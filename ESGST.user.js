@@ -3,7 +3,7 @@
 // @namespace revilheart
 // @author revilheart
 // @description Adds some cool features to SteamGifts.
-// @version 5.1.2
+// @version 5.2
 // @downloadURL https://github.com/rafaelgs18/ESGST/raw/master/ESGST.user.js
 // @updateURL https://github.com/rafaelgs18/ESGST/raw/master/ESGST.meta.js
 // @match https://www.steamgifts.com/*
@@ -330,6 +330,9 @@ Features = {
     },
     SM_D: {
         Name: "Enable new features by default."
+    },
+    GESL: {
+        Name: "Giveaway Error Search Links"
     }
 };
 if (window.Element && !window.Element.prototype.closest) {
@@ -471,6 +474,9 @@ function loadFeatures() {
         highlightDHDiscussion();
     }
     if (Path.match(/^\/giveaway\//)) {
+        if (ESGST.GESL && document.querySelector(".table__column__secondary-link")) {
+            addGESL();
+        }
         if (GM_getValue("GWC")) {
             addGWCChance();
         }
@@ -1911,7 +1917,7 @@ function loadSMMenu(Sidebar, SMButton) {
     SMLastSync = Container.getElementsByClassName("SMLastSync")[0];
     SMAPIKey = Container.getElementsByClassName("SMAPIKey")[0];
     SMGeneralFeatures = ["FE", "ES", "GV", "HIR", "AT", "PR", "VAI"];
-    SMGiveawayFeatures = ["GTS", "SGG", "AGS", "EGF", "ELGB", "GDCBP", "GWC", "GGP", "GWL", "DGN", "UGS", "ER"];
+    SMGiveawayFeatures = ["GTS", "SGG", "AGS", "EGF", "ELGB", "GDCBP", "GWC", "GGP", "GWL", "DGN", "UGS", "ER", "GESL"];
     SMDiscussionFeatures = ["ADOT", "DH", "MPP", "DED"];
     SMCommentingFeatures = ["CH", "CT", "CFH", "MCBP", "MR", "RFI", "RML"];
     SMUserFeatures = ["UH", "PUN", "RWSCVL", "SWR", "SGPB", "STPB", "SGC", "PUT", "WBH", "WBC", "NAMWC", "NRF", "UGD", "LUC", "IWH", "AP"];
@@ -6164,6 +6170,35 @@ function addGWCChance(Context) {
         "</div>"
     );
     setGWCChance(Context.nextElementSibling.lastElementChild, Entries, Copies);
+}
+
+// Giveaway Error Search Links
+
+function addGESL() {
+    var Context, Term;
+    Context = document.getElementsByClassName("table__column__secondary-link")[0];
+    Term = encodeURIComponent(Context.innerHTML);
+    document.getElementsByClassName("table__row-outer-wrap")[0].insertAdjacentHTML(
+        "afterEnd",
+        `<div class="table__row-outer-wrap">
+            <div class="table__row-inner-wrap">
+                <div class="table__column--width-small">
+                    <strong>Search Links</strong>
+                </div>
+                <div class="table__column--width-fill">
+                    <a href="https://www.steamgifts.com/giveaways/search?q=` + Term + `" target="_blank">
+                        <i class="fa"><img src="https://cdn.steamgifts.com/img/favicon.ico"></i>
+                    </a>&nbsp;
+                    <a href="https://steamdb.info/search/?a=app&amp;q=` + Term + `" target="_blank">
+                        <i class="fa"><img src="https://steamdb.info/static/logos/favicon-16x16.png"></i>
+                    </a>&nbsp;
+                    <a href="http://store.steampowered.com/search/?term=` + Term + `" target="_blank">
+                        <i class="fa fa-steam"></i>
+                    </a>
+                </div>
+            </div>
+        </div>`
+    );
 }
 
 // Groups Highlighter
