@@ -38,12 +38,14 @@ Tested on Microsoft Edge and most of it seems to work fine, but for some reason 
 * [Giveaway Templates](#giveaway-templates)
 * [Stickied Giveaway Groups](#stickied-giveaway-groups)
 * [Advanced Giveaway Search](#advanced-giveaway-search)
+* [Pinned Giveaways Button](#pinned-giveaways-button)
 * [Entered Giveaways Filter](#entered-giveaways-filter)
 * [Enter / Leave Giveaway Button](#enter--leave-giveaway-button)
 * [Giveaway Description / Comment Box Popup](#giveaway-description--comment-box-popup)
 * [Giveaway Winning Chance](#giveaway-winning-chance)
 * [Giveaway Groups Popout](#giveaway-groups-popout)
 * [Giveaway Winners Link](#giveaway-winners-link)
+* [Giveaway Error Search Links)(#giveaway-error-search-links)
 * [Delivered Gifts Notifier](#delivered-gifts-notifier)
 * [Unsent Gifts Sender](#unsent-gifts-sender)
 * [Entries Remover](#entries-remover)
@@ -408,6 +410,14 @@ Tested on Microsoft Edge and most of it seems to work fine, but for some reason 
 
 * Allows you to easily search giveaways using SG's [search parameters](https://www.steamgifts.com/discussion/8SzdT/).
 
+### Pinned Giveaways Button
+
+`steamgifts.com/giveaways/*`
+
+![](http://i.imgur.com/oiXdLx3.png)
+
+* Allows you to collapse the pinned giveaways container after expanding it.
+
 ### Points Refresher
 
 `steamgifts.com/?`
@@ -486,6 +496,14 @@ Tested on Microsoft Edge and most of it seems to work fine, but for some reason 
 
 * Pops out a box with all the groups of a giveaway upon clicking on the groups button.
 * Has Avatar Popout and Groups Highlighter built-in.
+
+### Giveaway Error Search Links
+
+`steamgifts.com/giveaway/*`
+
+![](http://i.imgur.com/GM6bX3s.png)
+
+* Provides search links for the game when you cannot access a giveaway.
 
 ### Discussions Highlighter
 
