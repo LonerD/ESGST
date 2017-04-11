@@ -1,9 +1,10 @@
 // ==UserScript==
 // @name ESGST
-// @namespace revilheart
-// @author revilheart
+// @namespace ESGST
+// @author rafaelgs18
+// @contributor Royalgamer06
 // @description Adds some cool features to SteamGifts.
-// @version 5.2
+// @version 5.3
 // @downloadURL https://github.com/rafaelgs18/ESGST/raw/master/ESGST.user.js
 // @updateURL https://github.com/rafaelgs18/ESGST/raw/master/ESGST.meta.js
 // @match https://www.steamgifts.com/*
@@ -22,11 +23,12 @@
 // @connect api.steampowered.com
 // @require https://github.com/rafaelgs18/ESGST/raw/master/Features/FixedElements.v5.0.1.js
 // @require https://github.com/rafaelgs18/ESGST/raw/master/Features/VisibleAttachedImages.v5.0.1.js
+// @require https://github.com/rafaelgs18/ESGST/raw/master/Features/PinnedGiveawaysButton.v5.0.js
 // @require https://github.com/rafaelgs18/ESGST/raw/master/Features/UsernameHistory.v5.0.js
 // @require https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js
 // @require https://greasyfork.org/scripts/26575-bpopup/code/bPopup.js?version=169515
 // @require https://cdn.steamgifts.com/js/highcharts.js
-// @run-at document-end
+// @run-at document-idle
 // ==/UserScript==
 
 var ESGST, SG, Path, Location, Hash, XSRFToken, Features, Users, Games, APBoxes;
@@ -34,7 +36,7 @@ ESGST = {};
 ESGST.SG = SG = window.location.hostname.match(/steamgifts/);
 ESGST.XSRFToken = document.getElementsByClassName(ESGST.SG ? "js__logout" : "js_logout")[0].getAttribute("data-form").match(/xsrf_token=(.+)/)[1];
 Path = window.location.pathname;
-ESGST.GiveawaysRegex = /^\/($|giveaways(?!.+\/(wishlist|created|entered|won)))/;
+ESGST.GiveawaysRegex = /^\/($|giveaways(?!.*\/(wishlist|created|entered|won|new)))/;
 ESGST.GiveawaysPath = Path.match(ESGST.GiveawaysRegex);
 ESGST.CommentsRegex = /^\/(giveaway(?!.+\/(entries|winners))|discussion|support\/ticket|trade)\//;
 ESGST.CommentsPath = Path.match(ESGST.CommentsRegex);
@@ -43,6 +45,9 @@ ESGST.GiveawayCommentsPath = Path.match(ESGST.GiveawayCommentsRegex);
 Location = window.location.href;
 Hash = window.location.hash;
 Features = {
+    PGB: {
+        Name: "Pinned Giveaways Button"
+    },
     FE: {
         Name: "Fixed Elements",
         FE_H: {
@@ -465,8 +470,13 @@ function loadFeatures() {
         if (CommentBox) {
             addDEDButton(CommentBox);
         }
-    } else if (GM_getValue("AGS") && SG && Path.match(/^\/($|giveaways(?!\/(wishlist|created|entered|won|new)))/)) {
-        addAGSPanel();
+    } else if (ESGST.SG && ESGST.GiveawaysPath) {
+        if (ESGST.AGS) {
+            addAGSPanel();
+        }
+        if (ESGST.PGB) {
+            addPGBButton();
+        }
     } else if (GM_getValue("GWC") && Path.match(/^\/giveaways\/entered/)) {
         addGWCHeading();
     }
@@ -1298,7 +1308,6 @@ function syncOwnedGames(Sync, Callback) {
     SteamAPIKey = GM_getValue("SteamAPIKey");
     if (SteamAPIKey) {
         URL = "http://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/?key=" + SteamAPIKey + "&steamid=" + GM_getValue("SteamID64") + "&format=json";
-        console.log(URL);
         makeRequest(null, URL, Sync.Progress, function(Response) {
             var ResponseText, ResponseGames, N, OwnedGames, I;
             ResponseText = Response.responseText;
@@ -1917,7 +1926,7 @@ function loadSMMenu(Sidebar, SMButton) {
     SMLastSync = Container.getElementsByClassName("SMLastSync")[0];
     SMAPIKey = Container.getElementsByClassName("SMAPIKey")[0];
     SMGeneralFeatures = ["FE", "ES", "GV", "HIR", "AT", "PR", "VAI"];
-    SMGiveawayFeatures = ["GTS", "SGG", "AGS", "EGF", "ELGB", "GDCBP", "GWC", "GGP", "GWL", "DGN", "UGS", "ER", "GESL"];
+    SMGiveawayFeatures = ["GTS", "SGG", "AGS", "PGB", "EGF", "ELGB", "GDCBP", "GWC", "GGP", "GWL", "DGN", "UGS", "ER", "GESL"];
     SMDiscussionFeatures = ["ADOT", "DH", "MPP", "DED"];
     SMCommentingFeatures = ["CH", "CT", "CFH", "MCBP", "MR", "RFI", "RML"];
     SMUserFeatures = ["UH", "PUN", "RWSCVL", "SWR", "SGPB", "STPB", "SGC", "PUT", "WBH", "WBC", "NAMWC", "NRF", "UGD", "LUC", "IWH", "AP"];
@@ -5337,14 +5346,21 @@ function addERButton(Context) {
 
 function removeEREntries(ER, Callback) {
     syncOwnedGames(ER, function(Result) {
-        var CurrentPage;
+        var Removed, CurrentPage;
+        Removed = [];
         switch (Result) {
             case 1:
                 ER.Games = GM_getValue("OwnedGames");
                 CurrentPage = Location.match(/page=(\d+)/);
                 CurrentPage = CurrentPage ? parseInt(CurrentPage[1]) : 1;
-                checkEREntries(ER, 1, CurrentPage, "/giveaways/entered/search?page=", function() {
-                    Callback("Entries removed.");
+                checkEREntries(ER, 1, CurrentPage, "/giveaways/entered/search?page=", Removed, function(Removed) {
+                    var N;
+                    N = Removed.length;
+                    if (N > 0) {
+                        Callback(N + " entries removed for: " + Removed.join(", "));
+                    } else {
+                        Callback("No entries removed.");
+                    }
                 });
                 break;
             case 2:
@@ -5360,22 +5376,22 @@ function removeEREntries(ER, Callback) {
     });
 }
 
-function checkEREntries(ER, NextPage, CurrentPage, URL, Callback, Context) {
+function checkEREntries(ER, NextPage, CurrentPage, URL, Removed, Callback, Context) {
     var Matches, N, Pagination;
     if (Context) {
         Matches = Context.getElementsByClassName("table__remove-default");
         N = Matches.length;
         if (N > 0) {
-            checkEREntry(0, Matches.length, Matches, ER, Context, function() {
+            checkEREntry(0, Matches.length, Matches, ER, Removed, Context, function(Removed) {
                 Pagination = Context.getElementsByClassName("pagination__navigation")[0];
                 if (Pagination && !Pagination.lastElementChild.classList.contains("is-selected")) {
-                    setTimeout(checkEREntries, 0, ER, NextPage, CurrentPage, URL, Callback);
+                    setTimeout(checkEREntries, 0, ER, NextPage, CurrentPage, URL, Removed, Callback);
                 } else {
-                    Callback();
+                    Callback(Removed);
                 }
             });
         } else {
-            Callback();
+            Callback(Removed);
         }
     } else {
         ER.Progress.innerHTML =
@@ -5383,37 +5399,42 @@ function checkEREntries(ER, NextPage, CurrentPage, URL, Callback, Context) {
             "<span>Checking page " + NextPage + "...</span>";
         if (CurrentPage != NextPage) {
             queueRequest(ER, null, URL + NextPage, function(Response) {
-                setTimeout(checkEREntries, 0, ER, ++NextPage, CurrentPage, URL, Callback, parseHTML(Response.responseText));
+                setTimeout(checkEREntries, 0, ER, ++NextPage, CurrentPage, URL, Removed, Callback, parseHTML(Response.responseText));
             });
         } else {
-            setTimeout(checkEREntries, 0, ER, ++NextPage, CurrentPage, URL, Callback, document);
+            setTimeout(checkEREntries, 0, ER, ++NextPage, CurrentPage, URL, Removed, Callback, document);
         }
     }
 }
 
-function checkEREntry(I, N, Matches, ER, Context, Callback) {
-    var ID;
+function checkEREntry(I, N, Matches, ER, Removed, Context, Callback) {
+    var Container, ID, Title;
     if (I < N) {
-        ID = Matches[I].closest(".table__row-inner-wrap").getElementsByClassName("global__image-outer-wrap--game-small")[0].firstElementChild.getAttribute("style");
+        Container = Matches[I].closest(".table__row-inner-wrap");
+        ID = Container.getElementsByClassName("global__image-outer-wrap--game-small")[0].firstElementChild.getAttribute("style");
         if (ID) {
             ID = parseInt(ID.match(/\/(apps|subs)\/(\d+)/)[2]);
             if (ER.Games.indexOf(ID) >= 0) {
+                Title = Container.getElementsByClassName("table__column__heading")[0].textContent;
+                if (Removed.indexOf(Title) < 0) {
+                    Removed.push(Title);
+                }
                 if (Context == document) {
                     Matches[I].click();
-                    setTimeout(checkEREntry, 0, ++I, N, Matches, ER, Context, Callback);
+                    setTimeout(checkEREntry, 0, ++I, N, Matches, ER, Removed, Context, Callback);
                 } else {
                     queueRequest(ER, "xsrf_token=" + ESGST.XSRFToken + "&do=entry_delete&code=" + Matches[I].parentElement.querySelector("[name='code']").value, "/ajax.php", function() {
-                        setTimeout(checkEREntry, 0, ++I, N, Matches, ER, Context, Callback);
+                        setTimeout(checkEREntry, 0, ++I, N, Matches, ER, Removed, Context, Callback);
                     });
                 }
             } else {
-                setTimeout(checkEREntry, 0, ++I, N, Matches, ER, Context, Callback);
+                setTimeout(checkEREntry, 0, ++I, N, Matches, ER, Removed, Context, Callback);
             }
         } else {
-            setTimeout(checkEREntry, 0, ++I, N, Matches, ER, Context, Callback);
+            setTimeout(checkEREntry, 0, ++I, N, Matches, ER, Removed, Context, Callback);
         }
     } else {
-        Callback();
+        Callback(Removed);
     }
 }
 
@@ -5989,7 +6010,7 @@ function addGPPanel(Context) {
                     "    <i class=\"fa fa-file-text\"></i>" +
                     "    <i class=\"fa fa-comment\"></i>" +
                     "</a>" +
-                    "<div class=\"ELGBButton" + ((GM_getValue("ELGB") && !Path.match(new RegExp("^\/user\/(?!" + GM_getValue("Username") + ")"))) ? "" : " rhHidden") + "\"></div>" +
+                    "<div class=\"ELGBButton" + ((ESGST.ELGB && !Path.match(new RegExp("^\/user\/" + GM_getValue("Username")))) ? "" : " rhHidden") + "\"></div>" +
                     "<div class=\"rhHidden\">" +
                     "    <div class=\"sidebar__error is-disabled\">" +
                     "        <i class=\"fa fa-exclamation-circle\"></i> " +
@@ -6015,7 +6036,7 @@ function addGPPanel(Context) {
                 GP.Username = Path.match(/^\/user\//) ?
                     document.getElementsByClassName("featured__heading__medium")[0].textContent : Context.getElementsByClassName("giveaway__username")[0].textContent;
                 GP.Points = document.getElementsByClassName("nav__points")[0];
-                if (GM_getValue("ELGB")) {
+                if (ESGST.ELGB && !Path.match(new RegExp("^\/user\/" + GM_getValue("Username")))) {
                     if (Context.classList.contains("is-faded")) {
                         Context.classList.remove("is-faded");
                         Context.classList.add("rhFaded");
@@ -6097,6 +6118,8 @@ function updateELGBButtons(Points) {
     }
 }
 
+GM_addStyle(".GDCBPDescription { text-align: left; }");
+
 function displayGDCBPPopup(GP, Enter) {
     GP.GDCBPButton.innerHTML = "<i class=\"fa fa-circle-o-notch fa-spin\"></i>";
     makeRequest(null, GP.URL, null, function(Response) {
@@ -6111,6 +6134,7 @@ function displayGDCBPPopup(GP, Enter) {
             Popup.Icon.classList.add("fa-file-text");
             Popup.Title.innerHTML = "<span><a href=\"" + GP.URL + "\">" + GP.Title + "</a></span> by <a href=\"/user/" + GP.Username + "\">" + GP.Username + "</a>";
             if (Description) {
+                Description.classList.add("GDCBPDescription");
                 Popup.Description.insertBefore(Description, Popup.Description.firstElementChild);
             }
             Popup.TextArea.classList.remove("rhHidden");
