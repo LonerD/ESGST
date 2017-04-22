@@ -106,9 +106,9 @@ function addERButton(Context) {
             if (I < N) {
                 Entry = Entries[I];
                 Container = Entry.closest(`.table__row-inner-wrap`);
-                Image = Container.getElementsByClassName(`global__image-inner-wrap`)[0].getAttribute(`style`);
+                Image = Container.getElementsByClassName(`global__image-inner-wrap`)[0];
                 if (Image) {
-                    Match = Image.match(/\/(apps|subs)\/(\d+)/);
+                    Match = Image.getAttribute(`style`).match(/\/(apps|subs)\/(\d+)/);
                     ID = parseInt(Match[2]);
                     if (OwnedGames.indexOf(ID) >= 0) {
                         Type = Match[1].replace(/s$/, ``);
