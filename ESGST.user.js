@@ -4,7 +4,7 @@
 // @author rafaelgs18
 // @contributor Royalgamer06
 // @description Adds some cool features to SteamGifts.
-// @version 5.3
+// @version 5.3.1
 // @downloadURL https://github.com/rafaelgs18/ESGST/raw/master/ESGST.user.js
 // @updateURL https://github.com/rafaelgs18/ESGST/raw/master/ESGST.meta.js
 // @match https://www.steamgifts.com/*
@@ -24,9 +24,10 @@
 // @require https://github.com/rafaelgs18/ESGST/raw/master/Features/FixedElements.v5.0.1.js
 // @require https://github.com/rafaelgs18/ESGST/raw/master/Features/VisibleAttachedImages.v5.0.1.js
 // @require https://github.com/rafaelgs18/ESGST/raw/master/Features/PinnedGiveawaysButton.v5.0.js
+// @require https://github.com/rafaelgs18/ESGST/raw/master/Features/EntriesRemover.v5.0.js
 // @require https://github.com/rafaelgs18/ESGST/raw/master/Features/UsernameHistory.v5.0.js
 // @require https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js
-// @require https://greasyfork.org/scripts/26575-bpopup/code/bPopup.js?version=169515
+// @require https://github.com/dinbror/bpopup/raw/master/jquery.bpopup.min.js
 // @require https://cdn.steamgifts.com/js/highcharts.js
 // @run-at document-idle
 // ==/UserScript==
@@ -35,7 +36,7 @@ var ESGST, SG, Path, Location, Hash, XSRFToken, Features, Users, Games, APBoxes;
 ESGST = {};
 ESGST.SG = SG = window.location.hostname.match(/steamgifts/);
 ESGST.XSRFToken = document.getElementsByClassName(ESGST.SG ? "js__logout" : "js_logout")[0].getAttribute("data-form").match(/xsrf_token=(.+)/)[1];
-Path = window.location.pathname;
+ESGST.Path = Path = window.location.pathname;
 ESGST.GiveawaysRegex = /^\/($|giveaways(?!.*\/(wishlist|created|entered|won|new)))/;
 ESGST.GiveawaysPath = Path.match(ESGST.GiveawaysRegex);
 ESGST.CommentsRegex = /^\/(giveaway(?!.+\/(entries|winners))|discussion|support\/ticket|trade)\//;
@@ -43,6 +44,12 @@ ESGST.CommentsPath = Path.match(ESGST.CommentsRegex);
 ESGST.GiveawayCommentsRegex = /^\/giveaway(?!.+\/(entries|winners))\//;
 ESGST.GiveawayCommentsPath = Path.match(ESGST.GiveawayCommentsRegex);
 Location = window.location.href;
+ESGST.CurrentPage = Location.match(/page=(\d+)/);
+if (ESGST.CurrentPage) {
+    ESGST.CurrentPage = parseInt(ESGST.CurrentPage[1]);
+} else {
+    ESGST.CurrentPage = 1;
+}
 Hash = window.location.hash;
 Features = {
     PGB: {
@@ -148,7 +155,10 @@ Features = {
         Name: "Unsent Gifts Sender"
     },
     ER: {
-        Name: "Entries Remover"
+        Name: "Entries Remover",
+        ER_S: {
+            Name: "Remove entries upon syncing."
+        }
     },
     ADOT: {
         Name: "Active Discussions On Top"
@@ -461,6 +471,9 @@ function loadFeatures() {
     }
     if (Path.match(/^\/account/)) {
         addSMButton();
+        if (ESGST.ER_S && Path.match(/^\/account\/settings\/profile/) && !Location.match(/#/)) {
+            addERButton();
+        }
     } else if (Path.match(/^\/user\//)) {
         loadProfileFeatures(document);
     } else if (Path.match(/^\/support\/tickets\/new/)) {
@@ -484,10 +497,10 @@ function loadFeatures() {
         highlightDHDiscussion();
     }
     if (Path.match(/^\/giveaway\//)) {
-        if (ESGST.GESL && document.querySelector(".table__column__secondary-link")) {
+        if (ESGST.GESL && document.querySelector(".table.table--summary")) {
             addGESL();
         }
-        if (GM_getValue("GWC")) {
+        if (GM_getValue("GWC") && !document.querySelector(".table.table--summary")) {
             addGWCChance();
         }
         if (GM_getValue("EGH")) {
@@ -5307,134 +5320,6 @@ function sendUGSGift(UGS, Winners, Keys, I, J, N, Callback) {
             }
             sendUGSGifts(UGS, ++I, N, J, Keys, Winners, Callback);
         });
-    }
-}
-
-// [ER] Entries Remover
-
-GM_addStyle(
-    ".ERButton {" +
-    "    cursor: pointer;" +
-    "    display: inline-block;" +
-    "}"
-);
-
-function addERButton(Context) {
-    var ERButton, Popup;
-    Context.insertAdjacentHTML(
-        "afterBegin",
-        "<div class=\"ERButton\" title=\"Remove entries for owned games.\">" +
-        "    <i class=\"fa fa-tag\"></i>" +
-        "    <i class=\"fa fa-times-circle\"></i>" +
-        "</div>"
-    );
-    ERButton = Context.firstElementChild;
-    Popup = createPopup();
-    Popup.Icon.classList.add("fa-times");
-    Popup.Title.textContent = "Remove entries for owned games:";
-    ERButton.addEventListener("click", function() {
-        Popup.popUp(function() {
-            ERButton.classList.add("rhBusy");
-            removeEREntries(Popup, function(Message) {
-                Popup.Progress.innerHTML = "";
-                Popup.OverallProgress.textContent = Message;
-                ERButton.classList.remove("rhBusy");
-            });
-        });
-    });
-}
-
-function removeEREntries(ER, Callback) {
-    syncOwnedGames(ER, function(Result) {
-        var Removed, CurrentPage;
-        Removed = [];
-        switch (Result) {
-            case 1:
-                ER.Games = GM_getValue("OwnedGames");
-                CurrentPage = Location.match(/page=(\d+)/);
-                CurrentPage = CurrentPage ? parseInt(CurrentPage[1]) : 1;
-                checkEREntries(ER, 1, CurrentPage, "/giveaways/entered/search?page=", Removed, function(Removed) {
-                    var N;
-                    N = Removed.length;
-                    if (N > 0) {
-                        Callback(N + " entries removed for: " + Removed.join(", "));
-                    } else {
-                        Callback("No entries removed.");
-                    }
-                });
-                break;
-            case 2:
-                Callback("No new games detected.");
-                break;
-            case 3:
-                Callback("Invalid Steam API Key.");
-                break;
-            case 4:
-                Callback("No Steam API Key found.");
-                break;
-        }
-    });
-}
-
-function checkEREntries(ER, NextPage, CurrentPage, URL, Removed, Callback, Context) {
-    var Matches, N, Pagination;
-    if (Context) {
-        Matches = Context.getElementsByClassName("table__remove-default");
-        N = Matches.length;
-        if (N > 0) {
-            checkEREntry(0, Matches.length, Matches, ER, Removed, Context, function(Removed) {
-                Pagination = Context.getElementsByClassName("pagination__navigation")[0];
-                if (Pagination && !Pagination.lastElementChild.classList.contains("is-selected")) {
-                    setTimeout(checkEREntries, 0, ER, NextPage, CurrentPage, URL, Removed, Callback);
-                } else {
-                    Callback(Removed);
-                }
-            });
-        } else {
-            Callback(Removed);
-        }
-    } else {
-        ER.Progress.innerHTML =
-            "<i class=\"fa fa-circle-o-notch fa-spin\"></i> " +
-            "<span>Checking page " + NextPage + "...</span>";
-        if (CurrentPage != NextPage) {
-            queueRequest(ER, null, URL + NextPage, function(Response) {
-                setTimeout(checkEREntries, 0, ER, ++NextPage, CurrentPage, URL, Removed, Callback, parseHTML(Response.responseText));
-            });
-        } else {
-            setTimeout(checkEREntries, 0, ER, ++NextPage, CurrentPage, URL, Removed, Callback, document);
-        }
-    }
-}
-
-function checkEREntry(I, N, Matches, ER, Removed, Context, Callback) {
-    var Container, ID, Title;
-    if (I < N) {
-        Container = Matches[I].closest(".table__row-inner-wrap");
-        ID = Container.getElementsByClassName("global__image-outer-wrap--game-small")[0].firstElementChild.getAttribute("style");
-        if (ID) {
-            ID = parseInt(ID.match(/\/(apps|subs)\/(\d+)/)[2]);
-            if (ER.Games.indexOf(ID) >= 0) {
-                Title = Container.getElementsByClassName("table__column__heading")[0].textContent;
-                if (Removed.indexOf(Title) < 0) {
-                    Removed.push(Title);
-                }
-                if (Context == document) {
-                    Matches[I].click();
-                    setTimeout(checkEREntry, 0, ++I, N, Matches, ER, Removed, Context, Callback);
-                } else {
-                    queueRequest(ER, "xsrf_token=" + ESGST.XSRFToken + "&do=entry_delete&code=" + Matches[I].parentElement.querySelector("[name='code']").value, "/ajax.php", function() {
-                        setTimeout(checkEREntry, 0, ++I, N, Matches, ER, Removed, Context, Callback);
-                    });
-                }
-            } else {
-                setTimeout(checkEREntry, 0, ++I, N, Matches, ER, Removed, Context, Callback);
-            }
-        } else {
-            setTimeout(checkEREntry, 0, ++I, N, Matches, ER, Removed, Context, Callback);
-        }
-    } else {
-        Callback(Removed);
     }
 }
 
