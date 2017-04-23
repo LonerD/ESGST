@@ -4,7 +4,7 @@
 // @author rafaelgs18
 // @contributor Royalgamer06
 // @description Adds some cool features to SteamGifts.
-// @version 5.3.2.1
+// @version 5.3.3
 // @downloadURL https://github.com/rafaelgs18/ESGST/raw/master/ESGST.user.js
 // @updateURL https://github.com/rafaelgs18/ESGST/raw/master/ESGST.meta.js
 // @match https://www.steamgifts.com/*
