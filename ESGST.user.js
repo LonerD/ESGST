@@ -24,7 +24,7 @@
 // @require https://github.com/rafaelgs18/ESGST/raw/master/Features/FixedElements.v5.0.1.js
 // @require https://github.com/rafaelgs18/ESGST/raw/master/Features/VisibleAttachedImages.v5.0.1.js
 // @require https://github.com/rafaelgs18/ESGST/raw/master/Features/PinnedGiveawaysButton.v5.0.js
-// @require https://github.com/rafaelgs18/ESGST/raw/master/Features/EntriesRemover.v5.0.1.js
+// @require https://github.com/rafaelgs18/ESGST/raw/master/Features/EntriesRemover.v5.0.2.js
 // @require https://github.com/rafaelgs18/ESGST/raw/master/Features/UsernameHistory.v5.0.js
 // @require https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js
 // @require https://github.com/dinbror/bpopup/raw/master/jquery.bpopup.min.js
