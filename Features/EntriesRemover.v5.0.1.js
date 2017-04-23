@@ -169,7 +169,7 @@ function addERButton(Context) {
             Result = `
                 <strong>${N} entries removed:</strong>
                 <span class="popup__actions">
-                    ${Result.join(``)}
+                    ${Results.join(``)}
                 </span>
             `;
             showResult(Result);
