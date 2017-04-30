@@ -69,7 +69,7 @@ function fix_sidebar() {
                 top: ${esgst.page_top}px;
             }
             .fe_sidebar_element {
-                margin-left: ${esgst.sidebar.offsetWidth + 25}px;
+                margin-left: ${esgst.sidebar.offsetWidth + 25}px !important;
             }
         `;
         GM_addStyle(style);
