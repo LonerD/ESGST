@@ -48,7 +48,7 @@ function fix_sidebar() {
     }
     
     function unfix() {
-        if (window.scrollY < sidebar_top) {
+        if (window.scrollY <= sidebar_top) {
             document.removeEventListener(`scroll`, unfix);
             toggle_sidebar_fixed();
             document.addEventListener(`scroll`, fix);
@@ -107,7 +107,7 @@ function fix_main_heading() {
     }
 
     function unfix() {
-        if (window.scrollY < main_heading_top) {
+        if (window.scrollY <= main_heading_top) {
             document.removeEventListener(`scroll`, unfix);
             esgst.main_heading.classList.remove(`fe_main_heading_fixed`);
             main_heading_placeholder.remove();
