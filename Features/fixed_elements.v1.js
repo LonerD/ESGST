@@ -2,7 +2,7 @@ function fix_header() {
     esgst.header.classList.add(`fe_header`);
     var header_element;
     if (esgst.featured_container) {
-        if (esgst.he_fc && esgst.giveaways_path) {
+        if (esgst.he_sg_fc && esgst.giveaways_path) {
             header_element = esgst.outer_wrap;
         } else {
             header_element = esgst.featured_container;
