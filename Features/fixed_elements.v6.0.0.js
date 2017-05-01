@@ -88,7 +88,7 @@ function load_fixed_main_page_heading() {
     `;
     esgst.main_page_heading.insertAdjacentHTML(`afterEnd`, main_page_heading_html);
     esgst.main_page_heading_placeholder = esgst.main_page_heading.nextElementSibling;
-    esgst.main_page_heading_background = main_page_heading_placeholder.nextElementSibling;
+    esgst.main_page_heading_background = esgst.main_page_heading_placeholder.nextElementSibling;
     main_page_heading_width = esgst.main_page_heading.offsetWidth;
     main_page_heading_height = esgst.main_page_heading.offsetHeight;
     esgst.comments_top += main_page_heading_height + 5;
