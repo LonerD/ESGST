@@ -1,4 +1,5 @@
 function load_endless_scrolling() {
+    var pagination, context, next_page, main_page_bottom, main_pagination_navigation_backup, reverse_scrolling;
     if (!esgst.fe_mph) {
         load_fixed_main_page_heading();
     }
@@ -12,7 +13,7 @@ function load_endless_scrolling() {
     main_pagination_navigation_backup = esgst.pagination_navigation.innerHTML;
     document.addEventListener(`scroll`, restore_original_pagination);
     document.addEventListener(`scroll`, get_next_page);
-    if (esgst.es_rs) {
+    if (esgst.es_rs && esgst.discussion_comments_path) {
         pagination.classList.add(`esgst_hidden`);
         context.classList.add(`esgst_hidden`);
         next_page = parseInt(esgst.pagination_navigation.lastElementChild.getAttribute(`data-page-number`));
@@ -100,7 +101,7 @@ function load_endless_scrolling() {
             }
         } else {
             ++next_page;
-            if (!pagination_navigation.lastElementChild.classList.contains(esgst.selected_class) {
+            if (!pagination_navigation.lastElementChild.classList.contains(esgst.selected_class)) {
                 document.addEventListener(`scroll`, get_next_page);
             }
         }
