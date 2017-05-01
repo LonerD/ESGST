@@ -23,6 +23,7 @@ function load_fixed_header() {
         `;
         GM_addStyle(header_style);
         esgst.page_top += header_height;
+        esgst.comments_top += header_height;
     }
 }
 
@@ -88,6 +89,7 @@ function load_fixed_main_page_heading() {
     `;
     main_page_heading_width = esgst.main_page_heading.offsetWidth;
     main_page_heading_height = esgst.main_page_heading.offsetHeight;
+    esgst.comments_top += main_page_heading_height + 5;
     document.addEventListener(`scroll`, fix_main_page_heading);
     fix_main_page_heading();
     add_main_page_heading_style();
