@@ -49,7 +49,7 @@ function load_endless_scrolling() {
                 next_heading = esgst.main_page_heading.firstElementChlid;
             } else {
                 html = `
-                    <div class="es_heading page__heading">
+                    <div class="page__heading es_page_heading">
                         <div class="page__heading__breadcrumbs">
                             <i class="fa fa-circle-o-notch fa-spin"></i>
                             <span>Loading next page...</span>
@@ -82,7 +82,7 @@ function load_endless_scrolling() {
         parent.insertBefore(context, next_heading.nextElementSibling);
         parent.insertBefore(pagination, context.nextElementSibling);
         pagination_navigation = pagination.getElementsByClassName(esgst.pagination_navigation_class)[0];
-        pagination_navigation_backgup = pagination_navigation.innerHTML;
+        pagination_navigation_backup = pagination_navigation.innerHTML;
         if (reverse_scrolling) {
             esgst.pagination_navigation.innerHTML = pagination_navigation_backup;
         }
