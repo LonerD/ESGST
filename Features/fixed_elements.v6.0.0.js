@@ -79,14 +79,16 @@ function load_fixed_sidebar() {
 }
 
 function load_fixed_main_page_heading() {
-    var main_page_heading_top, main_page_heading_html,
-        main_page_heading_placeholder, main_page_heading_background,
+    var main_page_heading_html, main_page_heading_top,
         main_page_heading_width, main_page_heading_height;
     esgst.main_page_heading.classList.add(`fe_main_page_heading`);
     main_page_heading_html = `
-        <div class="fe_main_page_heading_placeholder"></div>
-        <div class="${esgst.page_outer_wrap_class} fe_main_page_heading_background"></div>
+        <div class="fe_main_page_heading_placeholder esgst_hidden"></div>
+        <div class="${esgst.page_outer_wrap_class} fe_main_page_heading_background esgst_hidden"></div>
     `;
+    esgst.main_page_heading.insertAdjacentHTML(`afterEnd`, main_page_heading_html);
+    esgst.main_page_heading_placeholder = esgst.main_page_heading.nextElementSibling;
+    esgst.main_page_heading_background = main_page_heading_placeholder.nextElementSibling;
     main_page_heading_width = esgst.main_page_heading.offsetWidth;
     main_page_heading_height = esgst.main_page_heading.offsetHeight;
     esgst.comments_top += main_page_heading_height + 5;
@@ -98,10 +100,7 @@ function load_fixed_main_page_heading() {
         main_page_heading_top = esgst.main_page_heading.offsetTop - esgst.page_top;
         if (window.scrollY > main_page_heading_top) {
             document.removeEventListener(`scroll`, fix_main_page_heading);
-            esgst.main_page_heading.classList.add(`fe_main_page_heading_fixed`);
-            esgst.main_page_heading.insertAdjacentHTML(`afterEnd`, main_page_heading_html);
-            main_page_heading_placeholder = esgst.main_page_heading.nextElementSibling;
-            main_page_heading_background = main_page_heading_placeholder.nextElementSibling;
+            toggle_fixed_main_page_heading();
             document.addEventListener(`scroll`, unfix_main_page_heading);
         }
     }
@@ -109,11 +108,15 @@ function load_fixed_main_page_heading() {
     function unfix_main_page_heading() {
         if (window.scrollY <= main_page_heading_top) {
             document.removeEventListener(`scroll`, unfix_main_page_heading);
-            esgst.main_page_heading.classList.remove(`fe_main_page_heading_fixed`);
-            main_page_heading_placeholder.remove();
-            main_page_heading_background.remove();
+            toggle_fixed_main_page_heading();            
             document.addEventListener(`scroll`, fix_main_page_heading);
         }
+    }
+    
+    function toggle_fixed_main_page_heading() {
+        esgst.main_page_heading.classList.toggle(`fe_main_page_heading_fixed`);
+        esgst.main_page_heading_placeholder.classList.toggle(`esgst_hidden`);
+        esgst.main_page_heading_background.classList.toggle(`esgst_hidden`);
     }
     
     function add_main_page_heading_style() {
