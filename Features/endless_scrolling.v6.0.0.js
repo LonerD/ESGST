@@ -43,10 +43,10 @@ function load_endless_scrolling() {
         document.addEventListener(`scroll`, load_next_page);
         document.addEventListener(`scroll`, restore_main_pagination_navigation);
         html = `
-            <div class="es_refresh_button" title="Refresh the current page.">
+            <div class="page_heading_btn es_refresh_button" title="Refresh the current page.">
                 <i class="fa fa-refresh"></i>
             </div>
-            <div class="es_pause_button" title="Pause the endless scrolling.">
+            <div class="page_heading_btn es_pause_button" title="Pause the endless scrolling.">
                 <i class="fa fa-pause"></i>
             </div>
         `;
@@ -102,7 +102,7 @@ function load_endless_scrolling() {
         title_backup = `${title} - Page ${next_page}`;
         if (reverse_pages) {
             es_page_heading.remove();
-            es_page_heading = esgst.main_page_heading;
+            es_page_heading = esgst.pagination;
             page_top = 0;
             esgst.pagination_navigation.innerHTML = pagination_navigation_backup;
             reverse_pages = false;
