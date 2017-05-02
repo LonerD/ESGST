@@ -11,11 +11,16 @@ function load_active_discussions_on_top() {
 }
 
 function load_main_comment_box_on_top() {
-    var html, eot_main_comment_box;
+    var html, element, eot_main_comment_box;
     html = `
         <div class="eot_main_comment_box"></div>
     `;
-    esgst.main_page_heading_background.insertAdjacentHTML(`afterEnd`, html);
-    eot_main_comment_box = esgst.main_page_heading_background.nextElementSibling;
+    if (esgst.main_page_heading_background) {
+        element = esgst.main_page_heading_background;
+    } else {
+        element = esgst.main_page_heading;
+    }
+    element.insertAdjacentHTML(`afterEnd`, html);
+    eot_main_comment_box = element.nextElementSibling;
     eot_main_comment_box.appendChild(esgst.main_comment_box);
 }
