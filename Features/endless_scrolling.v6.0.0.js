@@ -117,10 +117,8 @@ function load_endless_scrolling() {
         parent = es_page_heading.parentElement;
         parent.insertBefore(context, es_page_heading.nextElementSibling);
         parent.insertBefore(pagination, context.nextElementSibling);
-        if (esgst.es_rs) {
-            if (esgst.discussion_comments_path) {
-                reverse_comments(context);
-            }
+        if (esgst.es_rs && esgst.discussion_comments_path) {
+            reverse_comments(context);
             --next_page;
             if (next_page > 0) {
                 document.addEventListener(`scroll`, load_next_page);
@@ -182,7 +180,7 @@ function load_endless_scrolling() {
         es_pause_button.removeEventListener(`click`, pause_endless_scrolling);
         es_pause_button.title = `Resume the endless scrolling.`;
         es_pause_button.innerHTML = `
-            <i class="fa fa-resume"></i>
+            <i class="fa fa-play"></i>
         `;
         es_pause_button.addEventListener(`click`, resume_endless_scrolling);
     }
