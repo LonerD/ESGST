@@ -9,10 +9,10 @@ function check_delivered_gifts(response) {
     delivered = 0;
     for (i = 0, n = matches.length; i < n; ++i) {
         received = matches[i].getElementsByClassName(`table__gift-feedback-received`)[0];
-        not_received = matches[I].getElementsByClassName(`table__gift-feedback-not-received`)[0];
+        not_received = matches[i].getElementsByClassName(`table__gift-feedback-not-received`)[0];
         if ((received.classList.contains(esgst.hidden_class) &&
             ((not_received && not_received.classList.contains(esgst.hidden_class)) || !not_received)) &&
-            matches[I].querySelector("[data-clipboard-text]")
+            matches[i].querySelector("[data-clipboard-text]")
         ) {
             ++delivered;
         }
