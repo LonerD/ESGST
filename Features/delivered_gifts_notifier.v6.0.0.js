@@ -3,6 +3,8 @@ function load_delivered_gifts_notifier() {
 }
 
 function check_delivered_gifts(response) {
+    var response_html, matches, delivered, i, n, received, not_received;
+    response_html = parseHTML(response.responseText);
     matches = response_html.getElementsByClassName(`table__row-inner-wrap`);
     delivered = 0;
     for (i = 0, n = matches.length; i < n; ++i) {
