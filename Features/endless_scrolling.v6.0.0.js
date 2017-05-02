@@ -137,7 +137,7 @@ function load_endless_scrolling() {
         
         function change_pagination_navigation() {
             var page_top, page_bottom;
-            page_top = previous_pagination_backup.offsetTop;
+            page_top = previous_pagination_backup.offsetTop - esgst.page_top;
             page_bottom = pagination_backup.offsetTop;
             if ((window.scrollY >= page_top) && (window.scrollY <= page_bottom)) {
                 if (window.location.href != search_url_backup) {
