@@ -70,7 +70,7 @@ function load_endless_scrolling() {
                     </div>
                 `;
                 esgst.main_page_heading.insertAdjacentHTML(`afterBegin`, html);
-                es_page_heading = esgst.main_page_heading.firstElementChlid;
+                es_page_heading = esgst.main_page_heading.firstElementChild;
             } else {
                 html = `
                     <div class="${esgst.page_heading_class} es_page_heading">
