@@ -36,7 +36,6 @@ function load_endless_scrolling() {
         }
         esgst.main_page_heading_placeholder.id = `es_page_${current_page}`;
         title = document.title.replace(/ - Page (\d+)/, ``);
-        main_page_bottom = pagination.offsetTop;
         main_search_url_backup = `${esgst.search_url}${current_page}`;
         main_title_backup = `${title} - Page ${current_page}`;
         main_pagination_navigation_backup = esgst.pagination_navigation.innerHTML;
@@ -88,9 +87,10 @@ function load_endless_scrolling() {
     }
     
     function set_next_page(response) {
-        var response_html, pagination_navigation, pagination_navigation_backup,
-            search_url_backup, title_backup, page_top, page_bottom, parent;
+        var response_html, previous_pagination_backup, pagination_navigation, pagination_navigation_backup,
+            search_url_backup, title_backup, pagination_backup, parent;
         response_html = parseHTML(response.responseText);
+        previous_pagination_backup = pagination;
         pagination = response_html.getElementsByClassName(`pagination`)[0];
         context = pagination.previousElementSibling;
         loadEndlessFeatures(context);
@@ -100,10 +100,10 @@ function load_endless_scrolling() {
         pagination_navigation_backup = pagination_navigation.innerHTML;
         search_url_backup = `${esgst.search_url}${next_page}`;
         title_backup = `${title} - Page ${next_page}`;
+        pagination_backup = pagination;
         if (reverse_pages) {
             es_page_heading.remove();
             es_page_heading = esgst.pagination;
-            page_top = 0;
             esgst.pagination_navigation.innerHTML = pagination_navigation_backup;
             reverse_pages = false;
         } else {
@@ -111,12 +111,10 @@ function load_endless_scrolling() {
                 <a href="${esgst.search_url}${next_page}">Page ${next_page}</a>
             `;
             es_page_heading.id = `es_page_${next_page}`;
-            page_top = es_page_heading.offsetTop;
         }
         parent = es_page_heading.parentElement;
         parent.insertBefore(context, es_page_heading.nextElementSibling);
         parent.insertBefore(pagination, context.nextElementSibling);
-        page_bottom = pagination.offsetTop;
         if (esgst.es_rs && esgst.discussion_comments_path) {
             reverse_comments(context);
             --next_page;
@@ -134,6 +132,9 @@ function load_endless_scrolling() {
         load_next_page();
         
         function change_pagination_navigation() {
+            var page_top, page_bottom;
+            page_top = previous_pagination_backup.offsetTop;
+            page_bottom = pagination_backup.offsetTop;
             if ((window.scrollY >= page_top) && (window.scrollY <= page_bottom)) {
                 if (window.location.href != search_url_backup) {
                     window.history.replaceState({}, null, search_url_backup);
@@ -145,6 +146,8 @@ function load_endless_scrolling() {
     }
     
     function restore_main_pagination_navigation() {
+        var main_page_bottom;
+        main_page_bottom = esgst.pagination.offsetTop;
         if ((window.scrollY >= 0) && (window.scrollY <= main_page_bottom)) {
             if (window.location.href != main_search_url_backup) {
                 window.history.replaceState({}, null, main_search_url_backup);
@@ -159,7 +162,7 @@ function load_endless_scrolling() {
         page = window.location.href.match(/\d+/);
         makeRequest(null, window.location.href, null, set_refreshed_page);
     
-        function set_refreshed_page(reponse) {
+        function set_refreshed_page(response) {
             var response_html, new_context, element, parent;
             response_html = parseHTML(response.responseText);
             new_context = response_html.getElementsByClassName(`pagination`)[0].previousElementSibling;
