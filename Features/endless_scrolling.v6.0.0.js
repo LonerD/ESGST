@@ -113,10 +113,10 @@ function load_endless_scrolling() {
             es_page_heading.id = `es_page_${next_page}`;
             page_top = es_page_heading.offsetTop;
         }
-        page_bottom = pagination.offsetTop;
         parent = es_page_heading.parentElement;
         parent.insertBefore(context, es_page_heading.nextElementSibling);
         parent.insertBefore(pagination, context.nextElementSibling);
+        page_bottom = pagination.offsetTop;
         if (esgst.es_rs && esgst.discussion_comments_path) {
             reverse_comments(context);
             --next_page;
@@ -131,11 +131,12 @@ function load_endless_scrolling() {
         }
         pagination_navigation.remove();
         document.addEventListener(`scroll`, change_pagination_navigation);
+        load_next_page();
         
         function change_pagination_navigation() {
             if ((window.scrollY >= page_top) && (window.scrollY <= page_bottom)) {
                 if (window.location.href != search_url_backup) {
-                    history.replaceState({}, null, search_url_backup);
+                    window.history.replaceState({}, null, search_url_backup);
                     document.title = title_backup;
                     esgst.pagination_navigation.innerHTML = pagination_navigation_backup;
                 }
@@ -145,7 +146,7 @@ function load_endless_scrolling() {
     
     function restore_main_pagination_navigation() {
         if ((window.scrollY >= 0) && (window.scrollY <= main_page_bottom)) {
-            if (window.location.href != (main_search_url_backup)) {
+            if (window.location.href != main_search_url_backup) {
                 window.history.replaceState({}, null, main_search_url_backup);
                 document.title = main_title_backup;
                 esgst.pagination_navigation.innerHTML = main_pagination_navigation_backup;
