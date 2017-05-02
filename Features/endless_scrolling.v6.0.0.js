@@ -42,7 +42,9 @@ function load_endless_scrolling() {
         document.title = main_title_backup;
         main_pagination_navigation_backup = esgst.pagination_navigation.innerHTML;
         document.addEventListener(`scroll`, load_next_page);
-        document.addEventListener(`scroll`, restore_main_pagination_navigation);
+        if (!reverse_pages) {
+            document.addEventListener(`scroll`, restore_main_pagination_navigation);
+        }
         html = `
             <div class="page_heading_btn es_refresh_button" title="Refresh the current page.">
                 <i class="fa fa-refresh"></i>
