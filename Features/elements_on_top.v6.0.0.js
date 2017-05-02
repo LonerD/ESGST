@@ -11,7 +11,7 @@ function load_active_discussions_on_top() {
 }
 
 function load_main_comment_box_on_top() {
-    var html, element, eot_main_comment_box;
+    var html, element, eot_main_comment_box, cancel_button;
     html = `
         <div class="eot_main_comment_box"></div>
     `;
@@ -23,4 +23,11 @@ function load_main_comment_box_on_top() {
     element.insertAdjacentHTML(`afterEnd`, html);
     eot_main_comment_box = element.nextElementSibling;
     eot_main_comment_box.appendChild(esgst.main_comment_box);
+    cancel_button = esgst.main_comment_box.getElementsByClassName(`js__comment-reply-cancel`)[0];
+    cancel_button.classList.remove(`js__comment-reply-cancel`);
+    cancel_button.addEventListener(`click`, restore);
+    
+    function restore_main_comment_box() {
+        eot_main_comment_box.appendChild(esgst.main_comment_box);
+    }
 }
