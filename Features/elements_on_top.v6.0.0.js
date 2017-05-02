@@ -25,7 +25,7 @@ function load_main_comment_box_on_top() {
     eot_main_comment_box.appendChild(esgst.main_comment_box);
     cancel_button = esgst.main_comment_box.getElementsByClassName(`js__comment-reply-cancel`)[0];
     cancel_button.classList.remove(`js__comment-reply-cancel`);
-    cancel_button.addEventListener(`click`, restore);
+    cancel_button.addEventListener(`click`, restore_main_comment_box);
     
     function restore_main_comment_box() {
         eot_main_comment_box.appendChild(esgst.main_comment_box);
