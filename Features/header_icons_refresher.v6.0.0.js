@@ -35,10 +35,10 @@ function load_header_icons_refresher() {
                 if (count > 9) {
                     count = 0;
                 }
-                esgst.icon.href = getResourceURL(`hir_icon_${count}`);
+                esgst.icon.href = GM_getResourceURL(`hir_icon_${count}`);
             }
         } else {
-            esgst.icon.href = getResourceURL(`steamgifts_icon`);
+            esgst.icon.href = GM_getResourceURL(`steamgifts_icon`);
         }
     }
     
