@@ -1,5 +1,5 @@
 function load_header_icons_refresher() {
-    var refresher;
+    var refresher, last_count;
     window.addEventListener(`focus`, load_won_page);
     if (esgst.hir_b) {
         window.addEventListener(`blur`, deactivate_header_icons_refresher);
