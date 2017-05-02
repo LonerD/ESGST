@@ -1,69 +1,83 @@
 function load_endless_scrolling() {
-    var pagination, context, next_page, main_page_bottom, main_pagination_navigation_backup, reverse_scrolling;
-    if (!esgst.fe_mph) {
-        load_fixed_main_page_heading();
-    }
-    if (!esgst.eot_pn) {
-        load_pagination_navigation_on_top();
-    }
+    var pagination, context, next_page, reverse_pages;
     pagination = esgst.pagination;
-    context = esgst.pagination.previousElementSibling;
-    next_page = esgst.page + 1;
-    main_page_bottom = pagination.offsetTop;
-    main_pagination_navigation_backup = esgst.pagination_navigation.innerHTML;
-    document.addEventListener(`scroll`, restore_original_pagination);
-    document.addEventListener(`scroll`, get_next_page);
+    context = pagination.previousElementSibling;
     if (esgst.es_rs && esgst.discussion_comments_path) {
-        pagination.classList.add(`esgst_hidden`);
-        context.classList.add(`esgst_hidden`);
-        next_page = parseInt(esgst.pagination_navigation.lastElementChild.getAttribute(`data-page-number`));
-        esgst.main_page_heading_placeholder.id = `es_page_${next_page}`;
-        reverse_scrolling = true;
-        get_next_page();
-    } else {
-        esgst.main_page_heading_placeholder.id = `es_page_${next_page - 1}`;
-        reverse_scrolling = false;
-        get_next_page();
-    }
-    
-    function restore_original_pagination() {
-        if (window.scrollY >= 0 && window.scrollY <= main_page_bottom) {
-            if (location.href != (esgst.url + esgst.page)) {
-                esgst.pagination_navigation.innerHTML = main_pagination_navigation_backup;
-                history.replaceState({}, null, esgst.url + esgst.page);
-            }
+        if (esgst.current_page == 1) {
+            pagination.classList.add(`esgst_hidden`);
+            context.classList.add(`esgst_hidden`);
+            next_page = parseInt(esgst.pagination_navigation.lastElementChild.getAttribute(`data-page-number`));
+            reverse_pages = true;
+            activate_endless_scrolling();
+        } else {
+            reverse_comments(context);
+            next_page = esgst.current_page - 1;
+            reverse_pages = false;
+            activate_endless_scrolling();
         }
+    } else if (!esgst.pagination_navigation.lastElementChild.classList.contains(esgst.selected_class)) {
+        next_page = esgst.current_page + 1;
+        reverse_pages = false;
+        activate_endless_scrolling();
     }
     
-    function get_next_page() {
+    function activate_endless_scrolling() {
+        if (!esgst.fe_mph) {
+            load_fixed_main_page_heading();
+        }
+        if (!esgst.eot_pn) {
+            load_pagination_navigation_on_top();
+        }
+        esgst.main_page_heading_placeholder.id = `es_page_${next_page}`;
+        main_page_bottom = pagination.offsetTop;
+        main_pagination_navigation_backup = esgst.pagination_navigation.innerHTML;
+        document.addEventListener(`scroll`, load_next_page);
+        document.addEventListener(`scroll`, restore_original_pagination);
+        html = `
+            <div class="es_refresh_button">
+                <i class="fa fa-refresh"></i>
+            </div>
+            <div class="es_pause_button">
+                <i class="fa fa-pause"></i>
+            </div>
+        `;
+        esgst.main_page_heading.insertAdjacentHTML(`beforeEnd`, html);
+        es_pause_button = esgst.main_page_heading.lastElementChild;
+        es_refresh_button = es_pause_button.previousElementSibling;
+        es_refresh_button.addEventListener(`click`, refresh_page);
+        es_pause_button.addEventListener(`click`, pause_endless_scrolling);
+        load_next_page();
+    }
+    
+    function load_next_page() {
         if (window.scrollY >= (document.body.offsetHeight - (window.innerHeight * 2))) {
-            document.removeEventListener(`scroll`, get_next_page);
-            if (reverse_scrolling) {
+            document.removeEventListener(`scroll`, load_next_page);
+            if (reverse_pages) {
                 html = `
                     <div>
                         <i class="fa fa-circle-o-notch fa-spin"></i>
-                        <span>Reversing comments...</span>
+                        <span>Reversing pages...</span>
                     </div>
                 `;
                 esgst.main_page_heading.insertAdjacentHTML(`afterBegin`, html);
-                next_heading = esgst.main_page_heading.firstElementChlid;
+                es_page_heading = esgst.main_page_heading.firstElementChlid;
             } else {
                 html = `
-                    <div class="page__heading es_page_heading">
-                        <div class="page__heading__breadcrumbs">
+                    <div class="${esgst.page_heading_class} es_page_heading">
+                        <div class="${esgst.page_heading_breadcrumbs_class}">
                             <i class="fa fa-circle-o-notch fa-spin"></i>
                             <span>Loading next page...</span>
                         </div>
                     </div>
                 `;
                 pagination.insertAdjacentHTML(`afterEnd`, html);
-                next_heading = pagination.nextElementSibling;
+                es_page_heading = pagination.nextElementSibling;
             }
-            makeRequest(null, esgst.url + next_page, null, load_next_page);
+            makeRequest(null, esgst.url + next_page, null, set_next_page);
         }
     }
     
-    function load_next_page(response) {
+    function set_next_page(response) {
         var parent, pagination_navigation, pagination_navigation_backup, url_backup, current_top, current_bottom;
         var response_html = parseHTML(response.responseText);
         pagination = response_html.getElementsByClassName(`pagination`)[0];
@@ -115,5 +129,29 @@ function load_endless_scrolling() {
                 }
             }
         }
+    }
+    
+    function restore_main_pagination_navigation() {
+        if (window.scrollY >= 0 && window.scrollY <= main_page_bottom) {
+            if (location.href != (esgst.url + esgst.page)) {
+                esgst.pagination_navigation.innerHTML = main_pagination_navigation_backup;
+                history.replaceState({}, null, esgst.url + esgst.page);
+            }
+        }
+    }
+    
+    function refresh_page() {
+    }
+    
+    function pause_endless_scrolling() {
+    }
+    
+    function resume_endless_scrolling() {
+    }
+}
+
+function reverse_comments(context) {
+    for (var i = 0, n = context.children.length; i < n; ++i) {
+        context.appendChild(context.firstElementChild);
     }
 }
