@@ -37,7 +37,9 @@ function load_endless_scrolling() {
         esgst.main_page_heading_placeholder.id = `es_page_${current_page}`;
         title = document.title.replace(/ - Page (\d+)/, ``);
         main_search_url_backup = `${esgst.search_url}${current_page}`;
+        window.history.replaceState({}, null, main_search_url_backup);
         main_title_backup = `${title} - Page ${current_page}`;
+        document.title = main_title_backup;
         main_pagination_navigation_backup = esgst.pagination_navigation.innerHTML;
         document.addEventListener(`scroll`, load_next_page);
         document.addEventListener(`scroll`, restore_main_pagination_navigation);
@@ -54,6 +56,7 @@ function load_endless_scrolling() {
         es_refresh_button = es_pause_button.previousElementSibling;
         es_refresh_button.addEventListener(`click`, refresh_page);
         es_pause_button.addEventListener(`click`, pause_endless_scrolling);
+        set_es_pagination_navigation();
         load_next_page();
     }
     
@@ -105,6 +108,7 @@ function load_endless_scrolling() {
             es_page_heading.remove();
             es_page_heading = esgst.pagination;
             esgst.pagination_navigation.innerHTML = pagination_navigation_backup;
+            set_es_pagination_navigation();
             reverse_pages = false;
         } else {
             es_page_heading.firstElementChild.innerHTML = `
@@ -140,6 +144,7 @@ function load_endless_scrolling() {
                     window.history.replaceState({}, null, search_url_backup);
                     document.title = title_backup;
                     esgst.pagination_navigation.innerHTML = pagination_navigation_backup;
+                    set_es_pagination_navigation();
                 }
             }
         }
@@ -153,13 +158,14 @@ function load_endless_scrolling() {
                 window.history.replaceState({}, null, main_search_url_backup);
                 document.title = main_title_backup;
                 esgst.pagination_navigation.innerHTML = main_pagination_navigation_backup;
+                set_es_pagination_navigation();
             }
         }
     }
     
     function refresh_page() {
         var page;
-        page = window.location.href.match(/\d+/);
+        page = window.location.href.match(/page=(\d+)/)[1];
         makeRequest(null, window.location.href, null, set_refreshed_page);
     
         function set_refreshed_page(response) {
@@ -205,5 +211,25 @@ function reverse_comments(context) {
     var i, n;
     for (i = 0, n = context.children.length; i < n; ++i) {
         context.appendChild(context.firstElementChild);
+    }
+}
+
+function set_es_pagination_navigation() {
+    var matches, i, n;
+    matches = esgst.pagination_navigation.children;
+    for (i = 0, n = matches.length; i < n; ++i) {
+        matches[i].addEventListener(`click`, set_es_pagination_navigation_item);
+    }
+}
+
+function set_es_pagination_navigation_item(event) {
+    var page, id;
+    event.preventDefault();
+    page = event.currentTarget.getAttribute(`data-page-number`);
+    id = `es_page_${page}`;
+    if (document.getElementById(id)) {
+        window.location.hash = id;
+    } else {
+        window.location.href = event.currentTarget.getAttribute(`href`);
     }
 }
