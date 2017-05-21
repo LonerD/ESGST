@@ -31,6 +31,12 @@ function loadEsgst() {
         esgst.name = `st`;
         esgst.selectedClass = `is_selected`;
     }
+    esgst.currentPage = window.location.href.match(/page=(\d+)/);
+    if (esgst.currentPage) {
+        esgst.currentPage = parseInt(esgst.currentPage[1]);
+    } else {
+        esgst.currentPage = 1;
+    }
     var url = window.location.href.replace(window.location.search, ``).replace(window.location.hash, ``).replace(`/search`, ``);
     esgst.originalUrl = url;
     esgst.originalTitle = document.title;
@@ -43,6 +49,12 @@ function loadEsgst() {
     for (var i = 0, n = parameters.length; i < n; ++i) {
         if (parameters[i] && !parameters[i].match(/page/)) {
             url += parameters[i] + `&`;
+        }
+    }
+    if (window.location.search) {
+        esgst.originalUrl = url.replace(/&$/, ``);
+        if (esgst.currentPage > 1) {
+            esgst.originalUrl += `&page=${esgst.currentPage}`;
         }
     }
     url += `page=`;
@@ -115,12 +127,6 @@ function loadEsgst() {
         }
     }
     esgst.xsrfToken = document.getElementsByClassName(esgst.sg ? "js__logout" : "js_logout")[0].getAttribute("data-form").match(/xsrf_token=(.+)/)[1];
-    esgst.currentPage = window.location.href.match(/page=(\d+)/);
-    if (esgst.currentPage) {
-        esgst.currentPage = parseInt(esgst.currentPage[1]);
-    } else {
-        esgst.currentPage = 1;
-    }
     esgst.videoTypes = [
         {
             url: `youtube.com`,
@@ -246,6 +252,7 @@ function loadEsgst() {
         mt: `MT`
     };
     esgst.defaultValues = {
+        sm_hb: true,
         sm_ebd: true,
         gp: true,
         Avatar: "",

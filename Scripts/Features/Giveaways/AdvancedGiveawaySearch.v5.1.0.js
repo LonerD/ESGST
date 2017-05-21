@@ -35,9 +35,16 @@ function loadAdvancedGiveawaySearch() {
         "<div>" +
         "    <span></span>" +
         "    <span>Region Restricted</span>" +
+        "</div>" +
+        "<div>" +
+        "    <span></span>" +
+        "    <span>DLC</span>" +
         "</div>"
     );
-    RegionRestricted = createCheckbox(AGSPanel.lastElementChild.firstElementChild).Checkbox;
+    var dlc = AGSPanel.lastElementChild;
+    var regionRestricted = dlc.previousElementSibling;
+    RegionRestricted = createCheckbox(regionRestricted.firstElementChild).Checkbox;
+    var DLC = createCheckbox(dlc.firstElementChild).Checkbox;
     Context.addEventListener("keydown", function(Event) {
         var Type, URL, Key;
         if (Event.key == "Enter") {
@@ -50,6 +57,7 @@ function loadAdvancedGiveawaySearch() {
                 }
             }
             URL += RegionRestricted.checked ? "&region_restricted=true" : "";
+            URL += DLC.checked ? "&dlc=true" : "";
             window.location.href = URL;
         }
     });

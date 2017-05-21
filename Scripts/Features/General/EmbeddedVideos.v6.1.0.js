@@ -5,17 +5,26 @@ function loadEmbeddedVideos(context) {
         for (var j = 0, numVideos = videos.length; j < numVideos; ++j) {
             var video = videos[j];
             var url = video.getAttribute(`href`);
-            if ((url == video.textContent) && (video.parentElement.textContent == video.textContent)) {
+            var text = video.textContent;
+            var next = video.nextSibling;
+            var previous = video.previousSibling;
+            if ((!previous || (previous.textContent == `\n`)) && (!next || !next.textContent || (next.textContent.match(/\.|:/)))) {
                 video.outerHTML = `
-                    <iframe width="640" height="360" src="${type.getEmbedUrl(url)}" frameborder="0" allowfullscreen></iframe>
+                    <div>
+                        ${(url != text) ? `<div>${text}</div>${next ? next.textContent : ``}` : ``}
+                        <iframe width="640" height="360" src="${type.getEmbedUrl(url)}" frameborder="0" allowfullscreen></iframe>
+                    </div>
                 `;
+                if (next) {
+                    next.remove();
+                }
             }
         }
     }
 }
 
 function getYoutubeComEmbedUrl(url) {
-  return `https://www.youtube.com/embed/${url.match(/watch\?v=(.+)/)[1]}`;
+  return `https://www.youtube.com/embed/${url.match(/watch\?v=(.+?)(&.*)?$/)[1]}`;
 }
 
 function getYoutuBeEmbedUrl(url) {

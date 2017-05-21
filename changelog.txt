@@ -1,4 +1,15 @@
 /*
+ * May 21, 2017 - v6.Beta.0.2
+ */
+
+* Fixed a bug in Embedded Videos and added more link formats.
+* Fixed a bug in Endless Scrolling that was removing filters from the URL.
+* Added support for the new DLC filter to Advanced Giveaway Search.
+* Fixed a bug in Comment Formatting Helper that was not adding the helper to all text areas of the page.
+* Added endless scrolling support and an option to clear the cache to User Giveaways Data.
+* Fixed some bugs in Whitelist / Blacklist Checker, added support for the Two-Way Blacklists update and an option to clear the caches.
+
+/*
  * May 21, 2017 - v6.Beta.0.1
  */
 
@@ -44,7 +55,7 @@ Upgraded the following features to v6:
 
 Added the following features:
 
-* Header Menu
+* Header Button
 * Embedded Videos (partial solution to #89)
 * Pagination Navigation On Top
 * Reply Box On Top

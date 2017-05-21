@@ -83,6 +83,15 @@ function addWBCButton(Context) {
         Name: "SimpleUpdate",
         Key: "SU",
         ID: "WBC_SU"
+    }, {
+        Check: function() {
+            return true;
+        },
+        Description: "Clear caches.",
+        Title: "If enabled, the caches of all checked users will be cleared (slower).",
+        Name: "ClearCaches",
+        Key: "CC",
+        ID: "WBC_CC"
     }]);
     Popup.Options.insertAdjacentHTML("afterEnd", createDescription("If an user is highlighted, that means they have been either checked for the first time or updated."));
     if (Context) {
@@ -300,13 +309,16 @@ function returnWBCWhitelistBlacklist(WBC, User, Callback) {
 function checkWBCUser(WBC, User, Callback) {
     var Match;
     if (!WBC.Canceled) {
+        if (WBC.CC.checked) {
+            delete User.WBC;
+        }
         if (!User.WBC) {
             User.WBC = {
                 LastSearch: 0,
                 Timestamp: 0
             };
         }
-        if (((new Date().getTime()) - User.WBC.LastSearch) > 86400000) {
+        if ((((new Date().getTime()) - User.WBC.LastSearch) > 86400000) || WBC.Update) {
             if ((WBC.FC.checked && User.WBC.WhitelistGiveaway) || (!WBC.FC.checked && User.WBC.Giveaway)) {
                 WBC.Timestamp = User.WBC.Timestamp;
                 checkWBCGiveaway(WBC, User, Callback);
@@ -326,15 +338,21 @@ function checkWBCGiveaway(WBC, User, Callback) {
     var ResponseText;
     if (!WBC.Canceled) {
         queueRequest(WBC, null, User.WBC.WhitelistGiveaway || User.WBC.Giveaway, function(Response) {
-            ResponseText = Response.responseText;
-            if (ResponseText.match(/you've been blacklisted by the giveaway creator/)) {
-                User.WBC.Result = "Blacklisted";
-            } else if (User.WBC.WhitelistGiveaway) {
-                if (ResponseText.match(/you're not a member of the giveaway creator's whitelist/)) {
+            var responseHtml = parseHTML(Response.responseText);
+            var errorMessage = responseHtml.getElementsByClassName(`table--summary`)[0];
+            if (errorMessage) {
+                errorMessage = errorMessage.textContent;
+                if (errorMessage.match(/blacklisted the giveaway creator/)) {
+                    User.WBC.Result = "Unknown";
+                } else if (errorMessage.match(/blacklisted by the giveaway creator/)) {
+                    User.WBC.Result = "Blacklisted";
+                } else if (errorMessage.match(/not a member of the giveaway creator's whitelist/)) {
                     User.WBC.Result = "None";
                 } else {
-                    User.WBC.Result = "Whitelisted";
+                    User.WBC.Result = "NotBlacklisted";
                 }
+            } else if (User.WBC.WhitelistGiveaway) {
+                User.WBC.Result = "Whitelisted";
             } else {
                 User.WBC.Result = "NotBlacklisted";
             }
@@ -376,7 +394,7 @@ function getWBCGiveaways(WBC, User, NextPage, CurrentPage, URL, Callback, Contex
                     if (User.WBC.WhitelistGiveaway) {
                         checkWBCGiveaway(WBC, User, Callback);
                     } else if (((WBC.Timestamp >= User.WBC.Timestamp) || (WBC.Timestamp === 0)) && Pagination && !Pagination.lastElementChild.classList.contains("is-selected")) {
-                        getWBCGiveaways(WBC, User, NextPage, CurrentPage, URL, Callback);
+                        window.setTimeout(getWBCGiveaways, 0, WBC, User, NextPage, CurrentPage, URL, Callback);
                     } else if ((User.WBC.GroupGiveaways && User.WBC.GroupGiveaways.length) || WBC.GroupGiveaways.length) {
                         getWBCGroupGiveaways(WBC, 0, WBC.GroupGiveaways.length, User, function(Result) {
                             var Groups, GroupGiveaways, Found, J, NumGroups;
@@ -413,7 +431,7 @@ function getWBCGiveaways(WBC, User, NextPage, CurrentPage, URL, Callback, Contex
                 }
             });
         } else if (((WBC.Timestamp >= User.WBC.Timestamp) || (WBC.Timestamp === 0)) && Pagination && !Pagination.lastElementChild.classList.contains("is-selected")) {
-            getWBCGiveaways(WBC, User, NextPage, CurrentPage, URL, Callback);
+            window.setTimeout(getWBCGiveaways, 0, WBC, User, NextPage, CurrentPage, URL, Callback);
         } else {
             User.WBC.Result = "Unknown";
             User.WBC.LastSearch = new Date().getTime();
@@ -427,7 +445,7 @@ function getWBCGiveaways(WBC, User, NextPage, CurrentPage, URL, Callback, Contex
         if (CurrentPage != NextPage) {
             queueRequest(WBC, null, URL + NextPage, function(Response) {
                 if (Response.finalUrl.match(/\/user\//)) {
-                    getWBCGiveaways(WBC, User, ++NextPage, CurrentPage, URL, Callback, parseHTML(Response.responseText));
+                    window.setTimeout(getWBCGiveaways, 0, WBC, User, ++NextPage, CurrentPage, URL, Callback, parseHTML(Response.responseText));
                 } else {
                     User.WBC.Result = "Unknown";
                     User.WBC.LastSearch = new Date().getTime();
@@ -436,7 +454,7 @@ function getWBCGiveaways(WBC, User, NextPage, CurrentPage, URL, Callback, Contex
                 }
             });
         } else {
-            getWBCGiveaways(WBC, User, ++NextPage, CurrentPage, URL, Callback, document);
+            window.setTimeout(getWBCGiveaways, 0, WBC, User, ++NextPage, CurrentPage, URL, Callback, document);
         }
     }
 }
@@ -451,7 +469,7 @@ function getWBCGroupGiveaways(WBC, I, N, User, Callback) {
                 if (Result) {
                     Callback(Result);
                 } else {
-                    getWBCGroupGiveaways(WBC, ++I, N, User, Callback);
+                    window.setTimeout(getWBCGroupGiveaways, 0, WBC, ++I, N, User, Callback);
                 }
             });
         } else {
@@ -484,15 +502,18 @@ function getWBCGroups(WBC, URL, NextPage, User, Callback) {
                 }
                 Pagination = ResponseHTML.getElementsByClassName("pagination__navigation")[0];
                 if (Pagination && !Pagination.lastElementChild.classList.contains("is-selected")) {
-                    getWBCGroups(WBC, URL, ++NextPage, User, Callback);
+                    window.setTimeout(getWBCGroups, 0, WBC, URL, ++NextPage, User, Callback);
                 } else {
                     Callback();
                 }
-            } else if (ResponseText.match(/you're not a member of the giveaway creator's whitelist/)) {
-                User.WBC.Result = "None";
-                Callback(true);
             } else {
-                Callback(true);
+                var errorMessage = ResponseHTML.getElementsByClassName(`table--summary`)[0];
+                if (errorMessage && errorMessage.textContent.match(/not a member of the giveaway creator's whitelist/)) {
+                    User.WBC.Result = "None";
+                    Callback(true);
+                } else {
+                    Callback(true);
+                }
             }
         });
     }
@@ -513,7 +534,7 @@ function getWBCUsers(WBC, NextPage, CurrentPage, URL, Callback, Context) {
         }
         Pagination = Context.getElementsByClassName("pagination__navigation")[0];
         if (Pagination && !Pagination.lastElementChild.classList.contains("is-selected")) {
-            getWBCUsers(WBC, NextPage, CurrentPage, URL, Callback);
+            window.setTimeout(getWBCUsers, 0, WBC, NextPage, CurrentPage, URL, Callback);
         } else {
             Callback();
         }
@@ -523,10 +544,10 @@ function getWBCUsers(WBC, NextPage, CurrentPage, URL, Callback, Context) {
             "<span>Retrieving users (page " + NextPage + ")...</span>";
         if (CurrentPage != NextPage) {
             queueRequest(WBC, null, URL + NextPage, function(Response) {
-                getWBCUsers(WBC, ++NextPage, CurrentPage, URL, Callback, parseHTML(Response.responseText));
+                window.setTimeout(getWBCUsers, 0, WBC, ++NextPage, CurrentPage, URL, Callback, parseHTML(Response.responseText));
             });
         } else {
-            getWBCUsers(WBC, ++NextPage, CurrentPage, URL, Callback, document);
+            window.setTimeout(getWBCUsers, 0, WBC, ++NextPage, CurrentPage, URL, Callback, document);
         }
     }
 }

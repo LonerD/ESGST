@@ -30,6 +30,16 @@ function addUGDButton(Context, Key, User) {
     Popup.Popup.classList.add("rhPopupLarge");
     Popup.Icon.classList.add("fa-bar-chart");
     Popup.Title.textContent = "Get " + User.Username + "'s " + UGD.Key.toLowerCase() + " giveaways data:";
+    createOptions(Popup.Options, UGD, [{
+        Check: function() {
+            return true;
+        },
+        Description: "Clear cache.",
+        Title: "If enabled, the cache will be cleared and all giveaways will be retrieved again (slower).",
+        Name: "ClearCache",
+        Key: "CC",
+        ID: "UGD_CC"
+    }]);
     createButton(Popup.Button, "fa-bar-chart", "Get Data", "fa-times-circle", "Cancel", function(Callback) {
         UGD.Canceled = false;
         UGDButton.classList.add("rhBusy");
@@ -38,6 +48,9 @@ function addUGDButton(Context, Key, User) {
                 var Match, CurrentPage;
                 GM_setValue("LastSave", 0);
                 User.UGD = getUser(User).UGD;
+                if (UGD.CC.checked) {
+                    delete User.UGD;
+                }
                 if (!User.UGD) {
                     User.UGD = {
                         Sent: {},
@@ -316,7 +329,7 @@ function getUGDGiveaways(UGD, User, NextPage, CurrentPage, CurrentContext, URL, 
             "<i class=\"fa fa-circle-o-notch fa-spin\"></i> " +
             "<span>Retrieving giveaways (page " + NextPage + ")...</span>";
         if (CurrentPage != NextPage) {
-            if (CurrentContext && document.getElementById("ESPage" + NextPage)) {
+            if (CurrentContext && document.getElementById("esgst-es-page-" + NextPage)) {
                 getUGDGiveaways(UGD, User, ++NextPage, CurrentPage, CurrentContext, URL, Callback);
             } else {
                 queueRequest(UGD, null, URL + NextPage, function(Response) {
