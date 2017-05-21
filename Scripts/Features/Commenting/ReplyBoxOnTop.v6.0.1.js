@@ -12,7 +12,9 @@ function loadReplyBoxOnTop() {
     var box = sibling.nextElementSibling;
     box.appendChild(esgst.replyBox);
     var button = box.getElementsByClassName(esgst.cancelButtonClass)[0];
-    button.addEventListener(`click`, waitToRestoreReplyBox);
+    if (button) {
+        button.addEventListener(`click`, waitToRestoreReplyBox);
+    }
 
     function waitToRestoreReplyBox() {
       window.setTimeout(restoreReplyBox, 0);

@@ -126,7 +126,10 @@ function loadEsgst() {
             }
         }
     }
-    esgst.xsrfToken = document.getElementsByClassName(esgst.sg ? "js__logout" : "js_logout")[0].getAttribute("data-form").match(/xsrf_token=(.+)/)[1];
+    var logoutButton = document.getElementsByClassName(esgst.sg ? "js__logout" : "js_logout")[0];
+    if (logoutButton) {
+        esgst.xsrfToken = .getAttribute("data-form").match(/xsrf_token=(.+)/)[1];
+    }
     esgst.videoTypes = [
         {
             url: `youtube.com`,
@@ -535,7 +538,7 @@ function loadEsgst() {
         {
             id: `ded`,
             name: `Discussion Edit Detector`,
-            check: getValue(`ded`) && esgst.replyBox,
+            check: getValue(`ded`) && esgst.replyBox && !esgst.userPath,
             load: loadDiscussionEditDetector
         },
         {
@@ -657,7 +660,8 @@ function loadEsgst() {
                 }
             ],
             check: getValue(`cfh`),
-            load: loadCommentFormattingHelper
+            load: loadCommentFormattingHelper,
+            endless: true
         },
         {
             id: `rbot`,
@@ -1607,20 +1611,32 @@ function createPopup(Temp) {
     Popup.OverallProgress = Popup.Popup.getElementsByClassName("rhPopupOverallProgress")[0];
     Popup.Results = Popup.Popup.getElementsByClassName("rhPopupResults")[0];
     Popup.Close = Popup.Popup.getElementsByClassName("rhPopupClose")[0];
+    if (esgst.st) {
+        Popup.Popup.classList.remove(`popup`);
+    }
+    var popup;
     Popup.popUp = function(Callback) {
-        return $(Popup.Popup).bPopup({
+        Popup.Popup.classList.add(`popup`);
+        popup = $(Popup.Popup).bPopup({
             amsl: [0],
             fadeSpeed: 200,
             followSpeed: 500,
             modalColor: "#3c424d",
             opacity: 0.85,
             onClose: function() {
+                Popup.Popup.classList.remove(`popup`);
                 if (Temp) {
                     Popup.Popup.remove();
                 }
             }
         }, Callback);
+        return popup;
     };
+    Popup.Popup.addEventListener(`click`, function() {
+        if (popup) {
+            popup.reposition();
+        }
+    });
     return Popup;
 }
 
@@ -1896,6 +1912,7 @@ function addStyles() {
         "    max-height: 75%;" +
         "    overflow: auto;" +
         "    min-width: 300px;" +
+        "   max-width: 75%;" +
         "}" +
         ".rhPopupLarge {" +
         "    width: 75%;" +
@@ -2355,14 +2372,14 @@ function goToComment(hash) {
             Top = Element.offsetTop;
             window.scrollTo(0, Top);
             window.scrollBy(0, -esgst.commentsTop);
-            Permalink = document.getElementsByClassName("comment__permalink")[0];
+            Permalink = document.getElementsByClassName(esgst.sg ? "comment__permalink" : "author_permalink")[0];
             if (Permalink) {
                 Permalink.remove();
             }
-            Element.getElementsByClassName("comment__username")[0].insertAdjacentHTML(
-                "beforeBegin",
+            Element.getElementsByClassName(esgst.sg ? "comment__username" : "author_avatar")[0].insertAdjacentHTML(
+                esgst.sg ? "beforeBegin" : "afterEnd",
                 "<div class=\"comment__permalink\">" +
-                "    <i class=\"fa fa-share\"></i>" +
+                "    <i class=\"fa fa-share author_permalink\"></i>" +
                 "</div>"
             );
         }

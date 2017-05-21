@@ -8,16 +8,13 @@ function loadEmbeddedVideos(context) {
             var text = video.textContent;
             var next = video.nextSibling;
             var previous = video.previousSibling;
-            if ((!previous || (previous.textContent == `\n`)) && (!next || !next.textContent || (next.textContent.match(/\.|:/)))) {
+            if ((!previous || !previous.textContent.trim()) && (!next || !next.textContent.trim())) {
                 video.outerHTML = `
                     <div>
-                        ${(url != text) ? `<div>${text}</div>${next ? next.textContent : ``}` : ``}
+                        ${(url != text) ? `<div>${text}</div>` : ``}
                         <iframe width="640" height="360" src="${type.getEmbedUrl(url)}" frameborder="0" allowfullscreen></iframe>
                     </div>
                 `;
-                if (next) {
-                    next.remove();
-                }
             }
         }
     }

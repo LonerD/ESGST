@@ -175,6 +175,7 @@ function displayGDCBPPopup(GP, Enter) {
             if (Description) {
                 Description.classList.add("GDCBPDescription");
                 Popup.Description.insertBefore(Description, Popup.Description.firstElementChild);
+                loadEndlessFeatures(Description);
             }
             Popup.TextArea.classList.remove("rhHidden");
             if (GM_getValue("CFH")) {

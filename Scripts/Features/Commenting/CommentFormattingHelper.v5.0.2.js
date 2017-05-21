@@ -1,5 +1,5 @@
-function loadCommentFormattingHelper() {
-    var textAreas = document.querySelectorAll(`textarea[name='description']`);
+function loadCommentFormattingHelper(context) {
+    var textAreas = context.querySelectorAll(`textarea[name='description']`);
     for (var i = 0, n = textAreas.length; i < n; ++i) {
         addCFHPanel(textAreas[i]);
     }

@@ -1,4 +1,21 @@
 /*
+ * May 21, 2017 - v6.Beta.0.4
+ */
+
+* Fixed a bug that happened when trying to retrieve the xsrf_token from the page.
+* Fixed a bug that was mixing the script's popups with SteamTrades' popups (closes #72).
+* The popups are now repositioned upon clicking on them (closes #83).
+* Changed the max width of popups to 75% (it was previously not set, which was making some popups have a 100% width).
+* Fixed a bug on SteamTrades that happened when going to the permalink of a comment.
+* Fixed a bug in Visible Attached Images and added support for images in the format .gifv.
+* Fixed a bug in Embedded Videos.
+* Added endless scrolling support to Giveaway Description/Reply Box Popup.
+* Added the option to only send gifts to users who are still members of at least one of the groups for group giveaways in Unsent Gifts Sender and added endless scrolling support for it (closes #90).
+* Fixed a bug on SteamTrades that was enabling Discussion Edit Detector in the user pages.
+* Fixed a bug in Comment Formatting Helper that was not enabling endless scrolling support for it.
+* Fixed a bug in Reply Box On Top for the user pages on SteamTrades.
+
+/*
  * May 21, 2017 - v6.Beta.0.3
  */
 

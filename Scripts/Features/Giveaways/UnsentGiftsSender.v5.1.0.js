@@ -45,6 +45,16 @@ function addUGSButton(Context) {
         Name: "SendWhitelist",
         Key: "SW",
         ID: "UGS_SW"
+    }, {
+        Check: function() {
+            return true;
+        },
+        Description: "Only send to users who are still members of at least one of the groups for group giveaways.",
+        Title: "This option will retrieve the results in real time.\n" + (
+            "Group members get a pass for not activated / multiple wins and for not being whitelisted."),
+        Name: "SendGroup",
+        Key: "G",
+        ID: "UGS_G"
     }]);
     Context.insertAdjacentHTML(
         "afterBegin",
@@ -71,12 +81,23 @@ function addUGSButton(Context) {
             var N;
             N = UGS.Giveaways.length;
             if (N > 0) {
-                getUGSWinners(UGS, 0, N, function() {
-                    UGSButton.classList.remove("rhBusy");
-                    UGS.Progress.innerHTML = UGS.OverallProgress.innerHTML = "";
-                    GM_setValue("Winners", UGS.Winners);
-                    Callback();
-                });
+                if (UGS.G.checked) {
+                    getUgsGiveawayGroups(UGS, 0, N, function() {
+                        getUGSWinners(UGS, 0, N, function() {
+                            UGSButton.classList.remove("rhBusy");
+                            UGS.Progress.innerHTML = UGS.OverallProgress.innerHTML = "";
+                            GM_setValue("Winners", UGS.Winners);
+                            Callback();
+                        });
+                    });
+                } else {
+                    getUGSWinners(UGS, 0, N, function() {
+                        UGSButton.classList.remove("rhBusy");
+                        UGS.Progress.innerHTML = UGS.OverallProgress.innerHTML = "";
+                        GM_setValue("Winners", UGS.Winners);
+                        Callback();
+                    });
+                }
             } else {
                 UGSButton.classList.remove("rhBusy");
                 UGS.Progress.innerHTML =
@@ -111,6 +132,41 @@ function addUGSButton(Context) {
     });
 }
 
+function getUgsGiveawayGroups(ugs, i, n, callback) {
+    if (i < n) {
+        ugs.Giveaways[i].Groups = [];
+        getNextUgsGiveawayGroupsPage(ugs, i, `${ugs.Giveaways[i].URL.replace(/\/winners/, ``)}/groups/search?page=`, 1, function() {
+            window.setTimeout(getUgsGiveawayGroups, 0, ugs, ++i, n, callback);
+        });
+    } else {
+        callback();
+    }
+}
+
+function getNextUgsGiveawayGroupsPage(ugs, I, url, nextPage, callback, context) {
+    if (context) {
+        var matches = context.getElementsByClassName(`table__column__heading`);
+        for (var i = 0, n = matches.length; i < n; ++i) {
+            var title = matches[i].getAttribute(`href`).match(/\/group\/.+\/(.+)/)[1];
+            ugs.Giveaways[I].Groups.push(title);
+        }
+        var paginationNavigation = context.getElementsByClassName(`pagination__navigation`)[0];
+        if (paginationNavigation && !paginationNavigation.lastElementChild.classList.contains(`is-selected`)) {
+            window.setTimeout(getNextUgsGiveawayGroupsPage, 0, ugs, I, url, nextPage, callback);
+        } else {
+            callback();
+        }
+    } else {
+        ugs.Progress.innerHTML =
+            "<i class=\"fa fa-circle-o-notch fa-spin\"></i> " +
+            "<span>Getting " + ugs.Giveaways[I].Name + "'s groups...</span>";
+        queueRequest(ugs, null, `${url}${nextPage}`, function(response) {
+            var context = parseHTML(response.responseText);
+            window.setTimeout(getNextUgsGiveawayGroupsPage, 0, ugs, I, url, ++nextPage, callback, context);
+        });
+    }
+}
+
 function getUGSGiveaways(UGS, NextPage, CurrentPage, Callback, Context) {
     var Matches, N, I, Pagination;
     if (Context) {
@@ -126,7 +182,7 @@ function getUGSGiveaways(UGS, NextPage, CurrentPage, Callback, Context) {
             }
             Pagination = Context.getElementsByClassName("pagination__navigation")[0];
             if (Pagination && !Pagination.lastElementChild.classList.contains("is-selected")) {
-                getUGSGiveaways(UGS, NextPage, CurrentPage, Callback);
+                window.setTimeout(getUGSGiveaways, 0, UGS, NextPage, CurrentPage, Callback);
             } else {
                 Callback();
             }
@@ -138,12 +194,32 @@ function getUGSGiveaways(UGS, NextPage, CurrentPage, Callback, Context) {
             "<i class=\"fa fa-circle-o-notch\"></i> " +
             "<span>Retrieving unsent giveaways (page " + NextPage + ")...</span>";
         if (CurrentPage != NextPage) {
-            queueRequest(UGS, null, "/giveaways/created/search?page=" + NextPage, function(Response) {
-                getUGSGiveaways(UGS, ++NextPage, CurrentPage, Callback, parseHTML(Response.responseText));
-            });
+            if (!document.getElementById(`esgst-es-page-${NextPage}`)) {
+                queueRequest(UGS, null, "/giveaways/created/search?page=" + NextPage, function(Response) {
+                    window.setTimeout(getUGSGiveaways, 0, UGS, ++NextPage, CurrentPage, Callback, parseHTML(Response.responseText));
+                });
+            } else {
+                window.setTimeout(getUGSGiveaways, 0, UGS, ++NextPage, CurrentPage, Callback);
+            }
         } else {
-            getUGSGiveaways(UGS, ++NextPage, CurrentPage, Callback, document);
+            window.setTimeout(getUGSGiveaways, 0, UGS, ++NextPage, CurrentPage, Callback, document);
         }
+    }
+}
+
+function checkUgsUserGroups(ugs, i, n, j, steamId64, callback) {
+    if (i < n) {
+        makeRequest(null, `http://steamcommunity.com/groups/${ugs.Giveaways[j].Groups[i]}/memberslistxml/?xml=1`, ugs, function(response) {
+            var responseText = response.responseText;
+            var reg = new RegExp(`<steamID64>${steamId64}</steamID64>`);
+            if (reg.exec(responseText)) {
+                callback(true);
+            }  else {
+                window.setTimeout(checkUgsUserGroups, 0, ugs, ++i, n, j, steamId64, callback);
+            }
+        });
+    } else {
+        callback(false);
     }
 }
 
@@ -165,7 +241,7 @@ function getUGSWinners(UGS, I, N, Callback) {
                 if (NumMatches < 25) {
                     WinnersKeys = sortArray(Object.keys(Winners));
                     sendUGSGifts(UGS, 0, WinnersKeys.length, I, WinnersKeys, Winners, function() {
-                        getUGSWinners(UGS, ++I, N, Callback);
+                        window.setTimeout(getUGSWinners, 0, UGS, ++I, N, Callback);
                     });
                 } else {
                     queueRequest(UGS, null, UGS.Giveaways[I].URL + "/search?page=2", function(Response) {
@@ -175,7 +251,7 @@ function getUGSWinners(UGS, I, N, Callback) {
                         }
                         WinnersKeys = sortArray(Object.keys(Winners));
                         sendUGSGifts(UGS, 0, WinnersKeys.length, I, WinnersKeys, Winners, function() {
-                            getUGSWinners(UGS, ++I, N, Callback);
+                            window.setTimeout(getUGSWinners, 0, UGS, ++I, N, Callback);
                         });
                     });
                 }
@@ -198,7 +274,8 @@ function sendUGSGifts(UGS, I, N, J, Keys, Winners, Callback) {
             if (Reroll && (UGS.Checked.indexOf(Keys[I] + UGS.Giveaways[J].Name) < 0)) {
                 SANM = UGS.SANM.checked;
                 SW = UGS.SW.checked;
-                if (SANM || SW) {
+                G = UGS.G.checked;
+                if (SANM || SW || G) {
                     User = {
                         Username: Keys[I]
                     };
@@ -207,7 +284,25 @@ function sendUGSGifts(UGS, I, N, J, Keys, Winners, Callback) {
                             var SavedUser;
                             GM_setValue("LastSave", 0);
                             SavedUser = getUser(User);
-                            if (SANM) {
+                            if (G && UGS.Giveaways[J].Groups.length) {
+                                UGS.Progress.innerHTML =
+                                    "<i class=\"fa fa-circle-o-notch fa-spin\"></i> " +
+                                    "<span>Checking if user is a member of one of the " + UGS.Giveaways[J].Name + " groups...</span>";
+                                checkUgsUserGroups(UGS, 0, UGS.Giveaways[J].Groups.length, J, SavedUser.SteamID64, function(member) {
+                                    if (member) {
+                                        sendUGSGift(UGS, Winners, Keys, I, J, N, Callback);
+                                    } else {
+                                        UGS.Checked.push(Keys[I] + UGS.Giveaways[J].Name);
+                                        UGS.Unsent.classList.remove("rhHidden");
+                                        UGS.UnsentCount.textContent = parseInt(UGS.UnsentCount.textContent) + 1;
+                                        UGS.UnsentUsers.insertAdjacentHTML(
+                                            "beforeEnd",
+                                            "<span><a href=\"/user/" + Keys[I] + "\">" + Keys[I] + "</a> (<a href=\"" + UGS.Giveaways[J].URL + "\">" + UGS.Giveaways[J].Name + "</a>)</span>"
+                                        );
+                                        sendUGSGifts(UGS, ++I, N, J, Keys, Winners, Callback);
+                                    }
+                                });
+                            } else if (SANM) {
                                 if (SW && SavedUser.Whitelisted) {
                                     sendUGSGift(UGS, Winners, Keys, I, J, N, Callback);
                                 } else {
