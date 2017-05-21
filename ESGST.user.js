@@ -23,7 +23,7 @@
 // @grant GM_getResourceText
 // @grant GM_getResourceURL
 // @grant GM_xmlhttpRequest
-// @require https://github.com/revilheart/ESGST/raw/master/Scripts/HelperFunctions.v6.0.1.js
+// @require https://github.com/revilheart/ESGST/raw/master/Scripts/HelperFunctions.v6.0.2.js
 // @require https://github.com/revilheart/ESGST/raw/master/Scripts/Features/Other/HeaderButton.v6.0.0.js
 // @require https://github.com/revilheart/ESGST/raw/master/Scripts/Features/Other/SettingsMenu.v5.js
 // @require https://github.com/revilheart/ESGST/raw/master/Scripts/Features/General/FixedHeader.v6.0.0.js
