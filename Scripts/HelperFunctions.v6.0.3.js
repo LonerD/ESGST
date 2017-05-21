@@ -128,7 +128,7 @@ function loadEsgst() {
     }
     var logoutButton = document.getElementsByClassName(esgst.sg ? "js__logout" : "js_logout")[0];
     if (logoutButton) {
-        esgst.xsrfToken = .getAttribute("data-form").match(/xsrf_token=(.+)/)[1];
+        esgst.xsrfToken = logoutButton.getAttribute("data-form").match(/xsrf_token=(.+)/)[1];
     }
     esgst.videoTypes = [
         {
