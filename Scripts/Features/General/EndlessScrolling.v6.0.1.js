@@ -50,7 +50,6 @@ function loadEndlessScrolling() {
         window.history.replaceState({}, null, mainSearchUrlBackup);
         document.title = mainTitleBackup;
         mainPaginationNavigationBackup = esgst.paginationNavigation.innerHTML;
-        document.addEventListener(`scroll`, loadNextPage);
         if (!reversePages) {
             document.addEventListener(`scroll`, restoreMainPaginationNavigation);
         }
@@ -68,7 +67,8 @@ function loadEndlessScrolling() {
         esRefreshButton.addEventListener(`click`, refreshPage);
         esPauseButton.addEventListener(`click`, pauseEndlessScrolling);
         setEsPaginationNavigation();
-        window.setTimeout(loadNextPage, 0);
+        document.addEventListener(`scroll`, loadNextPage);
+        loadNextPage();
     }
 
     function loadNextPage() {
@@ -135,16 +135,17 @@ function loadEndlessScrolling() {
             --nextPage;
             if (nextPage > 0) {
                 document.addEventListener(`scroll`, loadNextPage);
+                loadNextPage();
             }
         } else {
             ++nextPage;
             if (!paginationNavigation.lastElementChild.classList.contains(esgst.selectedClass)) {
                 document.addEventListener(`scroll`, loadNextPage);
+                loadNextPage();
             }
         }
         paginationNavigation.remove();
         document.addEventListener(`scroll`, changePaginationNavigation);
-        loadNextPage();
 
         function changePaginationNavigation() {
             var pageTop, pageBottom;

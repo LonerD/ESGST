@@ -1,4 +1,10 @@
 /*
+ * May 21, 2017 - v6.Beta.0.3
+ */
+
+* Fixed a bug in Endless Scrolling that was not stopping at the last page and continuously loading it.
+
+/*
  * May 21, 2017 - v6.Beta.0.2
  */
 
