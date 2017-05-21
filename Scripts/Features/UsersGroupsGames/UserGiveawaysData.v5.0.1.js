@@ -45,6 +45,12 @@ function addUGDButton(Context, Key, User) {
                         SentTimestamp: 0,
                         WonTimestamp: 0
                     };
+                } else if (!User.UGD.SentTimestamp) {
+                    User.UGD.Sent = {};
+                    User.UGD.SentTimestamp = 0;
+                } else if (!User.UGD.WonTimestamp) {
+                    User.UGD.Won = {};
+                    User.UGD.WonTimestamp = 0;
                 }
                 Match = window.location.pathname.match(new RegExp("^\/user\/" + User.Username + ((UGD.Key == "Won") ? "/giveaways/won" : "")));
                 CurrentPage = window.location.href.match(/page=(\d+)/);
@@ -242,58 +248,59 @@ function getUGDGiveaways(UGD, User, NextPage, CurrentPage, CurrentContext, URL, 
         Giveaways = Context.getElementsByClassName("giveaway__summary");
         for (I = 0, NumGiveaways = Giveaways.length; I < NumGiveaways; ++I) {
             Giveaway = Giveaways[I];
-            if (!Giveaway.getElementsByClassName(`giveaway__columns`)[0].innerHTML.match(/remaining|Begins/)) {
-                Data = {};
-                Heading = Giveaway.getElementsByClassName("giveaway__heading")[0];
-                SteamButton = Heading.querySelector("[href*='store.steampowered.com']");
-                if (SteamButton) {
-                    Match = Heading.getElementsByClassName("giveaway__heading__name")[0];
-                    Data.Code = Match.getAttribute("href");
-                    Data.Code = Data.Code ? Data.Code.match(/\/giveaway\/(.+?)\//)[1] : "";
-                    Data.Name = Match.textContent;
-                    Matches = Heading.getElementsByClassName("giveaway__heading__thin");
-                    if (Matches.length > 1) {
-                        Data.Copies = parseInt(Matches[0].textContent.replace(/,/, "").match(/\d+/)[0]);
-                        Data.Points = parseInt(Matches[1].textContent.replace(/,/, "").match(/\d+/)[0]);
-                    } else {
-                        Data.Copies = 1;
-                        Data.Points = parseInt(Matches[0].textContent.replace(/,/, "").match(/\d+/)[0]);
-                    }
-                    Data.ID = parseInt(SteamButton.getAttribute("href").match(/\d+/)[0]);
-                    if (UGD.Key == "Won") {
-                        Data.Creator = Giveaway.getElementsByClassName("giveaway__username")[0].textContent;
-                    }
-                    Data.Level = Giveaway.getElementsByClassName("giveaway__column--contributor-level")[0];
-                    Data.Level = Data.Level ? parseInt(Data.Level.textContent.match(/\d+/)[0]) : 0;
-                    Data.Private = Giveaway.getElementsByClassName("giveaway__column--invite-only")[0];
-                    Data.Private = Data.Private ? true : false;
-                    Data.Group = Giveaway.getElementsByClassName("giveaway__column--group")[0];
-                    Data.Group = Data.Group ? true : false;
-                    Data.Whitelist = Giveaway.getElementsByClassName("giveaway__column--whitelist")[0];
-                    Data.Whitelist = Data.Whitelist ? true : false;
-                    Data.Region = Giveaway.getElementsByClassName("giveaway__column--region-restricted")[0];
-                    Data.Region = Data.Region ? true : false;
-                    Links = Giveaway.getElementsByClassName("giveaway__links")[0].children;
-                    for (J = 0, NumLinks = Links.length; J < NumLinks; ++J) {
-                        Text = Links[J].textContent;
-                        if (Text.match(/(entry|entries)/)) {
-                            Data.Entries = parseInt(Text.replace(/,/g, "").match(/\d+/)[0]);
-                        } else if (Text.match(/comment/)) {
-                            Data.Comments = parseInt(Text.replace(/,/g, "").match(/\d+/)[0]);
-                        }
-                    }
-                    var stored = User.UGD[UGD.Key][Data.ID];
-                    if (stored) {
-                        for (var i = 0, n = stored.length; (i < n) && (stored[i].Code != Data.Code); ++i);
-                        if (i < n) {
-                            Found = true;
-                            break;
+            Timestamp = parseInt(Giveaway.getElementsByClassName("giveaway__columns")[0].querySelector("[data-timestamp]").getAttribute("data-timestamp")) * 1000;
+            if (Timestamp < (new Date().getTime())) {
+                if (!UGD.Timestamp) {
+                    UGD.Timestamp = Timestamp;
+                }
+                if (Timestamp > User.UGD[UGD.Key + "Timestamp"]) {
+                    Data = {};
+                    Heading = Giveaway.getElementsByClassName("giveaway__heading")[0];
+                    SteamButton = Heading.querySelector("[href*='store.steampowered.com']");
+                    if (SteamButton) {
+                        Match = Heading.getElementsByClassName("giveaway__heading__name")[0];
+                        Data.Code = Match.getAttribute("href");
+                        Data.Code = Data.Code ? Data.Code.match(/\/giveaway\/(.+?)\//)[1] : "";
+                        Data.Name = Match.textContent;
+                        Matches = Heading.getElementsByClassName("giveaway__heading__thin");
+                        if (Matches.length > 1) {
+                            Data.Copies = parseInt(Matches[0].textContent.replace(/,/, "").match(/\d+/)[0]);
+                            Data.Points = parseInt(Matches[1].textContent.replace(/,/, "").match(/\d+/)[0]);
                         } else {
-                            User.UGD[UGD.Key][Data.ID].push(Data);
+                            Data.Copies = 1;
+                            Data.Points = parseInt(Matches[0].textContent.replace(/,/, "").match(/\d+/)[0]);
                         }
-                    } else {
-                        User.UGD[UGD.Key][Data.ID] = [Data];
+                        Data.ID = parseInt(SteamButton.getAttribute("href").match(/\d+/)[0]);
+                        if (UGD.Key == "Won") {
+                            Data.Creator = Giveaway.getElementsByClassName("giveaway__username")[0].textContent;
+                        }
+                        Data.Level = Giveaway.getElementsByClassName("giveaway__column--contributor-level")[0];
+                        Data.Level = Data.Level ? parseInt(Data.Level.textContent.match(/\d+/)[0]) : 0;
+                        Data.Private = Giveaway.getElementsByClassName("giveaway__column--invite-only")[0];
+                        Data.Private = Data.Private ? true : false;
+                        Data.Group = Giveaway.getElementsByClassName("giveaway__column--group")[0];
+                        Data.Group = Data.Group ? true : false;
+                        Data.Whitelist = Giveaway.getElementsByClassName("giveaway__column--whitelist")[0];
+                        Data.Whitelist = Data.Whitelist ? true : false;
+                        Data.Region = Giveaway.getElementsByClassName("giveaway__column--region-restricted")[0];
+                        Data.Region = Data.Region ? true : false;
+                        Links = Giveaway.getElementsByClassName("giveaway__links")[0].children;
+                        for (J = 0, NumLinks = Links.length; J < NumLinks; ++J) {
+                            Text = Links[J].textContent;
+                            if (Text.match(/(entry|entries)/)) {
+                                Data.Entries = parseInt(Text.replace(/,/g, "").match(/\d+/)[0]);
+                            } else if (Text.match(/comment/)) {
+                                Data.Comments = parseInt(Text.replace(/,/g, "").match(/\d+/)[0]);
+                            }
+                        }
+                        if (!User.UGD[UGD.Key][Data.ID]) {
+                            User.UGD[UGD.Key][Data.ID] = [];
+                        }
+                        User.UGD[UGD.Key][Data.ID].push(Data);
                     }
+                } else {
+                    Found = true;
+                    break;
                 }
             }
         }
@@ -301,6 +308,7 @@ function getUGDGiveaways(UGD, User, NextPage, CurrentPage, CurrentContext, URL, 
         if (!Found && Pagination && !Pagination.lastElementChild.classList.contains("is-selected")) {
             getUGDGiveaways(UGD, User, NextPage, CurrentPage, CurrentContext, URL, Callback);
         } else {
+            User.UGD[UGD.Key + "Timestamp"] = UGD.Timestamp;
             Callback();
         }
     } else if (!UGD.Canceled) {

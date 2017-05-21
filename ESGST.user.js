@@ -2,7 +2,7 @@
 // @name ESGST
 // @namespace ESGST
 // @description Enhances SteamGifts and SteamTrades by adding some cool features to them.
-// @version 6.Beta.0.0
+// @version 6.Beta.0.1
 // @author revilheart
 // @contributor Royalgamer06
 // @downloadURL https://github.com/revilheart/ESGST/raw/master/ESGST.user.js
@@ -23,7 +23,7 @@
 // @grant GM_getResourceText
 // @grant GM_getResourceURL
 // @grant GM_xmlhttpRequest
-// @require https://github.com/revilheart/ESGST/raw/master/Scripts/HelperFunctions.v6.0.0.js
+// @require https://github.com/revilheart/ESGST/raw/master/Scripts/HelperFunctions.v6.0.1.js
 // @require https://github.com/revilheart/ESGST/raw/master/Scripts/Features/Other/HeaderButton.v6.0.0.js
 // @require https://github.com/revilheart/ESGST/raw/master/Scripts/Features/Other/SettingsMenu.v5.js
 // @require https://github.com/revilheart/ESGST/raw/master/Scripts/Features/General/FixedHeader.v6.0.0.js
@@ -68,7 +68,7 @@
 // @require https://github.com/revilheart/ESGST/raw/master/Scripts/Features/UsersGroupsGames/UsernameHistory.v5.js
 // @require https://github.com/revilheart/ESGST/raw/master/Scripts/Features/UsersGroupsGames/UserNotes.v5.js
 // @require https://github.com/revilheart/ESGST/raw/master/Scripts/Features/UsersGroupsGames/RealWonSentCVLinks.v5.js
-// @require https://github.com/revilheart/ESGST/raw/master/Scripts/Features/UsersGroupsGames/UserGiveawaysData.v5.js
+// @require https://github.com/revilheart/ESGST/raw/master/Scripts/Features/UsersGroupsGames/UserGiveawaysData.v5.0.1.js
 // @require https://github.com/revilheart/ESGST/raw/master/Scripts/Features/UsersGroupsGames/NotActivatedMultipleWinsChecker.v5.js
 // @require https://github.com/revilheart/ESGST/raw/master/Scripts/Features/UsersGroupsGames/NotReceivedFinder.v5.js
 // @require https://github.com/revilheart/ESGST/raw/master/Scripts/Features/UsersGroupsGames/SentWonRatio.v5.js

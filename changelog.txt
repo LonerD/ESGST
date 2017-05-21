@@ -1,4 +1,11 @@
 /*
+ * May 21, 2017 - v6.Beta.0.1
+ */
+
+* Fixed a bug in User Giveaways Data that was not returning complete results.
+* Fixed a bug that was running Accurate Timestamps even if it was disabled.
+
+/*
  * May 20, 2017 - v6.Beta.0.0
  */
 

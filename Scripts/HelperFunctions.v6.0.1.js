@@ -348,7 +348,7 @@ function loadEsgst() {
                     check: getValue(`at_g`)
                 }
             ],
-            check: getValue(`at`) && (esgst.giveawaysPath && esgst.at_g) || !esgst.giveawaysPath,
+            check: getValue(`at`) && ((esgst.giveawaysPath && esgst.at_g) || !esgst.giveawaysPath),
             load: loadAccurateTimestamps,
             endless: true
         },
