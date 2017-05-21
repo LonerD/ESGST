@@ -1,0 +1,43 @@
+/*
+ * May 20, 2017 - v6.Beta.0.0
+ */
+
+* Created an icon for the script.
+* Separated all features into different files.
+* Fixed some typos in the README file (closes #94).
+* Created new icons for Header Icons Refresher and added support for SteamTrades.
+* Fixed a bug in Comment Tracker that was not marking some discussions as visited from the main page (closes #95).
+* The URL field for link and image in Comment Formatting Helper is now automatically focused upon opening and you can now select a part of the text to use as Title.
+* Fixed a bug in User Giveaways Data that was not updating the data correctly for users with ongoing giveaways (closes #68).
+
+Renamed the following features:
+
+* Blacklist Stats Hider -> Hidden Blacklist Stats;
+* Featured Container Hider -> Hidden Featured Container;
+* Giveaway Description/Comment Box Popup -> Giveaway Description/Reply Box Popup;
+* Main Comment Box Popup -> Reply Box Popup;
+* Permanent User Notes -> User Notes;
+* Permanent User Tags -> User Tags;
+* Entered Games Highlighter -> Games Highlighter.
+
+Upgraded the following features to v6:
+
+* Fixed Elements
+1. Separated the feature into individual features (Fixed Header, Fixed Sidebar, Fixed Main Page Heading and Fixed Footer).
+2. Fixed Main Page Heading works much more smoother, especially in small pages.
+* Visible Attached Images;
+* Accurate Timestamps
+1. Changed the timestamp format to match SteamGifts' format.
+* Endless Scrolling
+1. Fixed several bugs (closes #50) and made several improvements.
+2. Reverse scrolling now loads the last page first.
+* Hidden Featured Container
+* Active Discussions On Top
+1. The ad is no longer brought to the top.
+
+Added the following features:
+
+* Header Menu
+* Embedded Videos (partial solution to #89)
+* Pagination Navigation On Top
+* Reply Box On Top

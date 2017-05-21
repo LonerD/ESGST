@@ -43,9 +43,9 @@ Tested on Microsoft Edge and most of it seems to work fine, but for some reason 
 * [Enter / Leave Giveaway Button](#enter--leave-giveaway-button)
 * [Giveaway Description / Comment Box Popup](#giveaway-description--comment-box-popup)
 * [Giveaway Winning Chance](#giveaway-winning-chance)
-* [Giveaway Groups Popout](#giveaway-groups-popout)
+* [Giveaway Groups Popup](#giveaway-groups-popup)
 * [Giveaway Winners Link](#giveaway-winners-link)
-* [Giveaway Error Search Links)(#giveaway-error-search-links)
+* [Giveaway Error Search Links](#giveaway-error-search-links)
 * [Delivered Gifts Notifier](#delivered-gifts-notifier)
 * [Unsent Gifts Sender](#unsent-gifts-sender)
 * [Entries Remover](#entries-remover)
@@ -110,7 +110,7 @@ Tested on Microsoft Edge and most of it seems to work fine, but for some reason 
 * Allows you to manage `Whitelist / Blacklist Highlighter` and `Not Activated / Multiple Wins Checker` caches.
 * Allows you to sync your data and enable / disable the automatic sync.
 
-### Featured Container Hider
+### Hidden Featured Container
 
 `steamgifts.com/giveaways/*`
 
@@ -118,7 +118,7 @@ Tested on Microsoft Edge and most of it seems to work fine, but for some reason 
 
 * Hides the featured container in the giveaways pages.
 
-### Blacklist Stats Hider
+### Hidden Blacklist Stats
 
 `steamgifts.com/stats/personal/community`
 
@@ -126,7 +126,10 @@ Tested on Microsoft Edge and most of it seems to work fine, but for some reason 
 
 * Hides blacklist stats in the stats page.
 
-### Fixed Elements
+### Fixed Header
+### Fixed Sidebar
+### Fixed Main Page Heading
+### Fixed Footer
 
 `(steamgifts|steamtrades).com/*`
 
@@ -205,7 +208,7 @@ Tested on Microsoft Edge and most of it seems to work fine, but for some reason 
 * An user is added to the database when you click on the arrow next to their username.
 * You can view recent username changes from the settings menu.
 
-### Permanent User Notes
+### User Notes
 
 `(steamgifts|steamtrades).com/user/*`
 
@@ -218,7 +221,7 @@ Tested on Microsoft Edge and most of it seems to work fine, but for some reason 
 
 ![](http://i.imgur.com/PYm3Ds7.png)
 
-### Permanent User Tags
+### User Tags
 
 `(steamgifts|steamtrades).com/*`
 
@@ -240,7 +243,7 @@ Tested on Microsoft Edge and most of it seems to work fine, but for some reason 
 * Allows you to tag multiple users / games at the same time.
 * It goes without saying that this feature only works if either Permanent User Notes or Game Tags are enabled.
 
-### Whitelist / Blacklist Highlighter
+### Whitelist/Blacklist Highlighter
 
 `(steamgifts|steamtrades).com/*`
 
@@ -250,7 +253,7 @@ Tested on Microsoft Edge and most of it seems to work fine, but for some reason 
 * Adds a heart or ban icon next to the username of all users from your whitelist / blacklist.
 * The users must be scanned through the settings menu for the feature to work. You can scan them manually or enable the automatic scan to run every once in a while.
 
-### Whitelist / Blacklist Checker
+### Whitelist/Blacklist Checker
 
 `steamgifts.com/*`
 
@@ -266,7 +269,7 @@ Tested on Microsoft Edge and most of it seems to work fine, but for some reason 
 ![](http://i.imgur.com/yPoDrnm.png)
 ![](http://i.imgur.com/BRLSAXD.png)
 
-### Real Won / Sent CV Links
+### Real Won/Sent CV Links
 
 `steamgifts.com/user/*`
 
@@ -276,7 +279,7 @@ Tested on Microsoft Edge and most of it seems to work fine, but for some reason 
 * Adds links to an user's SGTools real won / sent CV pages.
 * Has an option to automatically load the real CV and show it on the profile.
 
-### Sent / Won Ratio
+### Sent/Won Ratio
 
 `steamgifts.com/user/*`
 
@@ -284,7 +287,7 @@ Tested on Microsoft Edge and most of it seems to work fine, but for some reason 
 
 * Shows the sent / won ratio of an user.
 
-### Not Activated / Multiple Wins Checker
+### Not Activated/Multiple Wins Checker
 
 `steamgifts.com/(user|giveaway/.../winners)/*`
 
@@ -433,7 +436,7 @@ Tested on Microsoft Edge and most of it seems to work fine, but for some reason 
 
 * Shows all attached images by default.
 
-### Entered Games Highlighter
+### Games Highlighter
 
 `steamgifts.com/*`
 
@@ -441,13 +444,14 @@ Tested on Microsoft Edge and most of it seems to work fine, but for some reason 
 
 * Highlights games you have already entered giveaways for.
 
+### Giveaway Panel
 ### Entered Giveaways Filter
 
 `steamgifts.com/*`
 
 * Hides entered giveaways.
 
-### Enter / Leave Giveaway Button
+### Enter/Leave Giveaway Button
 
 `steamgifts.com/(giveaways|user|group)/*`
 
@@ -455,7 +459,7 @@ Tested on Microsoft Edge and most of it seems to work fine, but for some reason 
 
 * Allows you to enter / leave giveaways directly from the giveaways pages.
 
-### Giveaway Description / Comment Box Popup
+### Giveaway Description/Reply Box Popup
 
 `steamgifts.com/(giveaways|user|group)/*`
 
@@ -488,7 +492,7 @@ Tested on Microsoft Edge and most of it seems to work fine, but for some reason 
 
 * Shows your status in groups from your groups page.
 
-### Giveaway Groups Popout
+### Giveaway Groups Popup
 
 `steamgifts.com/*`
 
@@ -532,7 +536,7 @@ Tested on Microsoft Edge and most of it seems to work fine, but for some reason 
 * Keeps track of discussion comments and shows how many comments are unread on the discussions page.
 * Allows you to go to the first unread comment of a discussion or mark all its comments as read directly from the discussions page.
 
-### Accurate Timestamp
+### Accurate Timestamps
 
 `(steamgifts|steamtrades).com/*`
 
@@ -549,7 +553,7 @@ Tested on Microsoft Edge and most of it seems to work fine, but for some reason 
 * Allows you to turn automatic links / images paste formatting on / off.
 * You can disable any items of the panel through the settings menu, except for the automatic links / images paste formatting item.
 
-### Main Comment Box Popup
+### Reply Box Popup
 
 `(steamgifts|steamtrades).com/*`
 
@@ -623,6 +627,39 @@ Tested on Microsoft Edge and most of it seems to work fine, but for some reason 
 ![](http://i.imgur.com/bkUPFuV.png)
 
 * Allows you to search the archive by exact title / AppID.
+
+### Embedded Videos
+
+`steamgifts|steamtrades.com*`
+
+* Embeds YouTube and Vimeo videos into the page.
+* Videos are only embedded if the links are in the format [URL](URL) and the only content in a line.
+
+For example:
+
+[https://www.youtube.com/watch?v=cD1e0BNNifk](https://www.youtube.com/watch?v=cD1e0BNNifk)
+
+The video above gets embedded.
+
+[Orange Sphincter To The Rescue](https://www.youtube.com/watch?v=cD1e0BNNifk)
+
+The video above does not get embedded.
+
+I watched [https://www.youtube.com/watch?v=cD1e0BNNifk](https://www.youtube.com/watch?v=cD1e0BNNifk) and it was hilarious.
+
+The video above does not get embedded.
+
+### Pagination Navigation On Top
+
+`steamgifts|steamtrades.com*`
+
+* Moves the pagination navigation to the top of the page.
+
+### Reply Box On Top
+
+`steamgifts|steamtrades.com*`
+
+* Moves the reply box to the top of the page.
 
 ### Other Info
 

@@ -1,0 +1,100 @@
+.esgst-hidden {
+  display: none !important;
+}
+
+.fa img {
+    height: 14px;
+    width: 14px;
+    vertical-align: middle;
+}
+.nav__left-container .fa img {
+    vertical-align: baseline;
+}
+
+.esgst-checkbox {
+    cursor: pointer;
+}
+
+.esgst-adot, .esgst-rbot {
+  margin-bottom: 25px;
+}
+
+.esgst-rbot .reply_form .btn_cancel {
+  display: none;
+}
+
+.esgst-fh {
+  height: auto !important;
+  position: fixed;
+  top: 0;
+  width: 100%;
+  z-index: 999 !important;
+}
+
+.esgst-fs {
+  position: fixed;
+}
+
+.esgst-fmph {
+  position: fixed;
+  z-index: 998;
+}
+
+.esgst-fmph-background {
+  padding: 0;
+  position: fixed;
+  top: 0;
+  z-index: 997;
+}
+
+.esgst-ff {
+  background-color: inherit;
+  bottom: 0;
+  padding: 0;
+  position: fixed;
+  width: 100%;
+  z-index: 999;
+}
+
+.esgst-ff >* {
+  padding: 15px 25px;
+}
+
+.esgst-ags-panel {
+    margin: 0 0 15px 0;
+}
+
+.esgst-ags-filter {
+    display: flex;
+}
+
+.esgst-ags-filter >* {
+    display: inline-flex;
+    justify-content: space-between;
+    margin: 5px;
+    width: 150px;
+}
+
+.esgst-ags-panel input, .esgst-ags-panel select {
+    padding: 0 5px;
+    width: 50px;
+}
+
+.esgst-aas-button, .esgst-es-pause-button, .esgst-es-refresh-button {
+    cursor: pointer;
+    display: inline-block;
+}
+
+.esgst-es-page-heading {
+    margin-top: 25px;
+}
+
+.PGBContainer {
+    border-radius: 0 !important;
+    margin: 0! important;
+}
+
+.ERButton {
+    cursor: pointer;
+    display: inline-block;
+}
