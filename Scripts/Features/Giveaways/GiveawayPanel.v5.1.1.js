@@ -3,6 +3,9 @@ function loadGiveawayPanel(context) {
         if (esgst.gpGwc && esgst.enteredPath) {
             addGWCHeading();
         }
+        if (esgst.gpGwc && esgst.giveawayPath && !document.querySelector(".table.table--summary")) {
+            addGWCChance();
+        }
     }
     var className, callback;
     if (esgst.enteredPath && esgst.gpGwc) {
@@ -15,9 +18,6 @@ function loadGiveawayPanel(context) {
     var matches = context.getElementsByClassName(className);
     for (var i = 0, n = matches.length; i < n; ++i) {
         callback(matches[i]);
-    }
-    if (esgst.gpGwc && esgst.giveawayPath && !document.querySelector(".table.table--summary")) {
-        addGWCChance();
     }
 }
 

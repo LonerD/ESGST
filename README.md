@@ -57,7 +57,7 @@ Tested on Microsoft Edge and most of it seems to work fine, but for some reason 
 * [Main Post Popup](#main-post-popup)
 * [Discussion Edit Detector](#discussion-edit-detector)
 
-## Comments / Commenting
+## Commenting
 
 * [Comment History](#comment-history)
 * [Comment Tracker](#comment-tracker)
@@ -67,7 +67,7 @@ Tested on Microsoft Edge and most of it seems to work fine, but for some reason 
 * [Reply From Inbox](#reply-from-inbox)
 * [Reply Mention Link](#reply-mention-link)
 
-## Users
+## Users, Groups & Games
 
 * [Username History](#username-history)
 * [Permanent User Notes](#permanent-user-notes)
@@ -84,6 +84,7 @@ Tested on Microsoft Edge and most of it seems to work fine, but for some reason 
 * [User Giveaways Data](#user-giveaways-data)
 * [Inbox Winners Highlighter](#inbox-winners-highlighter)
 * [Avatar Popout](#avatar-popout)
+# [Game Categories](#game-categories)
 
 ## Games
 
@@ -100,6 +101,17 @@ Tested on Microsoft Edge and most of it seems to work fine, but for some reason 
 * [Archive Searcher](#archive-searcher)
 
 * [Other Info](#other-info)
+
+### Game Categories
+
+`steamgifts.com/*`
+
+* Displays categories for games. Categories so far: bundled.
+* The bundle list must be synced through the settings menu for the bundled category to work.
+
+![](http://i.imgur.com/DmYIM2V.png)
+![](http://i.imgur.com/70Gyhxu.png)
+![](http://i.imgur.com/jsL0aVB.png)
 
 ### Settings Menu
 

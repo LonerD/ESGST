@@ -252,6 +252,7 @@ function loadEsgst() {
         gs: `GS`,
         ggh: `EGH`,
         ggt: `GT`,
+        gc: `gc`,
         mt: `MT`
     };
     esgst.defaultValues = {
@@ -268,6 +269,7 @@ function loadEsgst() {
         LastRequest: 0,
         LastSave: 0,
         LastSync: 0,
+        LastBundleSync: 0,
         SyncFrequency: 7,
         Comments: {},
         Comments_ST: {},
@@ -863,6 +865,12 @@ function loadEsgst() {
             check: getValue(`ggt`) && esgst.sg,
             load: loadGameTags,
             endless: true
+        },
+        {
+            id: `gc`,
+            name: `Game Categories`,
+            check: getValue(`gc`) && esgst.sg,
+            load: loadGameCategories
         },
         {
             id: `mt`,
@@ -2400,4 +2408,76 @@ function updateGroups() {
         });
         Popup.popUp();
     }
+}
+
+function syncBundleList() {
+    var popup = createPopup();
+    popup.Icon.classList.add("fa-refresh");
+    popup.Title.textContent = "Syncing...";
+    var sync = {};
+    createButton(popup.Button, "fa-times-circle", "Cancel", "", "", function() {
+        sync.Canceled = true;
+        popup.Close.click();
+    }, null, true);
+    sync.Progress = popup.Progress;
+    sync.OverallProgress = popup.OverallProgress;
+    popup.popUp().reposition();
+    sync.games = GM_getValue(`Games`);
+    syncBundles(sync, `/bundle-games/search?page=`, 1, function() {
+        queueSave(sync, function() {
+            updateGames(sync.games);
+            GM_setValue(`LastSave`, 0);
+            popup.Icon.classList.remove("fa-refresh");
+            popup.Icon.classList.add("fa-check");
+            popup.Title.textContent = "Synced!";
+            popup.Button.innerHTML = "";
+            sync.Progress.innerHTML = sync.OverallProgress.innerHTML = "";
+            popup.Close.click();
+            GM_setValue("LastBundleSync", new Date().getTime());
+        });
+    });
+}
+
+function syncBundles(sync, url, nextPage, callback, context) {
+    if (context) {
+        var matches = context.getElementsByClassName(`table__column__secondary-link`);
+        for (var i = 0, n = matches.length; i < n; ++i) {
+            var id = matches[i].textContent.match(/\d+/)[0];
+            if (sync.games[id]) {
+                sync.games[id].bundled = true;
+            } else {
+                sync.games[id] = {
+                    bundled: true
+                };
+            }
+        }
+        var paginationNavigation = context.getElementsByClassName(`pagination__navigation`)[0];
+        if (paginationNavigation && !paginationNavigation.lastElementChild.classList.contains(`is-selected`)) {
+            window.setTimeout(syncBundles, 0, sync, url, nextPage, callback);
+        } else {
+            callback();
+        }
+    } else {
+        sync.Progress.innerHTML = `
+            <i class="fa fa-circle-o-notch fa-spin"></i>
+            <span>Syncing bundles (page ${nextPage})...</span>
+        `;
+        queueRequest(sync, null, `${url}${nextPage}`, function(response) {
+            window.setTimeout(syncBundles, 0, sync, url, ++nextPage, callback, parseHTML(response.responseText));
+        });
+    }
+}
+
+function updateGames(games) {
+    var saved = GM_getValue(`Games`);
+    for (var key in games) {
+        if (saved[key]) {
+            for (var subKey in games[key]) {
+                saved[key][subKey] = games[key][subKey];
+            }
+        } else {
+            saved[key] = games[key];
+        }
+    }
+    GM_setValue(`Games`, saved);
 }

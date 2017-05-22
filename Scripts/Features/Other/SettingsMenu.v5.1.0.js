@@ -81,6 +81,21 @@ function loadSMMenu(Sidebar, SMButton) {
                 "    </div>" +
                 "</div>"
             )
+        },
+        {
+            Title: "Sync Bundle List",
+            HTML: (
+                "<div class=\"form__sync\">" +
+                "    <div class=\"form__sync-data\">" +
+                "        <div class=\"notification notification--warning SMLastBundleSync\">" +
+                "            <i class=\"fa fa-question-circle\"></i> Never synced." +
+                "        </div>" +
+                "    </div>" +
+                "    <div class=\"form__submit-button SMBundleSync\">" +
+                "        <i class=\"fa fa-refresh\"></i> Sync" +
+                "    </div>" +
+                "</div>"
+            )
         }, {
             Title: "Steam API Key",
             HTML: "<input class=\"SMAPIKey\" type=\"text\"/>" +
@@ -132,12 +147,13 @@ function loadSMMenu(Sidebar, SMButton) {
     SMManageTags = Container.getElementsByClassName("SMManageTags")[0];
     SMSyncFrequency = Container.getElementsByClassName("SMSyncFrequency")[0];
     SMLastSync = Container.getElementsByClassName("SMLastSync")[0];
+    SMLastBundleSync = Container.getElementsByClassName("SMLastBundleSync")[0];
     SMAPIKey = Container.getElementsByClassName("SMAPIKey")[0];
     SMGeneralFeatures = ["fh", "fs", "fmph", "ff", "hir", "vai", "ev", "hbs", "at", "pnot", "es"];
     SMGiveawayFeatures = ["dgn", "pr", "hfc", "ags", "pgb", "gv", "egf", "gp", "ggp", "gt", "sgg", "ugs", "er", "gwl", "gesl", "as"];
     SMDiscussionFeatures = ["adot", "dh", "mpp", "ded"];
     SMCommentingFeatures = ["ch", "ct", "cfh", "rbot", "rbp", "mr", "rfi", "rml"];
-    SMUserGroupGamesFeatures = ["ap", "uh", "un", "rwscvl", "ugd", "namwc", "nrf", "swr", "luc", "sgpb", "stpb", "sgc", "wbc", "wbh", "ut", "iwh", "gh", "gs", "ggh", "ggt", "mt"];
+    SMUserGroupGamesFeatures = ["ap", "uh", "un", "rwscvl", "ugd", "namwc", "nrf", "swr", "luc", "sgpb", "stpb", "sgc", "wbc", "wbh", "ut", "iwh", "gh", "gs", "ggh", "ggt", "gc", "mt"];
     SMOtherFeatures = ["sm_ebd", "sm_hb"];
     for (var i = 0, n = esgst.features.length; i < n; ++i) {
         var id = esgst.features[i].id;
@@ -167,6 +183,19 @@ function loadSMMenu(Sidebar, SMButton) {
         SMLastSync.classList.add("notification--success");
         SMLastSync.innerHTML =
             "<i class=\"fa fa-check-circle\"></i> Last synced " + CurrentDate.toLocaleString() + ".";
+    });
+    LastBundleSync = GM_getValue("LastBundleSync");
+    if (LastBundleSync) {
+        SMLastBundleSync.classList.remove("notification--warning");
+        SMLastBundleSync.classList.add("notification--success");
+        SMLastBundleSync.innerHTML = "<i class=\"fa fa-check-circle\"></i> Last synced " + (new Date(LastBundleSync).toLocaleString()) + ".";
+    }
+    document.getElementsByClassName("SMBundleSync")[0].addEventListener("click", function() {
+        if (((new Date().getTime()) - LastBundleSync) > 604800000) {
+            syncBundleList();
+        } else {
+            window.alert(`You synced the bundle list in less than a week ago. You can sync only once per week.`);
+        }
     });
     if (GM_getValue("SteamAPIKey")) {
         SMAPIKey.value = GM_getValue("SteamAPIKey");

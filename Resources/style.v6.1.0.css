@@ -89,6 +89,14 @@
     margin-top: 25px;
 }
 
+.esgst-gc-bundled {
+    display: inline-block;
+    margin: 0;
+    margin-bottom: 5px;
+    position: static;
+    text-shadow: none;
+}
+
 .PGBContainer {
     border-radius: 0 !important;
     margin: 0! important;
