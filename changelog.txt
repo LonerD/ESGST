@@ -1,8 +1,14 @@
 /*
+ * May 21, 2017 - v6.Beta.1.1
+ */
+
+* Fixed a the resource link to the style file.
+
+/*
  * May 21, 2017 - v6.Beta.1.0
  */
 
-* Fixed a bug in Giveaway Winning Chance that was loading it every time a new page was load through Endless Scrolling in the giveaway comment pages.
+* Fixed a bug in Giveaway Winning Chance that was loading it every time a new page was loaded through Endless Scrolling in the giveaway comment pages.
 
 Added the following features:
 

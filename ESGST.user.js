@@ -2,7 +2,7 @@
 // @name ESGST
 // @namespace ESGST
 // @description Enhances SteamGifts and SteamTrades by adding some cool features to them.
-// @version 6.Beta.1.0
+// @version 6.Beta.1.1
 // @author revilheart
 // @contributor Royalgamer06
 // @downloadURL https://github.com/revilheart/ESGST/raw/master/ESGST.user.js
@@ -86,7 +86,7 @@
 // @require https://github.com/revilheart/ESGST/raw/master/Scripts/Features/UsersGroupsGames/GameTags.v5.js
 // @require https://github.com/revilheart/ESGST/raw/master/Scripts/Features/UsersGroupsGames/GameCategories.v6.0.0.js
 // @require https://github.com/revilheart/ESGST/raw/master/Scripts/Features/UsersGroupsGames/MultiTag.v5.js
-// @resource style https://github.com/revilheart/ESGST/raw/master/Resources/style.v6.0.0.css
+// @resource style https://github.com/revilheart/ESGST/raw/master/Resources/style.v6.1.0.css
 // @resource esgstIcon https://github.com/revilheart/ESGST/raw/master/Resources/esgstIcon.ico
 // @resource sgIcon https://cdn.steamgifts.com/img/favicon.ico
 // @resource stIcon https://cdn.steamtrades.com/img/favicon.ico
