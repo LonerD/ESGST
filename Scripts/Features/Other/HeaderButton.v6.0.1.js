@@ -12,7 +12,7 @@ function loadHeaderButton() {
                             ` : ``}
                         </div>
                     </a>
-                    <a class="nav__row dropdown_btn" href="https://github.com/revilheart/ESGST" target="_blank">
+                    <a class="nav__row dropdown_btn" href="https://github.com/revilheart/ESGST">
                         <i class="icon-grey grey fa fa-fw fa-github"></i>
                         <div class="nav__row__summary">
                             <p class="nav__row__summary__name">GitHub</p>
@@ -21,7 +21,7 @@ function loadHeaderButton() {
                             ` : ``}
                         </div>
                     </a>
-                    <a class="nav__row dropdown_btn" href="https://www.steamgifts.com/discussion/TDyzv/" target="_blank">
+                    <a class="nav__row dropdown_btn" href="https://www.steamgifts.com/discussion/TDyzv/">
                         <i class="icon-green green fa fa-fw fa-commenting"></i>
                         <div class="nav__row__summary">
                             <p class="nav__row__summary__name">Discussion</p>
@@ -54,7 +54,7 @@ function loadHeaderButton() {
                     ` : ``}
                 </div>
             </div>
-            <a class="nav__button nav__button--is-dropdown nav_btn nav_btn_left" href="https://www.steamgifts.com/account#ESGST"  target="_blank">
+            <a class="nav__button nav__button--is-dropdown nav_btn nav_btn_left" href="https://www.steamgifts.com/account#ESGST">
                 <i class="fa"><img src="${GM_getResourceURL(`esgstIcon`)}"/></i>
                 <span>ESGST</span>
             </a>

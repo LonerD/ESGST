@@ -150,8 +150,9 @@ function addCFHPanel(Context) {
             ID: "cfh_t",
             Name: "Table",
             Icon: "fa-table",
-            setPopout: function(Popout) {
+            setPopup: function(Popup) {
                 var Table, InsertRow, InsertColumn;
+                Popout = Popup.Description;
                 Popout.innerHTML =
                     "<table></table>" +
                     "<div class=\"form__saving-button btn_action white\">Insert Row</div>" +
@@ -193,6 +194,7 @@ function addCFHPanel(Context) {
                         CFH.TextArea.value = CFH.TextArea.value.slice(0, Start) + Value + CFH.TextArea.value.slice(End);
                         CFH.TextArea.setSelectionRange(End + Value.length, End + Value.length);
                         CFH.TextArea.focus();
+                        Popup.Close.click();
                     }
                 });
             }
@@ -7660,6 +7662,14 @@ function addCFHItem(Item, CFH) {
                 } else {
                     Popout.Popout.classList.add("rhHidden");
                 }
+            });
+        } else if (Item.setPopup) {
+            var popup = createPopup();
+            popup.Icon.classList.add(`fa-table`);
+            popup.Title.textContent = `Add a table:`;
+            Item.setPopup(popup);
+            Button.addEventListener("click", function() {
+                popup.popUp();
             });
         } else {
             if (Item.Callback) {

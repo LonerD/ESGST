@@ -1,4 +1,15 @@
 /*
+ * May 22, 2017 - v6.Beta.2.1
+ */
+
+* The links from the header button now open in the same page instead of in a new window (closes #102).
+* Changed the table creation in Comment Formatting Helper from a popout to a popup (closes #70).
+* Increased the Game Categories cache to 1 month, as it was previously 24 hours for testing purposes.
+* Prevented the bundle tags in Game Categories to be displayed if the user has not synced yet.
+* Fixed a bug in Game Categories that was displaying "Not Bundled" tags even if the bundled category was disabled (closes #100).
+* Fixed a bug in Game Categories that was happening while creating a giveaway (closes #98).
+
+/*
  * May 22, 2017 - v6.Beta.2.0
  */
 

@@ -1,35 +1,37 @@
 function loadGameCategories() {
     if (esgst.newGiveawayPath) {
-        if (esgst.gc_b) {
+        if (esgst.gc_b && GM_getValue(`LastBundleSync`)) {
             var table = document.getElementsByClassName(`js__autocomplete-data`)[0];
-            var backup = table.innerHTML;
-            var games = GM_getValue(`Games`);
-            window.setInterval(function() {
-                if (table.innerHTML && (backup != table.innerHTML)) {
-                    var matches = table.getElementsByClassName(`table__column__secondary-link`);
-                    for (var i = 0, n = matches.length; i < n; ++i) {
-                        var id = matches[i].getAttribute(`href`).match(/\d+/)[0];
-                        if (!games[id]) {
-                            games[id] = {};
-                        }
-                        if ((esgst.gc_b_r && !games[id].bundled) || (!esgst.gc_b_r && games[id].bundled)) {
-                            var key, text;
-                            if (games[id].bundled) {
-                                text = `Bundled`;
-                            } else {
-                                text = `Not Bundled`;
+            if (table) {
+                var backup = table.innerHTML;
+                var games = GM_getValue(`Games`);
+                window.setInterval(function() {
+                    if (table.innerHTML && (backup != table.innerHTML)) {
+                        var matches = table.getElementsByClassName(`table__column__secondary-link`);
+                        for (var i = 0, n = matches.length; i < n; ++i) {
+                            var id = matches[i].getAttribute(`href`).match(/\d+/)[0];
+                            if (!games[id]) {
+                                games[id] = {};
                             }
-                            if (!matches[i].parentElement.getElementsByClassName(`esgst-gc bundled`)[0]) {
-                                var html = `
-                                    <div class="nav__notification esgst-gc bundled">${text}</div>
-                                `;
-                                matches[i].insertAdjacentHTML(`afterEnd`, html);
+                            if ((esgst.gc_b_r && !games[id].bundled) || (!esgst.gc_b_r && games[id].bundled)) {
+                                var key, text;
+                                if (games[id].bundled) {
+                                    text = `Bundled`;
+                                } else {
+                                    text = `Not Bundled`;
+                                }
+                                if (!matches[i].parentElement.getElementsByClassName(`esgst-gc bundled`)[0]) {
+                                    var html = `
+                                        <div class="nav__notification esgst-gc bundled">${text}</div>
+                                    `;
+                                    matches[i].insertAdjacentHTML(`afterEnd`, html);
+                                }
                             }
                         }
+                        backup = table.innerHTML;
                     }
-                    backup = table.innerHTML;
-                }
-            }, 500);
+                }, 500);
+            }
         }
     } else {
         esgst.endlessFeatures.push(setGameCategories);
@@ -79,7 +81,7 @@ function addGameCategories(i, n, matches, games) {
 }
 
 function addGameCategory(context, games, id, callback) {
-    if ((typeof games[id].lastCheck == `undefined`) || (((new Date().getTime()) - games[id].lastCheck) > 8640000)) {
+    if ((typeof games[id].lastCheck == `undefined`) || (((new Date().getTime()) - games[id].lastCheck) > 2628000000)) {
         makeRequest(null, `http://store.steampowered.com/api/appdetails?appids=${id}`, null, function(response) {
             var responseJson = parseJSON(response.responseText);
             if (responseJson[id].success) {
@@ -172,7 +174,7 @@ function addGameCategory(context, games, id, callback) {
             if (esgst[category.id] && ((category.id == `gc_b` && esgst.newGiveawayPath) || !esgst.newGiveawayPath) &&
                 ((category.id == `gc_b` && !esgst.gc_b_r) || (category.id != `gc_b`))) {
                 var value = games[id][category.key];
-                if ((value && category.id != `gc_b_r`) || (!value && category.id == `gc_b_r`)) {
+                if ((value && category.id != `gc_b_r`) || (!value && category.id == `gc_b_r` && esgst.gc_b)) {
                     if (!context.parentElement.getElementsByClassName(`esgst-gc-${category.key}`)[0]) {
                         var text;
                         if (category.key == `genres`) {
