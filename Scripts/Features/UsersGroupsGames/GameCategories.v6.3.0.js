@@ -121,6 +121,11 @@ function addGameCategory(context, games, id, callback) {
                 name: `Not Bundled`
             },
             {
+                id: `gc_w`,
+                key: `wishlist`,
+                name: `Wishlist`
+            },
+            {
                 id: `gc_tc`,
                 key: `tradingCards`,
                 name: `Trading Cards`

@@ -68,7 +68,7 @@ function loadSMMenu(Sidebar, SMButton) {
             Title: "Others",
             Name: "SMOthers"
         }, {
-            Title: "Sync Groups / Whitelist / Blacklist / Owned Games",
+            Title: "Sync Groups / Whitelist / Blacklist / Owned Games / Wishlist",
             HTML: SMSyncFrequency + createDescription("Select from how many days to how many days you want the automatic sync to run (0 to disable it).") + (
                 "<div class=\"form__sync\">" +
                 "    <div class=\"form__sync-data\">" +

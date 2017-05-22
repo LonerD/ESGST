@@ -255,6 +255,7 @@ function loadEsgst() {
         gc: `gc`,
         gc_b: `gc`,
         gc_b_r: `gc_b_r`,
+        gc_w: `gc_w`,
         gc_tc: `gc_tc`,
         gc_a: `gc_a`,
         gc_mp: `gc_mp`,
@@ -270,6 +271,7 @@ function loadEsgst() {
         sm_ebd: true,
         gp: true,
         gc_b_color: `#ffffff`,
+        gc_w_color: `#ffffff`,
         gc_tc_color: `#ffffff`,
         gc_a_color: `#ffffff`,
         gc_mp_color: `#ffffff`,
@@ -279,6 +281,7 @@ function loadEsgst() {
         gc_dlc_color: `#ffffff`,
         gc_g_color: `#ffffff`,
         gc_b_bgColor: `#7b241c`,
+        gc_w_bgColor: `#f39c12`,
         gc_tc_bgColor: `#1a5276`,
         gc_a_bgColor: `#117864`,
         gc_mp_bgColor: `#212f3c`,
@@ -911,6 +914,11 @@ function loadEsgst() {
                     check: getValue(`gc_b`)
                 },
                 {
+                    id: `gc_w`,
+                    name: `Wishlist`,
+                    check: getValue(`gc_w`)
+                },
+                {
                     id: `gc_tc`,
                     name: `Trading Cards`,
                     check: getValue(`gc_tc`)
@@ -1460,10 +1468,12 @@ function continueSync(Sync, Callback) {
         GM_setValue("Groups", Sync.Groups);
         syncWhitelistBlacklist(Sync, function() {
             syncOwnedGames(Sync, function() {
-                var CurrentDate;
-                CurrentDate = new Date();
-                GM_setValue("LastSync", CurrentDate.getTime());
-                Callback(CurrentDate);
+                syncWishlist(Sync, function() {
+                    var CurrentDate;
+                    CurrentDate = new Date();
+                    GM_setValue("LastSync", CurrentDate.getTime());
+                    Callback(CurrentDate);
+                });
             });
         });
     });
@@ -1586,6 +1596,32 @@ function getWhitelistBlacklistUsers(Sync, I, N, Matches, Key, Callback) {
     }
 }
 
+function syncWishlist(Sync, Callback) {
+    var games = GM_getValue(`Games`);
+    for (key in games) {
+        delete games[key].wishlist;
+    }
+    Sync.OverallProgress.innerHTML =
+        "<i class=\"fa fa-circle-o-notch fa-spin\"></i> " +
+        "<span>Syncing your wishlist...</span>";
+    makeRequest(null, `http://steamcommunity.com/profiles/${GM_getValue(`SteamID64`)}/wishlist`, Sync.Progress, function(Response) {
+        var responseHtml = parseHTML(Response.responseText);
+        var matches = responseHtml.querySelectorAll(`input[name="appid"]`);
+        for (var i = 0, n = matches.length; i < n; ++i) {
+            var id = matches[i].value;
+            if (!games[id]) {
+                games[id] = {};
+            }
+            games[id].wishlist = true;
+        }
+        queueSave(Sync.Progress, function() {
+            updateGames(games);
+            GM_setValue(`LastSave`, 0);
+            Callback();
+        });
+    });
+}
+
 function syncOwnedGames(Sync, Callback) {
     var SteamAPIKey, URL;
     Sync.OverallProgress.innerHTML =
@@ -1705,10 +1741,14 @@ function createPopup(Temp) {
     Popup.Close = Popup.Popup.getElementsByClassName("rhPopupClose")[0];
     if (esgst.st) {
         Popup.Popup.classList.remove(`popup`);
+        Popup.Popup.classList.add(`esgst-hidden`);
     }
     var popup;
     Popup.popUp = function(Callback) {
-        Popup.Popup.classList.add(`popup`);
+        if (esgst.st) {
+            Popup.Popup.classList.add(`popup`);
+            Popup.Popup.classList.remove(`esgst-hidden`);
+        }
         popup = $(Popup.Popup).bPopup({
             amsl: [0],
             fadeSpeed: 200,
@@ -1716,7 +1756,10 @@ function createPopup(Temp) {
             modalColor: "#3c424d",
             opacity: 0.85,
             onClose: function() {
-                Popup.Popup.classList.remove(`popup`);
+                if (esgst.st) {
+                    Popup.Popup.classList.remove(`popup`);
+                    Popup.Popup.classList.add(`esgst-hidden`);
+                }
                 if (Temp) {
                     Popup.Popup.remove();
                 }
@@ -1973,6 +2016,10 @@ function addStyles() {
         {
             id: `gc_b_r`,
             key: `bundled`
+        },
+        {
+            id: `gc_w`,
+            key: `wishlist`
         },
         {
             id: `gc_tc`,
@@ -2615,4 +2662,26 @@ function updateGames(games) {
         }
     }
     GM_setValue(`Games`, saved);
+}
+
+function formatDate(EntryDate) {
+    var Months, Hours, Minutes, OutputDate, Suffix;
+    Months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    Hours = EntryDate.getHours();
+    Minutes = EntryDate.getMinutes();
+    Minutes = (Minutes > 9) ? Minutes : ("0" + Minutes);
+    OutputDate = Months[EntryDate.getMonth()] + " " + EntryDate.getDate() + ", " + EntryDate.getFullYear() + " ";
+    if (Hours >= 12) {
+        if (Hours > 12) {
+            Hours -= 12;
+        }
+        Suffix = "pm";
+    } else {
+        if (Hours === 0) {
+            Hours = 12;
+        }
+        Suffix = "am";
+    }
+    OutputDate += Hours + ":" + Minutes + " " + Suffix;
+    return OutputDate;
 }
