@@ -253,6 +253,15 @@ function loadEsgst() {
         ggh: `EGH`,
         ggt: `GT`,
         gc: `gc`,
+        gc_b: `gc`,
+        gc_tc: `gc_tc`,
+        gc_a: `gc_a`,
+        gc_mp: `gc_mp`,
+        gc_sc: `gc_sc`,
+        gc_dlc: `gc_dlc`,
+        gc_l: `gc_l`,
+        gc_m: `gc_m`,
+        gc_g: `gc_g`,
         mt: `MT`
     };
     esgst.defaultValues = {
@@ -869,6 +878,53 @@ function loadEsgst() {
         {
             id: `gc`,
             name: `Game Categories`,
+            options: [
+                {
+                    id: `gc_b`,
+                    name: `Bundled`,
+                    check: getValue(`gc_b`)
+                },
+                {
+                    id: `gc_tc`,
+                    name: `Trading Cards`,
+                    check: getValue(`gc_tc`)
+                },
+                {
+                    id: `gc_a`,
+                    name: `Achivements`,
+                    check: getValue(`gc_a`)
+                },
+                {
+                    id: `gc_mp`,
+                    name: `Multiplayer`,
+                    check: getValue(`gc_mp`)
+                },
+                {
+                    id: `gc_sc`,
+                    name: `Steam Cloud`,
+                    check: getValue(`gc_sc`)
+                },
+                {
+                    id: `gc_l`,
+                    name: `Linux`,
+                    check: getValue(`gc_l`)
+                },
+                {
+                    id: `gc_m`,
+                    name: `Mac`,
+                    check: getValue(`gc_m`)
+                },
+                {
+                    id: `gc_dlc`,
+                    name: `DLC`,
+                    check: getValue(`gc_dlc`)
+                },
+                {
+                    id: `gc_g`,
+                    name: `Genres`,
+                    check: getValue(`gc_g`)
+                }
+            ],
             check: getValue(`gc`) && esgst.sg,
             load: loadGameCategories
         },
@@ -1123,9 +1179,11 @@ function queueSave(Element, Callback) {
         if ((CurrentDate - GM_getValue("LastSave")) > 5000) {
             clearInterval(Element.Save);
             GM_setValue("LastSave", CurrentDate);
-            Element.Progress.innerHTML = "";
+            if (Element.Progress) {
+                Element.Progress.innerHTML = "";
+            }
             Callback();
-        } else {
+        } else if (Element.Progress) {
             Element.Progress.innerHTML =
                 "<i class=\"fa fa-clock-o\"></i> " +
                 "<span>Waiting for a free save slot...</span>";

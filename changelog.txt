@@ -1,4 +1,10 @@
 /*
+ * May 21, 2017 - v6.Beta.1.2
+ */
+
+* Added more categories to Game Categories and added support for giveaway comment pages.
+
+/*
  * May 21, 2017 - v6.Beta.1.1
  */
 

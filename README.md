@@ -106,12 +106,13 @@ Tested on Microsoft Edge and most of it seems to work fine, but for some reason 
 
 `steamgifts.com/*`
 
-* Displays categories for games. Categories so far: bundled.
+* Displays categories for games. Categories so far: bundled, trading cards, achievements, multiplayer, Steam cloud, Linux, Mac, DLC and genres.
 * The bundle list must be synced through the settings menu for the bundled category to work.
 
 ![](http://i.imgur.com/DmYIM2V.png)
 ![](http://i.imgur.com/70Gyhxu.png)
 ![](http://i.imgur.com/jsL0aVB.png)
+![](http://i.imgur.com/zGeKiag.png)
 
 ### Settings Menu
 
