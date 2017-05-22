@@ -150,6 +150,7 @@ function loadEsgst() {
     esgst.APBoxes = {};
     esgst.users = {};
     esgst.games = {};
+    esgst.giveaways = [];
     esgst.oldValues = {
         sm_ebd: `SM_D`,
         fh: `FE_H`,
@@ -177,8 +178,8 @@ function loadEsgst() {
         hfc: `FCH`,
         ags: `AGS`,
         pgb: `PGB`,
+        gf: `gf`,
         gv: `GV`,
-        egf: `EGF`,
         gp: `gp`,
         gpGwc: `GWC`,
         gpGdrbp: `GDCBP`,
@@ -290,6 +291,24 @@ function loadEsgst() {
         gc_m_bgColor: `#935116`,
         gc_dlc_bgColor: `#63397a`,
         gc_g_bgColor: `#5f6a6a`,
+        gf_minLevel: 0,
+        gf_maxLevel: 10,
+        gf_minEntries: 0,
+        gf_maxEntries: 999999999,
+        gf_minCopies: 1,
+        gf_maxCopies: 999999999,
+        gf_minPoints: 0,
+        gf_maxPoints: 300,
+        gf_regionRestricted: true,
+        gf_entered: true,
+        gf_bundled: true,
+        gf_tradingCards: true,
+        gf_achievements: true,
+        gf_multiplayer: true,
+        gf_steamCloud: true,
+        gf_linux: true,
+        gf_mac: true,
+        gf_dlc: true,
         Avatar: "",
         Username: "",
         SteamID64: "",
@@ -439,17 +458,16 @@ function loadEsgst() {
             load: loadPinnedGiveawaysButton
         },
         {
+            id: `gf`,
+            name: `Giveaway Filters`,
+            check: getValue(`gf`) && esgst.giveawaysPath,
+            load: loadGiveawayFilters
+        },
+        {
             id: `gv`,
             name: `Grid View`,
             check: getValue(`gv`) && esgst.giveawaysPath,
             load: loadGridView,
-            endless: true
-        },
-        {
-            id: `egf`,
-            name: `Entered Giveaways Filter`,
-            check: getValue(`egf`) && esgst.giveawaysPath,
-            load: loadEnteredGiveawaysFilter,
             endless: true
         },
         {
@@ -1024,8 +1042,20 @@ function loadEsgst() {
         addSMButton();
     }
     getUsersGames(document);
+    fixFadedClass(document);
+    esgst.endlessFeatures.push(fixFadedClass);
     loadFeatures();
     goToComment(esgst.originalHash);
+}
+
+function fixFadedClass(context) {
+    var matches = context.getElementsByClassName(`giveaway__row-inner-wrap`);
+    for (var i = 0, n = matches.length; i < n; ++i) {
+        if (matches[i].classList.contains(`is-faded`)) {
+            matches[i].classList.remove(`is-faded`);
+            matches[i].classList.add(`esgst-faded`);
+        }
+    }
 }
 
 function getUsersGames(Context) {
@@ -1690,11 +1720,6 @@ function setHoverOpacity(Element, EnterOpacity, LeaveOpacity) {
     });
 }
 
-function setFadedGiveaway(Context) {
-    Context.classList.remove("is-faded");
-    Context.classList.add("rhFaded");
-}
-
 function createPopup(Temp) {
     var Popup;
     document.body.insertAdjacentHTML(
@@ -2095,7 +2120,7 @@ function addStyles() {
         ".rhBusy >*, .CFHALIPF {" +
         "    opacity: 0.2;" +
         "}" +
-        ".rhFaded .giveaway__summary >:not(.GPPanel):not(.giveaway__columns), .rhFaded .giveaway__columns >:not(.GGPContainer), .rhFaded .global__image-outer-wrap--game-medium {" +
+        ".esgst-faded .giveaway__summary >:not(.GPPanel):not(.giveaway__columns), .esgst-faded .giveaway__columns >:not(.GGPContainer), .esgst-faded .global__image-outer-wrap--game-medium {" +
         "    opacity: 0.5;" +
         "}" +
         ".rhPopup {" +

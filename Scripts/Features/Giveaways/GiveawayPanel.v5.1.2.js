@@ -76,9 +76,7 @@ function addGPPanel(Context) {
                     document.getElementsByClassName("featured__heading__medium")[0].textContent : Context.getElementsByClassName("giveaway__username")[0].textContent;
                 GP.Points = document.getElementsByClassName("nav__points")[0];
                 if (esgst.gpElgb && !window.location.pathname.match(new RegExp("^\/user\/" + GM_getValue("Username")))) {
-                    if (Context.classList.contains("is-faded")) {
-                        Context.classList.remove("is-faded");
-                        Context.classList.add("rhFaded");
+                    if (Context.classList.contains("esgst-faded")) {
                         GP.ELGBButton.setAttribute("data-entered", true);
                         setELGBButton(GP, "fa-minus-circle", "Leave", "Leaving...", "entry_delete", Context, true);
                     } else {
@@ -111,7 +109,7 @@ function enterLeaveELGBGiveaway(GP, Icon, Name, Message, Type, Context, Yellow) 
         var ResponseJSON;
         ResponseJSON = parseJSON(Response.responseText);
         if (ResponseJSON.type == "success") {
-            Context.classList.toggle("rhFaded");
+            Context.classList.toggle("esgst-faded");
             GP.Entries.textContent = ResponseJSON.entry_count + " entries";
             GP.Points.textContent = ResponseJSON.points;
             setGWCChance(GP.GWCChance, GP.Entries, GP.Copies);

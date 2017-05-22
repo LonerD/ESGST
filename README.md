@@ -39,6 +39,7 @@ Tested on Microsoft Edge and most of it seems to work fine, but for some reason 
 * [Stickied Giveaway Groups](#stickied-giveaway-groups)
 * [Advanced Giveaway Search](#advanced-giveaway-search)
 * [Pinned Giveaways Button](#pinned-giveaways-button)
+* [Giveaway Filters](#giveaway-filters)
 * [Entered Giveaways Filter](#entered-giveaways-filter)
 * [Enter / Leave Giveaway Button](#enter--leave-giveaway-button)
 * [Giveaway Description / Comment Box Popup](#giveaway-description--comment-box-popup)
@@ -113,6 +114,15 @@ Tested on Microsoft Edge and most of it seems to work fine, but for some reason 
 ![](http://i.imgur.com/70Gyhxu.png)
 ![](http://i.imgur.com/jsL0aVB.png)
 ![](http://i.imgur.com/zGeKiag.png)
+
+### Giveaway Filters
+
+`steamgifts.com/giveaways/*`
+
+* Allows you to filter out certain giveaways in a page.
+* Works well with Game Categories.
+
+![](http://i.imgur.com/Ez4NyMm.png)
 
 ### Settings Menu
 
