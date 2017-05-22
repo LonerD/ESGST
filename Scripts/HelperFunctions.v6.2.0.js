@@ -254,6 +254,7 @@ function loadEsgst() {
         ggt: `GT`,
         gc: `gc`,
         gc_b: `gc`,
+        gc_b_r: `gc_b_r`,
         gc_tc: `gc_tc`,
         gc_a: `gc_a`,
         gc_mp: `gc_mp`,
@@ -268,6 +269,24 @@ function loadEsgst() {
         sm_hb: true,
         sm_ebd: true,
         gp: true,
+        gc_b_color: `#ffffff`,
+        gc_tc_color: `#ffffff`,
+        gc_a_color: `#ffffff`,
+        gc_mp_color: `#ffffff`,
+        gc_sc_color: `#ffffff`,
+        gc_l_color: `#ffffff`,
+        gc_m_color: `#ffffff`,
+        gc_dlc_color: `#ffffff`,
+        gc_g_color: `#ffffff`,
+        gc_b_bgColor: `#7b241c`,
+        gc_tc_bgColor: `#1a5276`,
+        gc_a_bgColor: `#117864`,
+        gc_mp_bgColor: `#212f3c`,
+        gc_sc_bgColor: `#196f3d`,
+        gc_l_bgColor: `#9a7d0a`,
+        gc_m_bgColor: `#935116`,
+        gc_dlc_bgColor: `#63397a`,
+        gc_g_bgColor: `#5f6a6a`,
         Avatar: "",
         Username: "",
         SteamID64: "",
@@ -882,6 +901,13 @@ function loadEsgst() {
                 {
                     id: `gc_b`,
                     name: `Bundled`,
+                    options: [
+                        {
+                            id: `gc_b_r`,
+                            name: `Reverse (show only if not bundled).`,
+                            check: getValue(`gc_b_r`)
+                        }
+                    ],
                     check: getValue(`gc_b`)
                 },
                 {
@@ -1939,6 +1965,57 @@ function createNavigationItem(Name, URL, Title) {
 
 function addStyles() {
     var Temp, Positive, Negative, Unknown;
+    var categories = [
+        {
+            id: `gc_b`,
+            key: `bundled`
+        },
+        {
+            id: `gc_b_r`,
+            key: `bundled`
+        },
+        {
+            id: `gc_tc`,
+            key: `tradingCards`
+        },
+        {
+            id: `gc_a`,
+            key: `achievements`
+        },
+        {
+            id: `gc_m`,
+            key: `multiplayer`
+        },
+        {
+            id: `gc_sc`,
+            key: `steamCloud`
+        },
+        {
+            id: `gc_l`,
+            key: `linux`
+        },
+        {
+            id: `gc_m`,
+            key: `mac`
+        },
+        {
+            id: `gc_dlc`,
+                key: `dlc`
+        },
+        {
+            id: `gc_g`,
+            key: `genres`
+        }
+    ];
+    for (var i = 0, n = categories.length; i < n; ++i) {
+        var style = `
+            .esgst-gc.${categories[i].key} {
+                color: ${GM_getValue(`${categories[i].id}_color`)};
+                background-color: ${GM_getValue(`${categories[i].id}_bgColor`)};
+            }
+        `;
+        GM_addStyle(style);
+    }
     document.body.insertAdjacentHTML(
         "beforeEnd",
         "<span class=\"dropdown_btn\">" +

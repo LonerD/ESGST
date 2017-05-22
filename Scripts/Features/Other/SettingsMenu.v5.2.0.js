@@ -441,7 +441,7 @@ function loadSMMenu(Sidebar, SMButton) {
     });
 }
 
-function getSMFeature(Feature) {
+function getSMFeature(Feature, mainId) {
     var Menu, Checkbox, CheckboxInput, SMFeatures, Key;
     Menu = document.createElement("div");
     var ID = Feature.id;
@@ -459,8 +459,23 @@ function getSMFeature(Feature) {
     SMFeatures = Menu.lastElementChild;
     if (Feature.options) {
         for (var i = 0, n = Feature.options.length; i < n; ++i) {
-            SMFeatures.appendChild(getSMFeature(Feature.options[i]));
+            SMFeatures.appendChild(getSMFeature(Feature.options[i], Feature.id));
         }
+    }
+    if (mainId == `gc`) {
+        var color = GM_getValue(`${Feature.id}_color`);
+        var bgColor = GM_getValue(`${Feature.id}_bgColor`);
+        var html = `
+            <div class="esgst-sm-colors">
+                Text: <input type="color" value="${color}">
+                Background: <input type="color" value="${bgColor}">
+            </div>
+        `;
+        SMFeatures.insertAdjacentHTML(`beforeEnd`, html);
+        var colorContext = SMFeatures.lastElementChild.firstElementChild;
+        var bgColorContext = colorContext.nextElementSibling;
+        addColorObserver(colorContext, Feature.id, `color`);
+        addColorObserver(bgColorContext, Feature.id, `bgColor`);
     }
     if (CheckboxInput.checked && SMFeatures.children.length) {
         SMFeatures.classList.remove("rhHidden");
@@ -474,6 +489,12 @@ function getSMFeature(Feature) {
         }
     });
     return Menu;
+}
+
+function addColorObserver(context, id, key) {
+    context.addEventListener(`change`, function() {
+        GM_setValue(`${id}_${key}`, context.value);
+    });
 }
 
 function createSMSections(Sections) {

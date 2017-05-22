@@ -1,25 +1,36 @@
 function loadGameCategories() {
     if (esgst.newGiveawayPath) {
-        var table = document.getElementsByClassName(`js__autocomplete-data`)[0];
-        var backup = table.innerHTML;
-        var games = GM_getValue(`Games`);
-        window.setInterval(function() {
-            if (table.innerHTML && (backup != table.innerHTML)) {
-                var matches = table.getElementsByClassName(`table__column__secondary-link`);
-                for (var i = 0, n = matches.length; i < n; ++i) {
-                    var id = matches[i].getAttribute(`href`).match(/\d+/)[0];
-                    if (games[id]) {
-                        if (!matches[i].parentElement.getElementsByClassName(`esgst-gc bundled`)[0]) {
-                            var html = `
-                                <div class="nav__notification esgst-gc bundled">Bundled</div>
-                            `;
-                            matches[i].insertAdjacentHTML(`afterEnd`, html);
+        if (esgst.gc_b) {
+            var table = document.getElementsByClassName(`js__autocomplete-data`)[0];
+            var backup = table.innerHTML;
+            var games = GM_getValue(`Games`);
+            window.setInterval(function() {
+                if (table.innerHTML && (backup != table.innerHTML)) {
+                    var matches = table.getElementsByClassName(`table__column__secondary-link`);
+                    for (var i = 0, n = matches.length; i < n; ++i) {
+                        var id = matches[i].getAttribute(`href`).match(/\d+/)[0];
+                        if (!games[id]) {
+                            games[id] = {};
+                        }
+                        if ((esgst.gc_b_r && !games[id].bundled) || (!esgst.gc_b_r && games[id].bundled)) {
+                            var key, text;
+                            if (games[id].bundled) {
+                                text = `Bundled`;
+                            } else {
+                                text = `Not Bundled`;
+                            }
+                            if (!matches[i].parentElement.getElementsByClassName(`esgst-gc bundled`)[0]) {
+                                var html = `
+                                    <div class="nav__notification esgst-gc bundled">${text}</div>
+                                `;
+                                matches[i].insertAdjacentHTML(`afterEnd`, html);
+                            }
                         }
                     }
+                    backup = table.innerHTML;
                 }
-                backup = table.innerHTML;
-            }
-        }, 500);
+            }, 500);
+        }
     } else {
         esgst.endlessFeatures.push(setGameCategories);
         setGameCategories(document);
@@ -105,6 +116,11 @@ function addGameCategory(context, games, id, callback) {
                 name: `Bundled`
             },
             {
+                id: `gc_b_r`,
+                key: `bundled`,
+                name: `Not Bundled`
+            },
+            {
                 id: `gc_tc`,
                 key: `tradingCards`,
                 name: `Trading Cards`
@@ -147,9 +163,10 @@ function addGameCategory(context, games, id, callback) {
         ];
         for (var i = 0, n = categories.length - 1; i <= n; ++i) {
             var category = categories[n - i];
-            if (esgst[category.id] && ((category.id == `gc_b` && esgst.newGiveawayPath) || !esgst.newGiveawayPath)) {
+            if (esgst[category.id] && ((category.id == `gc_b` && esgst.newGiveawayPath) || !esgst.newGiveawayPath) &&
+                ((category.id == `gc_b` && !esgst.gc_b_r) || (category.id != `gc_b`))) {
                 var value = games[id][category.key];
-                if (value) {
+                if ((value && category.id != `gc_b_r`) || (!value && category.id == `gc_b_r`)) {
                     if (!context.parentElement.getElementsByClassName(`esgst-gc-${category.key}`)[0]) {
                         var text;
                         if (category.key == `genres`) {

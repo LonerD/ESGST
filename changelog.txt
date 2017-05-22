@@ -1,5 +1,12 @@
 /*
- * May 21, 2017 - v6.Beta.1.2
+ * May 22, 2017 - v6.Beta.1.3
+ */
+
+* Added a "Not Bundled" category for Game Categories and the option to customize the colors.
+* Fixed a bug in Game Categories that was showing incorrect categories for the new giveaway page.
+
+/*
+ * May 22, 2017 - v6.Beta.1.2
  */
 
 * Added more categories to Game Categories and added support for giveaway comment pages.

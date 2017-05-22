@@ -97,40 +97,10 @@
     text-shadow: none;
 }
 
-.esgst-gc.bundled {
-    background-color: #7B241C;
-}
-
-.esgst-gc.tradingCards {
-    background-color: #1A5276;
-}
-
-.esgst-gc.achievements {
-    background-color: #117864;
-}
-
-.esgst-gc.multiplayer {
-    background-color: #212F3C;
-}
-
-.esgst-gc.steamCloud {
-    background-color: #196F3D;
-}
-
-.esgst-gc.linux {
-    background-color: #9A7D0A;
-}
-
-.esgst-gc.mac {
-    background-color: #935116;
-}
-
-.esgst-gc.dlc {
-    background-color: #633974;
-}
-
-.esgst-gc.genres {
-    background-color: #5F6A6A;
+.esgst-sm-colors input {
+    display: inline-block;
+    padding: 0;
+    width: 30px;
 }
 
 .PGBContainer {
