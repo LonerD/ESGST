@@ -10,6 +10,7 @@
 // @match https://www.steamgifts.com/*
 // @match https://www.steamtrades.com/*
 // @connect api.steampowered.com
+// @connect store.steampowered.com
 // @connect script.google.com
 // @connect script.googleusercontent.com
 // @connect sgtools.info
