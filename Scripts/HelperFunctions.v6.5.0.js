@@ -257,6 +257,7 @@ function loadEsgst() {
         gc_b: `gc`,
         gc_b_r: `gc_b_r`,
         gc_w: `gc_w`,
+        gc_o: `gc_o`,
         gc_tc: `gc_tc`,
         gc_a: `gc_a`,
         gc_mp: `gc_mp`,
@@ -269,10 +270,11 @@ function loadEsgst() {
     };
     esgst.defaultValues = {
         sm_hb: true,
-        sm_ebd: true,
+        sm_ebd: false,
         gp: true,
         gc_b_color: `#ffffff`,
         gc_w_color: `#ffffff`,
+        gc_o_color: `#ffffff`,
         gc_tc_color: `#ffffff`,
         gc_a_color: `#ffffff`,
         gc_mp_color: `#ffffff`,
@@ -283,6 +285,7 @@ function loadEsgst() {
         gc_g_color: `#ffffff`,
         gc_b_bgColor: `#7b241c`,
         gc_w_bgColor: `#f39c12`,
+        gc_o_bgColor: `#2ecc71`,
         gc_tc_bgColor: `#1a5276`,
         gc_a_bgColor: `#117864`,
         gc_mp_bgColor: `#212f3c`,
@@ -299,16 +302,19 @@ function loadEsgst() {
         gf_maxCopies: 999999999,
         gf_minPoints: 0,
         gf_maxPoints: 300,
-        gf_regionRestricted: true,
-        gf_entered: true,
-        gf_bundled: true,
-        gf_tradingCards: true,
-        gf_achievements: true,
-        gf_multiplayer: true,
-        gf_steamCloud: true,
-        gf_linux: true,
-        gf_mac: true,
-        gf_dlc: true,
+        gf_pinned: `enabled`,
+        gf_group: `enabled`,
+        gf_whitelist: `enabled`,
+        gf_regionRestricted: `enabled`,
+        gf_entered: `enabled`,
+        gf_bundled: `enabled`,
+        gf_tradingCards: `enabled`,
+        gf_achievements: `enabled`,
+        gf_multiplayer: `enabled`,
+        gf_steamCloud: `enabled`,
+        gf_linux: `enabled`,
+        gf_mac: `enabled`,
+        gf_dlc: `enabled`,
         Avatar: "",
         Username: "",
         SteamID64: "",
@@ -937,6 +943,11 @@ function loadEsgst() {
                     check: getValue(`gc_w`)
                 },
                 {
+                    id: `gc_o`,
+                    name: `Owned`,
+                    check: getValue(`gc_o`)
+                },
+                {
                     id: `gc_tc`,
                     name: `Trading Cards`,
                     check: getValue(`gc_tc`)
@@ -1497,8 +1508,13 @@ function continueSync(Sync, Callback) {
     syncGroups(Sync, "/account/steam/groups/search?page=", 1, function() {
         GM_setValue("Groups", Sync.Groups);
         syncWhitelistBlacklist(Sync, function() {
-            syncOwnedGames(Sync, function() {
-                syncWishlist(Sync, function() {
+            var games = GM_getValue(`Games`);
+            for (var key in games) {
+                delete games[key].wishlist;
+                delete games[key].owned;
+            }
+            syncOwnedGames(Sync, games, function() {
+                syncWishlist(Sync, games, function() {
                     var CurrentDate;
                     CurrentDate = new Date();
                     GM_setValue("LastSync", CurrentDate.getTime());
@@ -1626,11 +1642,7 @@ function getWhitelistBlacklistUsers(Sync, I, N, Matches, Key, Callback) {
     }
 }
 
-function syncWishlist(Sync, Callback) {
-    var games = GM_getValue(`Games`);
-    for (key in games) {
-        delete games[key].wishlist;
-    }
+function syncWishlist(Sync, games, Callback) {
     Sync.OverallProgress.innerHTML =
         "<i class=\"fa fa-circle-o-notch fa-spin\"></i> " +
         "<span>Syncing your wishlist...</span>";
@@ -1652,7 +1664,7 @@ function syncWishlist(Sync, Callback) {
     });
 }
 
-function syncOwnedGames(Sync, Callback) {
+function syncOwnedGames(Sync, games, Callback) {
     var SteamAPIKey, URL;
     Sync.OverallProgress.innerHTML =
         "<i class=\"fa fa-circle-o-notch fa-spin\"></i> " +
@@ -1666,6 +1678,13 @@ function syncOwnedGames(Sync, Callback) {
             if (!ResponseText.match(/<title>Forbidden<\/title>/)) {
                 ResponseGames = parseJSON(ResponseText).response.games;
                 N = ResponseGames.length;
+                for (var i = 0; i < N; ++i) {
+                    var id = ResponseGames[i].appid;
+                    if (!games[id]) {
+                        games[id] = {};
+                    }
+                    games[id].owned = true;
+                }
                 if (N != GM_getValue("OwnedGames").length) {
                     OwnedGames = [];
                     for (I = 0; I < N; ++I) {
@@ -1949,6 +1968,129 @@ function createCheckbox(Context, Default) {
     };
 }
 
+function createCheckbox_v6(context, defaultValue, threeState) {
+    var html = `
+        <span class="esgst-checkbox">
+            <input class="esgst-hidden" type="checkbox">
+            <i class="fa fa-circle-o"></i>
+            <i class="fa fa-circle"></i>
+            <i class="fa fa-check-circle"></i>
+        </span>
+    `;
+    context.insertAdjacentHTML(`afterBegin`, html);
+    var checkbox = {
+        value: defaultValue,
+        threeState: threeState
+    };
+    checkbox.checkbox = context.firstElementChild;
+    checkbox.input = checkbox.checkbox.firstElementChild;
+    checkbox.disabled = checkbox.input.nextElementSibling;
+    checkbox.none = checkbox.disabled.nextElementSibling;
+    checkbox.enabled = checkbox.none.nextElementSibling;
+    checkbox.showNone = showNoneCheckbox.bind(null, checkbox);
+    checkbox.hideNone = hideNoneCheckbox.bind(null, checkbox);
+    if (!checkbox.threeState) {
+        if (checkbox.value) {
+            checkbox.input.checked = true;
+            checkbox.disabled.classList.add(`esgst-hidden`);
+            checkbox.none.classList.add(`esgst-hidden`);
+        } else {
+            checkbox.input.checked = false;
+            checkbox.none.classList.add(`esgst-hidden`);
+            checkbox.disabled.classList.add(`esgst-hidden`);
+            checkbox.checkbox.addEventListener(`mouseenter`, checkbox.showNone);
+            checkbox.checkbox.addEventListener(`mouseleave`, checkbox.hideNone);
+        }
+        checkbox.checkbox.addEventListener(`click`, changeCheckboxState.bind(null, checkbox, true));
+        changeCheckboxState(checkbox);
+    } else {
+        if (checkbox.value == `disabled`) {
+            checkbox.none.classList.add(`esgst-hidden`);
+            checkbox.enabled.classList.add(`esgst-hidden`);
+        } else if (checkbox.value == `none`) {
+            checkbox.disabled.classList.add(`esgst-hidden`);
+            checkbox.enabled.classList.add(`esgst-hidden`);
+        } else {
+            checkbox.disabled.classList.add(`esgst-hidden`);
+            checkbox.none.classList.add(`esgst-hidden`);
+        }
+        checkbox.checkbox.addEventListener(`click`, changeCheckboxState.bind(null, checkbox));
+    }
+    checkbox.check = checkCheckbox.bind(null, checkbox);
+    checkbox.uncheck = uncheckCheckbox.bind(null, checkbox);
+    checkbox.toggle = toggleCheckbox.bind(null, checkbox);
+    return checkbox;
+}
+
+function showNoneCheckbox(checkbox) {
+    checkbox.disabled.classList.add(`esgst-hidden`);
+    checkbox.none.classList.remove(`esgst-hidden`);
+}
+
+function hideNoneCheckbox(checkbox) {
+    checkbox.disabled.classList.remove(`esgst-hidden`);
+    checkbox.none.classList.add(`esgst-hidden`);
+}
+
+function checkCheckbox(checkbox) {
+    checkbox.input.checked = true;
+    changeCheckboxState(checkbox);
+}
+
+function uncheckCheckbox(checkbox) {
+    checkbox.input.checked = false;
+    changeCheckboxState(checkbox);
+}
+
+function toggleCheckbox(checkbox) {
+    if (checkbox.input.checked) {
+        checkbox.input.checked = false;
+    } else {
+        checkbox.input.checked = true;
+    }
+    changeCheckboxState(checkbox);
+}
+
+function changeCheckboxState(checkbox, toggle) {
+    if (!checkbox.threeState) {
+        if (toggle) {
+            if (checkbox.input.checked) {
+                checkbox.input.checked = false;
+            } else {
+                checkbox.input.checked = true;
+            }
+        }
+        if (checkbox.input.checked) {
+            checkbox.value = true;
+            checkbox.disabled.classList.add("esgst-hidden");
+            checkbox.none.classList.add("esgst-hidden");
+            checkbox.enabled.classList.remove("esgst-hidden");
+            checkbox.checkbox.removeEventListener("mouseenter", checkbox.showNone);
+            checkbox.checkbox.removeEventListener("mouseleave", checkbox.hideNone);
+        } else {
+            checkbox.value = false;
+            checkbox.enabled.classList.add("esgst-hidden");
+            checkbox.disabled.classList.remove("esgst-hidden");
+            checkbox.checkbox.addEventListener("mouseenter", checkbox.showNone);
+            checkbox.checkbox.addEventListener("mouseleave", checkbox.hideNone);
+        }
+    } else {
+        if (checkbox.value == `disabled`) {
+            checkbox.disabled.classList.add(`esgst-hidden`);
+            checkbox.none.classList.remove(`esgst-hidden`);
+            checkbox.value = `none`;
+        } else if (checkbox.value == `none`) {
+            checkbox.none.classList.add(`esgst-hidden`);
+            checkbox.enabled.classList.remove(`esgst-hidden`);
+            checkbox.value = `enabled`;
+        } else {
+            checkbox.enabled.classList.add(`esgst-hidden`);
+            checkbox.disabled.classList.remove(`esgst-hidden`);
+            checkbox.value = `disabled`;
+        }
+    }
+}
+
 function createOptions(Context, Element, Options) {
     var I, N;
     for (I = 0, N = Options.length; I < N; ++I) {
@@ -2047,6 +2189,10 @@ function addStyles() {
             key: `wishlist`
         },
         {
+            id: `gc_o`,
+            key: `owned`
+        },
+        {
             id: `gc_tc`,
             key: `tradingCards`
         },
@@ -2055,7 +2201,7 @@ function addStyles() {
             key: `achievements`
         },
         {
-            id: `gc_m`,
+            id: `gc_mp`,
             key: `multiplayer`
         },
         {
@@ -2072,7 +2218,7 @@ function addStyles() {
         },
         {
             id: `gc_dlc`,
-                key: `dlc`
+            key: `dlc`
         },
         {
             id: `gc_g`,

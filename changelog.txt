@@ -1,4 +1,16 @@
 /*
+ * May 22, 2017 - v6.Beta.2.2
+ */
+
+* Changed the script to disable all features upon the first installation.
+* Updated Giveaway Filters to work with three-state checkboxes: none, only and all.
+* Added "Pinned", "Group" and "Whitelist" filters to Giveaway Filters.
+* Fixed a bug in Giveaway Filters that wasn't filtering out entered giveaways with Grid View enabled (closes #104).
+* Added "Owned" tag to Game Categories (must sync owned games through the settings menu).
+* Fixed a bug in Game Categories where multiplayer and mac had the same id.
+* Fixed a bug in Game Categories that was not loading tags for certain games.
+
+/*
  * May 22, 2017 - v6.Beta.2.1
  */
 

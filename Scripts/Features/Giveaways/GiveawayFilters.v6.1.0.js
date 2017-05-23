@@ -77,6 +77,21 @@ function loadGiveawayFilters() {
     }
     esgst.gfCheckboxFilters = [
         {
+            name: `Pinned`,
+            saveKey: `pinned`,
+            key: `gfPinned`
+        },
+        {
+            name: `Group`,
+            saveKey: `group`,
+            key: `gfGroup`
+        },
+        {
+            name: `Whitelist`,
+            saveKey: `whitelist`,
+            key: `gfWhitelist`
+        },
+        {
             name: `Region Restricted`,
             saveKey: `regionRestricted`,
             key: `gfRegionRestricted`
@@ -94,17 +109,15 @@ function loadGiveawayFilters() {
         var key = checkboxFilter.key;
         html = `
             <div class="esgst-gf-checkbox-filter">
-                <span></span>
                 <span>${name}</span>
             </div>
         `;
         checkboxFilters.insertAdjacentHTML(`beforeEnd`, html);
         var gfCheckboxFilter = checkboxFilters.lastElementChild;
-        var checkbox = gfCheckboxFilter.firstElementChild;
         var value = GM_getValue(`gf_${saveKey}`);
         esgst[key] = value;
-        var input = createCheckbox(checkbox, value).Checkbox;
-        checkbox.addEventListener(`click`, saveGfValue.bind(null, key, `gf_${saveKey}`, input))
+        var checkbox = createCheckbox_v6(gfCheckboxFilter, value, true);
+        checkbox.checkbox.addEventListener(`click`, saveGfValue.bind(null, key, `gf_${saveKey}`, checkbox))
     }
     if (esgst.gc) {
         esgst.gfCategoryFilters = [
@@ -166,17 +179,15 @@ function loadGiveawayFilters() {
                 var key = categoryFilter.key;
                 html = `
                     <div class="esgst-gf-category-filter">
-                        <span></span>
                         <span>${name}</span>
                     </div>
                 `;
                 categoryFilters.insertAdjacentHTML(`beforeEnd`, html);
                 var gfCategoryFilter = categoryFilters.lastElementChild;
-                var checkbox = gfCategoryFilter.firstElementChild;
                 var value = GM_getValue(`gf_${saveKey}`);
                 esgst[key] = value;
-                var input = createCheckbox(checkbox, value).Checkbox;
-                checkbox.addEventListener(`click`, saveGfValue.bind(null, key, `gf_${saveKey}`, input));
+                var checkbox = createCheckbox_v6(gfCategoryFilter, value, true);
+                checkbox.checkbox.addEventListener(`click`, saveGfValue.bind(null, key, `gf_${saveKey}`, checkbox));
             }
         }
     }
@@ -185,10 +196,10 @@ function loadGiveawayFilters() {
     esgst.endlessFeatures.push(filterGfGiveaways);
 }
 
-function saveGfValue(key, name, input, event) {
+function saveGfValue(key, name, checkbox, event) {
     var value;
-    if (input) {
-        value = input.checked;
+    if (checkbox) {
+        value = checkbox.value;
     } else {
         value = parseInt(event.currentTarget.value);
     }
@@ -215,7 +226,7 @@ function filterGfGiveaways() {
             var checkboxFilter = esgst.gfCheckboxFilters[j];
             var key = checkboxFilter.key;
             var saveKey = checkboxFilter.saveKey;
-            if (!esgst[key] && giveaway[saveKey]) {
+            if (((esgst[key] == `disabled`) && giveaway[saveKey]) || ((esgst[key] == `none`) && !giveaway[saveKey])) {
                 filtered = true;
             }
         }
@@ -224,7 +235,7 @@ function filterGfGiveaways() {
                 var categoryFilter = esgst.gfCategoryFilters[j];
                 var key = categoryFilter.key;
                 var saveKey = categoryFilter.saveKey;
-                if (!esgst[key] && giveaway[saveKey]) {
+                if (((esgst[key] == `disabled`) && giveaway[saveKey]) || ((esgst[key] == `none`) && !giveaway[saveKey])) {
                     filtered = true;
                 }
             }
@@ -279,11 +290,20 @@ function getGfGiveaways() {
         }
         giveaway.copies = copies;
         giveaway.points = points;
-        if (context.firstElementChild.classList.contains(`esgst-faded`)) {
+        if (context.getElementsByClassName(`giveaway__row-inner-wrap`)[0].classList.contains(`esgst-faded`)) {
             giveaway.entered = true;
         }
         if (context.getElementsByClassName(`giveaway__column--region-restricted`)[0]) {
             giveaway.regionRestricted = true;
+        }
+        if (context.getElementsByClassName(`giveaway__column--whitelist`)[0]) {
+            giveaway.whitelist = true;
+        }
+        if (context.getElementsByClassName(`giveaway__column--group`)[0]) {
+            giveaway.group = true;
+        }
+        if (context.closest(`.pinned-giveaways__outer-wrap`)) {
+            giveaway.pinned = true;
         }
         if (esgst.gc) {
             var categories = [`bundled`, `tradingCards`, `achievements`, `multiplayer`, `steamCloud`, `linux`, `mac`, `dlc`];

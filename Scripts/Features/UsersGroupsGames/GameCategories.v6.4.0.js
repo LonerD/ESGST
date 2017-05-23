@@ -92,20 +92,24 @@ function addGameCategory(context, games, id, callback) {
                 games[id].windows = responseJson[id].data.platforms.windows;
                 games[id].linux = responseJson[id].data.platforms.linux;
                 games[id].mac = responseJson[id].data.platforms.mac;
-                for (var i = 0, n = responseJson[id].data.categories.length; i < n; ++i) {
-                    if (responseJson[id].data.categories[i].description == `Steam Achievements`) {
-                        games[id].achievements = true;
-                    } else if (responseJson[id].data.categories[i].description == `Steam Trading Cards`) {
-                        games[id].tradingCards = true;
-                    } else if (responseJson[id].data.categories[i].description == `Multi-player`) {
-                        games[id].multiplayer = true;
-                    } else if (responseJson[id].data.categories[i].description == `Steam Cloud`) {
-                        games[id].steamCloud = true;
+                if (responseJson[id].data.categories) {
+                    for (var i = 0, n = responseJson[id].data.categories.length; i < n; ++i) {
+                        if (responseJson[id].data.categories[i].description == `Steam Achievements`) {
+                            games[id].achievements = true;
+                        } else if (responseJson[id].data.categories[i].description == `Steam Trading Cards`) {
+                            games[id].tradingCards = true;
+                        } else if (responseJson[id].data.categories[i].description == `Multi-player`) {
+                            games[id].multiplayer = true;
+                        } else if (responseJson[id].data.categories[i].description == `Steam Cloud`) {
+                            games[id].steamCloud = true;
+                        }
                     }
                 }
-                games[id].genres = [];
-                for (var i = 0, n = responseJson[id].data.genres.length; i < n; ++i) {
-                    games[id].genres.push(responseJson[id].data.genres[i].description);
+                if (responseJson[id].data.genres) {
+                    games[id].genres = [];
+                    for (var i = 0, n = responseJson[id].data.genres.length; i < n; ++i) {
+                        games[id].genres.push(responseJson[id].data.genres[i].description);
+                    }
                 }
             }
             games[id].lastCheck = new Date().getTime();
@@ -129,6 +133,11 @@ function addGameCategory(context, games, id, callback) {
                 name: `Wishlist`
             },
             {
+                id: `gc_o`,
+                key: `owned`,
+                name: `Owned`
+            },
+            {
                 id: `gc_tc`,
                 key: `tradingCards`,
                 name: `Trading Cards`
@@ -139,7 +148,7 @@ function addGameCategory(context, games, id, callback) {
                 name: `Achievements`
             },
             {
-                id: `gc_m`,
+                id: `gc_mp`,
                 key: `multiplayer`,
                 name: `Multiplayer`
             },
