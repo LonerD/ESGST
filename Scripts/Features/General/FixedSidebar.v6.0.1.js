@@ -1,6 +1,8 @@
+var fs = {};
+
 function loadFixedSidebar() {
-    esgst.sidebarAd = esgst.sidebar.getElementsByClassName(`sidebar__mpu`)[0];
-    esgst.sidebarSibling = esgst.sidebar.nextElementSibling;
+    fs.sidebarAd = esgst.sidebar.getElementsByClassName(`sidebar__mpu`)[0];
+    fs.sidebarSibling = esgst.sidebar.nextElementSibling;
     document.addEventListener(`scroll`, fixSidebar);
     addSidebarStyle();
     fixSidebar();
@@ -25,10 +27,10 @@ function unfixSidebar() {
 
 function toggleFixedSidebar() {
     esgst.sidebar.classList.toggle(`esgst-fs`);
-    if (esgst.sidebarAd) {
-        esgst.sidebarAd.classList.toggle(`esgst-hidden`);
+    if (fs.sidebarAd) {
+        fs.sidebarAd.classList.toggle(`esgst-hidden`);
     }
-    esgst.sidebarSibling.classList.toggle(`esgst-fs-sibling`);
+    fs.sidebarSibling.classList.toggle(`esgst-fs-sibling`);
 }
 
 function addSidebarStyle() {
@@ -36,7 +38,6 @@ function addSidebarStyle() {
         .esgst-fs {
             top: ${esgst.pageTop}px;
         }
-
         .esgst-fs-sibling {
             margin-left: ${esgst.sidebar.offsetWidth + 25}px !important;
         }

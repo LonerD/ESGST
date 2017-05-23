@@ -72,7 +72,9 @@ function addGameCategories(i, n, matches, games) {
             window.setTimeout(addGameCategories, 0, ++i, n, matches, games);
         }
     } else {
-        filterGfGiveaways();
+        if (esgst.gf && esgst.giveawaysPath) {
+            filterGfGiveaways();
+        }
         queueSave({}, function() {
             updateGames(games);
             GM_setValue(`LastSave`, 0);

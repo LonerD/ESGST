@@ -107,9 +107,6 @@ function loadEndlessScrolling() {
         previousPaginationBackup = pagination;
         pagination = responseHtml.getElementsByClassName(`pagination`)[0];
         context = pagination.previousElementSibling;
-        loadEndlessFeatures(context);
-        setESHide(context);
-        setESRemoveEntry(context);
         paginationNavigation = pagination.getElementsByClassName(esgst.paginationNavigationClass)[0];
         paginationNavigationBackup = paginationNavigation.innerHTML;
         searchUrlBackup = `${esgst.searchUrl}${nextPage}`;
@@ -130,6 +127,9 @@ function loadEndlessScrolling() {
         parent = esPageHeading.parentElement;
         parent.insertBefore(context, esPageHeading.nextElementSibling);
         parent.insertBefore(pagination, context.nextElementSibling);
+        loadEndlessFeatures(context);
+        setESHide(context);
+        setESRemoveEntry(context);
         if (esgst.es_rs && esgst.discussionPath) {
             reverseComments(context);
             --nextPage;

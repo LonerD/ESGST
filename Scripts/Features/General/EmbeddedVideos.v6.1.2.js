@@ -1,6 +1,23 @@
+var ev = {
+    videoTypes: [
+        {
+            url: `youtube.com`,
+            getEmbedUrl: getYoutubeComEmbedUrl
+        },
+        {
+            url: `youtu.be`,
+            getEmbedUrl: getYoutuBeEmbedUrl
+        },
+        {
+            url: `vimeo.com`,
+            getEmbedUrl: getVimeoEmbedUrl
+        }
+    ]
+};
+
 function loadEmbeddedVideos(context) {
-    for (var i = 0, numTypes = esgst.videoTypes.length; i < numTypes; ++i) {
-        var type = esgst.videoTypes[i];
+    for (var i = 0, numTypes = ev.videoTypes.length; i < numTypes; ++i) {
+        var type = ev.videoTypes[i];
         var videos = context.querySelectorAll(`a[href*="${type.url}"]`);
         for (var j = 0, numVideos = videos.length; j < numVideos; ++j) {
             var video = videos[j];
@@ -21,13 +38,13 @@ function loadEmbeddedVideos(context) {
 }
 
 function getYoutubeComEmbedUrl(url) {
-  return `https://www.youtube.com/embed/${url.match(/watch\?v=(.+?)(&.*)?$/)[1]}`;
+    return `https://www.youtube.com/embed/${url.match(/watch\?v=(.+?)(&.*)?$/)[1]}`;
 }
 
 function getYoutuBeEmbedUrl(url) {
-  return `https://www.youtube.com/embed/${url.match(/youtu.be\/(.+)/)[1]}`;
+    return `https://www.youtube.com/embed/${url.match(/youtu.be\/(.+)/)[1]}`;
 }
 
 function getVimeoEmbedUrl(url) {
-  return `https://player.vimeo.com/video/${url.match(/vimeo.com\/(.+)/)[1]}`;
+    return `https://player.vimeo.com/video/${url.match(/vimeo.com\/(.+)/)[1]}`;
 }

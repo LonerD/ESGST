@@ -106,6 +106,7 @@
 
 .esgst-gf-filters >* {
     display: inline-block;
+    margin: 5px;
     vertical-align: top;
 }
 
@@ -120,7 +121,7 @@
     justify-content: space-between;
 }
 
-.esgst-gf-checkbox-filter, .esgst-gf-category-filter {
+.esgst-gf-checkbox-filter, .esgst-gf-category-filter, .esgst-gf-exception-filter {
     margin: 5px;
 }
 

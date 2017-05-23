@@ -2,7 +2,7 @@
 // @name ESGST
 // @namespace ESGST
 // @description Enhances SteamGifts and SteamTrades by adding some cool features to them.
-// @version 6.Beta.2.2
+// @version 6.Beta.2.3
 // @author revilheart
 // @contributor Royalgamer06
 // @downloadURL https://github.com/revilheart/ESGST/raw/master/ESGST.user.js
@@ -24,26 +24,26 @@
 // @grant GM_getResourceText
 // @grant GM_getResourceURL
 // @grant GM_xmlhttpRequest
-// @require https://github.com/revilheart/ESGST/raw/master/Scripts/HelperFunctions.v6.5.0.js
+// @require https://github.com/revilheart/ESGST/raw/master/Scripts/HelperFunctions.v6.5.1.js
 // @require https://github.com/revilheart/ESGST/raw/master/Scripts/Features/Other/HeaderButton.v6.0.1.js
 // @require https://github.com/revilheart/ESGST/raw/master/Scripts/Features/Other/SettingsMenu.v5.2.2.js
 // @require https://github.com/revilheart/ESGST/raw/master/Scripts/Features/General/FixedHeader.v6.0.0.js
-// @require https://github.com/revilheart/ESGST/raw/master/Scripts/Features/General/FixedSidebar.v6.0.0.js
+// @require https://github.com/revilheart/ESGST/raw/master/Scripts/Features/General/FixedSidebar.v6.0.1.js
 // @require https://github.com/revilheart/ESGST/raw/master/Scripts/Features/General/FixedMainPageHeading.v6.0.0.js
 // @require https://github.com/revilheart/ESGST/raw/master/Scripts/Features/General/FixedFooter.v6.0.0.js
 // @require https://github.com/revilheart/ESGST/raw/master/Scripts/Features/General/HeaderIconsRefresher.v5.js
 // @require https://github.com/revilheart/ESGST/raw/master/Scripts/Features/General/HiddenBlacklistStats.v5.js
 // @require https://github.com/revilheart/ESGST/raw/master/Scripts/Features/General/VisibleAttachedImages.v6.1.0.js
-// @require https://github.com/revilheart/ESGST/raw/master/Scripts/Features/General/EmbeddedVideos.v6.1.1.js
+// @require https://github.com/revilheart/ESGST/raw/master/Scripts/Features/General/EmbeddedVideos.v6.1.2.js
 // @require https://github.com/revilheart/ESGST/raw/master/Scripts/Features/General/AccurateTimestamps.v6.0.0.js
 // @require https://github.com/revilheart/ESGST/raw/master/Scripts/Features/General/PaginationNavigationOnTop.v6.0.0.js
-// @require https://github.com/revilheart/ESGST/raw/master/Scripts/Features/General/EndlessScrolling.v6.0.1.js
+// @require https://github.com/revilheart/ESGST/raw/master/Scripts/Features/General/EndlessScrolling.v6.0.2.js
 // @require https://github.com/revilheart/ESGST/raw/master/Scripts/Features/Giveaways/DeliveredGiftsNotifier.v5.js
 // @require https://github.com/revilheart/ESGST/raw/master/Scripts/Features/Giveaways/PointsRefresher.v5.js
 // @require https://github.com/revilheart/ESGST/raw/master/Scripts/Features/Giveaways/HiddenFeaturedContainer.v6.0.0.js
 // @require https://github.com/revilheart/ESGST/raw/master/Scripts/Features/Giveaways/AdvancedGiveawaySearch.v5.1.0.js
 // @require https://github.com/revilheart/ESGST/raw/master/Scripts/Features/Giveaways/PinnedGiveawaysButton.v5.js
-// @require https://github.com/revilheart/ESGST/raw/master/Scripts/Features/Giveaways/GiveawayFilters.v6.1.0.js
+// @require https://github.com/revilheart/ESGST/raw/master/Scripts/Features/Giveaways/GiveawayFilters.v6.2.0.js
 // @require https://github.com/revilheart/ESGST/raw/master/Scripts/Features/Giveaways/GridView.v5.js
 // @require https://github.com/revilheart/ESGST/raw/master/Scripts/Features/Giveaways/GiveawayPanel.v5.1.2.js
 // @require https://github.com/revilheart/ESGST/raw/master/Scripts/Features/Giveaways/GiveawayGroupsPopup.v5.js
@@ -85,9 +85,9 @@
 // @require https://github.com/revilheart/ESGST/raw/master/Scripts/Features/UsersGroupsGames/GroupsStats.v5.js
 // @require https://github.com/revilheart/ESGST/raw/master/Scripts/Features/UsersGroupsGames/GamesHighlighter.v5.js
 // @require https://github.com/revilheart/ESGST/raw/master/Scripts/Features/UsersGroupsGames/GameTags.v5.js
-// @require https://github.com/revilheart/ESGST/raw/master/Scripts/Features/UsersGroupsGames/GameCategories.v6.4.0.js
+// @require https://github.com/revilheart/ESGST/raw/master/Scripts/Features/UsersGroupsGames/GameCategories.v6.4.1.js
 // @require https://github.com/revilheart/ESGST/raw/master/Scripts/Features/UsersGroupsGames/MultiTag.v5.js
-// @resource style https://github.com/revilheart/ESGST/raw/master/Resources/style.v6.4.0.css
+// @resource style https://github.com/revilheart/ESGST/raw/master/Resources/style.v6.4.1.css
 // @resource esgstIcon https://github.com/revilheart/ESGST/raw/master/Resources/esgstIcon.ico
 // @resource sgIcon https://cdn.steamgifts.com/img/favicon.ico
 // @resource stIcon https://cdn.steamtrades.com/img/favicon.ico

@@ -1,5 +1,15 @@
 /*
- * May 22, 2017 - v6.Beta.2.2
+ * May 23, 2017 - v6.Beta.2.2
+ */
+
+* The automatic sync is now less intrusive and appears as a button in the header (which you can click to see the current progress), and only works in the main and account pages.
+* Fixed a bug in Giveaway Filters that wasn't running it for page 2+ with Endless Scrolling.
+* Added exceptions to Giveaway Filters (closes #106).
+* Filters for the wishlist and group pages are now saved separately in Giveaway Filters (closes #107).
+* Fixed a bug in Game Categories that was preventing Giveaway Description/Reply Box Popup from working in user pages (closes #105).
+
+/*
+ * May 23, 2017 - v6.Beta.2.2
  */
 
 * Changed the script to disable all features upon the first installation.

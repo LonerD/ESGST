@@ -16,8 +16,6 @@ function loadEsgst() {
         esgst.hiddenClass = `is-hidden`;
         esgst.name = `sg`;
         esgst.selectedClass = `is-selected`;
-        checkSync();
-        updateGroups();
     } else {
         esgst.pageOuterWrapClass = `page_outer_wrap`;
         esgst.pageHeadingClass = `page_heading`;
@@ -87,7 +85,6 @@ function loadEsgst() {
     esgst.pageOuterWrap = document.getElementsByClassName(esgst.pageOuterWrapClass)[0];
     esgst.paginationNavigation = document.getElementsByClassName(esgst.paginationNavigationClass)[0];
     esgst.sidebar = document.getElementsByClassName(`sidebar`)[0];
-    esgst.sidebarAd = document.getElementsByClassName(`sidebar__mpu`)[0];
     esgst.activeDiscussions = document.getElementsByClassName(`widget-container--margin-top`)[0];
     esgst.pinnedGiveawaysButton = document.getElementsByClassName(`pinned-giveaways__button`)[0];
     var mainPageHeadingIndex;
@@ -130,20 +127,6 @@ function loadEsgst() {
     if (logoutButton) {
         esgst.xsrfToken = logoutButton.getAttribute("data-form").match(/xsrf_token=(.+)/)[1];
     }
-    esgst.videoTypes = [
-        {
-            url: `youtube.com`,
-            getEmbedUrl: getYoutubeComEmbedUrl
-        },
-        {
-            url: `youtu.be`,
-            getEmbedUrl: getYoutuBeEmbedUrl
-        },
-        {
-            url: `vimeo.com`,
-            getEmbedUrl: getVimeoEmbedUrl
-        }
-    ];
     esgst.dateMonths = [`January`, `February`, `March`, `April`, `May`, `June`, `July`, `August`, `September`, `October`, `November`, `December`];
     esgst.pageTop = 25;
     esgst.commentsTop = 0;
@@ -315,6 +298,66 @@ function loadEsgst() {
         gf_linux: `enabled`,
         gf_mac: `enabled`,
         gf_dlc: `enabled`,
+        gf_exceptionPinned: false,
+        gf_exceptionGroup: false,
+        gf_exceptionWhitelist: false,
+        gf_exceptionRegionRestricted: false,
+        gf_exceptionMultiple: false,
+        gf_exceptionMultipleCopies: 1,
+        gf_minLevelWishlist:0,
+        gf_maxLevelWishlist:10,
+        gf_minEntriesWishlist:0,
+        gf_maxEntriesWishlist:999999999,
+        gf_minCopiesWishlist:1,
+        gf_maxCopiesWishlist:999999999,
+        gf_minPointsWishlist:0,
+        gf_maxPointsWishlist:300,
+        gf_pinnedWishlist:`enabled`,
+        gf_groupWishlist:`enabled`,
+        gf_whitelistWishlist:`enabled`,
+        gf_regionRestrictedWishlist:`enabled`,
+        gf_enteredWishlist:`enabled`,
+        gf_bundledWishlist:`enabled`,
+        gf_tradingCardsWishlist:`enabled`,
+        gf_achievementsWishlist:`enabled`,
+        gf_multiplayerWishlist:`enabled`,
+        gf_steamCloudWishlist:`enabled`,
+        gf_linuxWishlist:`enabled`,
+        gf_macWishlist:`enabled`,
+        gf_dlcWishlist:`enabled`,
+        gf_exceptionPinnedWishlist:false,
+        gf_exceptionGroupWishlist:false,
+        gf_exceptionWhitelistWishlist:false,
+        gf_exceptionRegionRestrictedWishlist:false,
+        gf_exceptionMultipleWishlist:false,
+        gf_exceptionMultipleCopiesWishlist:1,
+        gf_minLevelGroup:0,
+        gf_maxLevelGroup:10,
+        gf_minEntriesGroup:0,
+        gf_maxEntriesGroup:999999999,
+        gf_minCopiesGroup:1,
+        gf_maxCopiesGroup:999999999,
+        gf_minPointsGroup:0,
+        gf_maxPointsGroup:300,
+        gf_pinnedGroup:`enabled`,
+        gf_groupGroup:`enabled`,
+        gf_whitelistGroup:`enabled`,
+        gf_regionRestrictedGroup:`enabled`,
+        gf_enteredGroup:`enabled`,
+        gf_bundledGroup:`enabled`,
+        gf_tradingCardsGroup:`enabled`,
+        gf_achievementsGroup:`enabled`,
+        gf_multiplayerGroup:`enabled`,
+        gf_steamCloudGroup:`enabled`,
+        gf_linuxGroup:`enabled`,
+        gf_macGroup:`enabled`,
+        gf_dlcGroup:`enabled`,
+        gf_exceptionPinnedGroup:false,
+        gf_exceptionGroupGroup:false,
+        gf_exceptionWhitelistGroup:false,
+        gf_exceptionRegionRestrictedGroup:false,
+        gf_exceptionMultipleGroup:false,
+        gf_exceptionMultipleCopiesGroup:1,
         Avatar: "",
         Username: "",
         SteamID64: "",
@@ -1056,6 +1099,10 @@ function loadEsgst() {
     fixFadedClass(document);
     esgst.endlessFeatures.push(fixFadedClass);
     loadFeatures();
+    if (esgst.sg) {
+        checkSync();
+        updateGroups();
+    }
     goToComment(esgst.originalHash);
 }
 
@@ -1451,17 +1498,33 @@ function checkSync(Update, Callback) {
         document.getElementsByClassName("SMSync")[0].addEventListener("click", function() {
             setSync(CurrentDate, Update, Callback);
         });
-    } else if (SyncFrequency && ((CurrentDate - GM_getValue("LastSync")) > (SyncFrequency * 86400000))) {
+    } else if (SyncFrequency && ((CurrentDate - GM_getValue("LastSync")) > (SyncFrequency * 86400000)) && (esgst.mainPath || esgst.accountPath)) {
         setSync(CurrentDate, Update, Callback);
     }
 }
 
 function setSync(CurrentDate, Update, Callback) {
     var Popup, Sync;
-    GM_setValue("LastSync", CurrentDate);
-    Popup = createPopup(Update ? false : true);
+    Popup = createPopup();
+    if (!Update) {
+        var context = document.getElementsByClassName(`nav__left-container`)[0];
+        var html = `
+            <div class="nav__button-container">
+                <div class="nav__button">
+                    <div class="rhBusy"></div>
+                    <i class="fa fa-refresh fa-spin"></i>
+                    <span>Syncing...</span>
+                </div>
+            </div>
+        `;
+        context.insertAdjacentHTML(`beforeEnd`, html);
+        var button = context.lastElementChild.firstElementChild;
+        button.addEventListener(`click`, function() {
+            Popup.popUp();
+        });
+    }
     Popup.Icon.classList.add("fa-refresh");
-    Popup.Title.textContent = Update ? "Syncing..." : "ESGST is performing the automatic sync. Please do not close the popup or reload / close the tab until it has finished.";
+    Popup.Title.textContent = Update ? "Syncing..." : "ESGST is performing the automatic sync. Please do not reload / close the page until it has finished.";
     Sync = {};
     createButton(Popup.Button, "fa-times-circle", "Cancel", "", "", function() {
         Sync.Canceled = true;
@@ -1469,17 +1532,26 @@ function setSync(CurrentDate, Update, Callback) {
     }, null, true);
     Sync.Progress = Popup.Progress;
     Sync.OverallProgress = Popup.OverallProgress;
-    Popup.popUp().reposition();
+    if (Update) {
+        Popup.popUp().reposition();
+    }
     sync(Sync, function(CurrentDate) {
         Popup.Icon.classList.remove("fa-refresh");
         Popup.Icon.classList.add("fa-check");
-        Popup.Title.textContent = Update ? "Synced!" : "Automatic sync finished. You can now close the popup or reload / close the tab.";
+        Popup.Title.textContent = Update ? "Synced!" : "ESGST has finished the automatic sync. You can now reload / close the page.";
         Popup.Button.innerHTML = "";
         Sync.Progress.innerHTML = Sync.OverallProgress.innerHTML = "";
         if (Update) {
             Popup.Close.click();
             Callback(CurrentDate);
+        } else {
+            button.classList.remove(`rhBusy`);
+            button.innerHTML = `
+                <i class="fa fa-check-circle"></i>
+                <span>Synced!</span>
+            `;
         }
+        GM_setValue("LastSync", CurrentDate);
     });
 }
 
