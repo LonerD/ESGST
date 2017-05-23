@@ -41,7 +41,8 @@ function addERButton(Context) {
     }
 
     function getResult() {
-        syncOwnedGames(Popup, checkResult);
+        var games = GM_getValue(`Games`);
+        syncOwnedGames(Popup, games, checkResult);
     }
 
     function checkResult(Result) {

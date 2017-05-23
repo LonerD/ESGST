@@ -2,7 +2,7 @@
 // @name ESGST
 // @namespace ESGST
 // @description Enhances SteamGifts and SteamTrades by adding some cool features to them.
-// @version 6.Beta.2.3
+// @version 6.Beta.2.4
 // @author revilheart
 // @contributor Royalgamer06
 // @downloadURL https://github.com/revilheart/ESGST/raw/master/ESGST.user.js
@@ -24,7 +24,7 @@
 // @grant GM_getResourceText
 // @grant GM_getResourceURL
 // @grant GM_xmlhttpRequest
-// @require https://github.com/revilheart/ESGST/raw/master/Scripts/HelperFunctions.v6.5.1.js
+// @require https://github.com/revilheart/ESGST/raw/master/Scripts/HelperFunctions.v6.5.2.js
 // @require https://github.com/revilheart/ESGST/raw/master/Scripts/Features/Other/HeaderButton.v6.0.1.js
 // @require https://github.com/revilheart/ESGST/raw/master/Scripts/Features/Other/SettingsMenu.v5.2.2.js
 // @require https://github.com/revilheart/ESGST/raw/master/Scripts/Features/General/FixedHeader.v6.0.0.js
@@ -37,20 +37,20 @@
 // @require https://github.com/revilheart/ESGST/raw/master/Scripts/Features/General/EmbeddedVideos.v6.1.2.js
 // @require https://github.com/revilheart/ESGST/raw/master/Scripts/Features/General/AccurateTimestamps.v6.0.0.js
 // @require https://github.com/revilheart/ESGST/raw/master/Scripts/Features/General/PaginationNavigationOnTop.v6.0.0.js
-// @require https://github.com/revilheart/ESGST/raw/master/Scripts/Features/General/EndlessScrolling.v6.0.2.js
+// @require https://github.com/revilheart/ESGST/raw/master/Scripts/Features/General/EndlessScrolling.v6.0.3.js
 // @require https://github.com/revilheart/ESGST/raw/master/Scripts/Features/Giveaways/DeliveredGiftsNotifier.v5.js
 // @require https://github.com/revilheart/ESGST/raw/master/Scripts/Features/Giveaways/PointsRefresher.v5.js
 // @require https://github.com/revilheart/ESGST/raw/master/Scripts/Features/Giveaways/HiddenFeaturedContainer.v6.0.0.js
 // @require https://github.com/revilheart/ESGST/raw/master/Scripts/Features/Giveaways/AdvancedGiveawaySearch.v5.1.0.js
 // @require https://github.com/revilheart/ESGST/raw/master/Scripts/Features/Giveaways/PinnedGiveawaysButton.v5.js
-// @require https://github.com/revilheart/ESGST/raw/master/Scripts/Features/Giveaways/GiveawayFilters.v6.2.0.js
+// @require https://github.com/revilheart/ESGST/raw/master/Scripts/Features/Giveaways/GiveawayFilters.v6.3.0.js
 // @require https://github.com/revilheart/ESGST/raw/master/Scripts/Features/Giveaways/GridView.v5.js
 // @require https://github.com/revilheart/ESGST/raw/master/Scripts/Features/Giveaways/GiveawayPanel.v5.1.2.js
 // @require https://github.com/revilheart/ESGST/raw/master/Scripts/Features/Giveaways/GiveawayGroupsPopup.v5.js
 // @require https://github.com/revilheart/ESGST/raw/master/Scripts/Features/Giveaways/GiveawayTemplates.v5.js
 // @require https://github.com/revilheart/ESGST/raw/master/Scripts/Features/Giveaways/StickiedGiveawayGroups.v5.js
 // @require https://github.com/revilheart/ESGST/raw/master/Scripts/Features/Giveaways/UnsentGiftsSender.v5.1.0.js
-// @require https://github.com/revilheart/ESGST/raw/master/Scripts/Features/Giveaways/EntriesRemover.v5.0.2.js
+// @require https://github.com/revilheart/ESGST/raw/master/Scripts/Features/Giveaways/EntriesRemover.v5.0.3.js
 // @require https://github.com/revilheart/ESGST/raw/master/Scripts/Features/Giveaways/GiveawayWinnersLink.v5.js
 // @require https://github.com/revilheart/ESGST/raw/master/Scripts/Features/Giveaways/GiveawayErrorSearchLinks.v5.js
 // @require https://github.com/revilheart/ESGST/raw/master/Scripts/Features/Giveaways/ArchiveSearcher.v5.js
@@ -77,7 +77,7 @@
 // @require https://github.com/revilheart/ESGST/raw/master/Scripts/Features/UsersGroupsGames/SteamGiftsProfileButton.v5.js
 // @require https://github.com/revilheart/ESGST/raw/master/Scripts/Features/UsersGroupsGames/SteamTradesProfileButton.v5.js
 // @require https://github.com/revilheart/ESGST/raw/master/Scripts/Features/UsersGroupsGames/SharedGroupsChecker.v5.js
-// @require https://github.com/revilheart/ESGST/raw/master/Scripts/Features/UsersGroupsGames/WhitelistBlacklistChecker.v5.1.0.js
+// @require https://github.com/revilheart/ESGST/raw/master/Scripts/Features/UsersGroupsGames/WhitelistBlacklistChecker.v5.2.0.js
 // @require https://github.com/revilheart/ESGST/raw/master/Scripts/Features/UsersGroupsGames/WhitelistBlacklistHighlighter.v5.js
 // @require https://github.com/revilheart/ESGST/raw/master/Scripts/Features/UsersGroupsGames/UserTags.v5.js
 // @require https://github.com/revilheart/ESGST/raw/master/Scripts/Features/UsersGroupsGames/InboxWinnersHighlighter.v5.js

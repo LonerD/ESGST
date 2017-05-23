@@ -97,6 +97,10 @@ function loadGiveawayFilters() {
         ],
         exceptionFilters: [
             {
+                name: `Wishlist`,
+                key: `exceptionWishlist`
+            },
+            {
                 name: `Pinned`,
                 key: `exceptionPinned`
             },
@@ -266,12 +270,13 @@ function filterGfGiveaways() {
         var giveaway = giveaways[i];
         var count = parseInt(gf.filtered.textContent);
         var filtered = false;
-        if ((giveaway.pinned && !gf.exceptionPinned) ||
+        if ((giveaway.wishlist && !gf.exceptionWishlist) ||
+            (giveaway.pinned && !gf.exceptionPinned) ||
             (giveaway.group && !gf.exceptionGroup) ||
             (giveaway.whitelist && !gf.exceptionWhitelist) ||
             (giveaway.regionRestricted && !gf.exceptionRegionRestricted) ||
             ((giveaway.copies > gf.exceptionMultipleCopies) && !gf.exceptionMultiple) ||
-            (!giveaway.pinned && !giveaway.group && !giveaway.whitelist && !giveaway.regionRestricted && (giveaway.copies <= gf.exceptionMultipleCopies))
+            (!giveaway.wishlist && !giveaway.pinned && !giveaway.group && !giveaway.whitelist && !giveaway.regionRestricted && (giveaway.copies <= gf.exceptionMultipleCopies))
         ) {
             for (var j = 0, numRangeFilters = gf.rangeFilters.length; !filtered && (j < numRangeFilters); ++j) {
                 var name = gf.rangeFilters[j].name;
@@ -319,12 +324,20 @@ function toggleGfFilters(filters, expand, collapse) {
 
 function getGfGiveaways() {
     var giveaways = [];
+    var games = GM_getValue(`Games`);
     var matches = document.getElementsByClassName(`giveaway__row-outer-wrap`);
     for (var i = 0, n = matches.length; i < n; ++i) {
         var context = matches[i];
         var giveaway = {
             giveaway: context
         };
+        var id = context.querySelector(`a[href*="store.steampowered.com/app/"]`);
+        if (id) {
+            id = parseInt(id.getAttribute(`href`).match(/\d+/));
+            if (games[id] && games[id].wishlist) {
+                giveaway.wishlist = true;
+            }
+        }
         var level = context.getElementsByClassName(`giveaway__column--contributor-level`)[0];
         if (level) {
             giveaway.level = parseInt(level.textContent.match(/\d+/));

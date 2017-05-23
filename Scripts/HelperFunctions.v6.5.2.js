@@ -229,6 +229,7 @@ function loadEsgst() {
         wbc: `WBC`,
         wbc_b: `WBC_B`,
         wbc_h: `WBC_H`,
+        wbc_n: `wbc_n`,
         wbh: `WBH`,
         ut: `UH`,
         iwh: `IWH`,
@@ -298,6 +299,7 @@ function loadEsgst() {
         gf_linux: `enabled`,
         gf_mac: `enabled`,
         gf_dlc: `enabled`,
+        gf_exceptionWishlist: false,
         gf_exceptionPinned: false,
         gf_exceptionGroup: false,
         gf_exceptionWhitelist: false,
@@ -325,6 +327,7 @@ function loadEsgst() {
         gf_linuxWishlist:`enabled`,
         gf_macWishlist:`enabled`,
         gf_dlcWishlist:`enabled`,
+        gf_exceptionWishlistWishlist: false,
         gf_exceptionPinnedWishlist:false,
         gf_exceptionGroupWishlist:false,
         gf_exceptionWhitelistWishlist:false,
@@ -352,6 +355,7 @@ function loadEsgst() {
         gf_linuxGroup:`enabled`,
         gf_macGroup:`enabled`,
         gf_dlcGroup:`enabled`,
+        gf_exceptionWishlistGroup: false,
         gf_exceptionPinnedGroup:false,
         gf_exceptionGroupGroup:false,
         gf_exceptionWhitelistGroup:false,
@@ -509,7 +513,7 @@ function loadEsgst() {
         {
             id: `gf`,
             name: `Giveaway Filters`,
-            check: getValue(`gf`) && esgst.giveawaysPath,
+            check: getValue(`gf`) && esgst.giveawaysPath && !window.location.search.match(/q=(.+)&/),
             load: loadGiveawayFilters
         },
         {
@@ -911,6 +915,11 @@ function loadEsgst() {
                     id: `wbc_h`,
                     name: `Highlight users who have whitelisted/blacklisted you.`,
                     check: getValue(`wbc_h`)
+                },
+                {
+                    id: `wbc_n`,
+                    name: `Save automatic notes to users that you have returned whitelist/blacklist for.`,
+                    check: getValue(`wbc_n`)
                 }
             ],
             check: getValue(`wbc`) && esgst.sg && esgst.mainPageHeading,

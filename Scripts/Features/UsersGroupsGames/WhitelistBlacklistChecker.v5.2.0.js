@@ -236,6 +236,9 @@ function checkWBCUsers(WBC, I, N, Callback) {
                     }
                     User.Whitelisted = SavedUser.Whitelisted;
                     User.Blacklisted = SavedUser.Blacklisted;
+                    if (esgst.wbc_n) {
+                        User.Notes = SavedUser.Notes;
+                    }
                     checkWBCUser(WBC, User, function() {
                         setTimeout(setWBCResult, 0, WBC, User, (Result != User.WBC.Result) ? true : false, I, N, Callback);
                     });
@@ -291,16 +294,30 @@ function returnWBCWhitelistBlacklist(WBC, User, Callback) {
             document.getElementsByClassName("sidebar__shortcut__" + Type)[0].click();
             User.Whitelisted = User.Blacklisted = false;
             User[Key] = true;
+            if (esgst.wbc_n) {
+                var msg = `${Key} in return.`;
+                if (User.Notes) {
+                    User.Notes = `${msg}\n\n${User.Notes}`;
+                } else {
+                    User.Notes = msg;
+                }
+            }
             Callback();
         } else {
             queueRequest(WBC, "xsrf_token=" + esgst.xsrfToken + "&do=" + Type + "&child_user_id=" + User.ID + "&action=insert", "/ajax.php", function(Response) {
                 if (parseJSON(Response.responseText).type == "success") {
                     User.Whitelisted = User.Blacklisted = false;
                     User[Key] = true;
-                    Callback();
-                } else {
-                    Callback();
                 }
+                if (esgst.wbc_n) {
+                    var msg = `${Key} in return.`;
+                    if (User.Notes) {
+                        User.Notes = `${msg}\n\n${User.Notes}`;
+                    } else {
+                        User.Notes = msg;
+                    }
+                }
+                Callback();
             });
         }
     }
@@ -340,10 +357,12 @@ function checkWBCGiveaway(WBC, User, Callback) {
         queueRequest(WBC, null, User.WBC.WhitelistGiveaway || User.WBC.Giveaway, function(Response) {
             var responseHtml = parseHTML(Response.responseText);
             var errorMessage = responseHtml.getElementsByClassName(`table--summary`)[0];
+            var stop;
             if (errorMessage) {
                 errorMessage = errorMessage.textContent;
                 if (errorMessage.match(/blacklisted the giveaway creator/)) {
-                    User.WBC.Result = "Unknown";
+                    User.WBC.Result = "NotBlacklisted";
+                    stop = true;
                 } else if (errorMessage.match(/blacklisted by the giveaway creator/)) {
                     User.WBC.Result = "Blacklisted";
                 } else if (errorMessage.match(/not a member of the giveaway creator's whitelist/)) {
@@ -358,7 +377,7 @@ function checkWBCGiveaway(WBC, User, Callback) {
             }
             User.WBC.LastSearch = new Date().getTime();
             User.WBC.Timestamp = WBC.Timestamp;
-            Callback();
+            Callback(stop);
         });
     }
 }
@@ -379,9 +398,9 @@ function getWBCGiveaways(WBC, User, NextPage, CurrentPage, URL, Callback, Contex
             }
         }
         if (User.WBC.Giveaway) {
-            checkWBCGiveaway(WBC, User, function() {
+            checkWBCGiveaway(WBC, User, function(stop) {
                 var WhitelistGiveaways, I, N, GroupGiveaway;
-                if ((User.WBC.Result == "NotBlacklisted") && WBC.FC.checked) {
+                if ((User.WBC.Result == "NotBlacklisted") && !stop && WBC.FC.checked) {
                     WhitelistGiveaways = Context.getElementsByClassName("giveaway__column--whitelist");
                     for (I = 0, N = WhitelistGiveaways.length; (I < N) && !User.WBC.WhitelistGiveaway; ++I) {
                         GroupGiveaway = WhitelistGiveaways[I].parentElement.getElementsByClassName("giveaway__column--group")[0];

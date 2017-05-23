@@ -1,5 +1,16 @@
 /*
- * May 23, 2017 - v6.Beta.2.2
+ * May 23, 2017 - v6.Beta.2.4
+ */
+
+* Fixed a bug in Endless Scrolling that didn't update the filtered count from Giveaway Filters upon refreshing the page.
+* Prevented Giveaway Filters from running if an advanced search has been made.
+* Added "Wishlist" exception to Giveaway Filters.
+* Fixed a bug in Entries Remover that happened when syncing owned games (closes #110).
+* Added an option to Whitelist/Blacklist Checker that automatically saves notes to users that have been whitelisted/blacklisted in return (closes #59).
+* Fixed a bug in Whitelist/Blacklist Checker that was returning wrong results for blacklisted users.
+
+/*
+ * May 23, 2017 - v6.Beta.2.3
  */
 
 * The automatic sync is now less intrusive and appears as a button in the header (which you can click to see the current progress), and only works in the main and account pages.

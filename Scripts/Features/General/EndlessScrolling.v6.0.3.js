@@ -203,6 +203,10 @@ function loadEndlessScrolling() {
             if (element.classList.contains(`esgst-fmph-placeholder`)) {
                 element = esgst.pagination.previousElementSibling.previousElementSibling;
             }
+            if (gf.filtered) {
+                var hidden = element.nextElementSibling.getElementsByClassName(`giveaway__row-outer-wrap esgst-hidden`).length;
+                gf.filtered.textContent = parseInt(gf.filtered.textContent) - hidden;
+            }
             element.nextElementSibling.remove();
             parent = element.parentElement;
             parent.insertBefore(newContext, element.nextElementSibling);
