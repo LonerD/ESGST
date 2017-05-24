@@ -1,4 +1,11 @@
 /*
+ * May 23, 2017 - v6.Beta.3.1
+ */
+
+* Added an exception to Exclusive Giveaways to be enabled by default upon installation.
+* Added a line break to the list of giveaways in Exclusive Giveaways and also a star icon to comments that have hidden giveaways.
+
+/*
  * May 23, 2017 - v6.Beta.3.0
  */
 

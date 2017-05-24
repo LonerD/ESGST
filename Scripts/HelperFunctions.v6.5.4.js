@@ -256,6 +256,7 @@ function loadEsgst() {
         eg: `eg`
     };
     esgst.defaultValues = {
+        eg: true,
         sm_hb: true,
         sm_ebd: false,
         gp: true,

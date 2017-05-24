@@ -29,8 +29,15 @@ function getExclusiveGiveaways(context) {
         for (var i = 0; i < n; ++i) {
             var code = matches[i].getAttribute(`href`).match(/ESGST-(.+)/)[1];
             var decodedCode = decodeGiveawayCode(code);
-            var html = `<a href="/giveaway/${decodedCode}/">/giveaway/${decodedCode}/</a>`;
+            var html = `<a href="/giveaway/${decodedCode}/">/giveaway/${decodedCode}/</a><br/>`;
             eg.popup.Description.insertAdjacentHTML(`afterBegin`, html);
+            var actions = matches[i].closest(`.comment`).getElementsByClassName(`comment__actions`)[0];
+            html = `
+                <a class="esgst-eg" href="/giveaway/${decodedCode}/" title="ESGST Exclusive Giveaway">
+                    <i class="fa fa-star"></i>
+                </a>
+            `;
+            actions.insertAdjacentHTML(`beforeEnd`, html);
         }
     }
 }
