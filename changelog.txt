@@ -1,4 +1,11 @@
 /*
+ * May 23, 2017 - v6.Beta.3.2
+ */
+
+* Added the icon of the script to the metadata.
+* Fixed a bug that was injecting the script several times in Firefox-based browsers and causing several errors.
+
+/*
  * May 23, 2017 - v6.Beta.3.1
  */
 

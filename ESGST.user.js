@@ -2,7 +2,8 @@
 // @name ESGST
 // @namespace ESGST
 // @description Enhances SteamGifts and SteamTrades by adding some cool features to them.
-// @version 6.Beta.3.1
+// @icon https://github.com/revilheart/ESGST/raw/master/Resources/esgstIcon.ico
+// @version 6.Beta.3.2
 // @author revilheart
 // @contributor Royalgamer06
 // @downloadURL https://github.com/revilheart/ESGST/raw/master/ESGST.user.js
@@ -116,7 +117,7 @@
 // @require https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js
 // @require https://github.com/dinbror/bpopup/raw/master/jquery.bpopup.min.js
 // @require https://cdn.steamgifts.com/js/highcharts.js
-// @run-at document-idle
+// @noframes
 // ==/UserScript==
 
 try {
