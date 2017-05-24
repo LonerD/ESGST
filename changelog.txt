@@ -1,4 +1,10 @@
 /*
+ * May 23, 2017 - v6.Beta.3.3
+ */
+
+* Reverted the script back to a single file instead of separate ones. This is actually more maintainable than using separate files, and also allows users to customize the script more easily.
+
+/*
  * May 23, 2017 - v6.Beta.3.2
  */
 
