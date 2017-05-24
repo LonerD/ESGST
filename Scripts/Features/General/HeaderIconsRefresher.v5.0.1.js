@@ -61,10 +61,14 @@ function refreshHIRIcons(CreatedIcon, WonIcon, MessagesIcon, HIR, Background, Ic
                     HIR.LastCount = 0;
                     document.querySelector("link[rel='shortcut icon']").href = GM_getResourceURL(`${esgst.name}Icon`);
                 } else {
-                    if (Count > 9) {
-                        Count = 0;
+                    if (Count > 0) {
+                        if (Count > 9) {
+                            Count = 0;
+                        }
+                        document.querySelector("link[rel='shortcut icon']").href = GM_getResourceURL(`hir${HIR.Name}Icon${Count}`);
+                    } else {
+                        document.querySelector("link[rel='shortcut icon']").href = GM_getResourceURL(`${esgst.name}Icon`);                        
                     }
-                    document.querySelector("link[rel='shortcut icon']").href = GM_getResourceURL(`hir${HIR.Name}Icon${Count}`);
                 }
             }
         } else if (document.hasFocus()) {

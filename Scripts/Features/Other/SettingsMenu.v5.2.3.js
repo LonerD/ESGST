@@ -150,11 +150,11 @@ function loadSMMenu(Sidebar, SMButton) {
     SMLastBundleSync = Container.getElementsByClassName("SMLastBundleSync")[0];
     SMAPIKey = Container.getElementsByClassName("SMAPIKey")[0];
     SMGeneralFeatures = ["fh", "fs", "fmph", "ff", "hir", "vai", "ev", "hbs", "at", "pnot", "es"];
-    SMGiveawayFeatures = ["dgn", "pr", "hfc", "ags", "pgb", "gf", "gv", "egf", "gp", "ggp", "gt", "sgg", "ugs", "er", "gwl", "gesl", "as"];
+    SMGiveawayFeatures = ["dgn", "pr", "hfc", "ags", "pgb", "gf", "gv", "egf", "gp", "ggp", "gt", "sgg", "rcvc", "ugs", "er", "gwl", "gesl", "as"];
     SMDiscussionFeatures = ["adot", "dh", "mpp", "ded"];
     SMCommentingFeatures = ["ch", "ct", "cfh", "rbot", "rbp", "mr", "rfi", "rml"];
     SMUserGroupGamesFeatures = ["ap", "uh", "un", "rwscvl", "ugd", "namwc", "nrf", "swr", "luc", "sgpb", "stpb", "sgc", "wbc", "wbh", "ut", "iwh", "gh", "gs", "ggh", "ggt", "gc", "mt"];
-    SMOtherFeatures = ["sm_ebd", "sm_hb"];
+    SMOtherFeatures = ["sm_ebd", "sm_hb", "eg"];
     for (var i = 0, n = esgst.features.length; i < n; ++i) {
         var id = esgst.features[i].id;
         if (SMGeneralFeatures.indexOf(id) >= 0) {

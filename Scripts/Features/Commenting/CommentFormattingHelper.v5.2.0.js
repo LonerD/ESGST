@@ -276,6 +276,32 @@ function addCFHPanel(Context) {
             OnClick: function() {
                 setCFHALIPF(CFH);
             }
+        }, {
+            ID: "cfh_eg",
+            Name: "Exclusive Giveaway",
+            Icon: "fa-star",
+            setPopout: function(Popout) {
+                var Code;
+                Popout.innerHTML =
+                    "Giveaway Code: <input placeholder=\"XXXXX\" type=\"text\"/>" +
+                    "<div class=\"form__saving-button btn_action white\">Add</div>";
+                Code = Popout.firstElementChild;
+                Code.nextElementSibling.addEventListener("click", function() {
+                    var encodedCode = encodeGiveawayCode(Code.value);
+                    wrapCFHLinkImage(CFH, ``, `ESGST-${encodedCode}`);
+                    Code.value = ``;
+                    Code.focus();
+                });
+            },
+            Callback: function(Popout) {
+                var Value = CFH.TextArea.value;
+                var Start = CFH.TextArea.selectionStart;
+                var End = CFH.TextArea.selectionEnd;
+                Popout.firstElementChild.nextElementSibling.value = Value.slice(Start, End);
+                window.setTimeout(function() {
+                    Popout.firstElementChild.focus();
+                }, 0);
+            }
         }],
         Panel: Context.previousElementSibling,
         TextArea: Context,

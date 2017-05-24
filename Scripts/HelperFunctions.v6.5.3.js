@@ -172,6 +172,7 @@ function loadEsgst() {
         ggp: `GGP`,
         gt: `GTS`,
         sgg: `SGG`,
+        rcvc: `rcvc`,
         ugs: `UGS`,
         er: `ER`,
         er_s: `ER_S`,
@@ -203,6 +204,7 @@ function loadEsgst() {
         cfh_img: `CFH_IMG`,
         cfh_t: `CFH_T`,
         cfh_e: `CFH_E`,
+        cfh_eg: `cfh_eg`,
         rbot: `rbot`,
         rbp: `MCBP`,
         mr: `MR`,
@@ -250,7 +252,8 @@ function loadEsgst() {
         gc_l: `gc_l`,
         gc_m: `gc_m`,
         gc_g: `gc_g`,
-        mt: `MT`
+        mt: `MT`,
+        eg: `eg`
     };
     esgst.defaultValues = {
         sm_hb: true,
@@ -513,7 +516,7 @@ function loadEsgst() {
         {
             id: `gf`,
             name: `Giveaway Filters`,
-            check: getValue(`gf`) && esgst.giveawaysPath && !window.location.search.match(/q=(.+)&/),
+            check: getValue(`gf`) && esgst.sg && esgst.giveawaysPath && !window.location.search.match(/q=(.+)&/),
             load: loadGiveawayFilters
         },
         {
@@ -575,6 +578,12 @@ function loadEsgst() {
             name: `Stickied Giveaway Groups`,
             check: getValue(`sgg`) && esgst.sg && (esgst.groupsPath || (esgst.newGiveawayPath && !document.getElementsByClassName("table--summary")[0])),
             load: loadStickiedGiveawayGroups
+        },
+        {
+            id: `rcvc`,
+            name: `Real CV Calculator`,
+            check: getValue(`rcvc`) && esgst.newGiveawayPath,
+            load: loadRealCvCalculator
         },
         {
             id: `ugs`,
@@ -761,6 +770,11 @@ function loadEsgst() {
                     id: `cfh_e`,
                     name: `Emojis`,
                     check: getValue(`cfh_e`)
+                },
+                {
+                    id: `cfh_eg`,
+                    name: `Exclusive Giveaways`,
+                    check: getValue(`cfh_eg`)
                 }
             ],
             check: getValue(`cfh`),
@@ -1048,6 +1062,12 @@ function loadEsgst() {
             name: `Multi-Tag`,
             check: getValue(`mt`) && (esgst.ut || esgst.ggt) && !esgst.accountPath && esgst.mainPageHeading,
             load: loadMultiTag
+        },
+        {
+            id: `eg`,
+            name: `Exclusive Giveaways`,
+            check: getValue(`eg`) && esgst.sg,
+            load: loadExclusiveGiveaways
         },
         {
             id: `es`,

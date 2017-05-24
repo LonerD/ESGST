@@ -1,4 +1,16 @@
 /*
+ * May 23, 2017 - v6.Beta.3.0
+ */
+
+* Fixed a bug in Header Icons Refresher that was showing a "+" icon when there were no messages.
+* Fixed a bug in Giveaway Filters that was enabling it for SteamTrades.
+
+Added the following features:
+
+* Real CV Calculator
+* Exclusive Giveaways
+
+/*
  * May 23, 2017 - v6.Beta.2.4
  */
 

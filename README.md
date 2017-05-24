@@ -124,6 +124,24 @@ Tested on Microsoft Edge and most of it seems to work fine, but for some reason 
 
 ![](http://i.imgur.com/Ez4NyMm.png)
 
+### Real CV Calculator
+
+`steamgifts.com/giveaway/new`
+
+* Calculates how much real CV you should get for a giveaway.
+* It's only accurate if you have synced the bundle list from the settings menu and also scanned your sent giveaways using User Giveaways Data. But even then, it's only 100% accurate if the user has 0 not received giveaways, since User Giveaways Data doesn't currently know if the giveaways have been received or not.
+* In the example below, as I had previously given away 3 copies of Max Payne 3, the sixth copy is worth 10% less (18P). So the 3 new copies would equal 58P:
+
+![](http://i.imgur.com/oCGStUq.png)
+
+### Exclusive Giveaways
+
+`steamgifts.com/*`
+
+* Allows users of the script to hide giveaways in their posts that can be easily seen by other users of the script.
+* To add an exclusive giveaway to a post, you must have the option enabled for Comment Formatting Helper.
+* If there are any exclusive giveaways hidden in a page, a button will be added to the header menu where you can access them.
+
 ### Settings Menu
 
 `steamgifts.com/account/*`
