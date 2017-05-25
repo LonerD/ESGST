@@ -1,5 +1,19 @@
 /*
- * May 23, 2017 - v6.Beta.3.4
+ * May 25, 2017 - v6.Beta.3.5
+ */
+
+* New updates of the script will now show a popup with the changelog from the current version (closes #119).
+* Fixed a bug that was not exporting all settings (closes #122).
+* Added an option to the settings menu that allows you to merge the imported data with the current data when importing.
+* Added the option to export Exclusive Giveaways data to the settings menu.
+* Improved the update link in the header button: it now checks if there is an update before loading the link (closes #118).
+* Fixed a bug in Exclusive Giveaways that was happening in the inbox page.
+* Revamped the Exclusive Giveaways popup and improved the feature: the giveaways are now requested to gather information about them (only appears in the popup), new giveaways appear with the tag [NEW] (closes #121), and ended giveaways no longer appear.
+* Added an option to User Notes that prompts for notes when whitelisting/blacklisting an user.
+* Fixed a typo in the link to the changelog on SteamGifts (closes #109).
+
+/*
+ * May 25, 2017 - v6.Beta.3.4
  */
 
 * Fixed a bug that was disabling Real CV Calculator every time a giveaway was created (closes #124).
@@ -180,32 +194,26 @@ Added the following features:
 
 Renamed the following features:
 
-* Blacklist Stats Hider -> Hidden Blacklist Stats;
-* Featured Container Hider -> Hidden Featured Container;
-* Giveaway Description/Comment Box Popup -> Giveaway Description/Reply Box Popup;
-* Main Comment Box Popup -> Reply Box Popup;
-* Permanent User Notes -> User Notes;
-* Permanent User Tags -> User Tags;
-* Entered Games Highlighter -> Games Highlighter.
+* Blacklist Stats Hider -> Hidden Blacklist Stats
+* Featured Container Hider -> Hidden Featured Container
+* Giveaway Description/Comment Box Popup -> Giveaway Description/Reply Box Popup
+* Main Comment Box Popup -> Reply Box Popup
+* Permanent User Notes -> User Notes
+* Permanent User Tags -> User Tags
+* Entered Games Highlighter -> Games Highlighter
 
 Upgraded the following features to v6:
 
-* Fixed Elements
-1. Separated the feature into individual features (Fixed Header, Fixed Sidebar, Fixed Main Page Heading and Fixed Footer).
-2. Fixed Main Page Heading works much more smoother, especially in small pages.
-* Visible Attached Images;
-* Accurate Timestamps
-1. Changed the timestamp format to match SteamGifts' format.
-* Endless Scrolling
-1. Fixed several bugs (closes #50) and made several improvements.
-2. Reverse scrolling now loads the last page first.
+* Fixed Elements - Separated the feature into individual features (Fixed Header, Fixed Sidebar, Fixed Main Page Heading and Fixed Footer). Fixed Main Page Heading works much more smoother, especially in small pages.
+* Visible Attached Images
+* Accurate Timestamps - Changed the timestamp format to match SteamGifts' format.
+* Endless Scrolling - Fixed several bugs (closes #50) and made several improvements. Reverse scrolling now loads the last page first.
 * Hidden Featured Container
-* Active Discussions On Top
-1. The ad is no longer brought to the top.
+* Active Discussions On Top - The ad is no longer brought to the top.
 
 Added the following features:
 
 * Header Button
-* Embedded Videos (partial solution to #89)
+* Embedded Videos - Partial solution to #89.
 * Pagination Navigation On Top
 * Reply Box On Top

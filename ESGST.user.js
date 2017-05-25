@@ -3,13 +3,14 @@
 // @namespace ESGST
 // @description Enhances SteamGifts and SteamTrades by adding some cool features to them.
 // @icon https://github.com/revilheart/ESGST/raw/master/Resources/esgstIcon.ico
-// @version 6.Beta.3.4
+// @version 6.Beta.3.5
 // @author revilheart
 // @contributor Royalgamer06
 // @downloadURL https://github.com/revilheart/ESGST/raw/master/ESGST.user.js
 // @updateURL https://github.com/revilheart/ESGST/raw/master/ESGST.meta.js
 // @match https://www.steamgifts.com/*
 // @match https://www.steamtrades.com/*
+// @connect raw.githubusercontent.com
 // @connect api.steampowered.com
 // @connect store.steampowered.com
 // @connect script.google.com
@@ -25,6 +26,7 @@
 // @grant GM_getResourceText
 // @grant GM_getResourceURL
 // @grant GM_xmlhttpRequest
+// @grant GM_info
 // @resource esgstIcon https://github.com/revilheart/ESGST/raw/master/Resources/esgstIcon.ico
 // @resource sgIcon https://cdn.steamgifts.com/img/favicon.ico
 // @resource stIcon https://cdn.steamtrades.com/img/favicon.ico
@@ -92,6 +94,7 @@ try {
 
 function loadEsgst() {
     addStyles();
+    checkNewVersion();
     esgst.sg = window.location.hostname.match(/www.steamgifts.com/);
     esgst.st = window.location.hostname.match(/www.steamtrades.com/);
     if (esgst.sg) {
@@ -921,6 +924,13 @@ function loadEsgst() {
         {
             id: `un`,
             name: `User Notes`,
+            options: [
+                {
+                    id: `un_wb`,
+                    name: `Prompt for notes when whitelisting/blacklisting an user.`,
+                    check: getValue(`un_wb`)
+                }
+            ],
             check: getValue(`un`) && esgst.sg && (esgst.userPath || esgst.ap),
             load: loadUserNotes,
             profile: true
@@ -2442,6 +2452,17 @@ function addStyles() {
     Unknown = window.getComputedStyle(Unknown).color;
     Temp.remove();
     var style = `
+.rhPopup a {
+    border-bottom: 1px dotted;
+}
+
+.GPPanel .form__submit-button, .GPPanel .form__saving-button {
+    margin-bottom: 0;
+    min-width: 0;
+}
+.rhPopupDescription.left {
+    text-align: left;
+}
 .esgst-hidden {
   display: none !important;
 }
@@ -2455,7 +2476,7 @@ function addStyles() {
     vertical-align: baseline;
 }
 
-.esgst-checkbox {
+.esgst-checkboxm, .esgst-hb-update, .esgst-hb-changelog {
     cursor: pointer;
 }
 
@@ -14581,13 +14602,15 @@ function loadUsernameHistory(Context, User) {
 }
 
 function loadUserNotes(Context, User) {
-    var PUNButton, UserID, PUNIcon, SavedUser;
+    var PUNButton, UserID, PUNIcon, SavedUser, MainContext;
     if (!Context.context) {
+        MainContext = document;
         Context = esgst.featuredHeading;
         User = esgst.user;
     }
     if (Context) {
         if (Context.heading) {
+            MainContext = Context.context;
             Context = Context.heading;
         }
         Context.insertAdjacentHTML(
@@ -14601,7 +14624,20 @@ function loadUserNotes(Context, User) {
         PUNIcon = PUNButton.firstElementChild;
         SavedUser = getUser(User);
         PUNIcon.classList.add((SavedUser && SavedUser.Notes) ? "fa-sticky-note" : "fa-sticky-note-o");
-        PUNButton.addEventListener("click", function() {
+        PUNButton.addEventListener("click", openUnPopup);
+        if (esgst.un_wb) {
+            var sidebar = MainContext.getElementsByClassName(`sidebar__shortcut-inner-wrap`)[0];
+            var whitelistButton = sidebar.getElementsByClassName(`sidebar__shortcut__whitelist`)[0];
+            if (whitelistButton) {
+                whitelistButton.addEventListener("click", openUnPopup);
+            }
+            var blacklistButton = sidebar.getElementsByClassName(`sidebar__shortcut__blacklist`)[0];
+            if (blacklistButton) {
+                blacklistButton.addEventListener("click", openUnPopup);
+            }
+        }
+
+        function openUnPopup() {
             var Popup;
             Popup = createPopup(true);
             Popup.Icon.classList.add("fa-sticky-note");
@@ -14631,7 +14667,7 @@ function loadUserNotes(Context, User) {
                     Popup.TextArea.value = SavedUser.Notes;
                 }
             });
-        });
+        }
     }
 }
 
@@ -15764,7 +15800,7 @@ function loadSteamGiftsProfileButton() {
 
 function loadSteamTradesProfileButton(Context, User) {
     var STPBButton;
-    if (Context.context || esgst.userPath) {        
+    if (Context.context || esgst.userPath) {
         if (Context.context) {
             Context = Context.context;
         } else {
@@ -17287,7 +17323,7 @@ function loadHeaderButton() {
         <div class="nav__button-container nav_btn_container">
             <div class="nav__relative-dropdown dropdown ${esgst.hiddenClass}">
                 <div class="nav__absolute-dropdown">
-                    <a class="nav__row dropdown_btn" href="https://github.com/revilheart/ESGST/raw/master/ESGST.user.js">
+                    <div class="nav__row dropdown_btn esgst-hb-update">
                         <i class="icon-blue blue fa fa-fw fa-refresh"></i>
                         <div class="nav__row__summary">
                             <p class="nav__row__summary__name">Update</p>
@@ -17295,7 +17331,7 @@ function loadHeaderButton() {
                                 <p class="nav__row__summary__description">Check for updates.</p>
                             ` : ``}
                         </div>
-                    </a>
+                    </div>
                     <a class="nav__row dropdown_btn" href="https://github.com/revilheart/ESGST">
                         <i class="icon-grey grey fa fa-fw fa-github"></i>
                         <div class="nav__row__summary">
@@ -17336,6 +17372,15 @@ function loadHeaderButton() {
                             </div>
                         </div>
                     ` : ``}
+                    <div class="nav__row dropdown_btn esgst-hb-changelog">
+                        <i class="icon-grey grey fa fa-fw fa-file-text-o"></i>
+                        <div class="nav__row__summary">
+                            <p class="nav__row__summary__name">Changelog</p>
+                            ${esgst.sg ? `
+                                <p class="nav__row__summary__description">Check out the script's changelog.</p>
+                            ` : ``}
+                        </div>
+                    </div>
                 </div>
             </div>
             <a class="nav__button nav__button--is-dropdown nav_btn nav_btn_left" href="https://www.steamgifts.com/account#ESGST">
@@ -17362,6 +17407,8 @@ function loadHeaderButton() {
     var menu = context[getPosition];
     var SMRecentUsernameChanges = menu.getElementsByClassName("SMRecentUsernameChanges")[0];
     var SMCommentHistory = menu.getElementsByClassName("SMCommentHistory")[0];
+    var SMCheckUpdate = menu.getElementsByClassName("esgst-hb-update")[0];
+    var SMChangelog = menu.getElementsByClassName("esgst-hb-changelog")[0];
     if (SMRecentUsernameChanges) {
         setSMRecentUsernameChanges(SMRecentUsernameChanges);
     }
@@ -17370,6 +17417,37 @@ function loadHeaderButton() {
     }
     var button = menu.lastElementChild;
     button.addEventListener(`click`, toggleHeaderButton);
+    SMChangelog.addEventListener(`click`, function() {
+        makeRequest(null, `https://raw.githubusercontent.com/revilheart/ESGST/master/changelog.txt`, null, function(response) {
+            var changelogPopup = createPopup();
+            changelogPopup.Icon.classList.add(`fa-file-text-o`);
+            changelogPopup.Title.textContent = `Changelog`;
+            var html = response.responseText.replace(/\/\*\n\s\*(.+)\n\s\*\//g, function(m, p1) {
+                return `<strong>${p1}</strong>`;
+            }).replace(/\* (.+)/g, function (m, p1) {
+                return `<li>${p1}</li>`;
+            }).replace(/\n/g, `<br/>`).replace(/#(\d+)/g, function(m, p1) {
+                return `<a href="https://github.com/revilheart/ESGST/issues/${p1}">#${p1}</a>`;
+            });
+            changelogPopup.Description.insertAdjacentHTML(`afterBegin`, html);
+            changelogPopup.Description.classList.add(`left`);
+            changelogPopup.popUp();
+        });
+    });
+    SMCheckUpdate.addEventListener(`click`, function() {
+        makeRequest(null, `https://raw.githubusercontent.com/revilheart/ESGST/master/ESGST.meta.js`, null, function(response) {
+            var version = response.responseText.match(/@version (.+)/);
+            if (version) {
+                if (version[1] != GM_info.script.version) {
+                    window.location.href = `https://raw.githubusercontent.com/revilheart/ESGST/master/ESGST.user.js`;
+                } else {
+                    window.alert(`No ESGST updates found!`);
+                }
+            } else {
+                window.alert(`No ESGST updates found!`);
+            }
+        });
+    });
 
     function toggleHeaderButton(e) {
         if (esgst.sg) {
@@ -17413,22 +17491,138 @@ function getExclusiveGiveaways(context) {
     var matches = context.querySelectorAll(`[href^="ESGST-"]`);
     var n = matches.length;
     if (n > 0) {
-        esgst.eg.button.classList.remove(`esgst-hidden`);
-        for (var i = 0; i < n; ++i) {
-            var code = matches[i].getAttribute(`href`).match(/ESGST-(.+)/)[1];
-            var decodedCode = decodeGiveawayCode(code);
-            var html = `<a href="/giveaway/${decodedCode}/">/giveaway/${decodedCode}/</a><br/>`;
-            esgst.eg.popup.Description.insertAdjacentHTML(`afterBegin`, html);
-            var actions = matches[i].closest(`.comment`).getElementsByClassName(`comment__actions`)[0];
-            html = `
-                <a class="esgst-eg" href="/giveaway/${decodedCode}/" title="ESGST Exclusive Giveaway">
-                    <i class="fa fa-star"></i>
-                </a>
-            `;
-            actions.insertAdjacentHTML(`beforeEnd`, html);
+        esgst.eg.open = false;
+        esgst.eg.giveaways = GM_getValue(`exclusiveGiveaways`, {});
+        getEgDetails(0, n, matches);
+    }
+}
+
+function getEgDetails(i, n, matches) {
+    if (i < n) {
+        var context = matches[i];
+        var code = context.getAttribute(`href`).match(/ESGST-(.+)/)[1];
+        var id = decodeGiveawayCode(code);
+        var giveaway = esgst.eg.giveaways[id];
+        var html = `
+            <a class="esgst-eg" href="/giveaway/${id}/" title="ESGST Exclusive Giveaway">
+                <i class="fa fa-star"></i>
+            </a>
+        `;
+        if (giveaway) {
+            if (new Date().getTime() < giveaway.timestamp) {
+                var comment = context.closest(`.comment`);
+                if (comment) {
+                    var actions = comment.getElementsByClassName(`comment__actions`)[0];
+                    actions.insertAdjacentHTML(`beforeEnd`, html);
+                }
+                esgst.eg.popup.Results.insertAdjacentHTML(`beforeEnd`, giveaway.html);
+                esgst.eg.open = true;
+                window.setTimeout(getEgDetails, 0, ++i, n, matches);
+            } else {
+                delete giveaway.html;
+                window.setTimeout(getEgDetails, 0, ++i, n, matches);
+            }
+        } else {
+            makeRequest(null, `/giveaway/${id}/`, esgst.eg.popup.Progress, function(response) {
+                var responseHtml = parseHTML(response.responseText);
+                var container = responseHtml.getElementsByClassName(`featured__outer-wrap--giveaway`)[0];
+                if (container) {
+                    var heading = responseHtml.getElementsByClassName(`featured__heading`)[0];
+                    var columns = heading.nextElementSibling;
+                    var remaining = columns.firstElementChild;
+                    var timestamp = parseInt(remaining.lastElementChild.getAttribute(`data-timestamp`)) * 1000;
+                    if (new Date().getTime() < timestamp) {
+                        var url = response.finalUrl;
+                        var gameId = container.getAttribute(`data-game-id`);
+                        var anchors = heading.getElementsByTagName(`a`);
+                        for (var j = 0, numA = anchors.length; j < numA; ++j) {
+                            anchors[j].classList.add(`giveaway__icon`);
+                        }
+                        var hideButton = heading.getElementsByClassName(`featured__giveaway__hide`)[0];
+                        hideButton.remove();
+                        var headingName = heading.firstElementChild;
+                        headingName.outerHTML = `<a class="giveaway__heading__name" href="${url}">${headingName.innerHTML}</a>`;
+                        var thinHeadings = heading.getElementsByClassName(`featured__heading__small`);
+                        for (var j = 0, numT = thinHeadings.length; j < numT; ++j) {
+                            thinHeadings[j].outerHTML = `<span class="giveaway__heading__thin">${thinHeadings[j].innerHTML}</span>`;
+                        }
+                        remaining.classList.remove(`featured__column`);
+                        var created = remaining.nextElementSibling;
+                        created.classList.remove(`featured__column`, `featured__column--width-fill`);
+                        created.classList.add(`giveaway__column--width-fill`);
+                        created.lastElementChild.classList.add(`giveaway__username`);
+                        var avatar = columns.lastElementChild;
+                        avatar.remove();
+                        var element = created.nextElementSibling;
+                        while (element) {
+                            element.classList.remove(`featured__column`);
+                            element.className = element.className.replace(/featured/g, `giveaway`);
+                            element = element.nextElementSibling;
+                        }
+                        var counts = responseHtml.getElementsByClassName(`sidebar__navigation__item__count`);
+                        var image = responseHtml.getElementsByClassName(`global__image-outer-wrap--game-large`)[0].firstElementChild.getAttribute(`src`);
+                        var popupHtml = `
+                            <div class="giveaway__row-outer-wrap" data-game-id="${gameId}">
+ 		    	                <div class="giveaway__row-inner-wrap">
+		        			        <div class="giveaway__summary">
+			        			        <h2 class="giveaway__heading">
+                                            ${heading.innerHTML}
+					        	        </h2>
+					                    <div class="giveaway__columns">
+                                            ${columns.innerHTML}
+                                        </div>
+    						    	    <div class="giveaway__links">
+        							        <a href="${url}/entries">
+                                                <i class="fa fa-tag"></i>
+                                                <span>${counts[1].textContent} entries</span>
+                                            </a>
+				        				    <a href="${url}/comments">
+                                                <i class="fa fa-comment"></i>
+                                                <span>${counts[0].textContent} comments</span>
+                                            </a>
+						    	        </div>
+    						        </div>
+                                    ${avatar.outerHTML}
+                                    <a class="global__image-outer-wrap global__image-outer-wrap--game-medium" href="${url}">
+                                        <div class="global__image-inner-wrap" style="background-image:url(${image});"></div>
+                                    </a>
+				                </div>
+		                    </div>
+                        `;
+                        esgst.eg.popup.Results.insertAdjacentHTML(`beforeEnd`, popupHtml);
+                        esgst.eg.popup.Results.lastElementChild.getElementsByClassName(`giveaway__heading__name`)[0].insertAdjacentText(`afterBegin`, `[NEW] `);
+                        esgst.eg.open = true;
+                        var comment = context.closest(`.comment`);
+                        if (comment) {
+                            var actions = comment.getElementsByClassName(`comment__actions`)[0];
+                            actions.insertAdjacentHTML(`beforeEnd`, html);
+                        }
+                        esgst.eg.giveaways[id] = {
+                            timestamp: timestamp,
+                            html: popupHtml
+                        };
+                        window.setTimeout(getEgDetails, 0, ++i, n, matches);
+                    } else {
+                        esgst.eg.giveaways[id] = {
+                            timestamp: timestamp
+                        };
+                        window.setTimeout(getEgDetails, 0, ++i, n, matches);
+                    }
+                } else {
+                    window.setTimeout(getEgDetails, 0, ++i, n, matches);
+                }
+            });
+        }
+    } else {
+        GM_setValue(`exclusiveGiveaways`, esgst.eg.giveaways);
+        esgst.eg.popup.Description.classList.add(`left`);
+        loadEndlessFeatures(esgst.eg.popup.Results);
+        if (esgst.eg.open) {
+            esgst.eg.button.classList.remove(`esgst-hidden`);
         }
     }
 }
+
 
 function decodeGiveawayCode(code) {
     var decodedCode = ``;
@@ -17668,13 +17862,15 @@ function loadSMMenu(Sidebar, SMButton) {
             Names: {
                 Users: "U",
                 Games: "G",
+                Groups: "GP",
                 Comments: "C",
                 Comments_ST: "C_ST",
                 Emojis: "E",
                 Rerolls: "R",
                 CommentHistory: "CH",
                 StickiedGroups: "SG",
-                Templates: "T"
+                Templates: "T",
+                exclusiveGiveaways: "EG"
             }
         };
         createOptions(Popup.Options, SM, [{
@@ -17695,6 +17891,15 @@ function loadSMMenu(Sidebar, SMButton) {
             Name: "Games",
             Key: "G",
             ID: "SM_G"
+        }, {
+            Check: function() {
+                return true;
+            },
+            Description: "Groups data.",
+            Title: "Includes groups data.",
+            Name: "Groups",
+            Key: "GP",
+            ID: "SM_GP"
         }, {
             Check: function() {
                 return true;
@@ -17762,11 +17967,29 @@ function loadSMMenu(Sidebar, SMButton) {
             Check: function() {
                 return true;
             },
+            Description: "Exclusive giveaways data.",
+            Title: "Includes data from exclusive giveaways.",
+            Name: "exclusiveGiveaways",
+            Key: "EG",
+            ID: "SM_EG"
+        }, {
+            Check: function() {
+                return true;
+            },
             Description: "Settings data.",
             Title: "Includes feature settings.",
             Name: "Settings",
             Key: "S",
             ID: "SM_S"
+        }, {
+            Check: function() {
+                return true;
+            },
+            Description: "Merge current data with the imported one.",
+            Title: "If unchecked, the new data will replace the current one.",
+            Name: "Merge",
+            Key: "M",
+            ID: "SM_M"
         }]);
         Popup.Button.classList.add("SMManageDataPopup");
         Popup.Button.innerHTML =
@@ -17998,7 +18221,7 @@ function importSMData(SM) {
                 var Key, Setting;
                 File = parseJSON(Reader.result);
                 if ((File.rhSGST && (File.rhSGST == "Data")) || (File.ESGST && (File.ESGST == "Data"))) {
-                    if (window.confirm("Are you sure you want to import this data? A copy will be downloaded as precaution.")) {
+                    if (window.confirm("Are you sure you want to import this data? A copy of your current data will be downloaded as precaution.")) {
                         exportSMData(SM);
                         for (Key in File.Data) {
                             if (Key == "Settings") {
@@ -18007,11 +18230,180 @@ function importSMData(SM) {
                                         GM_setValue(Setting, File.Data.Settings[Setting]);
                                     }
                                 }
+                            } else if (SM.M.checked) {
+                                if (Key == "Users" && SM.U.checked) {
+                                    var savedUsers = GM_getValue(`Users`);
+                                    for (var i = 0, n = File.Data.Users.length; i < n; ++i) {
+                                        var user = File.Data.Users[i];
+                                        var j = getUserIndex(user, savedUsers);
+                                        if (j >= 0) {
+                                            var savedUser = savedUsers[j];
+                                            if (savedUser.Notes) {
+                                                if (user.Notes && savedUser.Notes != user.Notes) {
+                                                    savedUser.Notes += `\n\n${user.Notes}`;
+                                                }
+                                            } else {
+                                                savedUser.Notes = user.Notes;
+                                            }
+                                            if (savedUser.Tags) {
+                                                if (user.Tags) {
+                                                    var tags = user.Tags.split(/,\s/);
+                                                    for (var k = 0, numTags = tags.length; k < numTags; ++k) {
+                                                        if (tags[k] && savedUser.Tags.indexOf(tags[k]) < 0) {
+                                                            savedUser.Tags += `, ${tags[k]}`;
+                                                        }
+                                                    }
+                                                }
+                                            } else {
+                                                savedUser.Tags = user.Tags;
+                                            }
+                                            if (savedUser.RWSCVL) {
+                                                if (user.RWSCVL) {
+                                                    if (user.RWSCVL.LastWonCheck > savedUser.RWSCVL.LastWonCheck) {
+                                                        savedUser.RWSCVL = user.RWSCVL;
+                                                    }
+                                                }
+                                            } else {
+                                                savedUser.RWSCVL = user.RWSCVL;
+                                            }
+                                            if (savedUser.UGD) {
+                                                if (user.UGD) {
+                                                    if (user.UGD.SentTimestamp > savedUser.UGD.SentTimestamp) {
+                                                        savedUser.UGD.Sent = user.UGD.Sent;
+                                                        savedUser.UGD.SentTimestamp = user.UGD.SentTimestamp;
+                                                    }
+                                                    if (user.UGD.WonTimestamp > savedUser.UGD.WonTimestamp) {
+                                                        savedUser.UGD.Won = user.UGD.Won;
+                                                        savedUser.UGD.WonTimestamp = user.UGD.WonTimestamp;
+                                                    }
+                                                }
+                                            } else {
+                                                savedUser.UGD = user.UGD;
+                                            }
+                                            if (savedUser.NAMWC) {
+                                                if (user.NAMWC) {
+                                                    if (user.NAMWC.LastSearch > savedUser.NAMWC.LastSearch) {
+                                                        savedUser.NAMWC = user.NAMWC;
+                                                    }
+                                                }
+                                            } else {
+                                                savedUser.NAMWC = user.NAMWC;
+                                            }
+                                            if (savedUser.NRF) {
+                                                if (user.NRF) {
+                                                    if (user.NRF.LastSearch > savedUser.NRF.LastSearch) {
+                                                        savedUser.NRF = user.NRF;
+                                                    }
+                                                }
+                                            } else {
+                                                savedUser.NRF = user.NRF;
+                                            }
+                                            if (savedUser.WBC) {
+                                                if (user.WBC) {
+                                                    if (user.WBC.LastSearch > savedUser.WBC.LastSearch) {
+                                                        savedUser.WBC = user.WBC;
+                                                    }
+                                                }
+                                            } else {
+                                                savedUser.WBC = user.WBC;
+                                            }
+                                        } else {
+                                            savedUsers.push(user);
+                                        }
+                                    }
+                                    GM_setValue(`Users`, savedUsers);
+                                } else if (Key.match(/^(Games|Comments|Comments_ST)$/) && SM[SM.Names[Key]].checked) {
+                                    var saved = GM_getValue(Key);
+                                    for (var key in File.Data[Key]) {
+                                        var value = File.Data[Key][key];
+                                        if (saved[key]) {
+                                            for (var subKey in value) {
+                                                if (subKey == `Tags`) {
+                                                    if (saved.Tags) {
+                                                        var tags = value.Tags.split(/,\s/);
+                                                        for (var k = 0, numTags = tags.length; k < numTags; ++k) {
+                                                            if (tags[k] && saved.Tags.indexOf(tags[k]) < 0) {
+                                                                saved.Tags += `, ${tags[k]}`;
+                                                            }
+                                                        }
+                                                    } else {
+                                                        saved.Tags = value.Tags;
+                                                    }
+                                                } else if (Key == `Games`) {
+                                                    saved[key][subKey] = value[subKey];
+                                                } else if (saved[key][subKey] && saved[key][subKey] < value[subKey]) {
+                                                    saved[key][subKey] = value[subKey];
+                                                }
+                                            }
+                                        } else {
+                                            saved[key] = value;
+                                        }
+                                    }
+                                    GM_setValue(Key, saved);
+                                } else if (Key == `Emojis` && SM.E.checked) {
+                                    var savedEmojis = GM_getValue(`Emojis`);
+                                    var emojis = parseHTML(File.Data.Emojis).getElementsByTagName(`span`);
+                                    for (var i = 0, n = emojis.length; i < n; ++i) {
+                                        if (!savedEmojis.match(emojis[i].outerHTML)) {
+                                            savedEmojis += emojis[i].outerHTML;
+                                        }
+                                    }
+                                    GM_setValue(`Emojis`, savedEmojis);
+                                } else if (Key == `CommentHistory` && SM.CH.checked) {
+                                    var savedCommentsHtml = GM_getValue(`CommentHistory`);
+                                    var savedComments = parseHTML(savedCommentsHtml).getElementsByTagName(`div`);
+                                    var comments = parseHTML(File.Data.CommentHistory).getElementsByTagName(`div`);
+                                    var newComments = [];
+                                    var i = 0, j = 0, nS = savedComments.length, nC = comments.length;
+                                    while (i < nS && j < nC) {
+                                        var savedTimestamp = parseInt(savedComments[i].querySelector(`[data-timestamp]`).getAttribute(`data-timestamp`));
+                                        var timestamp = parseInt(comments[j].querySelector(`[data-timestamp]`).getAttribute(`data-timestamp`));
+                                        if (savedTimestamp > timestamp) {
+                                            newComments.push(savedComments[i].outerHTML);
+                                            ++i;
+                                        } else {
+                                            if (savedCommentsHtml.indexOf(comments[j].outerHTML) < 0) {
+                                                newComments.push(comments[j].outerHTML);
+                                            }
+                                            ++j;
+                                        }
+                                    }
+                                    while (i < nS) {
+                                        newComments.push(savedComments[i].outerHTML);
+                                        ++i;
+                                    }
+                                    while (j < nC) {
+                                        newComments.push(comments[j].outerHTML);
+                                        ++j;
+                                    }
+                                    GM_setValue(`CommentHistory`, newComments.join(``));
+                                } else if (Key.match(/^(Rerolls|StickiedGroups)$/) && SM[SM.Names[Key]].checked) {
+                                    var saved = GM_getValue(Key);
+                                    for (var i = 0, n = File.Data[Key].length; i < n; ++i) {
+                                        var value = File.Data[Key][i];
+                                        if (saved.indexOf(value) < 0) {
+                                            saved.push(value);
+                                        }
+                                    }
+                                    GM_setValue(Key, saved);
+                                } else if (Key == `Templates` && SM.T.checked) {
+                                    var savedTemplates = GM_getValue(`Templates`);
+                                    for (var i = 0, n = File.Data.Templates.length; i < n; ++i) {
+                                        var template = File.Data.Templates[i];
+                                        for (var j = 0, numT = savedTemplates.length; j < numT && savedTemplates[j].Name != template.Name; ++j);
+                                        if (j >= numT) {
+                                            savedTemplates.push(template);
+                                        }
+                                    }
+                                    GM_setValue(`Templates`, savedTemplates);
+                                } else if (SM[SM.Names[Key]].checked) {
+                                    GM_setValue(Key, File.Data[Key]);
+                                }
                             } else if (SM[SM.Names[Key]].checked) {
                                 GM_setValue(Key, File.Data[Key]);
                             }
                         }
-                        window.alert("Imported!");
+                        window.alert("Imported! It is always recommended to sync your data after importing it.");
                     }
                 } else {
                     window.alert("Wrong file!");
@@ -18034,13 +18426,12 @@ function exportSMData(SM) {
         }
     }
     if (SM.S.checked) {
+        var values = GM_listValues();
         Data.Settings = {};
-        for (var i = 0, n = esgst.features.length; i < n; ++i) {
-            Data.Settings[esgst.features[i].id] = esgst[esgst.features[i].id];
-            if (esgst.features[i].options) {
-                for (var j = 0, numO = esgst.features[i].options; j < numO; ++j) {
-                    Data.Settings[esgst.features[i].options[j].id] = esgst[esgst.features[i].options[j].id];
-                }
+        for (var i = 0, n = values.length; i < n; ++i) {
+            var id = values[i];
+            if (!SM.Names[id]) {
+                Data.Settings[id] = GM_getValue(id);
             }
         }
     }
@@ -18055,15 +18446,6 @@ function exportSMData(SM) {
     File.remove();
     window.URL.revokeObjectURL(URL);
     window.alert("Exported!");
-}
-
-function exportSMSettings(Data, Key, Feature) {
-    Data[Key] = GM_getValue(Key);
-    for (Key in Feature) {
-        if (Key != "Name") {
-            exportSMSettings(Data, Key, Feature[Key]);
-        }
-    }
 }
 
 function deleteSMData(SM) {
@@ -18136,3 +18518,26 @@ function setSMCommentHistory(SMCommentHistory) {
     });
 }
 
+function checkNewVersion() {
+    var version = GM_getValue(`version`, `0`);
+    if (version != GM_info.script.version) {
+        makeRequest(null, `https://raw.githubusercontent.com/revilheart/ESGST/master/changelog.txt`, null, function(response) {
+            version = GM_info.script.version;
+            GM_setValue(`version`, version);
+            var reg = new RegExp(`v${version}\\n\\s\\*\\/\\n\\n([\\s\\S]*?)\\n\\n\\/\\*`);
+            var changelog = response.responseText.match(reg);
+            if (changelog) {
+                var popup = createPopup(true);
+                popup.Icon.classList.add(`fa-code`);
+                popup.Title.textContent = `ESGST v${version} Changelog`;
+                var html = changelog[1].replace(/\* (.+)/g, function (m, p1) {
+                    return `<li>${p1}</li>`;
+                }).replace(/\n/g, `<br/>`).replace(/#(\d+)/g, function(m, p1) {
+                    return `<a href="https://github.com/revilheart/ESGST/issues/${p1}">#${p1}</a>`;
+                });
+                popup.Description.insertAdjacentHTML(`afterBegin`, html);
+                popup.popUp();
+            }
+        });
+    }
+}
