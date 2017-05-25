@@ -3,7 +3,7 @@
 // @namespace ESGST
 // @description Enhances SteamGifts and SteamTrades by adding some cool features to them.
 // @icon https://github.com/revilheart/ESGST/raw/master/Resources/esgstIcon.ico
-// @version 6.Beta.3.3
+// @version 6.Beta.3.4
 // @author revilheart
 // @contributor Royalgamer06
 // @downloadURL https://github.com/revilheart/ESGST/raw/master/ESGST.user.js
@@ -5138,7 +5138,7 @@ function loadRealCvCalculator() {
             table.insertAdjacentHTML(`beforeEnd`, html);
             var button = document.getElementsByClassName(`js__submit-form`)[0];
             button.addEventListener(`click`, function() {
-                GM_deleteValue(`rcvc`);
+                GM_deleteValue(`rcvcId`);
             })
         }
     } else {

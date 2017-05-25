@@ -1,4 +1,10 @@
 /*
+ * May 23, 2017 - v6.Beta.3.4
+ */
+
+* Fixed a bug that was disabling Real CV Calculator every time a giveaway was created (closes #124).
+
+/*
  * May 23, 2017 - v6.Beta.3.3
  */
 
