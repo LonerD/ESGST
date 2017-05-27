@@ -134,13 +134,13 @@ Tested on Microsoft Edge and most of it seems to work fine, but for some reason 
 
 ![](http://i.imgur.com/oCGStUq.png)
 
-### Exclusive Giveaways
+### Giveaway Encrypter/Decrypted
 
 `steamgifts.com/*`
 
-* Allows users of the script to hide giveaways in their posts that can be easily seen by other users of the script.
-* To add an exclusive giveaway to a post, you must have the option enabled for Comment Formatting Helper.
-* If there are any exclusive giveaways hidden in a page, a button will be added to the header menu where you can access them.
+* Allows users of the script to encrypt giveaways and hide them in their posts, so that they can be easily seen by other users of the script.
+* To add encrypt a giveaway and hide it in a post, you must have the option enabled for Comment Formatting Helper.
+* If there are any encrypted giveaways hidden in a page, a button will be added to the header menu where you can access them.
 
 ### Settings Menu
 

@@ -1,4 +1,22 @@
 /*
+ * May 26, 2017 - v6.Beta.3.6
+ */
+
+* Fixed a bug in Exclusive Giveaways that was happening for games that the user has hidden (closes #126).
+* Fixed a bug in Exclusive Giveaways that was duplicating elements when using endless scrolling.
+* Fixed a bug in Embedded Videos that was trying to embed channels/playlists (closes #112).
+* Your own comments are now automatically marked as read in Comment Tracker.
+
+Renamed the following features:
+
+* Exclusive Giveaways -> Giveaways Encrypter/Decrypter - This prevents any confusion about the nature of this feature. The giveaways are not really exclusive (anyone can see them in the source code of the page), this feature simply decrypts them and hands them over to the user (closes #125).
+
+Upgraded the following features to v6:
+
+* Username History
+* User Notes - Fixed a bug that was not loading it on SteamTrades.
+
+/*
  * May 25, 2017 - v6.Beta.3.5
  */
 
