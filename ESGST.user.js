@@ -3,7 +3,7 @@
 // @namespace ESGST
 // @description Enhances SteamGifts and SteamTrades by adding some cool features to them.
 // @icon https://github.com/revilheart/ESGST/raw/master/Resources/esgstIcon.ico
-// @version 6.Beta.3.8
+// @version 6.Beta.3.9
 // @author revilheart
 // @contributor Royalgamer06
 // @downloadURL https://github.com/revilheart/ESGST/raw/master/ESGST.user.js
@@ -337,6 +337,7 @@ function loadEsgst() {
         gc_b_r: `gc_b_r`,
         gc_w: `gc_w`,
         gc_o: `gc_o`,
+        gc_i: `gc_i`,
         gc_tc: `gc_tc`,
         gc_a: `gc_a`,
         gc_mp: `gc_mp`,
@@ -356,6 +357,7 @@ function loadEsgst() {
         gc_b_color: `#ffffff`,
         gc_w_color: `#ffffff`,
         gc_o_color: `#ffffff`,
+        gc_i_color: `#ffffff`,
         gc_tc_color: `#ffffff`,
         gc_a_color: `#ffffff`,
         gc_mp_color: `#ffffff`,
@@ -367,6 +369,7 @@ function loadEsgst() {
         gc_b_bgColor: `#7b241c`,
         gc_w_bgColor: `#f39c12`,
         gc_o_bgColor: `#2ecc71`,
+        gc_i_bgColor: `#d35400`,
         gc_tc_bgColor: `#1a5276`,
         gc_a_bgColor: `#117864`,
         gc_mp_bgColor: `#212f3c`,
@@ -466,7 +469,6 @@ function loadEsgst() {
         Avatar: "",
         Username: "",
         SteamID64: "",
-        OwnedGames: [],
         Users: [],
         Games: {},
         Groups: [],
@@ -1147,6 +1149,12 @@ function loadEsgst() {
                     check: getValue(`gc_o`)
                 },
                 {
+                    id: `gc_i`,
+                    name: `Ignored`,
+                    colors: true,
+                    check: getValue(`gc_i`)
+                },
+                {
                     id: `gc_tc`,
                     name: `Trading Cards`,
                     colors: true,
@@ -1754,14 +1762,13 @@ function continueSync(Sync, Callback) {
             for (var key in games) {
                 delete games[key].wishlist;
                 delete games[key].owned;
+                delete games[key].ignored;
             }
-            syncOwnedGames(Sync, games, function() {
-                syncWishlist(Sync, games, function() {
-                    var CurrentDate;
-                    CurrentDate = new Date();
-                    GM_setValue("LastSync", CurrentDate.getTime());
-                    Callback(CurrentDate);
-                });
+            syncGames(Sync, games, function() {
+                var CurrentDate;
+                CurrentDate = new Date();
+                GM_setValue("LastSync", CurrentDate.getTime());
+                Callback(CurrentDate);
             });
         });
     });
@@ -1884,66 +1891,68 @@ function getWhitelistBlacklistUsers(Sync, I, N, Matches, Key, Callback) {
     }
 }
 
-function syncWishlist(Sync, games, Callback) {
-    Sync.OverallProgress.innerHTML =
-        "<i class=\"fa fa-circle-o-notch fa-spin\"></i> " +
-        "<span>Syncing your wishlist...</span>";
-    makeRequest(null, `http://steamcommunity.com/profiles/${GM_getValue(`SteamID64`)}/wishlist`, Sync.Progress, function(Response) {
-        var responseHtml = parseHTML(Response.responseText);
-        var matches = responseHtml.querySelectorAll(`input[name="appid"]`);
-        for (var i = 0, n = matches.length; i < n; ++i) {
-            var id = matches[i].value;
-            if (!games[id]) {
-                games[id] = {};
-            }
-            games[id].wishlist = true;
-        }
-        queueSave(Sync.Progress, function() {
-            updateGames(games);
-            GM_setValue(`LastSave`, 0);
-            Callback();
-        });
-    });
-}
-
-function syncOwnedGames(Sync, games, Callback) {
+function syncGames(sync, games, callback) {
     var SteamAPIKey, URL;
-    Sync.OverallProgress.innerHTML =
-        "<i class=\"fa fa-circle-o-notch fa-spin\"></i> " +
-        "<span>Syncing your owned games...</span>";
-    SteamAPIKey = GM_getValue("SteamAPIKey");
-    if (SteamAPIKey) {
-        URL = "http://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/?key=" + SteamAPIKey + "&steamid=" + GM_getValue("SteamID64") + "&format=json";
-        makeRequest(null, URL, Sync.Progress, function(Response) {
-            var ResponseText, ResponseGames, N, OwnedGames, I;
-            ResponseText = Response.responseText;
-            if (!ResponseText.match(/<title>Forbidden<\/title>/)) {
-                ResponseGames = parseJSON(ResponseText).response.games;
-                N = ResponseGames.length;
-                for (var i = 0; i < N; ++i) {
-                    var id = ResponseGames[i].appid;
+    sync.OverallProgress.innerHTML = `
+        <i class="fa fa-circle-o-notch fa-spin"></i>
+        <span>Syncing your wishlist / owned games / ignored games...</span>
+    `;
+    var url = `http://store.steampowered.com/dynamicstore/userdata`;
+    makeRequest(null, url, sync.Progress, function(response) {
+        var responseJson = parseJSON(response.responseText);
+        var numOwned = responseJson.rgOwnedApps.length;
+        if (numOwned > 0) {
+            var types = [
+                {
+                    name: `rgWishlist`,
+                    key: `wishlist`
+                },
+                {
+                    name: `rgOwnedApps`,
+                    key: `owned`
+                },
+                {
+                    name: `rgOwnedPackages`,
+                    key: `owned`
+                },
+                {
+                    name: `rgIgnoredApps`,
+                    key: `ignored`
+                },
+                {
+                    name: `rgIgnoredPackages`,
+                    key: `ignored`
+                }
+            ];
+            var owned = 0;
+            for (var i = 0, n = types.length; i < n; ++i) {
+                var values = responseJson[types[i].name];
+                for (var j = 0, numValues = values.length; j < numValues; ++j) {
+                    var id = values[j];
                     if (!games[id]) {
                         games[id] = {};
                     }
-                    games[id].owned = true;
-                }
-                if (N != GM_getValue("OwnedGames").length) {
-                    OwnedGames = [];
-                    for (I = 0; I < N; ++I) {
-                        OwnedGames.push(ResponseGames[I].appid);
+                    var key = types[i].key;
+                    games[id][key] = true;
+                    if (key == `owned`) {
+                        ++owned;
                     }
-                    GM_setValue("OwnedGames", OwnedGames);
-                    Callback(1);
-                } else {
-                    Callback(2);
                 }
-            } else {
-                Callback(3);
             }
-        });
-    } else {
-        Callback(4);
-    }
+            queueSave(sync.Progress, function() {
+                updateGames(games);
+                GM_setValue(`LastSaved`, 0);
+                if (owned != GM_getValue(`ownedGames`, 0)) {
+                    GM_setValue(`ownedGames`, owned);
+                    callback(1, games);
+                } else {
+                    callback(2);
+                }
+            });
+        } else {
+            callback(3);
+        }
+    });
 }
 
 function parseJSON(String) {
@@ -2436,6 +2445,11 @@ function addStyles() {
         {
             id: `gc_o`,
             key: `owned`,
+            mainKey: `esgst-gc`
+        },
+        {
+            id: `gc_i`,
+            key: `ignored`,
             mainKey: `esgst-gc`
         },
         {
@@ -3229,7 +3243,7 @@ function syncBundleList() {
     popup.popUp().reposition();
     sync.games = GM_getValue(`Games`);
     syncBundles(sync, `/bundle-games/search?page=`, 1, function() {
-        queueSave(sync, function() {
+        queueSave(sync.Progress, function() {
             updateGames(sync.games);
             GM_setValue(`LastSave`, 0);
             popup.Icon.classList.remove("fa-refresh");
@@ -4256,6 +4270,12 @@ function loadGiveawayFilters() {
                 name: `Points`,
                 minValue: 0,
                 maxValue: 300
+            },
+            {
+                name: `Chance`,
+                minValue: 0,
+                maxValue: 100,
+                step: 0.01
             }
         ],
         checkboxFilters: [
@@ -4320,6 +4340,11 @@ function loadGiveawayFilters() {
                 id: `gc_dlc`,
                 name: `DLC`,
                 key: `dlc`
+            },
+            {
+                id: `gc_g`,
+                name: `Genres`,
+                key: `genres`
             }
         ],
         exceptionFilters: [
@@ -4389,6 +4414,7 @@ function loadGiveawayFilters() {
         name = rangeFilter.name;
         var minValue = rangeFilter.minValue;
         var maxValue = rangeFilter.maxValue;
+        var step = rangeFilter.step;
         var values = ``;
         if (typeof minValue != `undefined`) {
             values += ` min="${minValue}"`;
@@ -4396,10 +4422,13 @@ function loadGiveawayFilters() {
         if (typeof maxValue != `undefined`) {
             values += ` max="${maxValue}"`;
         }
+        if (typeof step != `undefined`) {
+            values += `step="${step}"`;
+        }
         var minKey = `min${name}`;
         var maxKey = `max${name}`;
-        var minSavedValue = GM_getValue(`gf_${minKey}${esgst.gf.type}`);
-        var maxSavedValue = GM_getValue(`gf_${maxKey}${esgst.gf.type}`);
+        var minSavedValue = GM_getValue(`gf_${minKey}${esgst.gf.type}`, minValue);
+        var maxSavedValue = GM_getValue(`gf_${maxKey}${esgst.gf.type}`, maxValue);
         esgst.gf[minKey] = minSavedValue;
         esgst.gf[maxKey] = maxSavedValue;
         html = `
@@ -4441,15 +4470,22 @@ function loadGiveawayFilters() {
                 key = categoryFilter.key;
                 html = `
                     <div class="esgst-gf-category-filter">
-                        <span>${name}</span>
+                        <span>${name} ${(key == `genres`) ? `<input placeholder="Genre1, Genre2" type="text">` : ``}</span>
                     </div>
                 `;
                 categoryFilters.insertAdjacentHTML(`beforeEnd`, html);
                 var gfCategoryFilter = categoryFilters.lastElementChild;
-                value = GM_getValue(`gf_${key}${esgst.gf.type}`);
+                value = GM_getValue(`gf_${key}${esgst.gf.type}`, (key == `genres`) ? false : `enabled`);
                 esgst.gf[key] = value;
-                checkbox = createCheckbox_v6(gfCategoryFilter, value, true);
+                checkbox = createCheckbox_v6(gfCategoryFilter, value, (key == `genres`) ? false : true);
                 checkbox.checkbox.addEventListener(`click`, saveGfValue.bind(null, key, `gf_${key}${esgst.gf.type}`, checkbox));
+                if (key == `genres`) {
+                    var input = gfCategoryFilter.lastElementChild.lastElementChild;
+                    value = GM_getValue(`gf_genresList${esgst.gf.type}`, ``).replace(/,(?!\s)/g, `, `);
+                    input.value = value;
+                    esgst.gf.genresList = value;
+                    input.addEventListener(`change`, saveGfValue.bind(null, `genresList`, `gf_genresList${esgst.gf.type}`, input));
+                }
             }
         }
     }
@@ -4486,7 +4522,7 @@ function saveGfValue(key, name, checkbox, event) {
     if (checkbox) {
         value = checkbox.value;
     } else {
-        value = parseInt(event.currentTarget.value);
+        value = parseFloat(event.currentTarget.value);
     }
     esgst.gf[key] = value;
     GM_setValue(name, value);
@@ -4517,13 +4553,24 @@ function filterGfGiveaways() {
                     filtered = true;
                 }
             }
-            if (esgst.gc) {
-                for (j = 0, numCategoryFilters = esgst.gf.categoryFilters.length; !filtered && (j < numCategoryFilters); ++j) {
-                    var categoryFilter = esgst.gf.categoryFilters[j];
-                    key = categoryFilter.key;
-                    if (((esgst.gf[key] == `disabled`) && giveaway[key]) || ((esgst.gf[key] == `none`) && !giveaway[key])) {
+        }
+        if (esgst.gc) {
+            for (j = 0, numCategoryFilters = esgst.gf.categoryFilters.length; !filtered && (j < numCategoryFilters); ++j) {
+                var categoryFilter = esgst.gf.categoryFilters[j];
+                key = categoryFilter.key;
+                if (key == `genres` && esgst.gf.genres) {
+                    if (giveaway.genres) {
+                        var genres = esgst.gf.genresList.toLowerCase().split(/,\s/);
+                        var k, numGenres;
+                        for (k = 0, numGenres = genres.length; k < numGenres && giveaway.genres.indexOf(genres[k]) < 0; ++k);
+                        if (k >= numGenres) {
+                            filtered = true;
+                        }
+                    } else {
                         filtered = true;
                     }
+                } else if (((esgst.gf[key] == `disabled`) && giveaway[key]) || ((esgst.gf[key] == `none`) && !giveaway[key])) {
+                    filtered = true;
                 }
             }
         }
@@ -4606,12 +4653,21 @@ function getGfGiveaways() {
         if (context.closest(`.pinned-giveaways__outer-wrap`)) {
             giveaway.pinned = true;
         }
+        var chance = context.getElementsByClassName(`GWCChance`)[0];
+        if (chance) {
+            giveaway.chance = parseFloat(chance.textContent.match(/(.+)%/)[1]);
+        }
         if (esgst.gc) {
-            var categories = [`bundled`, `tradingCards`, `achievements`, `multiplayer`, `steamCloud`, `linux`, `mac`, `dlc`];
+            var categories = [`bundled`, `tradingCards`, `achievements`, `multiplayer`, `steamCloud`, `linux`, `mac`, `dlc`, `genres`];
             for (j = 0, numCategories = categories.length; j < numCategories; ++j) {
                 id = categories[j];
-                if (context.getElementsByClassName(`esgst-gc ${id}`)[0]) {
-                    giveaway[id] = true;
+                var category = context.getElementsByClassName(`esgst-gc ${id}`)[0];
+                if (category) {
+                    if (id == `genres`) {
+                        giveaway[id] = category.textContent.toLowerCase().split(/,\s/);
+                    } else {
+                        giveaway[id] = true;
+                    }
                 }
             }
         }
@@ -5673,7 +5729,7 @@ function loadEntriesRemover() {
 }
 
 function addERButton(Context) {
-    var HTML, Button, Popup, URL, CurrentPage, NextPage, OwnedGames, RemovedEntries;
+    var HTML, Button, Popup, URL, CurrentPage, NextPage, RemovedEntries, ownedGames;
     if (Context) {
         HTML = `
             <div class="ERButton" title="Remove entries for owned games.">
@@ -5708,14 +5764,14 @@ function addERButton(Context) {
 
     function getResult() {
         var games = GM_getValue(`Games`);
-        syncOwnedGames(Popup, games, checkResult);
+        syncGames(Popup, games, checkResult);
     }
 
-    function checkResult(Result) {
+    function checkResult(Result, games) {
         Popup.OverallProgress.textContent = `Removing entries...`;
         switch (Result) {
             case 1:
-                OwnedGames = GM_getValue(`OwnedGames`);
+                ownedGames = games;
                 RemovedEntries = {};
                 checkNextPage();
                 break;
@@ -5723,10 +5779,7 @@ function addERButton(Context) {
                 showResult(`<strong>0 new games found.</strong>`);
                 break;
             case 3:
-                showResult(`<strong>Invalid Steam API key. Please enter a valid key in the settings menu.</strong>`);
-                break;
-            case 4:
-                showResult(`<strong>No Steam API Key found. Please enter a key in the settings menu.</strong>`);
+                showResult(`<strong>You are not logged in on Steam. Please log in so you can sync.</strong>`);
                 break;
         }
     }
@@ -5781,7 +5834,7 @@ function addERButton(Context) {
                 if (Image) {
                     Match = Image.getAttribute(`style`).match(/\/(apps|subs)\/(\d+)/);
                     ID = parseInt(Match[2]);
-                    if (OwnedGames.indexOf(ID) >= 0) {
+                    if (ownedGames[ID] && ownedGames[ID].owned) {
                         Type = Match[1].replace(/s$/, ``);
                         Title = Container.getElementsByClassName(`table__column__heading`)[0].textContent;
                         if (!RemovedEntries[ID]) {
@@ -17090,6 +17143,11 @@ function addGameCategory(context, games, id, callback) {
                 name: `Owned`
             },
             {
+                id: `gc_i`,
+                key: `ignored`,
+                name: `Ignored`
+            },
+            {
                 id: `gc_tc`,
                 key: `tradingCards`,
                 name: `Trading Cards`
@@ -17828,7 +17886,7 @@ function addSMButton() {
 function loadSMMenu(Sidebar, SMButton) {
     var Selected, Item, SMSyncFrequency, I, Container, SMGeneral, SMGiveaways, SMDiscussions, SMCommenting, SMUsers, SMOthers, SMManageData, SMRecentUsernameChanges,
         SMCommentHistory, SMManageTags, SMGeneralFeatures, SMGiveawayFeatures, SMDiscussionFeatures, SMCommentingFeatures, SMUserGroupGamesFeatures, SMOtherFeatures, ID,
-        SMLastSync, LastSync, SMAPIKey;
+        SMLastSync, LastSync;
     Selected = Sidebar.getElementsByClassName("is-selected")[0];
     Selected.classList.remove("is-selected");
     SMButton.classList.add("is-selected");
@@ -17868,7 +17926,7 @@ function loadSMMenu(Sidebar, SMButton) {
             Title: "Others",
             Name: "SMOthers"
         }, {
-            Title: "Sync Groups / Whitelist / Blacklist / Owned Games / Wishlist",
+            Title: "Sync Groups / Whitelist / Blacklist / Wishlist / Owned Games / Ignored Games",
             HTML: SMSyncFrequency + createDescription("Select from how many days to how many days you want the automatic sync to run (0 to disable it).") + (
                 "<div class=\"form__sync\">" +
                 "    <div class=\"form__sync-data\">" +
@@ -17896,11 +17954,6 @@ function loadSMMenu(Sidebar, SMButton) {
                 "    </div>" +
                 "</div>"
             )
-        }, {
-            Title: "Steam API Key",
-            HTML: "<input class=\"SMAPIKey\" type=\"text\"/>" +
-            createDescription("This is required for Entries Remover to work." +
-                              "Get a Steam API Key <a class=\"rhBold\" href=\"https://steamcommunity.com/dev/apikey\" target=\"_blank\">here</a>.")
         }]) +
         "</div>";
     createSMButtons([{
@@ -17948,7 +18001,6 @@ function loadSMMenu(Sidebar, SMButton) {
     SMSyncFrequency = Container.getElementsByClassName("SMSyncFrequency")[0];
     SMLastSync = Container.getElementsByClassName("SMLastSync")[0];
     SMLastBundleSync = Container.getElementsByClassName("SMLastBundleSync")[0];
-    SMAPIKey = Container.getElementsByClassName("SMAPIKey")[0];
     SMGeneralFeatures = ["fh", "fs", "fmph", "ff", "hir", "vai", "ev", "hbs", "at", "pnot", "es"];
     SMGiveawayFeatures = ["dgn", "pr", "hfc", "ags", "pgb", "gf", "gv", "egf", "gp", "ggp", "gt", "sgg", "rcvc", "ugs", "er", "gwl", "gesl", "as"];
     SMDiscussionFeatures = ["adot", "dh", "mpp", "ded"];
@@ -17997,9 +18049,6 @@ function loadSMMenu(Sidebar, SMButton) {
             window.alert(`You synced the bundle list in less than a week ago. You can sync only once per week.`);
         }
     });
-    if (GM_getValue("SteamAPIKey")) {
-        SMAPIKey.value = GM_getValue("SteamAPIKey");
-    }
     SMSyncFrequency.addEventListener("change", function() {
         GM_setValue("SyncFrequency", SMSyncFrequency.selectedIndex);
     });
@@ -18265,9 +18314,6 @@ function loadSMMenu(Sidebar, SMButton) {
     if (SMCommentHistory) {
         setSMCommentHistory(SMCommentHistory);
     }
-    SMAPIKey.addEventListener("input", function() {
-        GM_setValue("SteamAPIKey", SMAPIKey.value);
-    });
 }
 
 function getSMFeature(Feature) {
@@ -18694,3 +18740,4 @@ function checkNewVersion() {
         });
     }
 }
+

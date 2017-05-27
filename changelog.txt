@@ -1,4 +1,13 @@
 /*
+ * May 26, 2017 - v6.Beta.3.9
+ */
+
+* Changed the way the sync works (it no longer requires a Steam API key, but you must be logged in on Steam).
+* Category filters are now applied to exceptions in Giveaway Filters (closes #115).
+* Added "Chance" and "Genres" filters to Giveaway Filters.
+* Added "Ignored" category to Game Categories (must be synced through the settings menu).
+
+/*
  * May 26, 2017 - v6.Beta.3.8
  */
 
