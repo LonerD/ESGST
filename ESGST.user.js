@@ -3,7 +3,7 @@
 // @namespace ESGST
 // @description Enhances SteamGifts and SteamTrades by adding some cool features to them.
 // @icon https://github.com/revilheart/ESGST/raw/master/Resources/esgstIcon.ico
-// @version 6.Beta.3.7
+// @version 6.Beta.3.8
 // @author revilheart
 // @contributor Royalgamer06
 // @downloadURL https://github.com/revilheart/ESGST/raw/master/ESGST.user.js
@@ -375,6 +375,10 @@ function loadEsgst() {
         gc_m_bgColor: `#935116`,
         gc_dlc_bgColor: `#63397a`,
         gc_g_bgColor: `#5f6a6a`,
+        wbh_cw_color: `#ffffff`,
+        wbh_cw_bgColor: `#228b22`,
+        wbh_cb_color: `#ffffff`,
+        wbh_cb_bgColor: `#ff4500`,
         gf_minLevel: 0,
         gf_maxLevel: 10,
         gf_minEntries: 0,
@@ -968,6 +972,18 @@ function loadEsgst() {
                 {
                     id: `namwc_h`,
                     name: `Highlight users.`,
+                    options: [
+                        {
+                            id: `namwc_h_i`,
+                            name: `Show an icon next to the usernames instead of coloring.`,
+                            check: getValue(`namwc_h_i`)
+                        },
+                        {
+                            id: `namwc_m`,
+                            name: `Highlight multiple wins as positive.`,
+                            check: getValue(`namwc_m`)
+                        }
+                    ],
                     check: getValue(`namwc_h`)
                 }
             ],
@@ -1042,6 +1058,20 @@ function loadEsgst() {
         {
             id: `wbh`,
             name: `Whitelist/Blacklist Highlighter`,
+            options: [
+                {
+                    id: `wbh_cw`,
+                    name: `Color whitelisted users instead of adding a heart icon.`,
+                    colors: true,
+                    check: getValue(`wbh_cw`)
+                },
+                {
+                    id: `wbh_cb`,
+                    name: `Color blacklisted users instead of adding a ban icon.`,
+                    colors: true,
+                    check: getValue(`wbh_cb`)
+                }
+            ],
             check: getValue(`wbh`) && !esgst.accountPath,
             load: loadWhitelistBlacklistHighlighter,
             endless: true
@@ -1094,6 +1124,7 @@ function loadEsgst() {
                 {
                     id: `gc_b`,
                     name: `Bundled`,
+                    colors: true,
                     options: [
                         {
                             id: `gc_b_r`,
@@ -1106,51 +1137,61 @@ function loadEsgst() {
                 {
                     id: `gc_w`,
                     name: `Wishlist`,
+                    colors: true,
                     check: getValue(`gc_w`)
                 },
                 {
                     id: `gc_o`,
                     name: `Owned`,
+                    colors: true,
                     check: getValue(`gc_o`)
                 },
                 {
                     id: `gc_tc`,
                     name: `Trading Cards`,
+                    colors: true,
                     check: getValue(`gc_tc`)
                 },
                 {
                     id: `gc_a`,
                     name: `Achivements`,
+                    colors: true,
                     check: getValue(`gc_a`)
                 },
                 {
                     id: `gc_mp`,
                     name: `Multiplayer`,
+                    colors: true,
                     check: getValue(`gc_mp`)
                 },
                 {
                     id: `gc_sc`,
                     name: `Steam Cloud`,
+                    colors: true,
                     check: getValue(`gc_sc`)
                 },
                 {
                     id: `gc_l`,
                     name: `Linux`,
+                    colors: true,
                     check: getValue(`gc_l`)
                 },
                 {
                     id: `gc_m`,
                     name: `Mac`,
+                    colors: true,
                     check: getValue(`gc_m`)
                 },
                 {
                     id: `gc_dlc`,
                     name: `DLC`,
+                    colors: true,
                     check: getValue(`gc_dlc`)
                 },
                 {
                     id: `gc_g`,
                     name: `Genres`,
+                    colors: true,
                     check: getValue(`gc_g`)
                 }
             ],
@@ -2376,62 +2417,83 @@ function createNavigationItem(Name, URL, Title) {
 
 function addStyles() {
     var Temp, Positive, Negative, Unknown;
-    var categories = [
+    var colors = [
         {
             id: `gc_b`,
-            key: `bundled`
+            key: `bundled`,
+            mainKey: `esgst-gc`
         },
         {
             id: `gc_b_r`,
-            key: `bundled`
+            key: `bundled`,
+            mainKey: `esgst-gc`
         },
         {
             id: `gc_w`,
-            key: `wishlist`
+            key: `wishlist`,
+            mainKey: `esgst-gc`
         },
         {
             id: `gc_o`,
-            key: `owned`
+            key: `owned`,
+            mainKey: `esgst-gc`
         },
         {
             id: `gc_tc`,
-            key: `tradingCards`
+            key: `tradingCards`,
+            mainKey: `esgst-gc`
         },
         {
             id: `gc_a`,
-            key: `achievements`
+            key: `achievements`,
+            mainKey: `esgst-gc`
         },
         {
             id: `gc_mp`,
-            key: `multiplayer`
+            key: `multiplayer`,
+            mainKey: `esgst-gc`
         },
         {
             id: `gc_sc`,
-            key: `steamCloud`
+            key: `steamCloud`,
+            mainKey: `esgst-gc`
         },
         {
             id: `gc_l`,
-            key: `linux`
+            key: `linux`,
+            mainKey: `esgst-gc`
         },
         {
             id: `gc_m`,
-            key: `mac`
+            key: `mac`,
+            mainKey: `esgst-gc`
         },
         {
             id: `gc_dlc`,
-            key: `dlc`
+            key: `dlc`,
+            mainKey: `esgst-gc`
         },
         {
             id: `gc_g`,
-            key: `genres`
+            key: `genres`,
+            mainKey: `esgst-gc`
+        },
+        {
+            id: `wbh_cw`,
+            key: `whitelisted`,
+            mainKey: `esgst-wbh-highlight`
+        },
+        {
+            id: `wbh_cb`,
+            key: `blacklisted`,
+            mainKey: `esgst-wbh-highlight`
         }
     ];
-    var style;
-    for (var i = 0, n = categories.length; i < n; ++i) {
-        style = `
-            .esgst-gc.${categories[i].key} {
-                color: ${GM_getValue(`${categories[i].id}_color`)};
-                background-color: ${GM_getValue(`${categories[i].id}_bgColor`)};
+    for (var i = 0, n = colors.length; i < n; ++i) {
+        var style = `
+            .${colors[i].mainKey}.${colors[i].key} {
+                color: ${GM_getValue(`${colors[i].id}_color`)} !important;
+                background-color: ${GM_getValue(`${colors[i].id}_bgColor`)} !important;
             }
         `;
         GM_addStyle(style);
@@ -2608,6 +2670,17 @@ function addStyles() {
     margin: 0 0 15px;
 }
 
+.esgst-wbh-highlight {
+    border: none !important;
+    border-radius: 4px;
+    padding: 2px 5px;
+    text-shadow: none;
+}
+
+.page__heading__breadcrumbs .esgst-wbh-highlight {
+    padding: 0 2px;
+}
+
 .esgst-sm-colors input {
     display: inline-block;
     padding: 0;
@@ -2730,12 +2803,12 @@ function addStyles() {
         ".rhCheckbox, .APAvatar, .APLink, .APLink >* {" +
         "    cursor: pointer;" +
         "}" +
-        ".rhWBIcon {" +
+        ".rhWBIcon, .esgst-wbh-icon, .esgst-namwc-icon {" +
         "    display: inline-block;" +
         "    line-height: normal;" +
         "    margin: 0 5px 0 0;" +
         "}" +
-        ".rhWBIcon i {" +
+        ".rhWBIcon i, .esgst-wbh-icon i, .esgst-namwc-icon i {" +
         "    border: 0;" +
         "    line-height: normal;" +
         "    margin: 0;" +
@@ -2888,17 +2961,17 @@ function addStyles() {
         "    display: inline-block;" +
         "    margin: 0 5px 0 0;" +
         "}" +
-        ".NAMWCPositive {" +
+        ".esgst-namwc-highlight {" +
+        "    font-weight: bold;" +
+        "}" +
+        ".positive, .positive i {" +
         "    color: " + Positive + " !important;" +
-        "    font-weight: bold;" +
         "}" +
-        ".NAMWCNegative {" +
+        ".negative, .negative i {" +
         "    color: " + Negative + " !important;" +
-        "    font-weight: bold;" +
         "}" +
-        ".NAMWCUnknown {" +
+        ".unknown, .unknown i {" +
         "    color: " + Unknown + " !important;" +
-        "    font-weight: bold;" +
         "}" +
         ".UGDData {" +
         "    width: 100%;" +
@@ -3449,7 +3522,7 @@ function refreshHIRIcons(CreatedIcon, WonIcon, MessagesIcon, HIR, Background, Ic
                         }
                         document.querySelector("link[rel='shortcut icon']").href = GM_getResourceURL(`hir${HIR.Name}Icon${Count}`);
                     } else {
-                        document.querySelector("link[rel='shortcut icon']").href = GM_getResourceURL(`${esgst.name}Icon`);                        
+                        document.querySelector("link[rel='shortcut icon']").href = GM_getResourceURL(`${esgst.name}Icon`);
                     }
                 }
             }
@@ -15536,26 +15609,46 @@ function highlightNamwcUsers() {
         for (var I = 0, N = SavedUsers.length; I < N; ++I) {
             var UserID = esgst.sg ? SavedUsers[I].Username : SavedUsers[I].SteamID64;
             if (esgst.currentUsers[UserID]) {
-                highlightNAMWCUser(SavedUsers[I], esgst.currentUsers[UserID]);
+                highlightNamwcUser(SavedUsers[I], esgst.currentUsers[UserID]);
             }
         }
     }
 }
 
-function highlightNAMWCUser(User, Matches) {
-    var Name, Title, I, N;
-    if (User.NAMWC && User.NAMWC.Results) {
-        if (User.NAMWC.Results.None || (User.NAMWC.Results.Activated && User.NAMWC.Results.NotMultiple)) {
-            Name = "NAMWCPositive";
-        } else if (User.NAMWC.Results.Unknown) {
-            Name = "NAMWCUnknown";
+function highlightNamwcUser(user, matches) {
+    if (user.NAMWC && user.NAMWC.Results) {
+        var highlight, icon;
+        if (user.NAMWC.Results.None || (user.NAMWC.Results.Activated && (user.NAMWC.Results.NotMultiple || (user.NAMWC.Results.Multiple && esgst.namwc_m)))) {
+            highlight = `positive`;
+            icon = `fa-thumbs-up`;
+        } else if (user.NAMWC.Results.Unknown) {
+            highlight = `unknown`;
+            icon = `fa-warning`;
         } else {
-            Name = "NAMWCNegative";
+            highlight = `negative`;
+            icon = `fa-thumbs-down`;
         }
-        Title = User.Username + " has " + (User.NAMWC.Results.Unknown ? "?" : User.NAMWC.Results.NotActivated) + " not activated wins and " + User.NAMWC.Results.Multiple + " multiple wins.";
-        for (I = 0, N = Matches.length; I < N; ++I) {
-            Matches[I].classList.add(Name);
-            Matches[I].title = Title;
+        var i, n, context, title = `${user.Username} has ${(user.NAMWC.Results.Unknown ? `?` : user.NAMWC.Results.NotActivated)} not activated wins and ${user.NAMWC.Results.Multiple} multiple wins.`;
+        if (esgst.namwc_h_i || esgst.wbh_cw || esgst.wbh_cb) {
+            var html = `
+                <span class="esgst-namwc-icon ${highlight}" title="${title}">
+                    <i class="fa ${icon}"></i>
+                </span>
+            `;
+            for (i = 0, n = matches.length; i < n; ++i) {
+                context = matches[i];
+                var container = context.parentElement;
+                if (container.classList.contains(`comment__username`)) {
+                    context = container;
+                }
+                insertHtml(context, `beforeBegin`, html);
+            }
+        } else {
+            for (i = 0, n = matches.length; i < n; ++i) {
+                context = matches[i];
+                context.classList.add(`esgst-namwc-highlight`, highlight);
+                context.title = title;
+            }
         }
     }
 }
@@ -16566,33 +16659,43 @@ function loadWhitelistBlacklistHighlighter() {
         for (var I = 0, N = SavedUsers.length; I < N; ++I) {
             var UserID = esgst.sg ? SavedUsers[I].Username : SavedUsers[I].SteamID64;
             if (esgst.currentUsers[UserID]) {
-                addWBHIcon(SavedUsers[I], esgst.currentUsers[UserID]);
+                highlightWbhUser(SavedUsers[I], esgst.currentUsers[UserID]);
             }
         }
     }
 }
 
-function addWBHIcon(User, Matches) {
-    var Message, Icon, HTML, I, N, Context, Container;
-    if (User.Whitelisted || User.Blacklisted) {
-        if (User.Whitelisted) {
-            Message = "whitelisted";
-            Icon = "whitelist fa-heart";
+function highlightWbhUser(user, matches) {
+    if (user.Whitelisted || user.Blacklisted) {
+        var status, icon;
+        if (user.Whitelisted) {
+            status = `whitelisted`;
+            icon = `fa-heart sidebar__shortcut__whitelist`;
         } else {
-            Message = "blacklisted";
-            Icon = "blacklist fa-ban";
+            status = `blacklisted`;
+            icon = `fa-ban sidebar__shortcut__blacklist`;
         }
-        HTML =
-            "<span class=\"sidebar__shortcut-inner-wrap WBHIcon rhWBIcon\" title=\"You have " + Message + " " + User.Username + ".\">" +
-            "    <i class=\"fa sidebar__shortcut__" + Icon + " is-disabled is-selected\" style=\"background: none !important;\"></i>" +
-            "</span>";
-        for (I = 0, N = Matches.length; I < N; ++I) {
-            Context = Matches[I];
-            Container = Context.parentElement;
-            if (Container.classList.contains("comment__username")) {
-                Context = Container;
+        var title = `You have ${status} ${user.Username}.`;
+        if ((user.Whitelisted && esgst.wbh_cw) || (user.Blacklisted && esgst.wbh_cb)) {
+            for (var i = 0, n = matches.length; i < n; ++i) {
+                var context = matches[i];
+                context.classList.add(`esgst-wbh-highlight`, status);
+                context.title = title;
             }
-            Context.insertAdjacentHTML("beforeBegin", HTML);
+        } else {
+            html = `
+                <span class="sidebar__shortcut-inner-wrap esgst-wbh-icon" title="${title}">
+                    <i class="fa ${icon} is-disabled is-selected" style="background: none !important;"></i>
+                </span>
+            `;
+            for (var i = 0, n = matches.length; i < n; ++i) {
+                var context = matches[i];
+                var container = context.parentElement;
+                if (container.classList.contains(`comment__username`)) {
+                    context = container;
+                }
+                insertHtml(context, `beforeBegin`, html);
+            }
         }
     }
 }
@@ -17536,7 +17639,7 @@ function getEncryptedGiveaways(context) {
     var n = matches.length;
     if (n > 0) {
         esgst.ged.open = false;
-        esgst.ged.giveaways = GM_getValue(`decryptedGiveaways`, GM_getValue(`exclusiveGiveaways`));
+        esgst.ged.giveaways = GM_getValue(`decryptedGiveaways`, GM_getValue(`exclusiveGiveaways`, {}));
         getEncryptedGiveaway(0, n, matches);
     }
 }
@@ -18167,7 +18270,7 @@ function loadSMMenu(Sidebar, SMButton) {
     });
 }
 
-function getSMFeature(Feature, mainId) {
+function getSMFeature(Feature) {
     var Menu, Checkbox, CheckboxInput, SMFeatures, Key;
     Menu = document.createElement("div");
     var ID = Feature.id;
@@ -18188,7 +18291,7 @@ function getSMFeature(Feature, mainId) {
             SMFeatures.appendChild(getSMFeature(Feature.options[i], Feature.id));
         }
     }
-    if (mainId == `gc`) {
+    if (Feature.colors) {
         var color = GM_getValue(`${Feature.id}_color`);
         var bgColor = GM_getValue(`${Feature.id}_bgColor`);
         var html = `
@@ -18591,4 +18694,3 @@ function checkNewVersion() {
         });
     }
 }
-

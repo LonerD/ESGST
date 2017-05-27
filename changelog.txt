@@ -1,4 +1,13 @@
 /*
+ * May 26, 2017 - v6.Beta.3.8
+ */
+
+* Fixed a bug in Giveaway Encrypter/Decrypter.
+* Added the option to add an icon next to the usernames instead of coloring them to Not Activated/Multiple Wins Checker.
+* Added the option to highlight multiple wins as positive to Not Activated/Multiple Wins Checker, as multiple wins often cannot be fixed.
+* Added the option to color the usernames instead of adding an icon next to them to Whitelist/Blacklist Checker. If this option is enabled, Not Activated/Multiple Wins Checker highlights will automatically appear as icons to avoid conflict.
+
+/*
  * May 26, 2017 - v6.Beta.3.7
  */
 
