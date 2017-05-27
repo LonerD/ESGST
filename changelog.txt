@@ -1,4 +1,11 @@
 /*
+ * May 26, 2017 - v6.Beta.3.10
+ */
+
+* Added back the option to sync using the Steam API key, but made it optional. If there is a Steam API key saved, it will sync using both Steam API key and login, otherwise it will sync using only login.
+* Added the option to enable a simplified version of Game Categories that can either show initials of the categories or icons (suggestions for the icons are always welcome, as I wasn't sure which icon to choose for some categories).
+
+/*
  * May 26, 2017 - v6.Beta.3.9
  */
 

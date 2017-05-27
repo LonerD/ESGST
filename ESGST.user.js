@@ -3,7 +3,7 @@
 // @namespace ESGST
 // @description Enhances SteamGifts and SteamTrades by adding some cool features to them.
 // @icon https://github.com/revilheart/ESGST/raw/master/Resources/esgstIcon.ico
-// @version 6.Beta.3.9
+// @version 6.Beta.3.10
 // @author revilheart
 // @contributor Royalgamer06
 // @downloadURL https://github.com/revilheart/ESGST/raw/master/ESGST.user.js
@@ -1124,6 +1124,18 @@ function loadEsgst() {
             name: `Game Categories`,
             options: [
                 {
+                    id: `gc_s`,
+                    name: `Enable simplified version (initials).`,
+                    options: [
+                        {
+                            id: `gc_s_i`,
+                            name: `Use icons instead of letters.`,
+                            check: getValue(`gc_s_i`)
+                        }
+                    ],
+                    check: getValue(`gc_s`)
+                },
+                {
                     id: `gc_b`,
                     name: `Bundled`,
                     colors: true,
@@ -1758,13 +1770,7 @@ function continueSync(Sync, Callback) {
     syncGroups(Sync, "/account/steam/groups/search?page=", 1, function() {
         GM_setValue("Groups", Sync.Groups);
         syncWhitelistBlacklist(Sync, function() {
-            var games = GM_getValue(`Games`);
-            for (var key in games) {
-                delete games[key].wishlist;
-                delete games[key].owned;
-                delete games[key].ignored;
-            }
-            syncGames(Sync, games, function() {
+            syncGames(Sync, function() {
                 var CurrentDate;
                 CurrentDate = new Date();
                 GM_setValue("LastSync", CurrentDate.getTime());
@@ -1891,67 +1897,91 @@ function getWhitelistBlacklistUsers(Sync, I, N, Matches, Key, Callback) {
     }
 }
 
-function syncGames(sync, games, callback) {
+function syncGames(sync, callback) {
     var SteamAPIKey, URL;
     sync.OverallProgress.innerHTML = `
         <i class="fa fa-circle-o-notch fa-spin"></i>
         <span>Syncing your wishlist / owned games / ignored games...</span>
     `;
-    var url = `http://store.steampowered.com/dynamicstore/userdata`;
+    var steamApiKey = GM_getValue(`steamApiKey`, GM_getValue(`SteamAPIKey`));
+    var url = `http://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/?key=${steamApiKey}&steamid=${GM_getValue(`SteamID64`)}&format=json`;
+    var games = GM_getValue(`Games`);
+    for (var key in games) {
+        delete games[key].wishlist;
+        delete games[key].owned;
+        delete games[key].ignored;
+    }
     makeRequest(null, url, sync.Progress, function(response) {
-        var responseJson = parseJSON(response.responseText);
-        var numOwned = responseJson.rgOwnedApps.length;
-        if (numOwned > 0) {
-            var types = [
-                {
-                    name: `rgWishlist`,
-                    key: `wishlist`
-                },
-                {
-                    name: `rgOwnedApps`,
-                    key: `owned`
-                },
-                {
-                    name: `rgOwnedPackages`,
-                    key: `owned`
-                },
-                {
-                    name: `rgIgnoredApps`,
-                    key: `ignored`
-                },
-                {
-                    name: `rgIgnoredPackages`,
-                    key: `ignored`
+        var responseText = response.responseText;
+        var i, n, id, key;
+        var owned = 0;
+        if (!responseText.match(/<title>Forbidden<\/title>/)) {
+            var ownedGames = parseJSON(responseText).response.games;
+            for (i = 0, n = ownedGames.length; i < n; ++i) {
+                id = ownedGames[i].appid;
+                if (!games[id]) {
+                    games[id] = {};
                 }
-            ];
-            var owned = 0;
-            for (var i = 0, n = types.length; i < n; ++i) {
-                var values = responseJson[types[i].name];
-                for (var j = 0, numValues = values.length; j < numValues; ++j) {
-                    var id = values[j];
-                    if (!games[id]) {
-                        games[id] = {};
-                    }
-                    var key = types[i].key;
-                    games[id][key] = true;
-                    if (key == `owned`) {
-                        ++owned;
-                    }
-                }
+                games[id].owned = true;
+                ++owned;
             }
-            queueSave(sync.Progress, function() {
-                updateGames(games);
-                GM_setValue(`LastSaved`, 0);
-                if (owned != GM_getValue(`ownedGames`, 0)) {
-                    GM_setValue(`ownedGames`, owned);
-                    callback(1, games);
-                } else {
-                    callback(2);
-                }
-            });
-        } else {
-            callback(3);
         }
+        url = `http://store.steampowered.com/dynamicstore/userdata`;
+        makeRequest(null, url, sync.Progress, function(response) {
+            var responseJson = parseJSON(response.responseText);
+            var numOwned = responseJson.rgOwnedApps.length;
+            if (numOwned > 0) {
+                var types = [
+                    {
+                        name: `rgWishlist`,
+                        key: `wishlist`
+                    },
+                    {
+                        name: `rgOwnedApps`,
+                        key: `owned`
+                    },
+                    {
+                        name: `rgOwnedPackages`,
+                        key: `owned`
+                    },
+                    {
+                        name: `rgIgnoredApps`,
+                        key: `ignored`
+                    },
+                    {
+                        name: `rgIgnoredPackages`,
+                        key: `ignored`
+                    }
+                ];
+                for (var i = 0, n = types.length; i < n; ++i) {
+                    var values = responseJson[types[i].name];
+                    for (var j = 0, numValues = values.length; j < numValues; ++j) {
+                        var id = values[j];
+                        if (!games[id]) {
+                            games[id] = {};
+                        }
+                        var key = types[i].key;
+                        var oldValue = games[id][key];
+                        games[id][key] = true;
+                        if (key == `owned` && !oldValue) {
+                            ++owned;
+                        }
+                    }
+                }
+                queueSave(sync.Progress, function() {
+                    updateGames(games);
+                    GM_setValue(`LastSaved`, 0);
+                    if (owned != GM_getValue(`ownedGames`, 0)) {
+                        GM_setValue(`ownedGames`, owned);
+                        callback(1, games);
+                    } else {
+                        callback(2);
+                    }
+                });
+            } else {
+                callback(3);
+            }
+        });
     });
 }
 
@@ -2503,8 +2533,9 @@ function addStyles() {
             mainKey: `esgst-wbh-highlight`
         }
     ];
+    var style;
     for (var i = 0, n = colors.length; i < n; ++i) {
-        var style = `
+        style = `
             .${colors[i].mainKey}.${colors[i].key} {
                 color: ${GM_getValue(`${colors[i].id}_color`)} !important;
                 background-color: ${GM_getValue(`${colors[i].id}_bgColor`)} !important;
@@ -4461,6 +4492,7 @@ function loadGiveawayFilters() {
         checkbox = createCheckbox_v6(gfCheckboxFilter, value, true);
         checkbox.checkbox.addEventListener(`click`, saveGfValue.bind(null, key, `gf_${key}${esgst.gf.type}`, checkbox));
     }
+    var input;
     if (esgst.gc) {
         for ( i = 0, n = esgst.gf.categoryFilters.length; i < n; ++i) {
             var categoryFilter = esgst.gf.categoryFilters[i];
@@ -4480,7 +4512,7 @@ function loadGiveawayFilters() {
                 checkbox = createCheckbox_v6(gfCategoryFilter, value, (key == `genres`) ? false : true);
                 checkbox.checkbox.addEventListener(`click`, saveGfValue.bind(null, key, `gf_${key}${esgst.gf.type}`, checkbox));
                 if (key == `genres`) {
-                    var input = gfCategoryFilter.lastElementChild.lastElementChild;
+                    input = gfCategoryFilter.lastElementChild.lastElementChild;
                     value = GM_getValue(`gf_genresList${esgst.gf.type}`, ``).replace(/,(?!\s)/g, `, `);
                     input.value = value;
                     esgst.gf.genresList = value;
@@ -4505,7 +4537,7 @@ function loadGiveawayFilters() {
         checkbox = createCheckbox_v6(gfExceptionFilter, value);
         checkbox.checkbox.addEventListener(`click`, saveGfValue.bind(null, key, `gf_${key}${esgst.gf.type}`, checkbox));
         if (key == `exceptionMultiple`) {
-            var input = gfExceptionFilter.lastElementChild.lastElementChild;
+            input = gfExceptionFilter.lastElementChild.lastElementChild;
             value = GM_getValue(`gf_exceptionMultipleCopies${esgst.gf.type}`);
             input.value = value;
             esgst.gf.exceptionMultipleCopies = value;
@@ -5763,8 +5795,7 @@ function addERButton(Context) {
     }
 
     function getResult() {
-        var games = GM_getValue(`Games`);
-        syncGames(Popup, games, checkResult);
+        syncGames(Popup, checkResult);
     }
 
     function checkResult(Result, games) {
@@ -16728,10 +16759,10 @@ function highlightWbhUser(user, matches) {
             status = `blacklisted`;
             icon = `fa-ban sidebar__shortcut__blacklist`;
         }
-        var title = `You have ${status} ${user.Username}.`;
+        var title = `You have ${status} ${user.Username}.`, i, n, context;
         if ((user.Whitelisted && esgst.wbh_cw) || (user.Blacklisted && esgst.wbh_cb)) {
-            for (var i = 0, n = matches.length; i < n; ++i) {
-                var context = matches[i];
+            for (i = 0, n = matches.length; i < n; ++i) {
+                context = matches[i];
                 context.classList.add(`esgst-wbh-highlight`, status);
                 context.title = title;
             }
@@ -16741,8 +16772,8 @@ function highlightWbhUser(user, matches) {
                     <i class="fa ${icon} is-disabled is-selected" style="background: none !important;"></i>
                 </span>
             `;
-            for (var i = 0, n = matches.length; i < n; ++i) {
-                var context = matches[i];
+            for (i = 0, n = matches.length; i < n; ++i) {
+                context = matches[i];
                 var container = context.parentElement;
                 if (container.classList.contains(`comment__username`)) {
                     context = container;
@@ -17125,62 +17156,84 @@ function addGameCategory(context, games, id, callback) {
             {
                 id: `gc_b`,
                 key: `bundled`,
-                name: `Bundled`
+                name: `Bundled`,
+                simplified: `B`
             },
             {
                 id: `gc_b_r`,
                 key: `bundled`,
-                name: `Not Bundled`
+                name: `Not Bundled`,
+                simplified: `NB`
             },
             {
                 id: `gc_w`,
                 key: `wishlist`,
-                name: `Wishlist`
+                name: `Wishlist`,
+                simplified: `W`,
+                icon: `fa-star`
             },
             {
                 id: `gc_o`,
                 key: `owned`,
-                name: `Owned`
+                name: `Owned`,
+                simplified: `O`,
+                icon: `fa-folder`
             },
             {
                 id: `gc_i`,
                 key: `ignored`,
-                name: `Ignored`
+                name: `Ignored`,
+                simplified: `I`,
+                icon: `fa-minus-circle`
             },
             {
                 id: `gc_tc`,
                 key: `tradingCards`,
-                name: `Trading Cards`
+                name: `Trading Cards`,
+                simplified: `TC`,
+                icon: `fa-retweet`
             },
             {
                 id: `gc_a`,
                 key: `achievements`,
-                name: `Achievements`
+                name: `Achievements`,
+                simplified: `A`,
+                icon: `fa-trophy`
             },
             {
                 id: `gc_mp`,
                 key: `multiplayer`,
-                name: `Multiplayer`
+                name: `Multiplayer`,
+                simplified: `MP`,
+                icon: `fa-users`
             },
             {
                 id: `gc_sc`,
                 key: `steamCloud`,
-                name: `Steam Cloud`
+                name: `Steam Cloud`,
+                simplified: `SC`,
+                icon: `fa-cloud`
             },
             {
                 id: `gc_l`,
                 key: `linux`,
-                name: `Linux`
+                name: `Linux`,
+                simplified: `L`,
+                icon: `fa-linux`
             },
             {
                 id: `gc_m`,
                 key: `mac`,
-                name: `Mac`
+                name: `Mac`,
+                simplified: `M`,
+                icon: `fa-apple`
             },
             {
                 id: `gc_dlc`,
                 key: `dlc`,
-                name: `DLC`
+                name: `DLC`,
+                simplified: `DLC`,
+                icon: `fa-download`
             },
             {
                 id: `gc_g`,
@@ -17198,6 +17251,12 @@ function addGameCategory(context, games, id, callback) {
                         var text;
                         if (category.key == `genres`) {
                             text = value.join(`, `);
+                        } else if (esgst.gc_s) {
+                            if (esgst.gc_s_i && category.icon) {
+                                text = `<i class="fa ${category.icon}" title="${category.name}"></i>`;
+                            } else {
+                                text = `<span title="${category.name}">${category.simplified}</span>`;
+                            }
                         } else {
                             text = category.name;
                         }
@@ -17886,7 +17945,7 @@ function addSMButton() {
 function loadSMMenu(Sidebar, SMButton) {
     var Selected, Item, SMSyncFrequency, I, Container, SMGeneral, SMGiveaways, SMDiscussions, SMCommenting, SMUsers, SMOthers, SMManageData, SMRecentUsernameChanges,
         SMCommentHistory, SMManageTags, SMGeneralFeatures, SMGiveawayFeatures, SMDiscussionFeatures, SMCommentingFeatures, SMUserGroupGamesFeatures, SMOtherFeatures, ID,
-        SMLastSync, LastSync;
+        SMLastSync, LastSync, SMAPIKey;
     Selected = Sidebar.getElementsByClassName("is-selected")[0];
     Selected.classList.remove("is-selected");
     SMButton.classList.add("is-selected");
@@ -17954,6 +18013,11 @@ function loadSMMenu(Sidebar, SMButton) {
                 "    </div>" +
                 "</div>"
             )
+        }, {
+            Title: "Steam API Key",
+            HTML: "<input class=\"SMAPIKey\" type=\"text\"/>" +
+            createDescription("This is optional for Entries Remover (syncs new games faster). " +
+                              "Get a Steam API Key <a class=\"rhBold\" href=\"https://steamcommunity.com/dev/apikey\" target=\"_blank\">here</a>.")
         }]) +
         "</div>";
     createSMButtons([{
@@ -18001,6 +18065,7 @@ function loadSMMenu(Sidebar, SMButton) {
     SMSyncFrequency = Container.getElementsByClassName("SMSyncFrequency")[0];
     SMLastSync = Container.getElementsByClassName("SMLastSync")[0];
     SMLastBundleSync = Container.getElementsByClassName("SMLastBundleSync")[0];
+    SMAPIKey = Container.getElementsByClassName("SMAPIKey")[0];
     SMGeneralFeatures = ["fh", "fs", "fmph", "ff", "hir", "vai", "ev", "hbs", "at", "pnot", "es"];
     SMGiveawayFeatures = ["dgn", "pr", "hfc", "ags", "pgb", "gf", "gv", "egf", "gp", "ggp", "gt", "sgg", "rcvc", "ugs", "er", "gwl", "gesl", "as"];
     SMDiscussionFeatures = ["adot", "dh", "mpp", "ded"];
@@ -18049,6 +18114,10 @@ function loadSMMenu(Sidebar, SMButton) {
             window.alert(`You synced the bundle list in less than a week ago. You can sync only once per week.`);
         }
     });
+    var key = GM_getValue(`steamApiKey`, GM_getValue(`SteamAPIKey`));
+    if (key) {
+        SMAPIKey.value = key;
+    }
     SMSyncFrequency.addEventListener("change", function() {
         GM_setValue("SyncFrequency", SMSyncFrequency.selectedIndex);
     });
@@ -18314,6 +18383,9 @@ function loadSMMenu(Sidebar, SMButton) {
     if (SMCommentHistory) {
         setSMCommentHistory(SMCommentHistory);
     }
+    SMAPIKey.addEventListener("input", function() {
+        GM_setValue(`steamApiKey`, SMAPIKey.value);
+    });
 }
 
 function getSMFeature(Feature) {
@@ -18740,4 +18812,3 @@ function checkNewVersion() {
         });
     }
 }
-
