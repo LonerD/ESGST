@@ -1,8 +1,17 @@
 /*
+ * May 29, 2017 - v6.Beta.3.12
+ */
+
+* Internally tweaked Visible Attached Images, Embedded Videos and Pagination Navigation On Top a little.
+* Added the options to use a 24-hour clock and to show seconds in Accurate Timestamps and shortened the name of the months to the Mmm notation.
+* Fixed a bug in Giveaway Winning Chance that was happening for giveaways that have not started yet (closes #131).
+
+/*
  * May 29, 2017 - v6.Beta.3.11
  */
 
 * Header Icons Refresher, Points Refresher and Delivered Gifts Notifier have been merged into a single Header Refresher feature (see more details below).
+* Endless Scrolling no longer alters the title/URL of the page.
 * Added/changed some icons in the simplified version of Game Categories.
 
 Upgraded the following features to v6:

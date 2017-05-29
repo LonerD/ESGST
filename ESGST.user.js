@@ -3,7 +3,7 @@
 // @namespace ESGST
 // @description Enhances SteamGifts and SteamTrades by adding some cool features to them.
 // @icon https://github.com/revilheart/ESGST/raw/master/Resources/esgstIcon.ico
-// @version 6.Beta.3.11
+// @version 6.Beta.3.12
 // @author revilheart
 // @contributor Royalgamer06
 // @downloadURL https://github.com/revilheart/ESGST/raw/master/ESGST.user.js
@@ -39,7 +39,7 @@
 // ==/UserScript==
 
 (function() {
-  try {
+    try {
       // closest Polyfill
       if (window.Element && !window.Element.prototype.closest) {
           window.Element.prototype.closest = function(query) {
@@ -88,7 +88,6 @@
           esgst.replyBox = document.getElementsByClassName(`comment--submit`)[0];
           esgst.cancelButtonClass = `comment__cancel-button`;
           esgst.paginationNavigationClass = `pagination__navigation`;
-          esgst.attachedImagesClass = `comment__toggle-attached`;
           esgst.hiddenClass = `is-hidden`;
           esgst.name = `sg`;
           esgst.selectedClass = `is-selected`;
@@ -100,7 +99,6 @@
           esgst.replyBox = document.getElementsByClassName(`reply_form`)[0];
           esgst.cancelButtonClass = `btn_cancel`;
           esgst.paginationNavigationClass = `pagination_navigation`;
-          esgst.attachedImagesClass = `view_attached`;
           esgst.hiddenClass = `is_hidden`;
           esgst.name = `st`;
           esgst.selectedClass = `is_selected`;
@@ -135,7 +133,7 @@
       esgst.searchUrl = url;
       esgst.userPath = window.location.pathname.match(/^\/user\//);
       esgst.winnersPath = window.location.pathname.match(/^\/giveaway\/.+\/winners/);
-      esgst.giveawaysPath = window.location.pathname.match(/^\/($|giveaways(?!.*\/(new|wishlist|created|entered|won)))/);
+      esgst.giveawaysPath = esgst.sg && window.location.pathname.match(/^\/($|giveaways(?!.*\/(new|wishlist|created|entered|won)))/);
       esgst.giveawayCommentsPath = window.location.pathname.match(/^\/giveaway\/(?!.+\/(entries|winners|groups))/);
       esgst.discussionsTicketsTradesPath = (esgst.st && window.location.pathname.match(/^\/$/)) ||
           window.location.pathname.match(/^\/(discussions|support\/tickets|trades)/);
@@ -203,7 +201,6 @@
       if (logoutButton) {
           esgst.xsrfToken = logoutButton.getAttribute("data-form").match(/xsrf_token=(.+)/)[1];
       }
-      esgst.dateMonths = [`January`, `February`, `March`, `April`, `May`, `June`, `July`, `August`, `September`, `October`, `November`, `December`];
       esgst.pageTop = 25;
       esgst.commentsTop = 0;
       esgst.APBoxes = {};
@@ -224,6 +221,8 @@
           ev: `ev`,
           at: `AT`,
           at_g: `AT_G`,
+          at_c24: `at_c24`,
+          at_s: `at_s`,
           pnot: `pnot`,
           es: `ES`,
           es_gt: `ES_G`,
@@ -534,8 +533,7 @@
               id: `vai`,
               name: `Visible Attached Images`,
               check: getValue(`vai`),
-              load: loadVisibleAttachedImages,
-              endless: true
+              load: loadVisibleAttachedImages
           },
           {
               id: `ev`,
@@ -551,16 +549,25 @@
                       id: `at_g`,
                       name: `Enable in the main giveaway pages.`,
                       check: getValue(`at_g`)
+                  },
+                  {
+                      id: `at_c24`,
+                      name: `Use a 24-hour clock.`,
+                      check: getValue(`at_c24`)
+                  },
+                  {
+                      id: `at_s`,
+                      name: `Show seconds.`,
+                      check: getValue(`at_s`)
                   }
               ],
-              check: getValue(`at`) && ((esgst.giveawaysPath && esgst.at_g) || !esgst.giveawaysPath),
-              load: loadAccurateTimestamps,
-              endless: true
+              check: getValue(`at`),
+              load: loadAccurateTimestamps
           },
           {
               id: `pnot`,
               name: `Pagination Navigation On Top`,
-              check: getValue(`pnot`) && esgst.paginationNavigation,
+              check: getValue(`pnot`),
               load: loadPaginationNavigationOnTop
           },
           {
@@ -572,7 +579,7 @@
           {
               id: `ags`,
               name: `Advanced Giveaway Search`,
-              check: getValue(`ags`) && esgst.sg && esgst.giveawaysPath,
+              check: getValue(`ags`) && esgst.giveawaysPath,
               load: loadAdvancedGiveawaySearch
           },
           {
@@ -584,7 +591,7 @@
           {
               id: `gf`,
               name: `Giveaway Filters`,
-              check: getValue(`gf`) && esgst.sg && esgst.giveawaysPath && !window.location.search.match(/q=(.+)&/),
+              check: getValue(`gf`) && esgst.giveawaysPath && !window.location.search.match(/q=(.+)&/),
               load: loadGiveawayFilters
           },
           {
@@ -1381,25 +1388,36 @@
       return value;
   }
 
-  function getTimestamp(unixTimestamp) {
-    var date = new Date(unixTimestamp * 1e3);
-    var month = date.getMonth();
-    var day = date.getDate();
-    var year = date.getFullYear();
-    var hours = date.getHours();
-    var minutes = `0${date.getMinutes()}`.slice(-2);
-    var period;
-    if (hours < 12) {
-      period = `am`;
-    } else {
-      period = `pm`;
+    function getTimestamp(unixTimestamp, clock24, showSeconds) {
+        var months, date, month, day, year, hours, period, minutes, seconds;
+        months = [`Jan`, `Feb`, `Mar`, `Apr`, `May`, `Jun`, `Jul`, `Aug`, `Sep`, `Oct`, `Nov`, `Dec`];
+        date = new Date(unixTimestamp * 1e3);
+        month = date.getMonth();
+        day = date.getDate();
+        year = date.getFullYear();
+        hours = date.getHours();
+        if (clock24) {
+            period = ``;
+        } else {
+            if (hours < 12) {
+                period = `am`;
+            } else {
+                period = `pm`;
+            }
+            hours %= 12;
+            if (hours === 0) {
+                hours = 12;
+            }
+        }
+        minutes = `0${date.getMinutes()}`.slice(-2);
+        if (showSeconds) {
+            seconds = `0${date.getSeconds()}`.slice(-2);
+            seconds = `:${seconds}`;
+        } else {
+            seconds = ``;
+        }
+        return `${months[month]} ${day}, ${year}, ${hours}:${minutes}${seconds}${period}`;
     }
-    hours %= 12;
-    if (hours === 0) {
-      hours = 12;
-    }
-    return `${esgst.dateMonths[month]} ${day}, ${year}, ${hours}:${minutes}${period}`;
-  }
 
   function queueRequest(Element, Data, URL, Callback) {
       var CurrentDate, HTML;
@@ -2504,10 +2522,12 @@
       ];
       var style;
       for (var i = 0, n = colors.length; i < n; ++i) {
+           var color = GM_getValue(`${colors[i].id}_color`);
+           var backgroundColor = GM_getValue(`${colors[i].id}_bgColor`);
           style = `
               .${colors[i].mainKey}.${colors[i].key} {
-                  color: ${GM_getValue(`${colors[i].id}_color`)} !important;
-                  background-color: ${GM_getValue(`${colors[i].id}_bgColor`)} !important;
+                  color: ${color} !important;
+                  background-color: ${backgroundColor} !important;
               }
           `;
           GM_addStyle(style);
@@ -2529,194 +2549,194 @@
       Unknown = window.getComputedStyle(Unknown).color;
       Temp.remove();
       style = `
-  .rhPopup a {
-      border-bottom: 1px dotted;
-  }
+          .rhPopup a {
+              border-bottom: 1px dotted;
+          }
 
-  .GPPanel .form__submit-button, .GPPanel .form__saving-button {
-      margin-bottom: 0;
-      min-width: 0;
-  }
-  .rhPopupDescription.left {
-      text-align: left;
-  }
-  .esgst-hidden {
-    display: none !important;
-  }
+          .GPPanel .form__submit-button, .GPPanel .form__saving-button {
+              margin-bottom: 0;
+              min-width: 0;
+          }
+          .rhPopupDescription.left {
+              text-align: left;
+          }
+          .esgst-hidden {
+            display: none !important;
+          }
 
-  .fa img {
-      height: 14px;
-      width: 14px;
-      vertical-align: middle;
-  }
-  .nav__left-container .fa img {
-      vertical-align: baseline;
-  }
+          .fa img {
+              height: 14px;
+              width: 14px;
+              vertical-align: middle;
+          }
+          .nav__left-container .fa img {
+              vertical-align: baseline;
+          }
 
-  .esgst-checkboxm, .esgst-hb-update, .esgst-hb-changelog {
-      cursor: pointer;
-  }
+          .esgst-checkboxm, .esgst-hb-update, .esgst-hb-changelog {
+              cursor: pointer;
+          }
 
-.esgst-hr-delivered i {
-color: #FECC66;
-}
-  .esgst-adot, .esgst-rbot {
-    margin-bottom: 25px;
-  }
+        .esgst-hr-delivered i {
+        color: #FECC66;
+        }
+          .esgst-adot, .esgst-rbot {
+            margin-bottom: 25px;
+          }
 
-  .esgst-rbot .reply_form .btn_cancel {
-    display: none;
-  }
+          .esgst-rbot .reply_form .btn_cancel {
+            display: none;
+          }
 
-  .esgst-fh {
-    height: auto !important;
-    position: fixed;
-    top: 0;
-    width: 100%;
-    z-index: 999 !important;
-  }
+          .esgst-fh {
+            height: auto !important;
+            position: fixed;
+            top: 0;
+            width: 100%;
+            z-index: 999 !important;
+          }
 
-  .esgst-fs {
-    position: fixed;
-  }
+          .esgst-fs {
+            position: fixed;
+          }
 
-  .esgst-fmph {
-    position: fixed;
-    z-index: 998;
-  }
+          .esgst-fmph {
+            position: fixed;
+            z-index: 998;
+          }
 
-  .esgst-fmph-background {
-    padding: 0;
-    position: fixed;
-    top: 0;
-    z-index: 997;
-  }
+          .esgst-fmph-background {
+            padding: 0;
+            position: fixed;
+            top: 0;
+            z-index: 997;
+          }
 
-  .esgst-ff {
-    background-color: inherit;
-    bottom: 0;
-    padding: 0;
-    position: fixed;
-    width: 100%;
-    z-index: 999;
-  }
+          .esgst-ff {
+            background-color: inherit;
+            bottom: 0;
+            padding: 0;
+            position: fixed;
+            width: 100%;
+            z-index: 999;
+          }
 
-  .esgst-ff >* {
-    padding: 15px 25px;
-  }
+          .esgst-ff >* {
+            padding: 15px 25px;
+          }
 
-  .esgst-ags-panel {
-      margin: 0 0 15px 0;
-  }
+          .esgst-ags-panel {
+              margin: 0 0 15px 0;
+          }
 
-  .esgst-ags-filter {
-      display: flex;
-  }
+          .esgst-ags-filter {
+              display: flex;
+          }
 
-  .esgst-ags-filter >* {
-      display: inline-flex;
-      justify-content: space-between;
-      margin: 5px;
-      width: 150px;
-  }
+          .esgst-ags-filter >* {
+              display: inline-flex;
+              justify-content: space-between;
+              margin: 5px;
+              width: 150px;
+          }
 
-  .esgst-ags-panel input, .esgst-ags-panel select {
-      padding: 0 5px;
-      width: 50px;
-  }
+          .esgst-ags-panel input, .esgst-ags-panel select {
+              padding: 0 5px;
+              width: 50px;
+          }
 
-  .esgst-aas-button, .esgst-es-pause-button, .esgst-es-refresh-button {
-      cursor: pointer;
-      display: inline-block;
-  }
+          .esgst-aas-button, .esgst-es-pause-button, .esgst-es-refresh-button {
+              cursor: pointer;
+              display: inline-block;
+          }
 
-  .esgst-es-page-heading {
-      margin-top: 25px;
-  }
+          .esgst-es-page-heading {
+              margin-top: 25px;
+          }
 
-  .esgst-gc {
-      display: inline-block;
-      margin: 0;
-      margin-bottom: 5px;
-      position: static;
-      text-shadow: none;
-  }
+          .esgst-gc {
+              display: inline-block;
+              margin: 0;
+              margin-bottom: 5px;
+              position: static;
+              text-shadow: none;
+          }
 
-  .esgst-gf-container input {
-      display: inline-block;
-      height: 20px;
-      padding: 0 5px;
-      width: 100px;
-  }
+          .esgst-gf-container input {
+              display: inline-block;
+              height: 20px;
+              padding: 0 5px;
+              width: 100px;
+          }
 
-  .esgst-gf-filters >* {
-      display: inline-block;
-      margin: 5px;
-      vertical-align: top;
-  }
+          .esgst-gf-filters >* {
+              display: inline-block;
+              margin: 5px;
+              vertical-align: top;
+          }
 
-  .esgst-gf-range-filter {
-      display: flex;
-  }
+          .esgst-gf-range-filter {
+              display: flex;
+          }
 
-  .esgst-gf-range-filter >* {
-      display: inline-flex;
-      width: 200px;
-      margin: 5px;
-      justify-content: space-between;
-  }
+          .esgst-gf-range-filter >* {
+              display: inline-flex;
+              width: 200px;
+              margin: 5px;
+              justify-content: space-between;
+          }
 
-  .esgst-gf-checkbox-filter, .esgst-gf-category-filter, .esgst-gf-exception-filter {
-      margin: 5px;
-  }
+          .esgst-gf-checkbox-filter, .esgst-gf-category-filter, .esgst-gf-exception-filter {
+              margin: 5px;
+          }
 
-  .esgst-gf-button {
-      border-top: 1px;
-  }
+          .esgst-gf-button {
+              border-top: 1px;
+          }
 
-  .esgst-uh-box {
-      background-position: center;
-      margin: 5px 0 0;
-      padding: 15px;
-      position: absolute;
-      text-align: center;
-      width: auto;
-  }
+          .esgst-uh-box {
+              background-position: center;
+              margin: 5px 0 0;
+              padding: 15px;
+              position: absolute;
+              text-align: center;
+              width: auto;
+          }
 
-  .esgst-uh-title {
-      margin: 0 0 15px;
-  }
+          .esgst-uh-title {
+              margin: 0 0 15px;
+          }
 
-  .esgst-wbh-highlight {
-      border: none !important;
-      border-radius: 4px;
-      padding: 2px 5px;
-      text-shadow: none;
-  }
+          .esgst-wbh-highlight {
+              border: none !important;
+              border-radius: 4px;
+              padding: 2px 5px;
+              text-shadow: none;
+          }
 
-  .page__heading__breadcrumbs .esgst-wbh-highlight {
-      padding: 0 2px;
-  }
+          .page__heading__breadcrumbs .esgst-wbh-highlight {
+              padding: 0 2px;
+          }
 
-  .esgst-sm-colors input {
-      display: inline-block;
-      padding: 0;
-      width: 30px;
-  }
+          .esgst-sm-colors input {
+              display: inline-block;
+              padding: 0;
+              width: 30px;
+          }
 
-  .esgst-ged-icon {
-      margin: 0 0 0 10px;
-  }
+          .esgst-ged-icon {
+              margin: 0 0 0 10px;
+          }
 
-  .PGBContainer, .esgst-gf-box {
-      border-radius: 0 !important;
-      margin: 0! important;
-  }
+          .PGBContainer, .esgst-gf-box {
+              border-radius: 0 !important;
+              margin: 0! important;
+          }
 
-  .ERButton {
-      cursor: pointer;
-      display: inline-block;
-  }
+          .ERButton {
+              cursor: pointer;
+              display: inline-block;
+          }
       `;
       GM_addStyle(style);
       GM_addStyle(
@@ -3692,94 +3712,126 @@ color: #FECC66;
       });
   }
 
-  function loadVisibleAttachedImages(context) {
-      var images = context.getElementsByClassName(esgst.attachedImagesClass);
-      for (var i = 0, n = images.length; i < n; ++i) {
-          var image = images[i].nextElementSibling.firstElementChild;
-          if (image) {
-              if (image.getAttribute(`src`).match(/\.gifv/)) {
-                  image.setAttribute(`src`, image.getAttribute(`src`).replace(/\.gifv/, `.gif`));
-              }
-              image.classList.remove(esgst.hiddenClass);
-          }
-      }
-  }
+    /* [VAI] Visible Attached Images */
 
-  function loadEmbeddedVideos() {
-      esgst.ev = {
-          videoTypes: [
-              {
-                  url: `youtube.com/watch`,
-                  getEmbedUrl: getYoutubeComEmbedUrl
-              },
-              {
-                  url: `youtu.be`,
-                  getEmbedUrl: getYoutuBeEmbedUrl
-              },
-              {
-                  url: `vimeo.com`,
-                  getEmbedUrl: getVimeoEmbedUrl
-              }
-          ]
-      };
-      getVideos(document);
-      esgst.endlessFeatures.push(getVideos);
-  }
+    function loadVisibleAttachedImages() {
+        getImages(document);
+        esgst.endlessFeatures.push(getImages);
+    }
 
-  function getVideos(context) {
-      for (var i = 0, numTypes = esgst.ev.videoTypes.length; i < numTypes; ++i) {
-          var type = esgst.ev.videoTypes[i];
-          var videos = context.querySelectorAll(`a[href*="${type.url}"]`);
-          for (var j = 0, numVideos = videos.length; j < numVideos; ++j) {
-              var video = videos[j];
-              var url = video.getAttribute(`href`);
-              var text = video.textContent;
-              var next = video.nextSibling;
-              var previous = video.previousSibling;
-              if ((!previous || !previous.textContent.trim()) && (!next || !next.textContent.trim())) {
-                  video.outerHTML = `
-                      <div>
-                          ${(url != text) ? `<div>${text}</div>` : ``}
-                          <iframe width="640" height="360" src="${type.getEmbedUrl(url)}" frameborder="0" allowfullscreen></iframe>
-                      </div>
-                  `;
-              }
-          }
-      }
-  }
+    function getImages(context) {
+        var images, i, n, image, url;
+        images = context.querySelectorAll(`.comment__toggle-attached ~ a img, .view_attached ~ a img`);
+        for (i = 0, n = images.length; i < n; ++i) {
+            image = images[i];
+            url = image.getAttribute(`src`);
+            if (url) {
+                // rename .gifv images to .gif so that they can be attached properly
+                url = url.replace(/\.gifv/, `.gif`);
+                image.setAttribute(`src`, url);
+            }
+            image.classList.remove(`is_hidden`, `is-hidden`);
+        }
+    }
 
-  function getYoutubeComEmbedUrl(url) {
-      return `https://www.youtube.com/embed/${url.match(/watch\?v=(.+?)(&.*)?$/)[1]}`;
-  }
+    /* [EV] Embedded Videos */
 
-  function getYoutuBeEmbedUrl(url) {
-      return `https://www.youtube.com/embed/${url.match(/youtu.be\/(.+)/)[1]}`;
-  }
+    function loadEmbeddedVideos() {
+        getVideos(document);
+        esgst.endlessFeatures.push(getVideos);
+    }
 
-  function getVimeoEmbedUrl(url) {
-      return `https://player.vimeo.com/video/${url.match(/vimeo.com\/(.+)/)[1]}`;
-  }
+    function getVideos(context) {
+        var types, i, numTypes, type, videos, j, numVideos, video, previous, next, embedUrl, url, text, title;
+        types = [`youtube.com`, `youtu.be`, `vimeo.com`];
+        for (i = 0, numTypes = types.length; i < numTypes; ++i) {
+            type = types[i];
+            videos = context.querySelectorAll(`a[href*="${type}"]`);
+            for (j = 0, numVideos = videos.length; j < numVideos; ++j) {
+                video = videos[j];
+                previous = video.previousSibling;
+                next = video.nextSibling;
+                if ((!previous || !previous.textContent.trim()) && (!next || !next.textContent.trim())) {
+                    // video is the only content in the line
+                    url = video.getAttribute(`href`);
+                    embedUrl = getVideoEmbedUrl(i, url);
+                    if (embedUrl) {
+                        text = video.textContent;
+                        if (url !== text) {
+                            title = `<div>${text}</div>`;
+                        } else {
+                            title = ``;
+                        }
+                        video.outerHTML = `
+                            <div>
+                                ${title}
+                                <iframe width="640" height="360" src="${embedUrl}" frameborder="0" allowfullscreen></iframe>
+                            </div>
+                        `;
+                    }
+                }
+            }
+        }
+    }
 
-  function loadAccurateTimestamps(context) {
-      var timestamps = context.querySelectorAll(`[data-timestamp]`);
-      for (var i = 0, n = timestamps.length; i < n; ++i) {
-          var timestamp = timestamps[i];
-          var accurateTimestamp = getTimestamp(parseInt(timestamp.getAttribute(`data-timestamp`)));
-          var content = timestamp.textContent;
-          var edited = content.match(/\*/);
-          if (edited) {
-            accurateTimestamp = ` (Edited ${accurateTimestamp})`;
-          } else if (content) {
-            accurateTimestamp = `${accurateTimestamp} - ${content}`;
-          }
-          timestamp.textContent = accurateTimestamp;
-      }
-  }
+    function getVideoEmbedUrl(i, url) {
+        var regExps, regExp, match, baseUrls, baseUrl, code;
+        regExps = [
+            /youtube.com\/watch\?v=(.+?)(\/.*)?(&.*)?$/,
+            /youtu.be\/(.+?)(\/.*)?$/,
+            /vimeo.com\/(.+?)(\/.*)?$/
+        ];
+        regExp = regExps[i];
+        match = url.match(regExp);
+        if (match) {
+            baseUrls = [
+                `https://www.youtube.com/embed/`,
+                `https://www.youtube.com/embed/`,
+                `https://player.vimeo.com/video/`
+            ];
+            baseUrl = baseUrls[i];
+            code = match[1];
+            return `${baseUrl}${code}`;
+        } else {
+            return null;
+        }
+    }
 
-  function loadPaginationNavigationOnTop() {
-      esgst.paginationNavigation.classList.add(`page_heading_btn`);
-      esgst.mainPageHeading.appendChild(esgst.paginationNavigation);
-  }
+    /* [AT] Accurate Timestamps */
+
+    function loadAccurateTimestamps() {
+        if ((esgst.at_g && esgst.giveawaysPath) || !esgst.giveawaysPath) {
+            getTimestamps(document);
+            esgst.endlessFeatures.push(getTimestamps);
+        }
+    }
+
+    function getTimestamps(context) {
+        var timestamps, i, n, timestamp, text, edited, seconds, accurateTimestamp;
+        timestamps = context.querySelectorAll(`[data-timestamp]`);
+        for (i = 0, n = timestamps.length; i < n; ++i) {
+            timestamp = timestamps[i];
+            text = timestamp.textContent;
+            edited = text.match(/\*/);
+            seconds = parseInt(timestamp.getAttribute(`data-timestamp`));
+            accurateTimestamp = getTimestamp(seconds, esgst.at_c24, esgst.at_s);
+            if (edited) {
+                text = ` (Edited ${accurateTimestamp})`;
+            } else {
+                text = `${accurateTimestamp} - ${text}`;
+            }
+            timestamp.textContent = text;
+        }
+    }
+
+    /* Pagination Navigation On Top */
+
+    function loadPaginationNavigationOnTop() {
+        if (esgst.paginationNavigation && esgst.mainPageHeading) {
+            esgst.paginationNavigation.classList.add(`page_heading_btn`);
+            esgst.mainPageHeading.appendChild(esgst.paginationNavigation);
+        }
+    }
 
   function loadEndlessScrolling() {
       var pagination, context, currentPage, nextPage, reversePages,
@@ -4919,17 +4971,19 @@ color: #FECC66;
           Entered = false;
       }
       Entries = Context.getElementsByClassName(Entered ? "table__column--width-small" : "live__entry-count")[0];
-      Copies = Context.getElementsByClassName(Entered ? "table__column__heading" : "featured__heading")[0].textContent.match(/\((.+) Copies\)/);
-      Copies = Copies ? parseInt(Copies[1].replace(/,/g, "")) : 1;
-      Context = Entered ? Entries : Context.getElementsByClassName("featured__column")[0];
-      Context.insertAdjacentHTML(
-          "afterEnd",
-          "<div class=\"" + (Entered ? "table__column--width-small text-center" : "featured__column") + " GWCChance\" title=\"Giveaway winning chance.\">" + (Entered ? "" : (
-              "<i class=\"fa fa-line-chart\"></i>")) +
-          "    <span></span>" +
-          "</div>"
-      );
-      setGWCChance(Context.nextElementSibling.lastElementChild, Entries, Copies);
+      if (Entries) {
+          Copies = Context.getElementsByClassName(Entered ? "table__column__heading" : "featured__heading")[0].textContent.match(/\((.+) Copies\)/);
+          Copies = Copies ? parseInt(Copies[1].replace(/,/g, "")) : 1;
+          Context = Entered ? Entries : Context.getElementsByClassName("featured__column")[0];
+          Context.insertAdjacentHTML(
+              "afterEnd",
+              "<div class=\"" + (Entered ? "table__column--width-small text-center" : "featured__column") + " GWCChance\" title=\"Giveaway winning chance.\">" + (Entered ? "" : (
+                  "<i class=\"fa fa-line-chart\"></i>")) +
+              "    <span></span>" +
+              "</div>"
+          );
+          setGWCChance(Context.nextElementSibling.lastElementChild, Entries, Copies);
+      }
   }
 
   function loadGiveawayGroupsPopup(context) {
@@ -14540,7 +14594,9 @@ color: #FECC66;
                       DisplayState.innerHTML = ResponseHTML.getElementsByClassName(esgst.sg ? "comment__display-state" : "comment_body_default")[0].innerHTML;
                       EditState.classList.add(esgst.sg ? "is-hidden" : "is_hidden");
                       MR.Timestamp.innerHTML = ResponseHTML.getElementsByClassName(esgst.sg ? "comment__actions" : "action_list")[0].firstElementChild.innerHTML;
-                      loadAccurateTimestamps(MR.Timestamp);
+                      if (esgst.at) {
+                        getTimestamps(MR.Timestamp);
+                      }
                       if (esgst.sg) {
                           DisplayState.classList.remove("is-hidden");
                           MR.Context.classList.remove("is-hidden");
@@ -18773,7 +18829,7 @@ color: #FECC66;
           Popup.Results.classList.add("SMComments");
           Popup.Results.innerHTML = GM_getValue("CommentHistory");
           if (esgst.at) {
-              loadAccurateTimestamps(Popup.Results);
+              getTimestamps(Popup.Results);
           }
           Popup.popUp();
       });
