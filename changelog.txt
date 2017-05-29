@@ -1,4 +1,15 @@
 /*
+ * May 29, 2017 - v6.Beta.3.11
+ */
+
+* Header Icons Refresher, Points Refresher and Delivered Gifts Notifier have been merged into a single Header Refresher feature (see more details below).
+* Added/changed some icons in the simplified version of Game Categories.
+
+Upgraded the following features to v6:
+
+* Header Refresher - If multiple tabs are open, only one tab will now make requests to refresh the header and then it will sync the changes with the other tabs (this happens instantly with Tampermonkey). The number of delivered wins will now appear in the title of the tab e.g. (2W). The icon of the tab is no longer changed, the message count will now appear in the title of the tab e.g. (5M). The level on SG and the reputation on ST are now refreshed as well, but they will not appear in the title of the tab. Points are updated instantly and refreshed across all open tabs when using Enter/Leave Giveaway Button with Tampermonkey (with Greasemonkey, it will still update, but only after 60 seconds). An example of all items combined: (2W) (5M) (150P) SteamGifts
+
+/*
  * May 26, 2017 - v6.Beta.3.10
  */
 
@@ -11,7 +22,7 @@
 
 * Changed the way the sync works (it no longer requires a Steam API key, but you must be logged in on Steam).
 * Category filters are now applied to exceptions in Giveaway Filters (closes #115).
-* Added "Chance" and "Genres" filters to Giveaway Filters.
+* Added "Chance" and "Genres" filters to Giveaway Filters (closes #101).
 * Added "Ignored" category to Game Categories (must be synced through the settings menu).
 
 /*
