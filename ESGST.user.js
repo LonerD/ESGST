@@ -3,7 +3,7 @@
 // @namespace ESGST
 // @description Enhances SteamGifts and SteamTrades by adding some cool features to them.
 // @icon https://github.com/revilheart/ESGST/raw/master/Resources/esgstIcon.ico
-// @version 6.Beta.3.12
+// @version 6.Beta.3.13
 // @author revilheart
 // @contributor Royalgamer06
 // @downloadURL https://github.com/revilheart/ESGST/raw/master/ESGST.user.js
@@ -215,7 +215,8 @@
           ff: `FE_F`,
           hr: `hir`,
           hr_b: `hir_b`,
-          hr_dw: `dgn`,
+          hr_i: `hr_i`,
+          hr_p: `pr`,
           hbs: `BSH`,
           vai: `VAI`,
           ev: `ev`,
@@ -231,8 +232,7 @@
           es_dtc: `ES_DC`,
           es_r: `ES_R`,
           es_rs: `ES_RS`,
-          pr: `PR`,
-          pr_b: `PR_B`,
+          dgn: `dgn`,
           hfc: `FCH`,
           ags: `AGS`,
           pgb: `PGB`,
@@ -510,14 +510,19 @@
               name: `Header Refresher`,
               options: [
                   {
+                      id: `hr_i`,
+                      name: `Show an icon in the title to highlight new messages.`,
+                      check: getValue(`hr_i`)
+                  },
+                  {
+                      id: `hr_p`,
+                      name: `Show points in the title.`,
+                      check: getValue(`hr_p`)
+                  },
+                  {
                       id: `hr_b`,
                       name: `Run in the background.`,
                       check: getValue(`hr_b`)
-                  },
-                  {
-                      id: `hr_dw`,
-                      name: `Notify delivered wins.`,
-                      check: getValue(`hr_dw`)
                   }
               ],
               check: getValue(`hr`),
@@ -569,6 +574,12 @@
               name: `Pagination Navigation On Top`,
               check: getValue(`pnot`),
               load: loadPaginationNavigationOnTop
+          },
+          {
+              id: `dgn`,
+              name: `Delivered Gifts Notifier`,
+              check: getValue(`dgn`),
+              load: loadDeliveredGiftsNotifier
           },
           {
               id: `hfc`,
@@ -3543,7 +3554,7 @@
                 if (wonIcon) {
                     elements.wonButton = wonIcon.closest(`.nav__button-container`);
                     if (elements.wonButton) {
-                        if (esgst.hr_dw) {
+                        if (esgst.dgn) {
                             var matches = context.getElementsByClassName(`table__row-inner-wrap`);
                             for (var i = 0, n = matches.length; i < n; ++i) {
                                 var match = matches[i];
@@ -3656,6 +3667,9 @@
                 hr.elements.inboxButton.innerHTML = elements.inboxButtonHtml;
             }
             if (elements.messageCount) {
+                if (esgst.hr_i) {
+                    title += `🔥 `;
+                }
                 title += `(${elements.messageCount}M) `;
             }
         }
@@ -3664,7 +3678,9 @@
                 hr.points = elements.points;
                 updateELGBButtons(elements.points);
             }
-            title += `(${elements.points}P) `;
+            if (esgst.hr_p) {
+                title += `(${elements.points}P) `;
+            }
         }
         title += hr.title;
         if (document.title !== title) {
@@ -3710,6 +3726,22 @@
           };
           $(Context).highcharts(Highcharts.merge(chart_options.default, chart_options.areaspline, chart_options.datetime, chart_options.graph));
       });
+  }
+
+  function loadDeliveredGiftsNotifier() {
+      if (esgst.sg && !esgst.hr) {
+        makeRequest(null, `/giveaways/won`, null, getDeliveredGifts);
+      }
+  }
+
+  function getDeliveredGifts(response) {
+      responseHtml = parseHTML(response.responseText);
+      pageElements = getHeaderElements(document);
+      elements = getHeaderElements(responseHtml);
+      if (pageElements.wonButton.innerHTML !== elements.wonButtonHtml) {
+          pageElements.wonButton.className = elements.wonButtonClass;
+          pageElements.wonButton.innerHTML = elements.wonButtonHtml;
+      }
   }
 
     /* [VAI] Visible Attached Images */
@@ -4028,9 +4060,9 @@
               if (element.classList.contains(`esgst-fmph-placeholder`)) {
                   element = esgst.pagination.previousElementSibling.previousElementSibling;
               }
-              if (gf.filtered) {
+              if (esgst.gf.filtered) {
                   var hidden = element.nextElementSibling.getElementsByClassName(`giveaway__row-outer-wrap esgst-hidden`).length;
-                  gf.filtered.textContent = parseInt(gf.filtered.textContent) - hidden;
+                  esgst.gf.filtered.textContent = parseInt(esgst.gf.filtered.textContent) - hidden;
               }
               element.nextElementSibling.remove();
               parent = element.parentElement;
@@ -17858,7 +17890,7 @@
                           headingName.outerHTML = `<a class="giveaway__heading__name" href="${url}">${headingName.innerHTML}</a>`;
                           var thinHeadings = heading.getElementsByClassName(`featured__heading__small`);
                           for (j = 0, numT = thinHeadings.length; j < numT; ++j) {
-                              thinHeadings[j].outerHTML = `<span class="giveaway__heading__thin">${thinHeadings[j].innerHTML}</span>`;
+                              thinHeadings[0].outerHTML = `<span class="giveaway__heading__thin">${thinHeadings[0].innerHTML}</span>`;
                           }
                           remaining.classList.remove(`featured__column`);
                           var created = remaining.nextElementSibling;
@@ -18113,7 +18145,7 @@
       SMLastBundleSync = Container.getElementsByClassName("SMLastBundleSync")[0];
       SMAPIKey = Container.getElementsByClassName("SMAPIKey")[0];
       SMGeneralFeatures = ["fh", "fs", "fmph", "ff", "hr", "vai", "ev", "hbs", "at", "pnot", "es"];
-      SMGiveawayFeatures = ["pr", "hfc", "ags", "pgb", "gf", "gv", "egf", "gp", "ggp", "gt", "sgg", "rcvc", "ugs", "er", "gwl", "gesl", "as"];
+      SMGiveawayFeatures = ["dgn", "hfc", "ags", "pgb", "gf", "gv", "egf", "gp", "ggp", "gt", "sgg", "rcvc", "ugs", "er", "gwl", "gesl", "as"];
       SMDiscussionFeatures = ["adot", "dh", "mpp", "ded"];
       SMCommentingFeatures = ["ch", "ct", "cfh", "rbot", "rbp", "mr", "rfi", "rml"];
       SMUserGroupGamesFeatures = ["ap", "uh", "un", "rwscvl", "ugd", "namwc", "nrf", "swr", "luc", "sgpb", "stpb", "sgc", "wbc", "wbh", "ut", "iwh", "gh", "gs", "ggh", "ggt", "gc", "mt"];

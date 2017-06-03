@@ -1,4 +1,13 @@
 /*
+ * June 2, 2017 - v6.Beta.3.13
+ */
+
+* Added the option to show points in the title to Header Refresher, and the option to show an icon in the title to highlight new messages. The icon chosen was "fire", because you got new messages, so you're "hot". If anyone has a better suggestion, feel free to let me know.
+* Separated the option to notify delivered gifts from Header Refresher back into Delivered Gifts Notifier.
+* Fixed a bug in Endless Scrolling that was happening while refreshing a page.
+* Fixed a bug in Giveaway Encrypter/Decrypter that was happening for giveaways with multiple copies.
+
+/*
  * May 29, 2017 - v6.Beta.3.12
  */
 
