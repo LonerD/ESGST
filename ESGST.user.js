@@ -3,7 +3,7 @@
 // @namespace ESGST
 // @description Enhances SteamGifts and SteamTrades by adding some cool features to them.
 // @icon https://github.com/revilheart/ESGST/raw/master/Resources/esgstIcon.ico
-// @version 6.Beta.3.16
+// @version 6.Beta.3.17
 // @author rafaelgs18
 // @contributor Royalgamer06
 // @downloadURL https://github.com/revilheart/ESGST/raw/master/ESGST.user.js
@@ -2167,15 +2167,17 @@
                 followSpeed: 500,
                 modalColor: `#3c424d`,
                 opacity: 0.85,
-                onClose: popup.close
+                onClose: function() {
+                    if (temp) {
+                        popup.popup.remove();
+                    } else {
+                        popup.popup.classList.remove(`popup`);
+                    }
+                    if (popup.close) {
+                        popup.close();
+                    }
+                }
             }, callback);
-        };
-        popup.close = function() {
-            if (temp) {
-                popup.popup.remove();
-            } else {
-                popup.popup.classList.remove(`popup`);
-            }
         };
         popup.reposition = function() {
             if (popup.opened) {
@@ -3830,7 +3832,7 @@ margin-bottom: ${esgst.footer.offsetHeight}px;
 
     function addLpvContainer(mainButton) {
         var progress;
-        progress = mainButton.lastElementChild.getAttribute(`title`).match(/\.(\d+)/);
+        progress = (mainButton.lastElementChild.lastElementChild || mainButton.lastElementChild).getAttribute(`title`).match(/\.(\d+)/);
         if (progress) {
             progress = `${progress[1]}%`;
             mainButton.classList.add(`esgst-lpv-main-button`);
@@ -5219,7 +5221,7 @@ ${title}
         }
     }
 
-    function enterLeaveELGBGiveaway(GP, Icon, Name, Message, Type, Context, Yellow) {
+    function enterLeaveELGBGiveaway(GP, Icon, Name, Message, Type, Context, Yellow, callback1) {
         if (Name === `Enter`) {
             makeRequest(null, GP.URL, null, function(response) {
                 var description, set, popup;
@@ -5235,6 +5237,9 @@ ${title}
                         popup.description.appendChild(set.set);
                         description.classList.add(`esgst-text-left`);
                         popup.description.insertAdjacentHTML(`afterBegin`, description.outerHTML);
+                        popup.close = function() {
+                            callback1();
+                        };
                         popup.open();
                     } else {
                         window.open(`https://www.steamgifts.com${GP.URL}`);
