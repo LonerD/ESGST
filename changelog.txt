@@ -1,4 +1,10 @@
 /*
+ * June 9, 2017 - v6.Beta.3.15
+ */
+
+* Fixed a bug from v6.Beta.3.14.
+
+/*
  * June 9, 2017 - v6.Beta.3.14
  */
 

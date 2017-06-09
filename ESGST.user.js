@@ -3,7 +3,7 @@
 // @namespace ESGST
 // @description Enhances SteamGifts and SteamTrades by adding some cool features to them.
 // @icon https://github.com/revilheart/ESGST/raw/master/Resources/esgstIcon.ico
-// @version 6.Beta.3.14
+// @version 6.Beta.3.15
 // @author rafaelgs18
 // @contributor Royalgamer06
 // @downloadURL https://github.com/revilheart/ESGST/raw/master/ESGST.user.js
@@ -75,9 +75,9 @@
                 apps: {},
                 subs: {}
             };
-            for (var key in saved) {
-                games.apps[key] = {};
-                for (var subKey in saved[key]) {
+            for (var id in saved) {
+                games.apps[id] = {};
+                for (var subKey in saved[id]) {
                     if (subKey === `Tags`) {
                         games.apps[id].tags = saved[id].Tags.split(`, `);
                     } else if (subKey === `Entered`) {
