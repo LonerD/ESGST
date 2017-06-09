@@ -1,4 +1,18 @@
 /*
+ * June 9, 2017 - v6.Beta.3.16
+ */
+
+* Changed how the comment history data is stored (your old data should be transferred without any problems, but let me know about any missing data). As a result, the option to import/export comment history data has been temporarily disabled until it is rewritten for the new system.
+* Comment History has been completely revamped and there are now two different data storages (one for SG and one for ST). The new data storages should also take much less memory space.
+* Fixed a bug in Game Categories that wasn't applying the negative class for "Rating" category.
+* Added an option to Enter/Leave Giveaway Button to pop up the giveaway description in the same window instead of opening it in another tab.
+* Fixed a bug in Enter/Leave Giveaway Button that was opening the giveaway description when leaving a giveaway.
+
+Added the following features:
+
+* Level Progress Visualizer (closes #144)
+
+/*
  * June 9, 2017 - v6.Beta.3.15
  */
 

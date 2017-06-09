@@ -151,6 +151,14 @@ Tested on Microsoft Edge and most of it seems to work fine, but for some reason 
 * Allows you to manage `Whitelist / Blacklist Highlighter` and `Not Activated / Multiple Wins Checker` caches.
 * Allows you to sync your data and enable / disable the automatic sync.
 
+### Level Progress Visualizer
+
+`steamgifts.com/*`
+
+* Shows your level progress in the main button.
+
+![](http://imgur.com/RJmCnpR.png)
+
 ### Hidden Featured Container
 
 `steamgifts.com/giveaways/*`

@@ -3,7 +3,7 @@
 // @namespace ESGST
 // @description Enhances SteamGifts and SteamTrades by adding some cool features to them.
 // @icon https://github.com/revilheart/ESGST/raw/master/Resources/esgstIcon.ico
-// @version 6.Beta.3.15
+// @version 6.Beta.3.16
 // @author rafaelgs18
 // @contributor Royalgamer06
 // @downloadURL https://github.com/revilheart/ESGST/raw/master/ESGST.user.js
@@ -18,6 +18,7 @@
 // @connect sgtools.info
 // @connect steamcommunity.com
 // @connect steamgifts.com
+// @connect steamtrades.com
 // @grant GM_addStyle
 // @grant GM_setValue
 // @grant GM_getValue
@@ -28,7 +29,6 @@
 // @grant GM_getResourceText
 // @grant GM_getResourceURL
 // @grant GM_xmlhttpRequest
-// @grant GM_openInTab
 // @grant GM_info
 // @require https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js
 // @require https://github.com/dinbror/bpopup/raw/master/jquery.bpopup.min.js
@@ -92,8 +92,34 @@
         }
     }
 
+    function updateCommentHistoryStorageToV6() {
+        var comments, i, id, match, n, saved;
+        if (!GM_getValue(`sgCommentHistoryStorageV6`, false)) {
+            comments = [];
+            saved = DOM.parse(GM_getValue(`CommentHistory`, ``)).getElementsByTagName(`div`);
+            n = saved.length;
+            if (n > 0) {
+                for (i = 0, n = saved.length; i < n; ++i) {
+                    match = saved[i].lastElementChild;
+                    if (match) {
+                        id = match.getAttribute(`href`).match(/\/go\/comment\/(.+)/);
+                        if (id) {
+                            comments.push({
+                                id: id[1],
+                                timestamp: parseInt(match.getAttribute(`data-timestamp`)) * 1e3
+                            });
+                        }
+                    }
+                }
+            }
+            GM_setValue(`sgCommentHistory`, JSON.stringify(comments));
+            GM_setValue(`sgCommentHistoryStorageV6`, true);
+        }
+    }
+
     function loadEsgst() {
         updateGameStorageToV6();
+        updateCommentHistoryStorageToV6();
         addStyles();
         checkNewVersion();
         esgst.sg = window.location.hostname.match(/www.steamgifts.com/);
@@ -235,6 +261,7 @@
             hr_b: `hir_b`,
             hr_i: `hr_i`,
             hr_p: `pr`,
+            lpv: `lpv`,
             hbs: `BSH`,
             vai: `VAI`,
             ev: `ev`,
@@ -544,6 +571,12 @@
                 load: loadHeaderRefresher
             },
             {
+                id: `lpv`,
+                name: `Level Progress Visualizer`,
+                check: getValue(`lpv`),
+                load: loadLpv
+            },
+            {
                 id: `hbs`,
                 name: `Hidden Blacklist Stats`,
                 check: getValue(`hbs`) && window.location.pathname.match(/^\/stats\/personal\/community/),
@@ -639,6 +672,13 @@
                     {
                         id: `gpElgb`,
                         name: `Enter/Leave Giveaway Button`,
+                        options: [
+                            {
+                                id: `elgb_p`,
+                                name: `Popup description instead of opening giveaway in a new tab.`,
+                                check: getValue(`elgb_p`)
+                            }
+                        ],
                         check: getValue(`gpElgb`)
                     }
                 ],
@@ -1610,7 +1650,7 @@
                 if (Match[3]) {
                     Callback();
                     if (esgst.ch) {
-                        saveCHComment(DEDStatus.closest(".comment__children"), Match[1], DOM.parse(Response.responseText).getElementsByTagName("title")[0].textContent, Match[3]);
+                        saveChComment(Match[3], Date.now());
                     }
                     if (DEDCallback) {
                         DEDCallback(Response, DEDStatus);
@@ -1622,7 +1662,7 @@
                         Callback();
                         Match = Response.finalUrl.match(/(.+?)(#(.+))?$/);
                         if (esgst.ch) {
-                            saveCHComment(DEDStatus.closest(".comment__children"), Match[1], DOM.parse(Response.responseText).getElementsByTagName("title")[0].textContent, Match[3]);
+                            saveChComment(Match[3], Date.now());
                         }
                         if (DEDCallback) {
                             DEDCallback(Response, DEDStatus);
@@ -1644,10 +1684,14 @@
                 ResponseJSON = JSON.parse(Response.responseText);
                 if (ResponseJSON.success) {
                     Callback();
+                    var id = DOM.parse(ResponseJSON.html).getElementsByClassName("comment_outer")[0].id;
+                    if (esgst.ch) {
+                        saveChComment(id, Date.now());
+                    }
                     if (DEDCallback) {
                         DEDCallback(Response, DEDStatus);
                     } else {
-                        window.location.href = "/go/comment/" + DOM.parse(ResponseJSON.html).getElementsByClassName("comment_outer")[0].id;
+                        window.location.href = "/go/comment/" + id;
                     }
                 } else {
                     Callback();
@@ -2099,7 +2143,7 @@
         var popup;
         popup = {};
         popup.popup = insertHtml(document.body, `beforeEnd`, `
-            <div class="page_outer_wrap esgst-popup">
+            <div class="page__outer-wrap page_outer_wrap esgst-popup">
                 <div class="popup_summary">
                     <div class="popup_icon">
                         <i class="popup__icon fa ${icon} esgst-popup-icon"></i>
@@ -2304,8 +2348,11 @@
             button1.classList.toggle(`esgst-hidden`);
             button2.classList.toggle(`esgst-hidden`);
             if (callback) {
-                callback(set.toggle.bind(null, button1, button2));
+                callback(set.toggle);
             }
+        };
+        set.trigger = function() {
+            set.toggle(callback1);
         };
         button1.addEventListener(`click`, set.toggle.bind(null, callback1));
         if (callback2) {
@@ -2744,6 +2791,14 @@ max-height: 75%;
 overflow: auto;
 }
 
+.esgst-popup .popup__actions {
+margin-top: 25px;
+}
+
+.esgst-button-set {
+margin-top: 25px;
+}
+
 .esgst-popup-icon {
 height: 48px;
 width: 48px;
@@ -2753,7 +2808,7 @@ width: 48px;
 font-weight: bold;
 }
 
-.rhPopupDescription.left {
+.rhPopupDescription.left, .esgst-text-left {
 text-align: left;
 }
 .esgst-hidden {
@@ -2776,6 +2831,16 @@ cursor: pointer;
 .esgst-hr-delivered i {
 color: #FECC66;
 }
+
+.esgst-lpv-main-button {
+padding: 0;
+}
+
+.esgst-lpv-container {
+border-radius: 4px;
+padding: 0 15px;
+}
+
 .esgst-adot, .esgst-rbot {
 margin-bottom: 25px;
 }
@@ -3751,6 +3816,28 @@ margin-bottom: ${esgst.footer.offsetHeight}px;
         GM_addStyle(style);
     }
 
+    /* Level Progress Visualizer */
+
+    function loadLpv() {
+        var elements;
+        if (esgst.sg && !esgst.hr) {
+            elements = getHeaderElements(document);
+            if (elements.mainButton) {
+                addLpvContainer(elements.mainButton);
+            }
+        }
+    }
+
+    function addLpvContainer(mainButton) {
+        var progress;
+        progress = mainButton.lastElementChild.getAttribute(`title`).match(/\.(\d+)/);
+        if (progress) {
+            progress = `${progress[1]}%`;
+            mainButton.classList.add(`esgst-lpv-main-button`);
+            mainButton.innerHTML = `<div class="esgst-lpv-container" style="background-image: linear-gradient(to right, #609f60 ${progress}, transparent ${progress})">${mainButton.innerHTML}</div>`;
+        }
+    }
+
     // Header Refresher
 
     function loadHeaderRefresher() {
@@ -3785,6 +3872,12 @@ margin-bottom: ${esgst.footer.offsetHeight}px;
             var elements = {};
             elements.mainButton = navigation.querySelector(`.nav__button--is-dropdown, .nav_btn[href^="/user/"]`);
             if (elements.mainButton) {
+                if (esgst.lpv) {
+                    addLpvContainer(elements.mainButton);
+                    elements.mainButtonClass = `esgst-lpv-main-button`;
+                } else {
+                    elements.mainButtonClass = ``;
+                }
                 elements.mainButtonHtml = elements.mainButton.innerHTML;
                 var pointsContainer = elements.mainButton.getElementsByClassName(`nav__points`)[0];
                 elements.points = -1;
@@ -3895,6 +3988,7 @@ margin-bottom: ${esgst.footer.offsetHeight}px;
 
     function refreshHeader(hr, elements) {
         if (hr.elements.mainButton.innerHTML !== elements.mainButtonHtml) {
+            hr.elements.mainButton.classList.add(elements.mainButtonClass);
             hr.elements.mainButton.innerHTML = elements.mainButtonHtml;
         }
         if (elements.createdButton && (hr.elements.createdButton.innerHTML !== elements.createdButtonHtml)) {
@@ -5126,48 +5220,75 @@ ${title}
     }
 
     function enterLeaveELGBGiveaway(GP, Icon, Name, Message, Type, Context, Yellow) {
+        if (Name === `Enter`) {
+            makeRequest(null, GP.URL, null, function(response) {
+                var description, set, popup;
+                description = DOM.parse(response.responseText).getElementsByClassName(`page__description`)[0];
+                if (description) {
+                    if (esgst.elgb_p) {
+                        popup = createPopup_v6(`fa-file-text-o`, `Giveaway Description`, true);
+                        set = createButtonSet(`green`, `grey`, `fa-plus-circle`, `fa-circle-o-notch fa-spin`, `Enter Giveaway`, `Entering...`, function(callback) {
+                            enterLeaveElgbGiveaway(GP, Icon, Name, Message, Type, Context, Yellow);
+                            callback();
+                            popup.opened.close();
+                        });
+                        popup.description.appendChild(set.set);
+                        description.classList.add(`esgst-text-left`);
+                        popup.description.insertAdjacentHTML(`afterBegin`, description.outerHTML);
+                        popup.open();
+                    } else {
+                        window.open(`https://www.steamgifts.com${GP.URL}`);
+                        GP.ELGBButton.remove();
+                    }
+                } else {
+                    enterLeaveElgbGiveaway(GP, Icon, Name, Message, Type, Context, Yellow);
+                }
+            });
+        } else {
+            enterLeaveElgbGiveaway(GP, Icon, Name, Message, Type, Context, Yellow);
+        }
+    }
+
+    function enterLeaveElgbGiveaway(GP, Icon, Name, Message, Type, Context, Yellow) {
         var Data, URL;
         Data = "xsrf_token=" + esgst.xsrfToken + "&do=" + Type + "&code=" + GP.Code;
         URL = "/ajax.php";
-        makeRequest(null, GP.URL, null, function(response) {
-            if (DOM.parse(response.responseText).getElementsByClassName(`page__description`)[0]) {
-                GM_openInTab(`https://www.steamgifts.com${GP.URL}`, true);
-                GP.ELGBButton.remove();
-            } else {
         makeRequest(Data, URL, null, function(Response) {
             var ResponseJSON;
             ResponseJSON = JSON.parse(Response.responseText);
-            if (ResponseJSON.type == "success") {
-                Context.classList.toggle("esgst-faded");
-                GP.Entries.textContent = ResponseJSON.entry_count + " entries";
-                GP.Points.textContent = ResponseJSON.points;
-                setGWCChance(GP.GWCChance, GP.Entries, GP.Copies);
-                if (GP.ELGBButton.getAttribute("data-entered")) {
-                    GP.ELGBButton.removeAttribute("data-entered");
-                    setELGBButton(GP, "fa-plus-circle", "Enter", "Entering...", "entry_insert", Context);
-                } else {
-                    if (esgst.hr) {
-                        var elements = getHeaderElements(document);
-                        GM_setValue(`sgRefreshedHeaderElements`, elements);
-                    }
-                    GP.ELGBButton.setAttribute("data-entered", true);
-                    GP.ELGBButton.nextElementSibling.classList.add("rhHidden");
-                    setELGBButton(GP, "fa-minus-circle", "Leave", "Leaving...", "entry_delete", Context, true);
-                }
-            } else if (parseInt(GP.ELGBButton.getAttribute("data-points")) <= ResponseJSON.points) {
-                GP.Points.textContent = ResponseJSON.points;
-                GP.ELGBButton.innerHTML =
-                    "<div class=\"sidebar__error is-disabled\">" +
-                    "    <i class=\"fa fa-exclamation-circle\"></i> " +
-                    "    <span>" + ResponseJSON.msg + "</span>" +
-                    "</div>";
-            } else {
+            updateElgbGiveaway(GP, Icon, Name, Message, Type, Context, Yellow, ResponseJSON);
+        });
+    }
+
+    function updateElgbGiveaway(GP, Icon, Name, Message, Type, Context, Yellow, ResponseJSON) {
+        if (ResponseJSON.type == "success") {
+            Context.classList.toggle("esgst-faded");
+            GP.Entries.textContent = ResponseJSON.entry_count + " entries";
+            GP.Points.textContent = ResponseJSON.points;
+            setGWCChance(GP.GWCChance, GP.Entries, GP.Copies);
+            if (GP.ELGBButton.getAttribute("data-entered")) {
+                GP.ELGBButton.removeAttribute("data-entered");
                 setELGBButton(GP, "fa-plus-circle", "Enter", "Entering...", "entry_insert", Context);
+            } else {
+                if (esgst.hr) {
+                    var elements = getHeaderElements(document);
+                    GM_setValue(`sgRefreshedHeaderElements`, elements);
+                }
+                GP.ELGBButton.setAttribute("data-entered", true);
+                GP.ELGBButton.nextElementSibling.classList.add("rhHidden");
+                setELGBButton(GP, "fa-minus-circle", "Leave", "Leaving...", "entry_delete", Context, true);
             }
-            updateELGBButtons(ResponseJSON.points);
-        });
+        } else if (parseInt(GP.ELGBButton.getAttribute("data-points")) <= ResponseJSON.points) {
+            GP.Points.textContent = ResponseJSON.points;
+            GP.ELGBButton.innerHTML =
+                "<div class=\"sidebar__error is-disabled\">" +
+                "    <i class=\"fa fa-exclamation-circle\"></i> " +
+                "    <span>" + ResponseJSON.msg + "</span>" +
+                "</div>";
+        } else {
+            setELGBButton(GP, "fa-plus-circle", "Enter", "Entering...", "entry_insert", Context);
         }
-        });
+        updateELGBButtons(ResponseJSON.points);
     }
 
     function updateELGBButtons(Points) {
@@ -6567,20 +6688,6 @@ ${Results.join(``)}
                 saveComment(TradeCode, ParentID.value, Description.value, URL, DEDStatus, Callback, DEDCallback);
             }
         }, null, true);
-    }
-
-    function saveCHComment(Context, URL, Title, ID) {
-        var Username;
-        Username = Context ? Context.previousElementSibling.getElementsByClassName("comment__username")[0].textContent : null;
-        GM_setValue(
-            "CommentHistory",
-            "<div>" +
-            "    You " + (Username ? ("replied to <a class=\"rhBold\" href=\"/user/" + Username + "\">" + Username + "</a> on") : "added a comment to") +
-            "    <a class=\"rhBold\" href=\"" + URL + "\">" + Title + "</a> at" +
-            "    <a class=\"rhBold\" data-timestamp=\"" + Math.floor((new Date().getTime()) / 1000) + "\" href=\"/go/comment/" + ID + "\"></a>." +
-            "</div>" +
-            GM_getValue("CommentHistory")
-        );
     }
 
     function loadCommentTracker() {
@@ -17186,6 +17293,82 @@ ${Results.join(``)}
     }
 
     /*
+     * Features - Commenting
+     */
+
+    function loadCommentingFeatures(context) {
+    }
+
+    function getComments() {
+    }
+
+    /* Comment History */
+
+    function saveChComment(id, timestamp) {
+        createLock(`${esgst.name}CommentHistoryLock`, 300, function(deleteLock) {
+            var comments, key;
+            key = `${esgst.name}CommentHistory`;
+            comments = JSON.parse(GM_getValue(key, `[]`));
+            comments.unshift({
+                id: id,
+                timestamp: timestamp
+            });
+            GM_setValue(key, JSON.stringify(comments));
+            deleteLock();
+        });
+    }
+
+     function getChComments(comments, i, n, popup, callback) {
+        var comment, id;
+        if (i < n) {
+            comment = comments[i];
+            if (comment) {
+                id = comment.id;
+                request(null, false, `https://${window.location.hostname}/go/comment/${id}`, function(response) {
+                    var html, parent, responseHtml;
+                    responseHtml = DOM.parse(response.responseText);
+                    comment = responseHtml.getElementById(id);
+                    if (esgst.sg) {
+                        comment = comment.closest(`.comment`);
+                        comment.firstElementChild.classList.remove(`comment__parent`);
+                        comment.firstElementChild.classList.add(`comment__child`);
+                    }
+                    comment.lastElementChild.remove();
+                    parent = comment.parentElement.closest(`.comment, .comment_outer`);
+                    if (parent) {
+                        parent.lastElementChild.remove();
+                        parent.insertAdjacentHTML(`beforeEnd`, `
+                            <div class="comment__children comment_children">${comment.outerHTML}</div>
+                        `);
+                        html = parent.outerHTML;
+                    } else {
+                        if (esgst.st) {
+                            comment.getElementsByClassName(`action_list`)[0].firstElementChild.insertAdjacentHTML(`afterEnd`, `
+                                <a href="${response.finalUrl}">${responseHtml.title}</a>
+                            `);
+                        }
+                        html = esgst.sg ? `
+                            <div class="comments__entity">
+                                <p class="comments__entity__name">
+                                    <a href="${response.finalUrl}">${responseHtml.title}</a>
+                                </p>
+                            </div>` : ``;
+                        html += `<div class="comment__children comment_children">${comment.outerHTML}</div>`;
+                    }
+                    popup.commentHistory.insertAdjacentHTML(`beforeEnd`, `<div class="comment comments comment_outer">${html}</div>`);
+                    loadEndlessFeatures(popup.commentHistory.lastElementChild);
+                    popup.reposition();
+                    window.setTimeout(getChComments, 0, comments, ++i, n, popup, callback);
+                });
+            } else {
+                callback(i + 1);
+            }
+        } else {
+            callback(i);
+        }
+    }
+
+    /*
      * Features - Games
      */
 
@@ -17588,7 +17771,7 @@ ${Results.join(``)}
                         summary.classList.remove(`game_review_summary`);
                         savedGames[type][id].rating = {
                             count: `${match[1]}% (${match[2]} Reviews)`,
-                            type: summary.className
+                            type: summary.className || `negative`
                         };
                         savedGames[type][id].genres.sort(function (a, b) {
                             return a.toLowerCase().localeCompare(b.toLowerCase());
@@ -18538,7 +18721,7 @@ ${avatar.outerHTML}
         SMLastSync = Container.getElementsByClassName("SMLastSync")[0];
         SMLastBundleSync = Container.getElementsByClassName("SMLastBundleSync")[0];
         SMAPIKey = Container.getElementsByClassName("SMAPIKey")[0];
-        SMGeneralFeatures = ["fh", "fs", "fmph", "ff", "hr", "vai", "ev", "hbs", "at", "pnot", "es"];
+        SMGeneralFeatures = ["fh", "fs", "fmph", "ff", "hr", "lpv", "vai", "ev", "hbs", "at", "pnot", "es"];
         SMGiveawayFeatures = ["dgn", "hfc", "ags", "pgb", "gf", "gv", "egf", "gp", "ggp", "gt", "sgg", "rcvc", "ugs", "er", "gwl", "gesl", "as"];
         SMDiscussionFeatures = ["adot", "dh", "mpp", "ded"];
         SMCommentingFeatures = ["ch", "ct", "cfh", "rbot", "rbp", "mr", "rfi", "rml"];
@@ -18601,7 +18784,7 @@ ${avatar.outerHTML}
             SM = {
                 Names: {
                     Users: "U",
-                    //Games: "G",
+                    Games: "G",
                     Groups: "GP",
                     Comments: "C",
                     Comments_ST: "C_ST",
@@ -18678,7 +18861,7 @@ ${avatar.outerHTML}
                 ID: "SM_R"
             }, {
                 Check: function() {
-                    return true;
+                    return false;// true
                 },
                 Description: "Comment history data.",
                 Title: "Includes Comment History data.",
@@ -19254,17 +19437,23 @@ Background: <input type="color" value="${bgColor}">
 
     function setSMCommentHistory(SMCommentHistory) {
         SMCommentHistory.addEventListener("click", function() {
-            var Popup;
-            Popup = createPopup(true);
-            Popup.Popup.style.width = "600px";
-            Popup.Icon.classList.add("fa-comments");
-            Popup.Title.textContent = "Comment History";
-            Popup.Results.classList.add("SMComments");
-            Popup.Results.innerHTML = GM_getValue("CommentHistory");
-            if (esgst.at) {
-                getTimestamps(Popup.Results);
-            }
-            Popup.popUp();
+            var comments, i, popup, set;
+            popup = createPopup_v6(`fa-comments`, `Comment History`);
+            popup.commentHistory = insertHtml(popup.description, `afterBegin`, `<div class="comments esgst-text-left"></div>`);
+            comments = JSON.parse(GM_getValue(`${esgst.name}CommentHistory`, `[]`));
+            i = 0;
+            set = createButtonSet(`green`, `grey`, `fa-plus`, `fa-circle-o-notch fa-spin`, `Load more...`, `Loading more...`, function(callback) {
+                getChComments(comments, i, i + 5, popup, function(value) {
+                    i = value;
+                    if (i > comments.length) {
+                        set.set.remove();
+                    }
+                    callback();
+                });
+            });
+            popup.description.appendChild(set.set);
+            popup.open();
+            set.trigger();
         });
     }
 
