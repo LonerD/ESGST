@@ -1,4 +1,26 @@
 /*
+ * June 9, 2017 - v6.Beta.3.14
+ */
+
+* Fixed some bugs and made some improvements.
+* Changed how the game data is stored (your old data should be transferred without any problems, but let me know about any missing data).
+* Fixed a conflict between games' app/sub ids. As a result, Multi-Tag and the option to import/export game data have been temporarily disabled until they are rewritten for the new system.
+* Reinforced how the gama data is saved to further prevent data from being overwritten. As a result, you might notice that game features now take a bit longer to save.
+* Added "Rating" and "User-Defined Tags" categories to Game Categories (closes #130).
+* Changed the default colors for Game Categories and added a button to the settings menu that allows you to reset the colors to their default values.
+* Changed the "Wishlisted" and "Ignored" icons in Game Categories.
+* Game Categories now works on any page (closes #108).
+* Game Categories now retrieves data from the US store (closes #123).
+
+Renamed the following features:
+
+* Games Highlighter -> Entered Games Highlighter - Fixed some bugs and made some improvements. The star icon should now be immediately added upon entering a giveaway.
+
+Removed the following features:
+
+* Giveaway Description/Comment Box Popup - Upon clicking the Enter/Leave giveaway button, the script now checks for a description. If it finds one, it opens the giveaway in a new tab so you can read it before entering, otherwise it enters the giveaway automatically.
+
+/*
  * June 2, 2017 - v6.Beta.3.13
  */
 
