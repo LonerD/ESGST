@@ -3,8 +3,8 @@
 // @namespace ESGST
 // @description Enhances SteamGifts and SteamTrades by adding some cool features to them.
 // @icon https://github.com/revilheart/ESGST/raw/master/Resources/esgstIcon.ico
-// @version 6.Beta.3.17
-// @author rafaelgs18
+// @version 6.Beta.3.18
+// @author revilheart
 // @contributor Royalgamer06
 // @downloadURL https://github.com/revilheart/ESGST/raw/master/ESGST.user.js
 // @updateURL https://github.com/revilheart/ESGST/raw/master/ESGST.meta.js
@@ -39,12 +39,12 @@
 // @noframes
 // ==/UserScript==
 
-(function() {
+(function () {
     try {
         // DOM Parser
         var DOM = {
             parser: new DOMParser(),
-            parse: function(string) {
+            parse: function (string) {
                 return this.parser.parseFromString(string, `text/html`);
             }
         };
@@ -54,13 +54,13 @@
         loadEsgst();
 
         // Page Events
-        window.addEventListener("beforeunload", function(event) {
+        window.addEventListener("beforeunload", function (event) {
             if (document.getElementsByClassName("rhBusy")[0]) {
                 event.returnValue = true;
                 return true;
             }
         });
-        window.addEventListener("hashchange", function() {
+        window.addEventListener("hashchange", function () {
             goToComment();
         });
     } catch (error) {
@@ -70,51 +70,58 @@
 
     function updateGameStorageToV6() {
         if (!GM_getValue(`v6GameStorage`, false)) {
-            var saved = GM_getValue(`Games`);
-            var games = {
-                apps: {},
-                subs: {}
-            };
-            for (var id in saved) {
-                games.apps[id] = {};
-                for (var subKey in saved[id]) {
-                    if (subKey === `Tags`) {
-                        games.apps[id].tags = saved[id].Tags.split(`, `);
-                    } else if (subKey === `Entered`) {
-                        games.apps[id].entered = saved[id].Entered;
-                    } else {
-                        games.apps[id][subKey] = saved[id][subKey];
-                    }
-                }
-            }
-            GM_setValue(`games`, JSON.stringify(games));
+            GM_setValue(`games`, JSON.stringify(getGameStorageV6(GM_getValue(`Games`, []))));
             GM_setValue(`v6GameStorage`, true);
         }
     }
 
+    function getGameStorageV6(saved) {
+        var games = {
+            apps: {},
+            subs: {}
+        };
+        for (var id in saved) {
+            games.apps[id] = {};
+            for (var subKey in saved[id]) {
+                if (subKey === `Tags`) {
+                    games.apps[id].tags = saved[id].Tags.split(`, `);
+                } else if (subKey === `Entered`) {
+                    games.apps[id].entered = saved[id].Entered;
+                } else {
+                    games.apps[id][subKey] = saved[id][subKey];
+                }
+            }
+        }
+        return games;
+    }
+
     function updateCommentHistoryStorageToV6() {
-        var comments, i, id, match, n, saved;
         if (!GM_getValue(`sgCommentHistoryStorageV6`, false)) {
-            comments = [];
-            saved = DOM.parse(GM_getValue(`CommentHistory`, ``)).getElementsByTagName(`div`);
-            n = saved.length;
-            if (n > 0) {
-                for (i = 0, n = saved.length; i < n; ++i) {
-                    match = saved[i].lastElementChild;
-                    if (match) {
-                        id = match.getAttribute(`href`).match(/\/go\/comment\/(.+)/);
-                        if (id) {
-                            comments.push({
-                                id: id[1],
-                                timestamp: parseInt(match.getAttribute(`data-timestamp`)) * 1e3
-                            });
-                        }
+            GM_setValue(`sgCommentHistory`, JSON.stringify(getCommentHistoryStorageV6(GM_getValue(`CommentHistory`, ``))));
+            GM_setValue(`sgCommentHistoryStorageV6`, true);
+        }
+    }
+
+    function getCommentHistoryStorageV6(context) {
+        var comments, i, id, match, n, saved;
+        comments = [];
+        saved = DOM.parse(context).getElementsByTagName(`div`);
+        n = saved.length;
+        if (n > 0) {
+            for (i = 0, n = saved.length; i < n; ++i) {
+                match = saved[i].lastElementChild;
+                if (match) {
+                    id = match.getAttribute(`href`).match(/\/go\/comment\/(.+)/);
+                    if (id) {
+                        comments.push({
+                            id: id[1],
+                            timestamp: parseInt(match.getAttribute(`data-timestamp`)) * 1e3
+                        });
                     }
                 }
             }
-            GM_setValue(`sgCommentHistory`, JSON.stringify(comments));
-            GM_setValue(`sgCommentHistoryStorageV6`, true);
         }
+        return comments;
     }
 
     function loadEsgst() {
@@ -434,62 +441,62 @@
             gf_exceptionRegionRestricted: false,
             gf_exceptionMultiple: false,
             gf_exceptionMultipleCopies: 1,
-            gf_minLevelWishlist:0,
-            gf_maxLevelWishlist:10,
-            gf_minEntriesWishlist:0,
-            gf_maxEntriesWishlist:999999999,
-            gf_minCopiesWishlist:1,
-            gf_maxCopiesWishlist:999999999,
-            gf_minPointsWishlist:0,
-            gf_maxPointsWishlist:300,
-            gf_pinnedWishlist:`enabled`,
-            gf_groupWishlist:`enabled`,
-            gf_whitelistWishlist:`enabled`,
-            gf_regionRestrictedWishlist:`enabled`,
-            gf_enteredWishlist:`enabled`,
-            gf_bundledWishlist:`enabled`,
-            gf_tradingCardsWishlist:`enabled`,
-            gf_achievementsWishlist:`enabled`,
-            gf_multiplayerWishlist:`enabled`,
-            gf_steamCloudWishlist:`enabled`,
-            gf_linuxWishlist:`enabled`,
-            gf_macWishlist:`enabled`,
-            gf_dlcWishlist:`enabled`,
+            gf_minLevelWishlist: 0,
+            gf_maxLevelWishlist: 10,
+            gf_minEntriesWishlist: 0,
+            gf_maxEntriesWishlist: 999999999,
+            gf_minCopiesWishlist: 1,
+            gf_maxCopiesWishlist: 999999999,
+            gf_minPointsWishlist: 0,
+            gf_maxPointsWishlist: 300,
+            gf_pinnedWishlist: `enabled`,
+            gf_groupWishlist: `enabled`,
+            gf_whitelistWishlist: `enabled`,
+            gf_regionRestrictedWishlist: `enabled`,
+            gf_enteredWishlist: `enabled`,
+            gf_bundledWishlist: `enabled`,
+            gf_tradingCardsWishlist: `enabled`,
+            gf_achievementsWishlist: `enabled`,
+            gf_multiplayerWishlist: `enabled`,
+            gf_steamCloudWishlist: `enabled`,
+            gf_linuxWishlist: `enabled`,
+            gf_macWishlist: `enabled`,
+            gf_dlcWishlist: `enabled`,
             gf_exceptionWishlistWishlist: false,
-            gf_exceptionPinnedWishlist:false,
-            gf_exceptionGroupWishlist:false,
-            gf_exceptionWhitelistWishlist:false,
-            gf_exceptionRegionRestrictedWishlist:false,
-            gf_exceptionMultipleWishlist:false,
-            gf_exceptionMultipleCopiesWishlist:1,
-            gf_minLevelGroup:0,
-            gf_maxLevelGroup:10,
-            gf_minEntriesGroup:0,
-            gf_maxEntriesGroup:999999999,
-            gf_minCopiesGroup:1,
-            gf_maxCopiesGroup:999999999,
-            gf_minPointsGroup:0,
-            gf_maxPointsGroup:300,
-            gf_pinnedGroup:`enabled`,
-            gf_groupGroup:`enabled`,
-            gf_whitelistGroup:`enabled`,
-            gf_regionRestrictedGroup:`enabled`,
-            gf_enteredGroup:`enabled`,
-            gf_bundledGroup:`enabled`,
-            gf_tradingCardsGroup:`enabled`,
-            gf_achievementsGroup:`enabled`,
-            gf_multiplayerGroup:`enabled`,
-            gf_steamCloudGroup:`enabled`,
-            gf_linuxGroup:`enabled`,
-            gf_macGroup:`enabled`,
-            gf_dlcGroup:`enabled`,
+            gf_exceptionPinnedWishlist: false,
+            gf_exceptionGroupWishlist: false,
+            gf_exceptionWhitelistWishlist: false,
+            gf_exceptionRegionRestrictedWishlist: false,
+            gf_exceptionMultipleWishlist: false,
+            gf_exceptionMultipleCopiesWishlist: 1,
+            gf_minLevelGroup: 0,
+            gf_maxLevelGroup: 10,
+            gf_minEntriesGroup: 0,
+            gf_maxEntriesGroup: 999999999,
+            gf_minCopiesGroup: 1,
+            gf_maxCopiesGroup: 999999999,
+            gf_minPointsGroup: 0,
+            gf_maxPointsGroup: 300,
+            gf_pinnedGroup: `enabled`,
+            gf_groupGroup: `enabled`,
+            gf_whitelistGroup: `enabled`,
+            gf_regionRestrictedGroup: `enabled`,
+            gf_enteredGroup: `enabled`,
+            gf_bundledGroup: `enabled`,
+            gf_tradingCardsGroup: `enabled`,
+            gf_achievementsGroup: `enabled`,
+            gf_multiplayerGroup: `enabled`,
+            gf_steamCloudGroup: `enabled`,
+            gf_linuxGroup: `enabled`,
+            gf_macGroup: `enabled`,
+            gf_dlcGroup: `enabled`,
             gf_exceptionWishlistGroup: false,
-            gf_exceptionPinnedGroup:false,
-            gf_exceptionGroupGroup:false,
-            gf_exceptionWhitelistGroup:false,
-            gf_exceptionRegionRestrictedGroup:false,
-            gf_exceptionMultipleGroup:false,
-            gf_exceptionMultipleCopiesGroup:1,
+            gf_exceptionPinnedGroup: false,
+            gf_exceptionGroupGroup: false,
+            gf_exceptionWhitelistGroup: false,
+            gf_exceptionRegionRestrictedGroup: false,
+            gf_exceptionMultipleGroup: false,
+            gf_exceptionMultipleCopiesGroup: 1,
             Avatar: "",
             Username: "",
             SteamID64: "",
@@ -1315,7 +1322,7 @@
                     (esgst.es_dtt && esgst.discussionsTicketsTradesPath) ||
                     (esgst.es_dttc && esgst.discussionTicketTradeCommentsPath) ||
                     (esgst.es_r && !esgst.giveawaysPath && !esgst.giveawayCommentsPath &&
-                     !esgst.discussionsTicketsTradesPath && !esgst.discussionTicketTradeCommentsPath)
+                        !esgst.discussionsTicketsTradesPath && !esgst.discussionTicketTradeCommentsPath)
                 ),
                 load: loadEndlessScrolling
             }
@@ -1458,7 +1465,7 @@
     function queueRequest(Element, Data, URL, Callback) {
         var CurrentDate, HTML;
         HTML = Element.Progress ? Element.Progress.innerHTML : "";
-        Element.Request = setInterval(function() {
+        Element.Request = setInterval(function () {
             CurrentDate = new Date().getTime();
             if ((CurrentDate - GM_getValue("LastRequest")) > 5000) {
                 clearInterval(Element.Request);
@@ -1466,7 +1473,7 @@
                 if (Element.Progress) {
                     Element.Progress.innerHTML = HTML;
                 }
-                makeRequest(Data, URL, Element.Progress, function(Response) {
+                makeRequest(Data, URL, Element.Progress, function (Response) {
                     GM_setValue("LastRequest", 0);
                     Callback(Response);
                 });
@@ -1487,10 +1494,10 @@
             method: (Data ? "POST" : "GET"),
             timeout: 300000,
             url: URL,
-            onerror: function() {
+            onerror: function () {
                 displayMessage(Context, "An error has ocurred.");
             },
-            ontimeout: function() {
+            ontimeout: function () {
                 displayMessage(Context, "The connection has timed out.");
             },
             onload: Callback
@@ -1509,7 +1516,7 @@
 
     function queueSave(Element, Callback) {
         var CurrentDate;
-        Element.Save = setInterval(function() {
+        Element.Save = setInterval(function () {
             CurrentDate = new Date().getTime();
             if ((CurrentDate - GM_getValue("LastSave")) > 5000) {
                 clearInterval(Element.Save);
@@ -1556,7 +1563,7 @@
             GM_setValue("Users", SavedUsers);
             Callback();
         } else {
-            setUser(Element, User, function() {
+            setUser(Element, User, function () {
                 if (esgst.sg) {
                     I = getUserIndex(User, SavedUsers);
                     if (I >= 0) {
@@ -1574,7 +1581,7 @@
     }
 
     function setUser(Element, User, Callback) {
-        queueRequest(Element, null, "https://www.steamgifts.com" + (esgst.sg ? "" : "/go") + "/user/" + (esgst.sg ? User.Username : User.SteamID64), function(Response) {
+        queueRequest(Element, null, "https://www.steamgifts.com" + (esgst.sg ? "" : "/go") + "/user/" + (esgst.sg ? User.Username : User.SteamID64), function (Response) {
             var ResponseHTML;
             ResponseHTML = DOM.parse(Response.responseText);
             if (esgst.sg) {
@@ -1595,7 +1602,7 @@
             User.ID = SavedUser.ID;
             Callback();
         } else {
-            queueRequest(Element, null, "/user/" + User.Username, function(Response) {
+            queueRequest(Element, null, "/user/" + User.Username, function (Response) {
                 User.ID = DOM.parse(Response.responseText).querySelector("[name='child_user_id']").value;
                 Callback();
             });
@@ -1643,7 +1650,7 @@
         var Data;
         Data = "xsrf_token=" + esgst.xsrfToken + "&do=" + (esgst.sg ? "comment_new" : "comment_insert") + "&trade_code=" + TradeCode + "&parent_id=" + ParentID + "&description=" +
             encodeURIComponent(Description);
-        makeRequest(Data, URL, DEDStatus, function(Response) {
+        makeRequest(Data, URL, DEDStatus, function (Response) {
             var Match, ResponseJSON;
             if (esgst.sg) {
                 Match = Response.finalUrl.match(/(.+?)(#(.+))?$/);
@@ -1658,7 +1665,7 @@
                         window.location.href = "/go/comment/" + Match[3];
                     }
                 } else if (URL != Match[1]) {
-                    makeRequest(Data, Match[1], DEDStatus, function(Response) {
+                    makeRequest(Data, Match[1], DEDStatus, function (Response) {
                         Callback();
                         Match = Response.finalUrl.match(/(.+?)(#(.+))?$/);
                         if (esgst.ch) {
@@ -1712,7 +1719,7 @@
         SyncFrequency = GM_getValue("SyncFrequency");
         CurrentDate = new Date().getTime();
         if (Update) {
-            document.getElementsByClassName("SMSync")[0].addEventListener("click", function() {
+            document.getElementsByClassName("SMSync")[0].addEventListener("click", function () {
                 setSync(CurrentDate, Update, Callback);
             });
         } else if (SyncFrequency && ((CurrentDate - GM_getValue("LastSync")) > (SyncFrequency * 86400000)) && (esgst.mainPath || esgst.accountPath)) {
@@ -1736,14 +1743,14 @@
 `;
             context.insertAdjacentHTML(`beforeEnd`, html);
             var button = context.lastElementChild.firstElementChild;
-            button.addEventListener(`click`, function() {
+            button.addEventListener(`click`, function () {
                 Popup.popUp();
             });
         }
         Popup.Icon.classList.add("fa-refresh");
         Popup.Title.textContent = Update ? "Syncing..." : "ESGST is performing the automatic sync. Please do not reload / close the page until it has finished.";
         Sync = {};
-        createButton(Popup.Button, "fa-times-circle", "Cancel", "", "", function() {
+        createButton(Popup.Button, "fa-times-circle", "Cancel", "", "", function () {
             Sync.Canceled = true;
             Popup.Close.click();
         }, null, true);
@@ -1752,7 +1759,7 @@
         if (Update) {
             Popup.popUp().reposition();
         }
-        sync(Sync, function(CurrentDate) {
+        sync(Sync, function (CurrentDate) {
             Popup.Icon.classList.remove("fa-refresh");
             Popup.Icon.classList.add("fa-check");
             Popup.Title.textContent = Update ? "Synced!" : "ESGST has finished the automatic sync. You can now reload / close the page.";
@@ -1781,7 +1788,7 @@
         }
         GM_setValue("Avatar", document.getElementsByClassName(esgst.sg ? "nav__avatar-inner-wrap" : "nav_avatar")[0].style.backgroundImage.match(/\("(.+)"\)/)[1]);
         if (!GM_getValue("SteamID64") && GM_getValue("Username")) {
-            getSteamID64(Sync, function() {
+            getSteamID64(Sync, function () {
                 continueSync(Sync, Callback);
             });
         } else {
@@ -1794,10 +1801,10 @@
             "<i class=\"fa fa-circle-o-notch fa-spin\"></i> " +
             "<span>Syncing your Steam groups...</span>";
         Sync.Groups = [];
-        syncGroups(Sync, "/account/steam/groups/search?page=", 1, function() {
+        syncGroups(Sync, "/account/steam/groups/search?page=", 1, function () {
             GM_setValue("Groups", Sync.Groups);
-            syncWhitelistBlacklist(Sync, function() {
-                syncGames(Sync, function() {
+            syncWhitelistBlacklist(Sync, function () {
+                syncGames(Sync, function () {
                     var CurrentDate;
                     CurrentDate = new Date();
                     GM_setValue("LastSync", CurrentDate.getTime());
@@ -1811,7 +1818,7 @@
         Sync.OverallProgress.innerHTML =
             "<i class=\"fa fa-circle-o-notch fa-spin\"></i> " +
             "<span>Retrieving your SteamID64...</span>";
-        makeRequest(null, "/user/" + GM_getValue("Username"), Sync.Progress, function(Response) {
+        makeRequest(null, "/user/" + GM_getValue("Username"), Sync.Progress, function (Response) {
             GM_setValue("SteamID64", DOM.parse(Response.responseText).querySelector("a[href*='/profiles/']").getAttribute("href").match(/\d+/)[0]);
             Callback();
         });
@@ -1819,7 +1826,7 @@
 
     function syncGroups(Sync, URL, NextPage, Callback) {
         if (!Sync.Canceled) {
-            queueRequest(Sync, null, URL + NextPage, function(Response) {
+            queueRequest(Sync, null, URL + NextPage, function (Response) {
                 var ResponseHTML, Matches, I, N, Pagination;
                 ResponseHTML = DOM.parse(Response.responseText);
                 Matches = ResponseHTML.getElementsByClassName("table__column__heading");
@@ -1844,16 +1851,16 @@
         if (!Sync.Canceled) {
             Sync.Users = [];
             SavedUsers = GM_getValue("Users");
-            clearWhitelistBlacklist(Sync, 0, SavedUsers.length, SavedUsers, function() {
+            clearWhitelistBlacklist(Sync, 0, SavedUsers.length, SavedUsers, function () {
                 Sync.OverallProgress.innerHTML =
                     "<i class=\"fa fa-circle-o-notch fa-spin\"></i> " +
                     "<span>Syncing your whitelist...</span>";
-                getWhitelistBlacklist(Sync, "/account/manage/whitelist/search?page=", 1, "Whitelisted", function() {
+                getWhitelistBlacklist(Sync, "/account/manage/whitelist/search?page=", 1, "Whitelisted", function () {
                     Sync.OverallProgress.innerHTML =
                         "<i class=\"fa fa-circle-o-notch fa-spin\"></i> " +
                         "<span>Syncing your blacklist...</span>";
-                    getWhitelistBlacklist(Sync, "/account/manage/blacklist/search?page=", 1, "Blacklisted", function() {
-                        queueSave(Sync, function() {
+                    getWhitelistBlacklist(Sync, "/account/manage/blacklist/search?page=", 1, "Blacklisted", function () {
+                        queueSave(Sync, function () {
                             updateUsers(Sync.Users);
                             GM_setValue("LastSave", 0);
                             Callback();
@@ -1883,11 +1890,11 @@
 
     function getWhitelistBlacklist(Sync, URL, NextPage, Key, Callback) {
         if (!Sync.Canceled) {
-            queueRequest(Sync, null, URL + NextPage, function(Response) {
+            queueRequest(Sync, null, URL + NextPage, function (Response) {
                 var ResponseHTML, Matches;
                 ResponseHTML = DOM.parse(Response.responseText);
                 Matches = ResponseHTML.getElementsByClassName("table__column__heading");
-                getWhitelistBlacklistUsers(Sync, 0, Matches.length, Matches, Key, function() {
+                getWhitelistBlacklistUsers(Sync, 0, Matches.length, Matches, Key, function () {
                     var Pagination;
                     Pagination = ResponseHTML.getElementsByClassName("pagination__navigation")[0];
                     if (Pagination && !Pagination.lastElementChild.classList.contains("is-selected")) {
@@ -1912,7 +1919,7 @@
                     Sync.Users[J][Key] = true;
                     setTimeout(getWhitelistBlacklistUsers, 0, Sync, ++I, N, Matches, Key, Callback);
                 } else {
-                    setUser(Sync, User, function() {
+                    setUser(Sync, User, function () {
                         User[Key] = true;
                         Sync.Users.push(User);
                         setTimeout(getWhitelistBlacklistUsers, 0, Sync, ++I, N, Matches, Key, Callback);
@@ -1932,101 +1939,101 @@
 `;
         var steamApiKey = GM_getValue(`steamApiKey`, GM_getValue(`SteamAPIKey`));
         var url = `http://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/?key=${steamApiKey}&steamid=${GM_getValue(`SteamID64`)}&format=json`;
-        makeRequest(null, url, sync.Progress, function(response) {
+        makeRequest(null, url, sync.Progress, function (response) {
             var responseText = response.responseText;
             var i, n, id;
             var owned = 0;
-            createLock(`gameLock`, 300, function(deleteLock) {
-        var games = JSON.parse(GM_getValue(`games`));
-        for (key in games.apps) {
-            delete games.apps[key].wishlist;
-            delete games.apps[key].wishlisted;
-            delete games.apps[key].owned;
-            delete games.apps[key].ignored;
-            if (!Object.keys(games.apps[key]).length) {
-                delete games.apps[key];
-            }
-        }
-        for (key in games.subs) {
-            delete games.subs[key].wishlist;
-            delete games.subs[key].wishlisted;
-            delete games.subs[key].owned;
-            delete games.subs[key].ignored;
-            if (!Object.keys(games.subs[key]).length) {
-                delete games.subs[key];
-            }
-        }
-            if (!responseText.match(/<title>Forbidden<\/title>/)) {
-                var ownedGames = JSON.parse(responseText).response.games;
-                for (i = 0, n = ownedGames.length; i < n; ++i) {
-                    id = ownedGames[i].appid;
-                    games.apps[id] = {
-                        owned: true
-                    };
-                    ++owned;
-                }
-            }
-            url = `http://store.steampowered.com/dynamicstore/userdata`;
-            makeRequest(null, url, sync.Progress, function(response) {
-                var responseJson = JSON.parse(response.responseText);
-                var numOwned = responseJson.rgOwnedApps.length;
-                if (numOwned > 0) {
-                    var types = [
-                        {
-                            name: `rgWishlist`,
-                            mainKey: `apps`,
-                            key: `wishlisted`
-                        },
-                        {
-                            name: `rgOwnedApps`,
-                            mainKey: `apps`,
-                            key: `owned`
-                        },
-                        {
-                            name: `rgOwnedPackages`,
-                            mainKey: `subs`,
-                            key: `owned`
-                        },
-                        {
-                            name: `rgIgnoredApps`,
-                            mainKey: `apps`,
-                            key: `ignored`
-                        },
-                        {
-                            name: `rgIgnoredPackages`,
-                            mainKey: `subs`,
-                            key: `ignored`
-                        }
-                    ];
-                    for (var i = 0, n = types.length; i < n; ++i) {
-                        var values = responseJson[types[i].name];
-                        var mainKey = types[i].mainKey;
-                        key = types[i].key;
-                        for (var j = 0, numValues = values.length; j < numValues; ++j) {
-                            var id = values[j];
-                            if (!games[mainKey][id]) {
-                                games[mainKey][id] = {};
-                            }
-                            var oldValue = games[mainKey][id][key];
-                            games[mainKey][id][key] = true;
-                            if (key == `owned` && !oldValue) {
-                                ++owned;
-                            }
-                        }
+            createLock(`gameLock`, 300, function (deleteLock) {
+                var games = JSON.parse(GM_getValue(`games`));
+                for (key in games.apps) {
+                    delete games.apps[key].wishlist;
+                    delete games.apps[key].wishlisted;
+                    delete games.apps[key].owned;
+                    delete games.apps[key].ignored;
+                    if (!Object.keys(games.apps[key]).length) {
+                        delete games.apps[key];
                     }
-                    if (owned != GM_getValue(`ownedGames`, 0)) {
-                        GM_setValue(`ownedGames`, owned);
-                        ind = 1;
+                }
+                for (key in games.subs) {
+                    delete games.subs[key].wishlist;
+                    delete games.subs[key].wishlisted;
+                    delete games.subs[key].owned;
+                    delete games.subs[key].ignored;
+                    if (!Object.keys(games.subs[key]).length) {
+                        delete games.subs[key];
+                    }
+                }
+                if (!responseText.match(/<title>Forbidden<\/title>/)) {
+                    var ownedGames = JSON.parse(responseText).response.games;
+                    for (i = 0, n = ownedGames.length; i < n; ++i) {
+                        id = ownedGames[i].appid;
+                        games.apps[id] = {
+                            owned: true
+                        };
+                        ++owned;
+                    }
+                }
+                url = `http://store.steampowered.com/dynamicstore/userdata`;
+                makeRequest(null, url, sync.Progress, function (response) {
+                    var responseJson = JSON.parse(response.responseText);
+                    var numOwned = responseJson.rgOwnedApps.length;
+                    if (numOwned > 0) {
+                        var types = [
+                            {
+                                name: `rgWishlist`,
+                                mainKey: `apps`,
+                                key: `wishlisted`
+                            },
+                            {
+                                name: `rgOwnedApps`,
+                                mainKey: `apps`,
+                                key: `owned`
+                            },
+                            {
+                                name: `rgOwnedPackages`,
+                                mainKey: `subs`,
+                                key: `owned`
+                            },
+                            {
+                                name: `rgIgnoredApps`,
+                                mainKey: `apps`,
+                                key: `ignored`
+                            },
+                            {
+                                name: `rgIgnoredPackages`,
+                                mainKey: `subs`,
+                                key: `ignored`
+                            }
+                        ];
+                        for (var i = 0, n = types.length; i < n; ++i) {
+                            var values = responseJson[types[i].name];
+                            var mainKey = types[i].mainKey;
+                            key = types[i].key;
+                            for (var j = 0, numValues = values.length; j < numValues; ++j) {
+                                var id = values[j];
+                                if (!games[mainKey][id]) {
+                                    games[mainKey][id] = {};
+                                }
+                                var oldValue = games[mainKey][id][key];
+                                games[mainKey][id][key] = true;
+                                if (key == `owned` && !oldValue) {
+                                    ++owned;
+                                }
+                            }
+                        }
+                        if (owned != GM_getValue(`ownedGames`, 0)) {
+                            GM_setValue(`ownedGames`, owned);
+                            ind = 1;
+                        } else {
+                            ind = 2;
+                        }
                     } else {
-                        ind = 2;
+                        ind = 3;
                     }
-                } else {
-                    ind = 3;
-                }
-                GM_setValue(`games`, JSON.stringify(games));
-                deleteLock();
-                callback(ind, games);
-            });
+                    GM_setValue(`games`, JSON.stringify(games));
+                    deleteLock();
+                    callback(ind, games);
+                });
             });
         });
     }
@@ -2050,10 +2057,10 @@
     }
 
     function setHoverOpacity(Element, EnterOpacity, LeaveOpacity) {
-        Element.addEventListener("mouseenter", function() {
+        Element.addEventListener("mouseenter", function () {
             Element.style.opacity = EnterOpacity;
         });
-        Element.addEventListener("mouseleave", function() {
+        Element.addEventListener("mouseleave", function () {
             Element.style.opacity = LeaveOpacity;
         });
     }
@@ -2073,7 +2080,7 @@
 
     function createLock(key, threshold, callback) {
         var uuid;
-        uuid = `xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx`.replace(/[xy]/g, function(c) {
+        uuid = `xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx`.replace(/[xy]/g, function (c) {
             var r, v;
             r = Math.random() * 16 | 0;
             v = c == `x` ? r : (r & 0x3 | 0x8);
@@ -2088,22 +2095,22 @@
         if (!locked || !locked.uuid || locked.timestamp < Date.now() - threshold) {
             console.log(`[ESGST] ${uuid} preparing to lock ${key}...`);
             doLock(key, uuid);
-            window.setTimeout(function() {
+            window.setTimeout(function () {
                 locked = JSON.parse(GM_getValue(key, `{}`));
                 if (locked && locked.uuid === uuid) {
-                    console.log(`[ESGST] :: ${uuid} locked ${key}...`);
+                    console.log(`[ESGST] ${uuid} locked ${key}...`);
                     lock = window.setInterval(doLock, threshold / 2, key, uuid);
-                    callback(function() {
+                    callback(function () {
                         window.clearInterval(lock);
                         GM_deleteValue(key);
                     });
                 } else {
-                    console.log(`[ESGST] :: ${uuid} failed to lock ${key}...`);
+                    console.log(`[ESGST] ${uuid} failed to lock ${key}...`);
                     checkLock(key, threshold, uuid, callback);
                 }
             }, threshold / 2);
         } else {
-            console.log(`[ESGST] :: ${uuid} waiting to lock ${key}...`);
+            console.log(`[ESGST] ${uuid} waiting to lock ${key}...`);
             window.setTimeout(checkLock, threshold / 3, key, threshold, uuid, callback);
         }
     }
@@ -2112,7 +2119,7 @@
 
     function request(data, queue, url, callback) {
         if (queue) {
-            createLock(`requestLock`, 1500, function(closeLock) {
+            createLock(`requestLock`, 1500, function (closeLock) {
                 continueRequest(data, url, callback, closeLock);
             });
         } else {
@@ -2128,7 +2135,7 @@
             },
             method: data ? `POST` : `GET`,
             url: url,
-            onload: function(response) {
+            onload: function (response) {
                 if (closeLock) {
                     closeLock();
                 }
@@ -2159,7 +2166,7 @@
             </div>
         `);
         popup.description = popup.popup.firstElementChild.nextElementSibling;
-        popup.open = function(callback) {
+        popup.open = function (callback) {
             popup.popup.classList.add(`popup`);
             popup.opened = $(popup.popup).bPopup({
                 amsl: [0],
@@ -2167,7 +2174,7 @@
                 followSpeed: 500,
                 modalColor: `#3c424d`,
                 opacity: 0.85,
-                onClose: function() {
+                onClose: function () {
                     if (temp) {
                         popup.popup.remove();
                     } else {
@@ -2179,7 +2186,7 @@
                 }
             }, callback);
         };
-        popup.reposition = function() {
+        popup.reposition = function () {
             if (popup.opened) {
                 popup.opened.reposition();
             }
@@ -2239,7 +2246,7 @@
             Popup.Popup.classList.add(`esgst-hidden`);
         }
         var popup;
-        Popup.popUp = function(Callback) {
+        Popup.popUp = function (Callback) {
             if (esgst.st) {
                 Popup.Popup.classList.add(`popup`);
                 Popup.Popup.classList.remove(`esgst-hidden`);
@@ -2250,7 +2257,7 @@
                 followSpeed: 500,
                 modalColor: "#3c424d",
                 opacity: 0.85,
-                onClose: function() {
+                onClose: function () {
                     if (esgst.st) {
                         Popup.Popup.classList.remove(`popup`);
                         Popup.Popup.classList.add(`esgst-hidden`);
@@ -2262,7 +2269,7 @@
             }, Callback);
             return popup;
         };
-        Popup.Popup.addEventListener(`click`, function() {
+        Popup.Popup.addEventListener(`click`, function () {
             if (popup) {
                 popup.reposition();
             }
@@ -2277,22 +2284,22 @@
         Context.insertAdjacentHTML("beforeEnd", "<div class=\"page__outer-wrap page_outer_wrap rhPopout rhHidden\"></div>");
         Popout = {
             Popout: Context.lastElementChild,
-            customRule: function() {
+            customRule: function () {
                 return true;
             },
-            popOut: function(Context, Callback) {
+            popOut: function (Context, Callback) {
                 if (Callback) {
                     Callback(Popout.Popout);
                 }
                 Popout.reposition(Context);
             },
-            reposition: function(Context) {
+            reposition: function (Context) {
                 Popout.Popout.classList.remove("rhHidden");
                 Popout.Popout.removeAttribute("style");
                 repositionPopout(Popout.Popout, Context);
             }
         };
-        document.addEventListener("click", function(Event) {
+        document.addEventListener("click", function (Event) {
             if (!Popout.Popout.classList.contains("rhHidden") && document.body.contains(Event.target) && !Popout.Popout.contains(Event.target) && Popout.customRule(Event.target)) {
                 Popout.Popout.classList.add("rhHidden");
             }
@@ -2346,14 +2353,14 @@
         `;
         button1 = set.set.firstElementChild;
         button2 = set.set.lastElementChild;
-        set.toggle = function(callback) {
+        set.toggle = function (callback) {
             button1.classList.toggle(`esgst-hidden`);
             button2.classList.toggle(`esgst-hidden`);
             if (callback) {
                 callback(set.toggle);
             }
         };
-        set.trigger = function() {
+        set.trigger = function () {
             set.toggle(callback1);
         };
         button1.addEventListener(`click`, set.toggle.bind(null, callback1));
@@ -2379,17 +2386,17 @@
             "</div>";
         DefaultButton = Context.firstElementChild;
         OnClickButton = Context.lastElementChild;
-        DefaultButton.addEventListener("click", function() {
+        DefaultButton.addEventListener("click", function () {
             DefaultButton.classList.add("rhHidden");
             OnClickButton.classList.remove("rhHidden");
-            DefaultCallback(function() {
+            DefaultCallback(function () {
                 OnClickButton.classList.add("rhHidden");
                 DefaultButton.classList.remove("rhHidden");
             });
         });
         if (OnClickCallback) {
             OnClickButton.classList.remove("is-disabled", "is_disabled");
-            OnClickButton.addEventListener("click", function() {
+            OnClickButton.addEventListener("click", function () {
                 OnClickButton.classList.add("rhHidden");
                 DefaultButton.classList.remove("rhHidden");
                 OnClickCallback();
@@ -2414,7 +2421,7 @@
         Input.checked = Default;
         Checkbox.addEventListener("mouseenter", setCheckboxHover);
         Checkbox.addEventListener("mouseleave", setCheckboxDisabled);
-        Checkbox.addEventListener("click", function() {
+        Checkbox.addEventListener("click", function () {
             Input.checked = Input.checked ? false : true;
             setCheckboxEnabled();
         });
@@ -2449,15 +2456,15 @@
 
         return {
             Checkbox: Input,
-            check: function() {
+            check: function () {
                 Input.checked = true;
                 setCheckboxEnabled();
             },
-            uncheck: function() {
+            uncheck: function () {
                 Input.checked = false;
                 setCheckboxEnabled();
             },
-            toggle: function() {
+            toggle: function () {
                 Input.checked = Input.checked ? false : true;
                 setCheckboxEnabled();
             }
@@ -2611,7 +2618,7 @@
         ID = Option.ID;
         Element[Key] = createCheckbox(Checkbox, GM_getValue(ID)).Checkbox;
         Dependency = Option.Dependency;
-        Checkbox.addEventListener("click", function() {
+        Checkbox.addEventListener("click", function () {
             GM_setValue(ID, Element[Key].checked);
             if (Dependency) {
                 Element[Dependency].classList.toggle("rhHidden");
@@ -2834,15 +2841,6 @@ cursor: pointer;
 color: #FECC66;
 }
 
-.esgst-lpv-main-button {
-padding: 0;
-}
-
-.esgst-lpv-container {
-border-radius: 4px;
-padding: 0 15px;
-}
-
 .esgst-adot, .esgst-rbot {
 margin-bottom: 25px;
 }
@@ -2886,6 +2884,15 @@ z-index: 999;
 
 .esgst-ff >* {
 padding: 15px 25px;
+}
+
+.esgst-lpv-main-button {
+padding: 0;
+}
+
+.esgst-lpv-container {
+border-radius: 4px;
+padding: 0 15px;
 }
 
 .esgst-ags-panel {
@@ -3216,7 +3223,7 @@ margin-left: 5px;
             "}" +
             ".pinned-giveaways__inner-wrap--minimized.GVView .giveaway__row-outer-wrap:nth-child(-n+8) {" +
             "    display: inline-block;" +
-            "}"+
+            "}" +
             ".GVContainer {" +
             "    border: 0 !important;" +
             "    box-shadow: none !important;" +
@@ -3560,7 +3567,7 @@ margin-left: 5px;
             Popup.Icon.classList.add("fa-refresh", "fa-spin");
             Popup.Title.textContent = "ESGST is updating your groups. Please wait...";
             Popup.Groups = [];
-            syncGroups(Popup, "/account/steam/groups/search?page=", 1, function(Groups) {
+            syncGroups(Popup, "/account/steam/groups/search?page=", 1, function (Groups) {
                 GM_setValue("GSync", true);
                 GM_setValue("Groups", Popup.Groups);
                 Popup.Title.textContent = "Done. You can close this now.";
@@ -3574,7 +3581,7 @@ margin-left: 5px;
         popup.Icon.classList.add("fa-refresh");
         popup.Title.textContent = "Syncing...";
         var sync = {};
-        createButton(popup.Button, "fa-times-circle", "Cancel", "", "", function() {
+        createButton(popup.Button, "fa-times-circle", "Cancel", "", "", function () {
             sync.Canceled = true;
             popup.Close.click();
         }, null, true);
@@ -3582,8 +3589,8 @@ margin-left: 5px;
         sync.OverallProgress = popup.OverallProgress;
         popup.popUp().reposition();
         sync.games = JSON.parse(GM_getValue(`games`));
-        syncBundles(sync, `/bundle-games/search?page=`, 1, function() {
-            queueSave(sync.Progress, function() {
+        syncBundles(sync, `/bundle-games/search?page=`, 1, function () {
+            queueSave(sync.Progress, function () {
                 updateGames(sync.games);
                 GM_setValue(`LastSave`, 0);
                 popup.Icon.classList.remove("fa-refresh");
@@ -3622,7 +3629,7 @@ margin-left: 5px;
 <i class="fa fa-circle-o-notch fa-spin"></i>
 <span>Syncing bundles (page ${nextPage})...</span>
 `;
-            queueRequest(sync, null, `${url}${nextPage}`, function(response) {
+            queueRequest(sync, null, `${url}${nextPage}`, function (response) {
                 window.setTimeout(syncBundles, 0, sync, url, ++nextPage, callback, DOM.parse(response.responseText));
             });
         }
@@ -3735,7 +3742,7 @@ margin-top: ${height}px;
     }
 
     function addSidebarStyle() {
-        var style= `
+        var style = `
 .esgst-fs {
 top: ${esgst.pageTop}px;
 }
@@ -3831,9 +3838,10 @@ margin-bottom: ${esgst.footer.offsetHeight}px;
     }
 
     function addLpvContainer(mainButton) {
-        var progress;
-        progress = (mainButton.lastElementChild.lastElementChild || mainButton.lastElementChild).getAttribute(`title`).match(/\.(\d+)/);
-        if (progress) {
+        var progress, title;
+        title = mainButton.querySelector(`[title]`);
+        if (title) {
+            progress = title.getAttribute(`title`).match(/\.(\d+)/);
             progress = `${progress[1]}%`;
             mainButton.classList.add(`esgst-lpv-main-button`);
             mainButton.innerHTML = `<div class="esgst-lpv-container" style="background-image: linear-gradient(to right, #609f60 ${progress}, transparent ${progress})">${mainButton.innerHTML}</div>`;
@@ -3906,9 +3914,9 @@ margin-bottom: ${esgst.footer.offsetHeight}px;
                                 var received = match.getElementsByClassName(`table__gift-feedback-received`)[0];
                                 var notReceived = match.getElementsByClassName(`table__gift-feedback-not-received`)[0];
                                 if (((received && received.classList.contains(`is-hidden`)) &&
-                                     ((notReceived && notReceived.classList.contains(`is-hidden`)) ||
-                                      !notReceived)) && match.querySelector(`[data-clipboard-text]`)
-                                   ) {
+                                    ((notReceived && notReceived.classList.contains(`is-hidden`)) ||
+                                        !notReceived)) && match.querySelector(`[data-clipboard-text]`)
+                                ) {
                                     ++elements.deliveredWins;
                                 }
                             }
@@ -4058,7 +4066,7 @@ margin-bottom: ${esgst.footer.offsetHeight}px;
         Context = Context.nextElementSibling;
         Context.textContent = Context.textContent.replace(/and blacklists\s/, "");
         Context = Context.nextElementSibling;
-        $(function() {
+        $(function () {
             chart_options.graph = {
                 colors: ["#6187d4", "#ec656c"],
                 tooltip: {
@@ -4475,7 +4483,7 @@ ${title}
         var Matches, I, N;
         Matches = Context.getElementsByClassName("giveaway__hide trigger-popup");
         for (I = 0, N = Matches.length; I < N; ++I) {
-            Matches[I].addEventListener("click", function(Event) {
+            Matches[I].addEventListener("click", function (Event) {
                 var Popup, Giveaway;
                 Popup = document.getElementsByClassName("popup--hide-games")[0];
                 Giveaway = Event.currentTarget.closest(".giveaway__row-outer-wrap");
@@ -4507,7 +4515,7 @@ ${title}
         if (Default) {
             Loading = Default.nextElementSibling;
             Complete = Loading.nextElementSibling;
-            Default.addEventListener("click", function() {
+            Default.addEventListener("click", function () {
                 var Values, I, N;
                 Default.classList.toggle("is-hidden");
                 Loading.classList.toggle("is-hidden");
@@ -4516,7 +4524,7 @@ ${title}
                 for (I = 0, N = Values.length; I < N; ++I) {
                     Data += Values[I].getAttribute("name") + "=" + Values[I].value + ((I < (N - 1)) ? "&" : "");
                 }
-                makeRequest(Data, "/ajax.php", null, function(Response) {
+                makeRequest(Data, "/ajax.php", null, function (Response) {
                     Loading.classList.toggle("is-hidden");
                     if (JSON.parse(Response.responseText).type == "success") {
                         Context.classList.add("is-faded");
@@ -4587,7 +4595,7 @@ ${title}
         var regionRestricted = dlc.previousElementSibling;
         RegionRestricted = createCheckbox(regionRestricted.firstElementChild).Checkbox;
         var DLC = createCheckbox(dlc.firstElementChild).Checkbox;
-        Context.addEventListener("keydown", function(Event) {
+        Context.addEventListener("keydown", function (Event) {
             var Type, URL, Key;
             if (Event.key == "Enter") {
                 Event.preventDefault();
@@ -4653,12 +4661,12 @@ ${title}
             }
             GVIcons.appendChild(Element);
         }
-        GVBox.addEventListener("mouseenter", function() {
+        GVBox.addEventListener("mouseenter", function () {
             GVInfo.classList.remove("rhHidden");
             GVInfo.removeAttribute("style");
             repositionPopout(GVInfo, GVBox);
         });
-        GVBox.addEventListener("mouseleave", function() {
+        GVBox.addEventListener("mouseleave", function () {
             GVInfo.classList.add("rhHidden");
         });
     }
@@ -4689,7 +4697,7 @@ ${title}
     function loadGiveawayFilters() {
         var type = window.location.search.match(/type=(wishlist|group)/);
         if (type) {
-            type = type[1].replace(/^(.)/, function(m, p1) {
+            type = type[1].replace(/^(.)/, function (m, p1) {
                 return p1.toUpperCase();
             });
         } else {
@@ -4908,7 +4916,7 @@ ${title}
         }
         var input;
         if (esgst.gc) {
-            for ( i = 0, n = esgst.gf.categoryFilters.length; i < n; ++i) {
+            for (i = 0, n = esgst.gf.categoryFilters.length; i < n; ++i) {
                 var categoryFilter = esgst.gf.categoryFilters[i];
                 var id = categoryFilter.id;
                 if (esgst[id]) {
@@ -4990,7 +4998,7 @@ ${title}
                 (giveaway.regionRestricted && !esgst.gf.exceptionRegionRestricted) ||
                 ((giveaway.copies > esgst.gf.exceptionMultipleCopies) && !esgst.gf.exceptionMultiple) ||
                 (!giveaway.wishlisted && !giveaway.pinned && !giveaway.group && !giveaway.whitelist && !giveaway.regionRestricted && (giveaway.copies <= esgst.gf.exceptionMultipleCopies))
-               ) {
+            ) {
                 for (j = 0, numRangeFilters = esgst.gf.rangeFilters.length; !filtered && (j < numRangeFilters); ++j) {
                     var name = esgst.gf.rangeFilters[j].name;
                     var minKey = `min${name}`;
@@ -5001,7 +5009,7 @@ ${title}
                     }
                 }
             }
-            if (esgst.gc) {
+            if (esgst.gc && giveaway.gcReady) {
                 for (j = 0, numCategoryFilters = esgst.gf.categoryFilters.length; !filtered && (j < numCategoryFilters); ++j) {
                     var categoryFilter = esgst.gf.categoryFilters[j];
                     key = categoryFilter.key;
@@ -5047,7 +5055,7 @@ ${title}
     }
 
     function getGfGiveaways() {
-        var giveaways = [], id;
+        var giveaways = [], id, type;
         var games = JSON.parse(GM_getValue(`games`)), numCategories;
         var matches = document.getElementsByClassName(`giveaway__row-outer-wrap`);
         for (var i = 0, n = matches.length; i < n; ++i) {
@@ -5055,10 +5063,11 @@ ${title}
             var giveaway = {
                 giveaway: context
             };
-            var match = context.querySelector(`a[href*="store.steampowered.com/app/"]`);
-            if (match) {
-                id = match.getAttribute(`href`).match(/app\/(\d+)/)[1];
-                if (games.apps[id] && games.apps[id].wishlisted) {
+            var info = getGameInfo(context);
+            if (info) {
+                id = info.id;
+                type = info.type;
+                if (games[type][id] && games[type][id].wishlisted) {
                     giveaway.wishlisted = true;
                 }
             }
@@ -5115,6 +5124,7 @@ ${title}
                         } else {
                             giveaway[id] = true;
                         }
+                        giveaway.gcReady = true;
                     }
                 }
             }
@@ -5213,7 +5223,7 @@ ${title}
     }
 
     function setELGBButton(GP, Icon, Name, Message, Type, Context, Yellow) {
-        createButton(GP.ELGBButton, Icon, Name, "fa-circle-o-notch fa-spin", Message, function(callback) {
+        createButton(GP.ELGBButton, Icon, Name, "fa-circle-o-notch fa-spin", Message, function (callback) {
             enterLeaveELGBGiveaway(GP, Icon, Name, Message, Type, Context, Yellow, callback);
         }, null, false, Yellow);
         if (esgst.egh && Name == `Enter`) {
@@ -5223,13 +5233,13 @@ ${title}
 
     function enterLeaveELGBGiveaway(GP, Icon, Name, Message, Type, Context, Yellow, callback1) {
         if (Name === `Enter`) {
-            makeRequest(null, GP.URL, null, function(response) {
+            makeRequest(null, GP.URL, null, function (response) {
                 var description, set, popup;
                 description = DOM.parse(response.responseText).getElementsByClassName(`page__description`)[0];
                 if (description) {
                     if (esgst.elgb_p) {
                         popup = createPopup_v6(`fa-file-text-o`, `Giveaway Description`, true);
-                        set = createButtonSet(`green`, `grey`, `fa-plus-circle`, `fa-circle-o-notch fa-spin`, `Enter Giveaway`, `Entering...`, function(callback) {
+                        set = createButtonSet(`green`, `grey`, `fa-plus-circle`, `fa-circle-o-notch fa-spin`, `Enter Giveaway`, `Entering...`, function (callback) {
                             enterLeaveElgbGiveaway(GP, Icon, Name, Message, Type, Context, Yellow);
                             callback();
                             popup.opened.close();
@@ -5237,7 +5247,7 @@ ${title}
                         popup.description.appendChild(set.set);
                         description.classList.add(`esgst-text-left`);
                         popup.description.insertAdjacentHTML(`afterBegin`, description.outerHTML);
-                        popup.close = function() {
+                        popup.close = function () {
                             callback1();
                         };
                         popup.open();
@@ -5258,7 +5268,7 @@ ${title}
         var Data, URL;
         Data = "xsrf_token=" + esgst.xsrfToken + "&do=" + Type + "&code=" + GP.Code;
         URL = "/ajax.php";
-        makeRequest(Data, URL, null, function(Response) {
+        makeRequest(Data, URL, null, function (Response) {
             var ResponseJSON;
             ResponseJSON = JSON.parse(Response.responseText);
             updateElgbGiveaway(GP, Icon, Name, Message, Type, Context, Yellow, ResponseJSON);
@@ -5363,7 +5373,7 @@ ${title}
         GGPButton = Context;
         GGPButton.classList.add("GGPButton");
         GGPButton.removeAttribute("href");
-        GGPButton.addEventListener("click", function() {
+        GGPButton.addEventListener("click", function () {
             var GGPPopup;
             if (Popup) {
                 Popup.popUp();
@@ -5375,7 +5385,7 @@ ${title}
                     "<i class=\"fa fa-circle-o-notch fa-spin\"></i> " +
                     "<span>Loading giveaway groups...</span>";
                 GGPPopup = Popup.popUp();
-                getGGPGroups(URL + "/search?page=", 1, Popup.Progress, [], function(Groups) {
+                getGGPGroups(URL + "/search?page=", 1, Popup.Progress, [], function (Groups) {
                     var I, N;
                     Popup.OverallProgress.innerHTML = "";
                     for (I = 0, N = Groups.length; I < N; ++I) {
@@ -5389,7 +5399,7 @@ ${title}
     }
 
     function getGGPGroups(URL, NextPage, Context, Groups, Callback) {
-        makeRequest(null, URL + NextPage, Context, function(Response) {
+        makeRequest(null, URL + NextPage, Context, function (Response) {
             var ResponseHTML, Matches, I, N, Pagination;
             ResponseHTML = DOM.parse(Response.responseText);
             Matches = ResponseHTML.getElementsByClassName("table__row-outer-wrap");
@@ -5428,7 +5438,7 @@ ${title}
         GTSContainer = Context.firstElementChild;
         GTSView = GTSContainer.firstElementChild;
         Popout = createPopout(GTSContainer);
-        Popout.customRule = function(Target) {
+        Popout.customRule = function (Target) {
             return !GTSContainer.contains(Target);
         };
         Templates = GM_getValue("Templates");
@@ -5448,7 +5458,7 @@ ${title}
         } else {
             Popout.Popout.textContent = "No templates saved.";
         }
-        GTSView.addEventListener("click", function() {
+        GTSView.addEventListener("click", function () {
             if (Popout.Popout.classList.contains("rhHidden")) {
                 Popout.popOut(GTSContainer);
             } else {
@@ -5458,7 +5468,7 @@ ${title}
     }
 
     function setGTSTemplate(GTSTemplate, Template, GTS) {
-        GTSTemplate.firstElementChild.addEventListener("click", function() {
+        GTSTemplate.firstElementChild.addEventListener("click", function () {
             var CurrentDate, Context, Groups, Matches, I, N, ID, Selected, J;
             CurrentDate = Date.now();
             document.querySelector("[name='start_time']").value = formatDate(new Date(CurrentDate + Template.Delay));
@@ -5501,7 +5511,7 @@ ${title}
             document.querySelector("[name='description']").value = Template.Description;
             GTS.Name = Template.Name;
         });
-        GTSTemplate.lastElementChild.addEventListener("click", function() {
+        GTSTemplate.lastElementChild.addEventListener("click", function () {
             var Templates, I, N;
             if (window.confirm("Are you sure you want to delete this template?")) {
                 Templates = GM_getValue("Templates");
@@ -5520,7 +5530,7 @@ ${title}
         var Context;
         Context = document.getElementsByClassName("form__submit-button")[0];
         Context.insertAdjacentHTML("afterEnd", "<div class=\"GTSSave\"></div>");
-        createButton(Context.nextElementSibling, "fa-file", "Save Template", "", "", function(Callback) {
+        createButton(Context.nextElementSibling, "fa-file", "Save Template", "", "", function (Callback) {
             var Popup;
             Callback();
             Popup = createPopup(true);
@@ -5529,7 +5539,7 @@ ${title}
             Popup.TextInput.classList.remove("rhHidden");
             Popup.TextInput.insertAdjacentHTML("afterEnd", createDescription("Enter a name for this template."));
             Popup.TextInput.value = GTS.Name;
-            createButton(Popup.Button, "fa-check", "Save", "fa-circle-o-notch fa-spin", "Saving...", function(Callback) {
+            createButton(Popup.Button, "fa-check", "Save", "fa-circle-o-notch fa-spin", "Saving...", function (Callback) {
                 var StartTime, Delay, Template, Templates, I, N;
                 if (Popup.TextInput.value) {
                     StartTime = new Date(document.querySelector("[name='start_time']").value).getTime();
@@ -5566,7 +5576,7 @@ ${title}
                     Callback();
                 }
             });
-            Popup.popUp(function() {
+            Popup.popUp(function () {
                 Popup.TextInput.focus();
             });
         });
@@ -5636,7 +5646,7 @@ ${title}
             "    <i class=\"fa fa-thumb-tack\"></i>" +
             "</a>"
         );
-        Context.firstElementChild.addEventListener("click", function(Event) {
+        Context.firstElementChild.addEventListener("click", function (Event) {
             var StickiedGroups;
             Event.stopPropagation();
             StickiedGroups = GM_getValue("StickiedGroups");
@@ -5700,7 +5710,7 @@ ${title}
                         var giveaway = giveaways[i];
                         if (((giveaways.Entries < 5) && !giveaway.Private && !giveaway.Group && !giveaway.Whitelist) ||
                             (giveaway.Entries >= 5)
-                           ) {
+                        ) {
                             if (giveaway.Entries >= giveaway.Copies) {
                                 sent += giveaway.Copies;
                             } else {
@@ -5745,14 +5755,14 @@ ${title}
 `;
                 table.insertAdjacentHTML(`beforeEnd`, html);
                 button = document.getElementsByClassName(`js__submit-form`)[0];
-                button.addEventListener(`click`, function() {
+                button.addEventListener(`click`, function () {
                     GM_deleteValue(`rcvcGame`);
                 });
             }
         } else {
             button = document.getElementsByClassName(`js__submit-form`)[0];
             var input = document.querySelector(`[name="game_id"]`);
-            button.addEventListener(`click`, function() {
+            button.addEventListener(`click`, function () {
                 var selectedId = input.value;
                 var selected = document.querySelector(`[data-autocomplete-id="${selectedId}"]`);
                 var info = getGameInfo(selected);
@@ -5773,7 +5783,7 @@ ${title}
     }
 
     function setUGSObserver() {
-        document.getElementsByClassName("form__submit-button")[0].addEventListener("click", function() {
+        document.getElementsByClassName("form__submit-button")[0].addEventListener("click", function () {
             var Winner, Rerolls;
             if (document.querySelector("[name='category_id']").value == 1) {
                 Winner = document.querySelector("[name='reroll_winner_id']").value;
@@ -5793,7 +5803,7 @@ ${title}
         Popup.Title.textContent = "Send unsent gifts:";
         UGS = {};
         createOptions(Popup.Options, UGS, [{
-            Check: function() {
+            Check: function () {
                 return true;
             },
             Description: "Only send to users with 0 not activated / multiple wins.",
@@ -5802,7 +5812,7 @@ ${title}
             Key: "SANM",
             ID: "UGS_SANM"
         }, {
-            Check: function() {
+            Check: function () {
                 return true;
             },
             Description: "Only send to users who are whitelisted.",
@@ -5812,7 +5822,7 @@ ${title}
             Key: "SW",
             ID: "UGS_SW"
         }, {
-            Check: function() {
+            Check: function () {
                 return true;
             },
             Description: "Only send to users who are still members of at least one of the groups for group giveaways.",
@@ -5830,7 +5840,7 @@ ${title}
             "</a>"
         );
         UGSButton = Context.firstElementChild;
-        createButton(Popup.Button, "fa-send", "Send", "fa-times-circle", "Cancel", function(Callback) {
+        createButton(Popup.Button, "fa-send", "Send", "fa-times-circle", "Cancel", function (Callback) {
             var Match;
             UGSButton.classList.add("rhBusy");
             UGS.Progress.innerHTML = UGS.OverallProgress.innerHTML = "";
@@ -5843,13 +5853,13 @@ ${title}
             UGS.Checked = [];
             UGS.Winners = GM_getValue("Winners");
             Match = window.location.href.match(/page=(\d+)/);
-            getUGSGiveaways(UGS, 1, Match ? parseInt(Match[1]) : 1, function() {
+            getUGSGiveaways(UGS, 1, Match ? parseInt(Match[1]) : 1, function () {
                 var N;
                 N = UGS.Giveaways.length;
                 if (N > 0) {
                     if (UGS.G.checked) {
-                        getUgsGiveawayGroups(UGS, 0, N, function() {
-                            getUGSWinners(UGS, 0, N, function() {
+                        getUgsGiveawayGroups(UGS, 0, N, function () {
+                            getUGSWinners(UGS, 0, N, function () {
                                 UGSButton.classList.remove("rhBusy");
                                 UGS.Progress.innerHTML = UGS.OverallProgress.innerHTML = "";
                                 GM_setValue("Winners", UGS.Winners);
@@ -5857,7 +5867,7 @@ ${title}
                             });
                         });
                     } else {
-                        getUGSWinners(UGS, 0, N, function() {
+                        getUGSWinners(UGS, 0, N, function () {
                             UGSButton.classList.remove("rhBusy");
                             UGS.Progress.innerHTML = UGS.OverallProgress.innerHTML = "";
                             GM_setValue("Winners", UGS.Winners);
@@ -5873,11 +5883,11 @@ ${title}
                     Callback();
                 }
             });
-        }, function() {
+        }, function () {
             clearInterval(UGS.Request);
             clearInterval(UGS.Save);
             UGS.Canceled = true;
-            setTimeout(function() {
+            setTimeout(function () {
                 UGS.Progress.innerHTML = UGS.OverallProgress.innerHTML = "";
             }, 500);
             UGSButton.classList.remove("rhBusy");
@@ -5893,7 +5903,7 @@ ${title}
             Description: "Did not send gifts to ",
             Key: "Unsent"
         }]);
-        UGSButton.addEventListener("click", function() {
+        UGSButton.addEventListener("click", function () {
             UGS.Popup = Popup.popUp();
         });
     }
@@ -5901,7 +5911,7 @@ ${title}
     function getUgsGiveawayGroups(ugs, i, n, callback) {
         if (i < n) {
             ugs.Giveaways[i].Groups = [];
-            getNextUgsGiveawayGroupsPage(ugs, i, `${ugs.Giveaways[i].URL.replace(/\/winners/, ``)}/groups/search?page=`, 1, function() {
+            getNextUgsGiveawayGroupsPage(ugs, i, `${ugs.Giveaways[i].URL.replace(/\/winners/, ``)}/groups/search?page=`, 1, function () {
                 window.setTimeout(getUgsGiveawayGroups, 0, ugs, ++i, n, callback);
             });
         } else {
@@ -5926,7 +5936,7 @@ ${title}
             ugs.Progress.innerHTML =
                 "<i class=\"fa fa-circle-o-notch fa-spin\"></i> " +
                 "<span>Getting " + ugs.Giveaways[I].Name + "'s groups...</span>";
-            queueRequest(ugs, null, `${url}${nextPage}`, function(response) {
+            queueRequest(ugs, null, `${url}${nextPage}`, function (response) {
                 var context = DOM.parse(response.responseText);
                 window.setTimeout(getNextUgsGiveawayGroupsPage, 0, ugs, I, url, ++nextPage, callback, context);
             });
@@ -5961,7 +5971,7 @@ ${title}
                 "<span>Retrieving unsent giveaways (page " + NextPage + ")...</span>";
             if (CurrentPage != NextPage) {
                 if (!document.getElementById(`esgst-es-page-${NextPage}`)) {
-                    queueRequest(UGS, null, "/giveaways/created/search?page=" + NextPage, function(Response) {
+                    queueRequest(UGS, null, "/giveaways/created/search?page=" + NextPage, function (Response) {
                         window.setTimeout(getUGSGiveaways, 0, UGS, ++NextPage, CurrentPage, Callback, DOM.parse(Response.responseText));
                     });
                 } else {
@@ -5975,12 +5985,12 @@ ${title}
 
     function checkUgsUserGroups(ugs, i, n, j, steamId64, callback) {
         if (i < n) {
-            makeRequest(null, `http://steamcommunity.com/groups/${ugs.Giveaways[j].Groups[i]}/memberslistxml/?xml=1`, ugs, function(response) {
+            makeRequest(null, `http://steamcommunity.com/groups/${ugs.Giveaways[j].Groups[i]}/memberslistxml/?xml=1`, ugs, function (response) {
                 var responseText = response.responseText;
                 var reg = new RegExp(`<steamID64>${steamId64}</steamID64>`);
                 if (reg.exec(responseText)) {
                     callback(true);
-                }  else {
+                } else {
                     window.setTimeout(checkUgsUserGroups, 0, ugs, ++i, n, j, steamId64, callback);
                 }
             });
@@ -5996,7 +6006,7 @@ ${title}
                 UGS.Progress.innerHTML =
                     "<i class=\"fa fa-circle-o-notch fa-spin\"></i> " +
                     "<span>Retrieving winners...</span>";
-                queueRequest(UGS, null, UGS.Giveaways[I].URL, function(Response) {
+                queueRequest(UGS, null, UGS.Giveaways[I].URL, function (Response) {
                     var ResponseHTML, Matches, Winners, J, NumMatches, WinnersKeys;
                     ResponseHTML = DOM.parse(Response.responseText);
                     Matches = ResponseHTML.getElementsByClassName("table__row-inner-wrap");
@@ -6006,17 +6016,17 @@ ${title}
                     }
                     if (NumMatches < 25) {
                         WinnersKeys = sortArray(Object.keys(Winners));
-                        sendUGSGifts(UGS, 0, WinnersKeys.length, I, WinnersKeys, Winners, function() {
+                        sendUGSGifts(UGS, 0, WinnersKeys.length, I, WinnersKeys, Winners, function () {
                             window.setTimeout(getUGSWinners, 0, UGS, ++I, N, Callback);
                         });
                     } else {
-                        queueRequest(UGS, null, UGS.Giveaways[I].URL + "/search?page=2", function(Response) {
+                        queueRequest(UGS, null, UGS.Giveaways[I].URL + "/search?page=2", function (Response) {
                             Matches = DOM.parse(Response.responseText).getElementsByClassName("table__row-inner-wrap");
                             for (J = 0, NumMatches = Matches.length; J < NumMatches; ++J) {
                                 Winners[Matches[J].getElementsByClassName("table__column__heading")[0].textContent] = Matches[J].querySelector("[name='winner_id']").value;
                             }
                             WinnersKeys = sortArray(Object.keys(Winners));
-                            sendUGSGifts(UGS, 0, WinnersKeys.length, I, WinnersKeys, Winners, function() {
+                            sendUGSGifts(UGS, 0, WinnersKeys.length, I, WinnersKeys, Winners, function () {
                                 window.setTimeout(getUGSWinners, 0, UGS, ++I, N, Callback);
                             });
                         });
@@ -6045,8 +6055,8 @@ ${title}
                         User = {
                             Username: Keys[I]
                         };
-                        queueSave(UGS, function() {
-                            saveUser(User, UGS, function() {
+                        queueSave(UGS, function () {
+                            saveUser(User, UGS, function () {
                                 var SavedUser;
                                 GM_setValue("LastSave", 0);
                                 SavedUser = getUser(User);
@@ -6054,7 +6064,7 @@ ${title}
                                     UGS.Progress.innerHTML =
                                         "<i class=\"fa fa-circle-o-notch fa-spin\"></i> " +
                                         "<span>Checking if user is a member of one of the " + UGS.Giveaways[J].Name + " groups...</span>";
-                                    checkUgsUserGroups(UGS, 0, UGS.Giveaways[J].Groups.length, J, SavedUser.SteamID64, function(member) {
+                                    checkUgsUserGroups(UGS, 0, UGS.Giveaways[J].Groups.length, J, SavedUser.SteamID64, function (member) {
                                         if (member) {
                                             sendUGSGift(UGS, Winners, Keys, I, J, N, Callback);
                                         } else {
@@ -6073,16 +6083,16 @@ ${title}
                                         sendUGSGift(UGS, Winners, Keys, I, J, N, Callback);
                                     } else {
                                         User.NAMWC = SavedUser.NAMWC;
-                                        updateNAMWCResults(User, UGS, function() {
+                                        updateNAMWCResults(User, UGS, function () {
                                             if (!User.NAMWC) {
                                                 User.NAMWC = {
                                                     Results: {}
                                                 };
                                             }
-                                            checkNAMWCNotActivated(UGS, User, function() {
-                                                checkNAMWCMultiple(UGS, User, function() {
-                                                    queueSave(UGS, function() {
-                                                        saveUser(User, UGS, function() {
+                                            checkNAMWCNotActivated(UGS, User, function () {
+                                                checkNAMWCMultiple(UGS, User, function () {
+                                                    queueSave(UGS, function () {
+                                                        saveUser(User, UGS, function () {
                                                             GM_setValue("LastSave", 0);
                                                             if (User.NAMWC.Results.Activated && User.NAMWC.Results.NotMultiple) {
                                                                 sendUGSGift(UGS, Winners, Keys, I, J, N, Callback);
@@ -6127,8 +6137,8 @@ ${title}
                     UGS.UnsentUsers.insertAdjacentHTML(
                         "beforeEnd",
                         "<span><a href=\"/user/" + Keys[I] + "\">" + Keys[I] + "</a> (" + (!Reroll ? ("Being rerolled for <a href=\"" + UGS.Giveaways[J].URL + "\">" + UGS.Giveaways[J].Name +
-                                                                                                      "</a>.)") : ("Already won <a href=\"" + UGS.Giveaways[J].URL + "\">" +
-                                                                                                                   UGS.Giveaways[J].Name + "</a> from you.)")) + "</span>"
+                            "</a>.)") : ("Already won <a href=\"" + UGS.Giveaways[J].URL + "\">" +
+                                UGS.Giveaways[J].Name + "</a> from you.)")) + "</span>"
                     );
                     sendUGSGifts(UGS, ++I, N, J, Keys, Winners, Callback);
                 }
@@ -6140,7 +6150,7 @@ ${title}
 
     function sendUGSGift(UGS, Winners, Keys, I, J, N, Callback) {
         if (!UGS.Canceled) {
-            queueRequest(UGS, "xsrf_token=" + esgst.xsrfToken + "&do=sent_feedback&action=1&winner_id=" + Winners[Keys[I]], "/ajax.php", function(Response) {
+            queueRequest(UGS, "xsrf_token=" + esgst.xsrfToken + "&do=sent_feedback&action=1&winner_id=" + Winners[Keys[I]], "/ajax.php", function (Response) {
                 var Key;
                 UGS.Checked.push(Keys[I] + UGS.Giveaways[J].Name);
                 UGS.Sent.classList.remove("rhHidden");
@@ -6412,7 +6422,7 @@ ${Results.join(``)}
         Popup.TextInput.classList.remove("rhHidden");
         AS = {};
         createOptions(Popup.Options, AS, [{
-            Check: function() {
+            Check: function () {
                 return true;
             },
             Description: "Search by AppID.",
@@ -6429,7 +6439,7 @@ ${Results.join(``)}
             "</a>"
         );
         ASButton = Context.firstElementChild;
-        createButton(Popup.Button, "fa-search", "Search", "fa-times-circle", "Cancel", function(Callback) {
+        createButton(Popup.Button, "fa-search", "Search", "fa-times-circle", "Cancel", function (Callback) {
             ASButton.classList.add("rhBusy");
             AS.Progress.innerHTML = AS.OverallProgress.innerHTML = AS.Results.innerHTML = "";
             AS.Popup.reposition();
@@ -6440,7 +6450,7 @@ ${Results.join(``)}
                     AS.Progress.innerHTML =
                         "<i class=\"fa fa-circle-o-notch fa-spin\"></i> " +
                         "<span>Retrieving game title...</span>";
-                    makeRequest(null, "https://steamcommunity.com/app/" + AS.Query, AS.Progress, function(Response) {
+                    makeRequest(null, "https://steamcommunity.com/app/" + AS.Query, AS.Progress, function (Response) {
                         var Title;
                         Title = DOM.parse(Response.responseText).getElementsByClassName("apphub_AppName")[0];
                         if (Title) {
@@ -6464,10 +6474,10 @@ ${Results.join(``)}
                     "<span>Please enter a title / AppID.</span>";
                 Callback();
             }
-        }, function() {
+        }, function () {
             clearInterval(AS.Request);
             AS.Canceled = true;
-            setTimeout(function() {
+            setTimeout(function () {
                 AS.Progress.innerHTML = "";
             }, 500);
             ASButton.classList.remove("rhBusy");
@@ -6475,8 +6485,8 @@ ${Results.join(``)}
         AS.Progress = Popup.Progress;
         AS.OverallProgress = Popup.OverallProgress;
         AS.Results = Popup.Results;
-        ASButton.addEventListener("click", function() {
-            AS.Popup = Popup.popUp(function() {
+        ASButton.addEventListener("click", function () {
+            AS.Popup = Popup.popUp(function () {
                 Popup.TextInput.focus();
             });
         });
@@ -6484,7 +6494,7 @@ ${Results.join(``)}
 
     function setASSearch(AS, ASButton, Callback) {
         AS.Query = ((AS.Query.length >= 50) ? AS.Query.slice(0, 50) : AS.Query).toLowerCase();
-        searchASGame(AS, window.location.href.match(/(.+?)(\/search.+?)?$/)[1] + "/search?q=" + encodeURIComponent(AS.Query) + "&page=", 1, function() {
+        searchASGame(AS, window.location.href.match(/(.+?)(\/search.+?)?$/)[1] + "/search?q=" + encodeURIComponent(AS.Query) + "&page=", 1, function () {
             ASButton.classList.remove("rhBusy");
             AS.Progress.innerHTML = "";
             Callback();
@@ -6496,7 +6506,7 @@ ${Results.join(``)}
             AS.Progress.innerHTML =
                 "<i class=\"fa fa-circle-o-notch fa-spin\"></i> " +
                 "<span>Loading page " + NextPage + "...</span>";
-            queueRequest(AS, null, URL + NextPage, function(Response) {
+            queueRequest(AS, null, URL + NextPage, function (Response) {
                 var ResponseHTML, Matches, I, N, Title, Pagination;
                 ResponseHTML = DOM.parse(Response.responseText);
                 Matches = ResponseHTML.getElementsByClassName("table__row-outer-wrap");
@@ -6597,7 +6607,7 @@ ${Results.join(``)}
     }
 
     function setDHIcon(DHIcon, Context, Key) {
-        DHIcon.addEventListener("click", function() {
+        DHIcon.addEventListener("click", function () {
             var Comments;
             DHIcon.classList.toggle("fa-star");
             DHIcon.classList.toggle("fa-star-o");
@@ -6638,7 +6648,7 @@ ${Results.join(``)}
             Hidden = true;
         }
         MPPPost.classList.add(Hidden ? "MPPPostOpen" : "MPPPostDefault");
-        Context.firstElementChild.addEventListener("click", function() {
+        Context.firstElementChild.addEventListener("click", function () {
             if (!Hidden) {
                 MPPPost.classList.remove("MPPPostDefault");
                 MPPPost.classList.add("MPPPostOpen");
@@ -6649,7 +6659,7 @@ ${Results.join(``)}
                 followSpeed: 500,
                 modalColor: "#3c424d",
                 opacity: 0.85,
-                onClose: function() {
+                onClose: function () {
                     if (!Hidden) {
                         MPPPost.classList.remove("MPPPostOpen");
                         MPPPost.classList.add("MPPPostDefault");
@@ -6678,10 +6688,10 @@ ${Results.join(``)}
         Context.insertAdjacentHTML("beforeEnd", "<div class=\"comment__actions action_list DEDStatus\"></div>");
         DEDButton = Context.firstElementChild;
         DEDStatus = Context.lastElementChild;
-        createButton(DEDButton, "fa-send", "Submit", "fa-circle-o-notch fa-spin", "Saving...", function(Callback) {
+        createButton(DEDButton, "fa-send", "Submit", "fa-circle-o-notch fa-spin", "Saving...", function (Callback) {
             DEDStatus.innerHTML = "";
             if (CommentURL) {
-                makeRequest(null, CommentURL, DEDStatus, function(Response) {
+                makeRequest(null, CommentURL, DEDStatus, function (Response) {
                     ResponseHTML = DOM.parse(Response.responseText);
                     TradeCode = esgst.sg ? "" : Response.finalUrl.match(/\/trade\/(.+?)\//)[1];
                     ParentID = ResponseHTML.getElementById(CommentURL.match(/\/comment\/(.+)/)[1]);
@@ -6781,28 +6791,28 @@ ${Results.join(``)}
         var CTGoToUnread, CTMarkRead;
         CTGoToUnread = CTPanel.firstElementChild;
         CTMarkRead = CTGoToUnread.nextElementSibling;
-        CTGoToUnread.addEventListener("click", function() {
+        CTGoToUnread.addEventListener("click", function () {
             CTPanel.innerHTML = "<i class=\"fa fa-circle-o-notch fa-spin\"></i>";
             markCTDiscussionRead({
                 Progress: CTPanel
-            }, URL + "/search?page=", 1, Key, true, LastUnread, LastUnread, function(ID) {
+            }, URL + "/search?page=", 1, Key, true, LastUnread, LastUnread, function (ID) {
                 window.location.href = ID ? "/go/comment/" + ID : URL;
             });
         });
-        CTMarkRead.addEventListener("click", function() {
+        CTMarkRead.addEventListener("click", function () {
             Element.style.opacity = "0.5";
             setHoverOpacity(Element, "1", "0.5");
             CTPanel.innerHTML = "<i class=\"fa fa-circle-o-notch fa-spin\"></i>";
             markCTDiscussionRead({
                 Progress: CTPanel
-            }, URL + "/search?page=", 1, Key, false, false, false, function() {
+            }, URL + "/search?page=", 1, Key, false, false, false, function () {
                 CTPanel.remove();
             });
         });
     }
 
     function markCTDiscussionRead(CT, URL, NextPage, Key, Unread, LastUnread, LastUnreadFirst, Callback) {
-        queueRequest(CT, null, URL + NextPage, function(Response) {
+        queueRequest(CT, null, URL + NextPage, function (Response) {
             var ResponseHTML, Matches, I, N, Comments, ID, Timestamp, Found, Pagination;
             ResponseHTML = DOM.parse(Response.responseText);
             Matches = ResponseHTML.getElementsByClassName("comment__summary");
@@ -6854,7 +6864,7 @@ ${Results.join(``)}
     function setCTVisited(CTPanel, Key, Element) {
         var CTMarkVisited;
         CTMarkVisited = CTPanel.lastElementChild;
-        CTMarkVisited.addEventListener("click", function() {
+        CTMarkVisited.addEventListener("click", function () {
             var Comments;
             Comments = GM_getValue("Comments");
             if (!Comments[Key]) {
@@ -6882,7 +6892,7 @@ ${Results.join(``)}
             "</span>"
         );
         CTGoToUnread = Context.firstElementChild.firstElementChild;
-        CTGoToUnread.addEventListener("click", function() {
+        CTGoToUnread.addEventListener("click", function () {
             var Unread, ID;
             Unread = document.getElementsByClassName("CTButton")[0];
             if (Unread) {
@@ -6895,7 +6905,7 @@ ${Results.join(``)}
                 }
             }
         });
-        CTGoToUnread.nextElementSibling.addEventListener("click", function() {
+        CTGoToUnread.nextElementSibling.addEventListener("click", function () {
             var Matches, ID, Key, I, N;
             Matches = document.getElementsByClassName("CTButton");
             ID = "Comments" + (esgst.sg ? "" : "_ST");
@@ -6942,7 +6952,7 @@ ${Results.join(``)}
                             "    <i class=\"fa fa-eye\"></i>" +
                             "</a>"
                         );
-                        Context.lastElementChild.addEventListener("click", function(Event) {
+                        Context.lastElementChild.addEventListener("click", function (Event) {
                             markCTRead(Event.currentTarget, ID, Key);
                         });
                     }
@@ -7065,7 +7075,7 @@ ${Results.join(``)}
                 ID: "cfh_l",
                 Name: "Link",
                 Icon: "fa-globe",
-                setPopout: function(Popout) {
+                setPopout: function (Popout) {
                     var URL, Title;
                     Popout.innerHTML =
                         "URL: <input placeholder=\"http://www.example.com\" type=\"text\"/>" +
@@ -7073,19 +7083,19 @@ ${Results.join(``)}
                         "<div class=\"form__saving-button btn_action white\">Add</div>";
                     URL = Popout.firstElementChild;
                     Title = URL.nextElementSibling;
-                    Title.nextElementSibling.addEventListener("click", function() {
+                    Title.nextElementSibling.addEventListener("click", function () {
                         wrapCFHLinkImage(CFH, Title.value, URL.value);
                         URL.value = ``;
                         Title.value = ``;
                         URL.focus();
                     });
                 },
-                Callback: function(Popout) {
+                Callback: function (Popout) {
                     var Value = CFH.TextArea.value;
                     var Start = CFH.TextArea.selectionStart;
                     var End = CFH.TextArea.selectionEnd;
                     Popout.firstElementChild.nextElementSibling.value = Value.slice(Start, End);
-                    window.setTimeout(function() {
+                    window.setTimeout(function () {
                         Popout.firstElementChild.focus();
                     }, 0);
                 }
@@ -7093,7 +7103,7 @@ ${Results.join(``)}
                 ID: "cfh_img",
                 Name: "Image",
                 Icon: "fa-image",
-                setPopout: function(Popout) {
+                setPopout: function (Popout) {
                     var URL, Title;
                     Popout.innerHTML =
                         "URL: <input placeholder=\"http://www.example.com/image.jpg\" type=\"text\"/>" +
@@ -7101,19 +7111,19 @@ ${Results.join(``)}
                         "<div class=\"form__saving-button btn_action white\">Add</div>";
                     URL = Popout.firstElementChild;
                     Title = URL.nextElementSibling;
-                    Title.nextElementSibling.addEventListener("click", function() {
+                    Title.nextElementSibling.addEventListener("click", function () {
                         wrapCFHLinkImage(CFH, Title.value, URL.value, true);
                         URL.value = ``;
                         Title.value = ``;
                         URL.focus();
                     });
                 },
-                Callback: function(Popout) {
+                Callback: function (Popout) {
                     var Value = CFH.TextArea.value;
                     var Start = CFH.TextArea.selectionStart;
                     var End = CFH.TextArea.selectionEnd;
                     Popout.firstElementChild.nextElementSibling.value = Value.slice(Start, End);
-                    window.setTimeout(function() {
+                    window.setTimeout(function () {
                         Popout.firstElementChild.focus();
                     }, 0);
                 }
@@ -7121,7 +7131,7 @@ ${Results.join(``)}
                 ID: "cfh_t",
                 Name: "Table",
                 Icon: "fa-table",
-                setPopup: function(Popup) {
+                setPopup: function (Popup) {
                     var Table, InsertRow, InsertColumn, Popout;
                     Popout = Popup.Description;
                     Popout.innerHTML =
@@ -7134,13 +7144,13 @@ ${Results.join(``)}
                     InsertColumn = InsertRow.nextElementSibling;
                     insertCFHTableRows(4, Table);
                     insertCFHTableColumns(2, Table);
-                    InsertRow.addEventListener("click", function() {
+                    InsertRow.addEventListener("click", function () {
                         insertCFHTableRows(1, Table);
                     });
-                    InsertColumn.addEventListener("click", function() {
+                    InsertColumn.addEventListener("click", function () {
                         insertCFHTableColumns(1, Table);
                     });
-                    InsertColumn.nextElementSibling.addEventListener("click", function() {
+                    InsertColumn.nextElementSibling.addEventListener("click", function () {
                         var Rows, I, NumRows, J, NumColumns, Value, Start, End;
                         Rows = Table.rows;
                         for (I = 1, NumRows = Rows.length; I < NumRows; ++I) {
@@ -7173,7 +7183,7 @@ ${Results.join(``)}
                 ID: "cfh_e",
                 Name: "Emojis",
                 Icon: "fa-smile-o",
-                setPopout: function(Popout) {
+                setPopout: function (Popout) {
                     var Emojis;
                     Popout.innerHTML =
                         "<div class=\"CFHEmojis\">" + GM_getValue("Emojis") + "</div>" +
@@ -7181,7 +7191,7 @@ ${Results.join(``)}
                     Emojis = Popout.firstElementChild;
                     setCFHEmojis(Emojis, CFH);
 
-                    Emojis.nextElementSibling.addEventListener("click", function() {
+                    Emojis.nextElementSibling.addEventListener("click", function () {
                         var Popup, I, N, Emoji, SavedEmojis;
                         Popup = createPopup(true);
                         Popup.Icon.classList.add("fa-smile-o");
@@ -7196,22 +7206,22 @@ ${Results.join(``)}
                         for (I = 0, N = CFH.Emojis.length; I < N; ++I) {
                             Emoji = CFH.Emojis[I].Emoji;
                             Emojis.insertAdjacentHTML("beforeEnd", "<span data-id=\"" + Emoji + "\" draggable=\"true\" title=\"" + CFH.Emojis[I].Title + "\">" + Emoji + "</span>");
-                            Emojis.lastElementChild.addEventListener("dragstart", function(Event) {
+                            Emojis.lastElementChild.addEventListener("dragstart", function (Event) {
                                 Event.dataTransfer.setData("text", Event.currentTarget.getAttribute("data-id"));
                             });
                         }
                         SavedEmojis = Emojis.nextElementSibling.nextElementSibling;
                         for (I = 0, N = SavedEmojis.children.length; I < N; ++I) {
-                            SavedEmojis.children[I].addEventListener("click", function(Event) {
+                            SavedEmojis.children[I].addEventListener("click", function (Event) {
                                 Event.currentTarget.remove();
                                 GM_setValue("Emojis", SavedEmojis.innerHTML);
                                 Popup.reposition();
                             });
                         }
-                        SavedEmojis.addEventListener("dragover", function(Event) {
+                        SavedEmojis.addEventListener("dragover", function (Event) {
                             Event.preventDefault();
                         });
-                        SavedEmojis.addEventListener("drop", function(Event) {
+                        SavedEmojis.addEventListener("drop", function (Event) {
                             var ID;
                             Event.preventDefault();
                             ID = Event.dataTransfer.getData("text").replace(/\\/g, "\\\\");
@@ -7219,19 +7229,19 @@ ${Results.join(``)}
                                 SavedEmojis.appendChild(document.querySelector("[data-id='" + ID + "']").cloneNode(true));
                                 GM_setValue("Emojis", SavedEmojis.innerHTML);
                                 Popup.reposition();
-                                SavedEmojis.lastElementChild.addEventListener("click", function(Event) {
+                                SavedEmojis.lastElementChild.addEventListener("click", function (Event) {
                                     Event.currentTarget.remove();
                                     GM_setValue("Emojis", SavedEmojis.innerHTML);
                                     Popup.reposition();
                                 });
                             }
                         });
-                        Popup = Popup.popUp(function() {
+                        Popup = Popup.popUp(function () {
                             Popout.classList.add("rhHidden");
                         });
                     });
                 },
-                Callback: function(Popout) {
+                Callback: function (Popout) {
                     var Emojis;
                     Emojis = Popout.firstElementChild;
                     Emojis.innerHTML = GM_getValue("Emojis");
@@ -7240,36 +7250,36 @@ ${Results.join(``)}
             }, {
                 Name: "Automatic Links / Images Paste Formatting",
                 Icon: "fa-paste",
-                Callback: function(Context) {
+                Callback: function (Context) {
                     CFH.ALIPF = Context.firstElementChild;
                     setCFHALIPF(CFH, GM_getValue("CFH_ALIPF"));
                 },
-                OnClick: function() {
+                OnClick: function () {
                     setCFHALIPF(CFH);
                 }
             }, {
                 ID: "cfh_ge",
                 Name: "Giveaway Encrypter",
                 Icon: "fa-star",
-                setPopout: function(Popout) {
+                setPopout: function (Popout) {
                     var Code;
                     Popout.innerHTML =
                         "Giveaway Code: <input placeholder=\"XXXXX\" type=\"text\"/>" +
                         "<div class=\"form__saving-button btn_action white\">Add</div>";
                     Code = Popout.firstElementChild;
-                    Code.nextElementSibling.addEventListener("click", function() {
+                    Code.nextElementSibling.addEventListener("click", function () {
                         var encodedCode = encryptGiveaway(Code.value);
                         wrapCFHLinkImage(CFH, ``, `ESGST-${encodedCode}`);
                         Code.value = ``;
                         Code.focus();
                     });
                 },
-                Callback: function(Popout) {
+                Callback: function (Popout) {
                     var Value = CFH.TextArea.value;
                     var Start = CFH.TextArea.selectionStart;
                     var End = CFH.TextArea.selectionEnd;
                     Popout.firstElementChild.nextElementSibling.value = Value.slice(Start, End);
-                    window.setTimeout(function() {
+                    window.setTimeout(function () {
                         Popout.firstElementChild.focus();
                     }, 0);
                 }
@@ -14527,7 +14537,7 @@ ${Results.join(``)}
         for (I = 0, N = CFH.Items.length; I < N; ++I) {
             addCFHItem(CFH.Items[I], CFH);
         }
-        CFH.TextArea.addEventListener("paste", function(Event) {
+        CFH.TextArea.addEventListener("paste", function (Event) {
             var Value;
             if (GM_getValue("CFH_ALIPF")) {
                 Value = Event.clipboardData.getData("text/plain");
@@ -14569,7 +14579,7 @@ ${Results.join(``)}
                 "<a>" +
                 "    <i class=\"fa fa-times-circle\" title=\"Delete row.\"></i>" +
                 "</a>";
-            Delete.firstElementChild.addEventListener("click", function() {
+            Delete.firstElementChild.addEventListener("click", function () {
                 if (Table.rows.length > 4) {
                     Row.remove();
                 } else {
@@ -14606,7 +14616,7 @@ ${Results.join(``)}
             "</a>";
         Column = Rows[1].insertCell(N);
         Column.innerHTML = "<input placeholder=\"Header\" type=\"text\"/>";
-        Delete.firstElementChild.addEventListener("click", function() {
+        Delete.firstElementChild.addEventListener("click", function () {
             Rows = Table.rows;
             N = Rows[1].cells.length;
             if (N > 3) {
@@ -14625,7 +14635,7 @@ ${Results.join(``)}
     function setCFHEmojis(Emojis, CFH) {
         var I, N;
         for (I = 0, N = Emojis.children.length; I < N; ++I) {
-            Emojis.children[I].addEventListener("click", function(Event) {
+            Emojis.children[I].addEventListener("click", function (Event) {
                 wrapCFHFormat(CFH, Event.currentTarget.textContent);
             });
         }
@@ -14640,7 +14650,7 @@ ${Results.join(``)}
                 "    <a class=\"page_heading_btn\" title=\"" + Item.Name + "\">" +
                 "        <i class=\"fa " + Item.Icon + "\"></i>" + (Item.SecondaryIcon ? (
                     "    <i class=\"fa " + Item.SecondaryIcon + "\"></i>") : "") + (Item.Text ? (
-                    "    <span>" + Item.Text + "</span") : "") +
+                        "    <span>" + Item.Text + "</span") : "") +
                 "    </a>" +
                 "</span>"
             );
@@ -14649,11 +14659,11 @@ ${Results.join(``)}
             if (Item.setPopout) {
                 Popout = createPopout(Context);
                 Popout.Popout.classList.add("CFHPopout");
-                Popout.customRule = function(Target) {
+                Popout.customRule = function (Target) {
                     return !Button.contains(Target);
                 };
                 Item.setPopout(Popout.Popout);
-                Button.addEventListener("click", function() {
+                Button.addEventListener("click", function () {
                     if (Popout.Popout.classList.contains("rhHidden")) {
                         Popout.popOut(Button, Item.Callback);
                     } else {
@@ -14665,14 +14675,14 @@ ${Results.join(``)}
                 popup.Icon.classList.add(`fa-table`);
                 popup.Title.textContent = `Add a table:`;
                 Item.setPopup(popup);
-                Button.addEventListener("click", function() {
+                Button.addEventListener("click", function () {
                     popup.popUp();
                 });
             } else {
                 if (Item.Callback) {
                     Item.Callback(Context);
                 }
-                Context.addEventListener("click", function() {
+                Context.addEventListener("click", function () {
                     if (Item.OnClick) {
                         Item.OnClick();
                     } else {
@@ -14691,7 +14701,7 @@ ${Results.join(``)}
         if (OrderedList || UnorderedList) {
             if (OrderedList) {
                 N = 1;
-                Prefix = N + ". " + Value.slice(Start, End).replace(/\n/g, function() {
+                Prefix = N + ". " + Value.slice(Start, End).replace(/\n/g, function () {
                     return ("\n" + (++N) + ". ");
                 });
             } else {
@@ -14755,10 +14765,10 @@ ${Results.join(``)}
         if (esgst.cfh) {
             addCFHPanel(Popup.TextArea);
         }
-        createButton(Popup.Button, "fa-check", "Save", "fa-circle-o-notch fa-spin", "Saving...", function(Callback) {
+        createButton(Popup.Button, "fa-check", "Save", "fa-circle-o-notch fa-spin", "Saving...", function (Callback) {
             Popup.Progress.innerHTML = "";
             saveComment(esgst.sg ? "" : document.querySelector("[name='trade_code']").value, "", Popup.TextArea.value, esgst.sg ? window.location.href.match(/(.+?)(#.+?)?$/)[1] : "/ajax.php", Popup.Progress,
-                        Callback);
+                Callback);
         });
         Context.insertAdjacentHTML(
             "afterBegin",
@@ -14766,8 +14776,8 @@ ${Results.join(``)}
             "    <i class=\"fa fa-comment\"></i>" +
             "</a>"
         );
-        Context.firstElementChild.addEventListener("click", function() {
-            Popup.popUp(function() {
+        Context.firstElementChild.addEventListener("click", function () {
+            Popup.popUp(function () {
                 Popup.TextArea.focus();
             });
         });
@@ -14812,7 +14822,7 @@ ${Results.join(``)}
                     MR.Username = MR.Comment.getElementsByClassName("author_name")[0].textContent;
                 }
                 MR.Timestamp.insertAdjacentHTML("afterEnd", "<a class=\"comment__actions__button MRReply\">Reply</a>");
-                MR.Timestamp.nextElementSibling.addEventListener("click", function() {
+                MR.Timestamp.nextElementSibling.addEventListener("click", function () {
                     if (!MR.Box) {
                         addMRBox(MR);
                     } else {
@@ -14865,7 +14875,7 @@ ${Results.join(``)}
             addCFHPanel(MR.Description);
         }
         MR.Description.focus();
-        addDEDButton(MR.Box, MR.URL, function(Response, DEDStatus) {
+        addDEDButton(MR.Box, MR.URL, function (Response, DEDStatus) {
             var ReplyID, Reply, ResponseJSON;
             if (esgst.sg) {
                 ReplyID = Response.finalUrl.match(/#(.+)/);
@@ -14897,7 +14907,7 @@ ${Results.join(``)}
                 }
             }
         });
-        MR.Cancel.addEventListener("click", function() {
+        MR.Cancel.addEventListener("click", function () {
             MR.Box.remove();
             MR.Box = null;
         });
@@ -14925,7 +14935,7 @@ ${Results.join(``)}
             ID = EditState.querySelector("[name='comment_id']").value;
             AllowReplies = esgst.sg ? EditState.querySelector("[name='allow_replies']").value : "";
             Description = EditState.querySelector("[name='description']");
-            MR.Edit.addEventListener("click", function() {
+            MR.Edit.addEventListener("click", function () {
                 var Temp;
                 if (esgst.sg) {
                     DisplayState.classList.add("is-hidden");
@@ -14939,27 +14949,27 @@ ${Results.join(``)}
                 Description.value = "";
                 Description.value = Temp;
             });
-            EditSave.addEventListener("click", function() {
+            EditSave.addEventListener("click", function () {
                 makeRequest("xsrf_token=" + esgst.xsrfToken + "&do=comment_edit&comment_id=" + ID + "&allow_replies=" + AllowReplies + "&description=" + encodeURIComponent(Description.value),
-                            "/ajax.php", null, function(Response) {
-                    var ResponseJSON, ResponseHTML;
-                    ResponseJSON = JSON.parse(Response.responseText);
-                    if (ResponseJSON.type == "success" || ResponseJSON.success) {
-                        ResponseHTML = DOM.parse(ResponseJSON[esgst.sg ? "comment" : "html"]);
-                        DisplayState.innerHTML = ResponseHTML.getElementsByClassName(esgst.sg ? "comment__display-state" : "comment_body_default")[0].innerHTML;
-                        EditState.classList.add(esgst.sg ? "is-hidden" : "is_hidden");
-                        MR.Timestamp.innerHTML = ResponseHTML.getElementsByClassName(esgst.sg ? "comment__actions" : "action_list")[0].firstElementChild.innerHTML;
-                        if (esgst.at) {
-                            getTimestamps(MR.Timestamp);
+                    "/ajax.php", null, function (Response) {
+                        var ResponseJSON, ResponseHTML;
+                        ResponseJSON = JSON.parse(Response.responseText);
+                        if (ResponseJSON.type == "success" || ResponseJSON.success) {
+                            ResponseHTML = DOM.parse(ResponseJSON[esgst.sg ? "comment" : "html"]);
+                            DisplayState.innerHTML = ResponseHTML.getElementsByClassName(esgst.sg ? "comment__display-state" : "comment_body_default")[0].innerHTML;
+                            EditState.classList.add(esgst.sg ? "is-hidden" : "is_hidden");
+                            MR.Timestamp.innerHTML = ResponseHTML.getElementsByClassName(esgst.sg ? "comment__actions" : "action_list")[0].firstElementChild.innerHTML;
+                            if (esgst.at) {
+                                getTimestamps(MR.Timestamp);
+                            }
+                            if (esgst.sg) {
+                                DisplayState.classList.remove("is-hidden");
+                                MR.Context.classList.remove("is-hidden");
+                            } else {
+                                MR.Container.classList.remove("is_hidden");
+                            }
                         }
-                        if (esgst.sg) {
-                            DisplayState.classList.remove("is-hidden");
-                            MR.Context.classList.remove("is-hidden");
-                        } else {
-                            MR.Container.classList.remove("is_hidden");
-                        }
-                    }
-                });
+                    });
             });
         }
     }
@@ -15015,13 +15025,13 @@ ${Results.join(``)}
             } else {
                 Context = APContainer;
             }
-            APAvatar.addEventListener("click", function() {
+            APAvatar.addEventListener("click", function () {
                 var APBox;
                 APBox = esgst.APBoxes[ID];
                 if (APBox) {
                     if (APBox.Popout.classList.contains("rhHidden")) {
                         Context.appendChild(APBox.Popout);
-                        APBox.customRule = function(Target) {
+                        APBox.customRule = function (Target) {
                             return (!APContainer.contains(Target) && !Context.contains(Target));
                         };
                         APBox.popOut(APAvatar);
@@ -15034,11 +15044,11 @@ ${Results.join(``)}
                     APBox.Popout.innerHTML =
                         "<i class=\"fa fa-circle-o-notch fa-spin\"></i> " +
                         "<span>Loading " + Key + "...</span>";
-                    APBox.customRule = function(Target) {
+                    APBox.customRule = function (Target) {
                         return (!APContainer.contains(Target) && !Context.contains(Target));
                     };
                     APBox.popOut(APAvatar);
-                    makeRequest(null, URL, APBox.Popout, function(Response) {
+                    makeRequest(null, URL, APBox.Popout, function (Response) {
                         var ResponseHTML, Avatar, Columns, ReportButton, APLink, I, N;
                         ResponseHTML = DOM.parse(Response.responseText);
                         APBox.Popout.innerHTML =
@@ -15055,7 +15065,7 @@ ${Results.join(``)}
                             Columns[0].appendChild(Columns[1].firstElementChild);
                         }
                         if (ReportButton) {
-                            ReportButton.addEventListener("click", function() {
+                            ReportButton.addEventListener("click", function () {
                                 return ReportButton.getElementsByTagName("form")[0].submit();
                             });
                         }
@@ -15232,7 +15242,7 @@ ${Results.join(``)}
         esgst.un.popup.Title.innerHTML = `Edit user notes for <span>${esgst.un.userId}</span>:`;
         esgst.un.popup.TextArea.classList.remove(`rhHidden`);
         createButton(esgst.un.popup.Button, `fa-check`, `Save`, `fa-circle-o-notch fa-spin`, `Saving...`, saveNotes);
-        esgst.un.popup.popUp(function() {
+        esgst.un.popup.popUp(function () {
             esgst.un.popup.TextArea.focus();
             var savedUser = getUser(esgst.un.user);
             if (savedUser && savedUser.Notes) {
@@ -15243,8 +15253,8 @@ ${Results.join(``)}
 
     function saveNotes(callback) {
         esgst.un.user.Notes = esgst.un.popup.TextArea.value.trim();
-        queueSave(esgst.un.popup, function() {
-            saveUser(esgst.un.user, esgst.un.popup, function() {
+        queueSave(esgst.un.popup, function () {
+            saveUser(esgst.un.user, esgst.un.popup, function () {
                 GM_setValue(`LastSave`, 0);
                 if (esgst.un.user.Notes) {
                     esgst.un.icon.classList.remove(`fa-sticky-note-o`);
@@ -15302,19 +15312,19 @@ ${Results.join(``)}
         );
         User = {};
         User[esgst.sg ? "Username" : "SteamID64"] = UserID;
-        Context.nextElementSibling.addEventListener("click", function() {
+        Context.nextElementSibling.addEventListener("click", function () {
             var Popup;
             Popup = createPopup(true);
             Popup.Icon.classList.add("fa-tag");
             Popup.Title.innerHTML = "Edit user tags for <span>" + UserID + "</span>:";
             Popup.TextInput.classList.remove("rhHidden");
             Popup.TextInput.insertAdjacentHTML("afterEnd", createDescription("Use commas to separate tags, for example: Tag1, Tag2, ..."));
-            createButton(Popup.Button, "fa-check", "Save", "fa-circle-o-notch fa-spin", "Saving...", function(Callback) {
-                User.Tags = Popup.TextInput.value.replace(/(,\s*)+/g, function(Match, P1, Offset, String) {
+            createButton(Popup.Button, "fa-check", "Save", "fa-circle-o-notch fa-spin", "Saving...", function (Callback) {
+                User.Tags = Popup.TextInput.value.replace(/(,\s*)+/g, function (Match, P1, Offset, String) {
                     return (((Offset === 0) || (Offset == (String.length - Match.length))) ? "" : ", ");
                 });
-                queueSave(Popup, function() {
-                    saveUser(User, Popup, function() {
+                queueSave(Popup, function () {
+                    saveUser(User, Popup, function () {
                         GM_setValue("LastSave", 0);
                         addPUTTags(UserID, getUser(User).Tags);
                         Callback();
@@ -15322,7 +15332,7 @@ ${Results.join(``)}
                     });
                 });
             });
-            Popup.popUp(function() {
+            Popup.popUp(function () {
                 var SavedUser;
                 Popup.TextInput.focus();
                 SavedUser = getUser(User);
@@ -15338,7 +15348,7 @@ ${Results.join(``)}
         Matches = esgst.users[UserID];
         Prefix = "<span class=\"global__image-outer-wrap author_avatar is_icon\">";
         Suffix = "</span>";
-        HTML = Tags ? Tags.replace(/^|,\s|$/g, function(Match, Offset, String) {
+        HTML = Tags ? Tags.replace(/^|,\s|$/g, function (Match, Offset, String) {
             return ((Offset === 0) ? Prefix : ((Offset == (String.length - Match.length)) ? Suffix : (Suffix + Prefix)));
         }) : "";
         for (I = 0, N = Matches.length; I < N; ++I) {
@@ -15385,8 +15395,8 @@ ${Results.join(``)}
             RWSCVL = {
                 Progress: Context.lastElementChild
             };
-            queueSave(RWSCVL, function() {
-                saveUser(User, RWSCVL, function() {
+            queueSave(RWSCVL, function () {
+                saveUser(User, RWSCVL, function () {
                     GM_setValue("LastSave", 0);
                     User.RWSCVL = getUser(User).RWSCVL;
                     if (!User.RWSCVL) {
@@ -15398,14 +15408,14 @@ ${Results.join(``)}
                         };
                     }
                     if ((new Date().getTime()) - User.RWSCVL["Last" + Key + "Check"] > 604800000) {
-                        queueRequest(RWSCVL, null, URL, function(Response) {
+                        queueRequest(RWSCVL, null, URL, function (Response) {
                             var Value;
                             RWSCVL.Progress.remove();
                             Value = DOM.parse(Response.responseText).getElementById("data").textContent.replace(/\s\$/, "");
                             User.RWSCVL[Key + "CV"] = Value;
                             User.RWSCVL["Last" + Key + "Check"] = new Date().getTime();
-                            queueSave(RWSCVL, function() {
-                                saveUser(User, RWSCVL, function() {
+                            queueSave(RWSCVL, function () {
+                                saveUser(User, RWSCVL, function () {
                                     GM_setValue("LastSave", 0);
                                     Context.insertAdjacentText("beforeEnd", " ($" + Value + " Real CV)");
                                 });
@@ -15453,7 +15463,7 @@ ${Results.join(``)}
         Popup.Icon.classList.add("fa-bar-chart");
         Popup.Title.textContent = "Get " + User.Username + "'s " + UGD.Key.toLowerCase() + " giveaways data:";
         createOptions(Popup.Options, UGD, [{
-            Check: function() {
+            Check: function () {
                 return true;
             },
             Description: "Clear cache.",
@@ -15462,11 +15472,11 @@ ${Results.join(``)}
             Key: "CC",
             ID: "UGD_CC"
         }]);
-        createButton(Popup.Button, "fa-bar-chart", "Get Data", "fa-times-circle", "Cancel", function(Callback) {
+        createButton(Popup.Button, "fa-bar-chart", "Get Data", "fa-times-circle", "Cancel", function (Callback) {
             UGD.Canceled = false;
             UGDButton.classList.add("rhBusy");
-            queueSave(UGD, function() {
-                saveUser(User, UGD, function() {
+            queueSave(UGD, function () {
+                saveUser(User, UGD, function () {
                     var Match, CurrentPage;
                     GM_setValue("LastSave", 0);
                     User.UGD = getUser(User).UGD;
@@ -15490,9 +15500,9 @@ ${Results.join(``)}
                     Match = window.location.pathname.match(new RegExp("^\/user\/" + User.Username + ((UGD.Key == "Won") ? "/giveaways/won" : "")));
                     CurrentPage = window.location.href.match(/page=(\d+)/);
                     CurrentPage = Match ? (CurrentPage ? parseInt(CurrentPage[1]) : 1) : 0;
-                    getUGDGiveaways(UGD, User, 1, CurrentPage, Match, "/user/" + User.Username + ((UGD.Key == "Won") ? "/giveaways/won" : "") + "/search?page=", function() {
-                        queueSave(UGD, function() {
-                            saveUser(User, UGD, function() {
+                    getUGDGiveaways(UGD, User, 1, CurrentPage, Match, "/user/" + User.Username + ((UGD.Key == "Won") ? "/giveaways/won" : "") + "/search?page=", function () {
+                        queueSave(UGD, function () {
+                            saveUser(User, UGD, function () {
                                 var Giveaways, Types, TypesTotal, LevelsTotal, Total, Frequencies, Key, I, N, Giveaway, Private, Group, Whitelist, Region, Level, Copies, Value, HTML, Type,
                                     Ordered;
                                 GM_setValue("LastSave", 0);
@@ -15633,7 +15643,7 @@ ${Results.join(``)}
                                 for (I = 0; I <= 10; ++I) {
                                     Value = Math.round(LevelsTotal[I] / Total * 10000) / 100;
                                     HTML +=
-                                        "    <td" + (Value ? "" : " class=\"is-faded\"") + ">" + LevelsTotal[I] + " (" + Value +  "%)</td>";
+                                        "    <td" + (Value ? "" : " class=\"is-faded\"") + ">" + LevelsTotal[I] + " (" + Value + "%)</td>";
                                 }
                                 HTML +=
                                     "        <td" + (Total ? "" : " class=\"is-faded\"") + ">" + Total + "</td>" +
@@ -15661,18 +15671,18 @@ ${Results.join(``)}
                     });
                 });
             });
-        }, function() {
+        }, function () {
             clearInterval(UGD.Request);
             clearInterval(UGD.Save);
             UGD.Canceled = true;
-            setTimeout(function() {
+            setTimeout(function () {
                 UGD.Progress.innerHTML = UGD.OverallProgress = "";
             }, 500);
             UGDButton.classList.remove("rhBusy");
         });
         UGD.Progress = Popup.Progress;
         UGD.OverallProgress = Popup.OverallProgress;
-        UGDButton.addEventListener("click", function() {
+        UGDButton.addEventListener("click", function () {
             UGD.Popup = Popup.popUp();
         });
     }
@@ -15754,7 +15764,7 @@ ${Results.join(``)}
                 if (CurrentContext && document.getElementById("esgst-es-page-" + NextPage)) {
                     getUGDGiveaways(UGD, User, ++NextPage, CurrentPage, CurrentContext, URL, Callback);
                 } else {
-                    queueRequest(UGD, null, URL + NextPage, function(Response) {
+                    queueRequest(UGD, null, URL + NextPage, function (Response) {
                         getUGDGiveaways(UGD, User, ++NextPage, CurrentPage, CurrentContext, URL, Callback, DOM.parse(Response.responseText));
                     });
                 }
@@ -15769,7 +15779,7 @@ ${Results.join(``)}
             addNAMWCProfileButton(esgst.wonRow, esgst.user);
         } else if (esgst.winnersPath) {
             addNAMWCButton(esgst.mainPageHeading);
-        } else if (esgst.esgstHash){
+        } else if (esgst.esgstHash) {
             addNAMWCButton();
         }
         if (esgst.ap) {
@@ -15816,11 +15826,11 @@ ${Results.join(``)}
             User: (User ? User : null)
         };
         Popup.Title.textContent = (Context ? "Check for " + (NAMWC.User ? (NAMWC.User.Username + "'s ") : "") + "not activated / multiple wins" :
-                                   "Manage Not Activated / Multiple Wins Checker caches") + ":";
+            "Manage Not Activated / Multiple Wins Checker caches") + ":";
         NAMWCButton = (Context ? Context : document).getElementsByClassName("NAMWCButton")[0];
         if (Context) {
             createOptions(Popup.Options, NAMWC, [{
-                Check: function() {
+                Check: function () {
                     return true;
                 },
                 Description: "Only check for not activated wins.",
@@ -15830,7 +15840,7 @@ ${Results.join(``)}
                 ID: "NAMWC_NAC",
                 Dependency: "MultipleCheck"
             }, {
-                Check: function() {
+                Check: function () {
                     return true;
                 },
                 Description: "Only check for multiple wins.",
@@ -15841,18 +15851,18 @@ ${Results.join(``)}
                 Dependency: "NotActivatedCheck"
             }]);
             Popup.Options.insertAdjacentHTML("afterEnd", createDescription("If an user is highlighted, that means they have been either checked for the first time or updated."));
-            createButton(Popup.Button, "fa-question-circle", "Check", "fa-times-circle", "Cancel", function(Callback) {
+            createButton(Popup.Button, "fa-question-circle", "Check", "fa-times-circle", "Cancel", function (Callback) {
                 NAMWC.ShowResults = false;
                 NAMWCButton.classList.add("rhBusy");
-                setNAMWCCheck(NAMWC, function() {
+                setNAMWCCheck(NAMWC, function () {
                     NAMWCButton.classList.remove("rhBusy");
                     Callback();
                 });
-            }, function() {
+            }, function () {
                 clearInterval(NAMWC.Request);
                 clearInterval(NAMWC.Save);
                 NAMWC.Canceled = true;
-                setTimeout(function() {
+                setTimeout(function () {
                     NAMWC.Progress.innerHTML = "";
                 }, 500);
                 NAMWCButton.classList.remove("rhBusy");
@@ -15881,8 +15891,8 @@ ${Results.join(``)}
             Description: "Users who cannot be checked for not activated wins either because they have a private profile or SteamCommunity is down",
             Key: "Unknown"
         }]);
-        NAMWCButton.addEventListener("click", function() {
-            NAMWC.Popup = Popup.popUp(function() {
+        NAMWCButton.addEventListener("click", function () {
+            NAMWC.Popup = Popup.popUp(function () {
                 if (!Context) {
                     NAMWC.ShowResults = true;
                     setNAMWCCheck(NAMWC);
@@ -15944,15 +15954,15 @@ ${Results.join(``)}
                 User = NAMWC.User ? NAMWC.User : {
                     Username: NAMWC.Users[I]
                 };
-                queueSave(NAMWC, function() {
-                    saveUser(User, NAMWC, function() {
+                queueSave(NAMWC, function () {
+                    saveUser(User, NAMWC, function () {
                         GM_setValue("LastSave", 0);
                         User.NAMWC = getUser(User).NAMWC;
-                        updateNAMWCResults(User, NAMWC, function() {
+                        updateNAMWCResults(User, NAMWC, function () {
                             if (User.NAMWC && User.NAMWC.Results) {
                                 Results = User.NAMWC.Results;
                             }
-                            checkNAMWCUser(NAMWC, User, function() {
+                            checkNAMWCUser(NAMWC, User, function () {
                                 if (Results) {
                                     for (Key in Results) {
                                         if (Results[Key] != User.NAMWC.Results[Key]) {
@@ -15985,8 +15995,8 @@ ${Results.join(``)}
                 Multiple: Results.Multiple,
                 Unknown: Results.PrivateDown
             };
-            queueSave(NAMWC, function() {
-                saveUser(User, NAMWC, function() {
+            queueSave(NAMWC, function () {
+                saveUser(User, NAMWC, function () {
                     GM_setValue("LastSave", 0);
                     Callback();
                 });
@@ -16012,8 +16022,8 @@ ${Results.join(``)}
             }
             if (!NAMWC.ShowResults) {
                 NAMWC.Popup.reposition();
-                queueSave(NAMWC, function() {
-                    saveUser(User, NAMWC, function() {
+                queueSave(NAMWC, function () {
+                    saveUser(User, NAMWC, function () {
                         GM_setValue("LastSave", 0);
                         setTimeout(checkNAMWCUsers, 0, NAMWC, ++I, N, Callback);
                     });
@@ -16036,7 +16046,7 @@ ${Results.join(``)}
                 } else if (NAMWC.MC.checked) {
                     checkNAMWCMultiple(NAMWC, User, Callback);
                 } else {
-                    checkNAMWCNotActivated(NAMWC, User, function() {
+                    checkNAMWCNotActivated(NAMWC, User, function () {
                         checkNAMWCMultiple(NAMWC, User, Callback);
                     });
                 }
@@ -16052,7 +16062,7 @@ ${Results.join(``)}
             NAMWC.Progress.innerHTML =
                 "<i class=\"fa fa-circle-o-notch fa-spin\"></i> " +
                 "<span>Retrieving " + User.Username + "'s not activated wins...</span>";
-            queueRequest(NAMWC, null, "http://www.sgtools.info/nonactivated/" + User.Username, function(Response) {
+            queueRequest(NAMWC, null, "http://www.sgtools.info/nonactivated/" + User.Username, function (Response) {
                 ResponseText = Response.responseText;
                 if (ResponseText.match(/has a private profile/)) {
                     User.NAMWC.Results.Activated = false;
@@ -16076,7 +16086,7 @@ ${Results.join(``)}
             NAMWC.Progress.innerHTML =
                 "<i class=\"fa fa-circle-o-notch fa-spin\"></i> " +
                 "<span>Retrieving " + User.Username + "'s multiple wins...</span>";
-            queueRequest(NAMWC, null, "http://www.sgtools.info/multiple/" + User.Username, function(Response) {
+            queueRequest(NAMWC, null, "http://www.sgtools.info/multiple/" + User.Username, function (Response) {
                 N = DOM.parse(Response.responseText).getElementsByClassName("multiplewins").length;
                 User.NAMWC.Results.NotMultiple = (N === 0) ? true : false;
                 User.NAMWC.Results.Multiple = N;
@@ -16173,7 +16183,7 @@ ${Results.join(``)}
         Popup.Icon.classList.add("fa-times");
         Popup.Title.textContent = "Find " + User.Username + "'s not received giveaways:";
         createOptions(Popup.Options, NRF, [{
-            Check: function() {
+            Check: function () {
                 return true;
             },
             Description: "Also search inside giveaways with multiple copies.",
@@ -16183,18 +16193,18 @@ ${Results.join(``)}
             ID: "NRF_FS"
         }]);
         Popup.Options.insertAdjacentHTML("afterEnd", createDescription("If you're blacklisted / not whitelisted / not a member of the same Steam groups, not all giveaways will be found."));
-        createButton(Popup.Button, "fa-search", "Find", "fa-times-circle", "Cancel", function(Callback) {
+        createButton(Popup.Button, "fa-search", "Find", "fa-times-circle", "Cancel", function (Callback) {
             NRFButton.classList.add("rhBusy");
-            setNRFSearch(NRF, User, function() {
+            setNRFSearch(NRF, User, function () {
                 NRF.Progress.innerHTML = "";
                 NRFButton.classList.remove("rhBusy");
                 Callback();
             });
-        }, function() {
+        }, function () {
             clearInterval(NRF.Request);
             clearInterval(NRF.Save);
             NRF.Canceled = true;
-            setTimeout(function() {
+            setTimeout(function () {
                 NRF.Progress.innerHTML = "";
             }, 500);
             NRFButton.classList.remove("rhBusy");
@@ -16202,7 +16212,7 @@ ${Results.join(``)}
         NRF.Progress = Popup.Progress;
         NRF.OverallProgress = Popup.OverallProgress;
         NRF.Results = Popup.Results;
-        NRFButton.addEventListener("click", function() {
+        NRFButton.addEventListener("click", function () {
             NRF.Popup = Popup.popUp();
         });
     }
@@ -16211,8 +16221,8 @@ ${Results.join(``)}
         NRF.Progress.innerHTML = NRF.OverallProgress.innerHTML = NRF.Results.innerHTML = "";
         NRF.Popup.reposition();
         NRF.Canceled = false;
-        queueSave(NRF, function() {
-            saveUser(User, NRF, function() {
+        queueSave(NRF, function () {
+            saveUser(User, NRF, function () {
                 var Match;
                 GM_setValue("LastSave", 0);
                 User.NRF = getUser(User).NRF;
@@ -16225,13 +16235,13 @@ ${Results.join(``)}
                 }
                 if (((new Date().getTime()) - User.NRF.LastSearch) > 604800000) {
                     Match = window.location.href.match(new RegExp("\/user\/" + User.Username + "(\/search\?page=(\d+))?"));
-                    searchNRFUser(NRF, User, 1, Match ? (Match[2] ? parseInt(Match[2]) : 1) : 0, "/user/" + User.Username + "/search?page=", function() {
+                    searchNRFUser(NRF, User, 1, Match ? (Match[2] ? parseInt(Match[2]) : 1) : 0, "/user/" + User.Username + "/search?page=", function () {
                         User.NRF.LastSearch = new Date().getTime();
                         User.NRF.OverallProgress = NRF.OverallProgress.innerHTML;
                         User.NRF.Results = NRF.Results.innerHTML;
                         loadEndlessFeatures(NRF.Results);
-                        queueSave(NRF, function() {
-                            saveUser(User, NRF, function() {
+                        queueSave(NRF, function () {
+                            saveUser(User, NRF, function () {
                                 GM_setValue("LastSave", 0);
                                 Callback();
                             });
@@ -16284,7 +16294,7 @@ ${Results.join(``)}
                 "<i class=\"fa fa-circle-o-notch fa-spin\"></i> " +
                 "<span>Searching " + User.Username + "'s giveaways (page " + NextPage + ")...</span>";
             if (CurrentPage != NextPage) {
-                queueRequest(NRF, null, URL + NextPage, function(Response) {
+                queueRequest(NRF, null, URL + NextPage, function (Response) {
                     searchNRFUser(NRF, User, ++NextPage, CurrentPage, URL, Callback, DOM.parse(Response.responseText));
                 });
             } else {
@@ -16299,7 +16309,7 @@ ${Results.join(``)}
                 "<i class=\"fa fa-circle-o-notch fa-spin\"></i> " +
                 "<span>Searching inside giveaways with multiple copies (" + I + " of " + N + ")...</span>";
             if (I < N) {
-                searchNRFGiveaway(NRF, NRF.Multiple[I].getElementsByClassName("giveaway__heading__name")[0].getAttribute("href") + "/winners/search?page=", 1, function(Found) {
+                searchNRFGiveaway(NRF, NRF.Multiple[I].getElementsByClassName("giveaway__heading__name")[0].getAttribute("href") + "/winners/search?page=", 1, function (Found) {
                     if (Found) {
                         NRF.Results.appendChild(NRF.Multiple[I].cloneNode(true));
                     }
@@ -16317,7 +16327,7 @@ ${Results.join(``)}
 
     function searchNRFGiveaway(NRF, URL, NextPage, Callback) {
         if (!NRF.Canceled) {
-            queueRequest(NRF, null, URL + NextPage, function(Response) {
+            queueRequest(NRF, null, URL + NextPage, function (Response) {
                 var ResponseHTML, Matches, I, N, Found, Pagination;
                 ResponseHTML = DOM.parse(Response.responseText);
                 Matches = ResponseHTML.getElementsByClassName("table__column--width-small");
@@ -16437,11 +16447,11 @@ ${Results.join(``)}
             STPBButton = Context.lastElementChild;
             Context = Context.parentElement.getElementsByClassName("js-tooltip")[0];
             if (Context) {
-                STPBButton.addEventListener("mouseenter", function() {
+                STPBButton.addEventListener("mouseenter", function () {
                     Context.textContent = "Visit SteamTrades Profile";
                     setSiblingsOpacity(STPBButton, "0.2");
                 });
-                STPBButton.addEventListener("mouseleave", function() {
+                STPBButton.addEventListener("mouseleave", function () {
                     setSiblingsOpacity(STPBButton, "1");
                 });
             }
@@ -16468,15 +16478,15 @@ ${Results.join(``)}
             SGCButton = Context.lastElementChild;
             Context = document.getElementsByClassName("js-tooltip")[0];
             if (Context) {
-                SGCButton.addEventListener("mouseenter", function() {
+                SGCButton.addEventListener("mouseenter", function () {
                     Context.textContent = "Check Shared Groups";
                     setSiblingsOpacity(SGCButton, "0.5");
                 });
-                SGCButton.addEventListener("mouseleave", function() {
+                SGCButton.addEventListener("mouseleave", function () {
                     setSiblingsOpacity(SGCButton, "1");
                 });
             }
-            SGCButton.addEventListener("click", function() {
+            SGCButton.addEventListener("click", function () {
                 var SGCPopup;
                 if (Popup) {
                     Popup.popUp();
@@ -16488,7 +16498,7 @@ ${Results.join(``)}
                         "<i class=\"fa fa-circle-o-notch fa-spin\"></i> " +
                         "<span>Checking shared groups...</span>";
                     SGCPopup = Popup.popUp();
-                    makeRequest(null, "http://www.steamcommunity.com/profiles/" + User.SteamID64 + "/groups", Popup.Progress, function(Response) {
+                    makeRequest(null, "http://www.steamcommunity.com/profiles/" + User.SteamID64 + "/groups", Popup.Progress, function (Response) {
                         var ResponseHTML, Matches, Groups, I, NumMatches, Name, J, NumGroups, Avatar;
                         Popup.OverallProgress.innerHTML = "";
                         ResponseHTML = DOM.parse(Response.responseText);
@@ -16530,7 +16540,7 @@ ${Results.join(``)}
     }
 
     function loadWhitelistBlacklistChecker() {
-        if (esgst.esgstHash){
+        if (esgst.esgstHash) {
             addWBCButton();
         } else {
             addWBCButton(esgst.mainPageHeading);
@@ -16560,7 +16570,7 @@ ${Results.join(``)}
             };
         }
         createOptions(Popup.Options, WBC, [{
-            Check: function() {
+            Check: function () {
                 return WBC.User;
             },
             Description: "Only check " + (WBC.User ? WBC.User.Username : "current user") + ".",
@@ -16570,7 +16580,7 @@ ${Results.join(``)}
             ID: "WBC_SC",
             Dependency: "FullListCheck"
         }, {
-            Check: function() {
+            Check: function () {
                 return WBC.B;
             },
             Description: "Also check whitelist.",
@@ -16579,7 +16589,7 @@ ${Results.join(``)}
             Key: "FC",
             ID: "WBC_FC"
         }, {
-            Check: function() {
+            Check: function () {
                 return ((((WBC.User && !WBC.SC.checked) || !WBC.User) && !WBC.Update && !window.location.pathname.match(/^\/($|giveaways|discussions|users|archive)/)) ? true : false);
             },
             Description: "Check all pages.",
@@ -16588,7 +16598,7 @@ ${Results.join(``)}
             Key: "FLC",
             ID: "WBC_FLC"
         }, {
-            Check: function() {
+            Check: function () {
                 return true;
             },
             Description: "Return whitelists.",
@@ -16597,7 +16607,7 @@ ${Results.join(``)}
             Key: "RW",
             ID: "WBC_RW"
         }, {
-            Check: function() {
+            Check: function () {
                 return WBC.B;
             },
             Description: "Return blacklists.",
@@ -16606,7 +16616,7 @@ ${Results.join(``)}
             Key: "RB",
             ID: "WBC_RB"
         }, {
-            Check: function() {
+            Check: function () {
                 return WBC.Update;
             },
             Description: "Only update whitelists / blacklists.",
@@ -16615,7 +16625,7 @@ ${Results.join(``)}
             Key: "SU",
             ID: "WBC_SU"
         }, {
-            Check: function() {
+            Check: function () {
                 return true;
             },
             Description: "Clear caches.",
@@ -16636,18 +16646,18 @@ ${Results.join(``)}
             );
         }
         WBCButton = document.getElementsByClassName("WBCButton")[0];
-        createButton(Popup.Button, WBC.Update ? "fa-refresh" : "fa-question-circle", WBC.Update ? "Update" : "Check", "fa-times-circle", "Cancel", function(Callback) {
+        createButton(Popup.Button, WBC.Update ? "fa-refresh" : "fa-question-circle", WBC.Update ? "Update" : "Check", "fa-times-circle", "Cancel", function (Callback) {
             WBC.ShowResults = false;
             WBCButton.classList.add("rhBusy");
-            setWBCCheck(WBC, function() {
+            setWBCCheck(WBC, function () {
                 WBCButton.classList.remove("rhBusy");
                 Callback();
             });
-        }, function() {
+        }, function () {
             clearInterval(WBC.Request);
             clearInterval(WBC.Save);
             WBC.Canceled = true;
-            setTimeout(function() {
+            setTimeout(function () {
                 WBC.Progress.innerHTML = "";
             }, 500);
             WBCButton.classList.remove("rhBusy");
@@ -16683,8 +16693,8 @@ ${Results.join(``)}
             Description: "There is not enough information to know if you are whitelisted or blacklisted by",
             Key: "Unknown"
         }]);
-        WBCButton.addEventListener("click", function() {
-            WBC.Popup = Popup.popUp(function() {
+        WBCButton.addEventListener("click", function () {
+            WBC.Popup = Popup.popUp(function () {
                 if (WBC.Update) {
                     WBC.ShowResults = true;
                     setWBCCheck(WBC);
@@ -16710,8 +16720,8 @@ ${Results.join(``)}
             SavedUsers = GM_getValue("Users");
             for (I = 0, N = SavedUsers.length; I < N; ++I) {
                 if (SavedUsers[I].WBC && SavedUsers[I].WBC.Result && (WBC.ShowResults || (!WBC.ShowResults && ((WBC.SU.checked &&
-                                                                                                                SavedUsers[I].WBC.Result.match(/^(Whitelisted|Blacklisted)$/)) ||
-                                                                                                               !WBC.SU.checked)))) {
+                    SavedUsers[I].WBC.Result.match(/^(Whitelisted|Blacklisted)$/)) ||
+                    !WBC.SU.checked)))) {
                     WBC.Users.push(SavedUsers[I].Username);
                 }
             }
@@ -16737,10 +16747,10 @@ ${Results.join(``)}
             if (WBC.FLC.checked) {
                 Match = window.location.href.match(/(.+?)(\/search\?(page=(\d+))?(.*))?$/);
                 getWBCUsers(WBC, 1, Match[4] ? parseInt(Match[4]) : 1, Match[1] + (window.location.pathname.match(/^\/$/) ? "giveaways/" : "/") + "search?" + (Match[5] ? (Match[5].replace(/^&|&$/g, "") + "&") :
-                                                                                                                                         "") + "page=", function() {
-                    WBC.Users = sortArray(WBC.Users);
-                    checkWBCUsers(WBC, 0, WBC.Users.length, Callback);
-                });
+                    "") + "page=", function () {
+                        WBC.Users = sortArray(WBC.Users);
+                        checkWBCUsers(WBC, 0, WBC.Users.length, Callback);
+                    });
             } else {
                 WBC.Users = sortArray(WBC.Users);
                 checkWBCUsers(WBC, 0, WBC.Users.length, Callback);
@@ -16757,8 +16767,8 @@ ${Results.join(``)}
                 User = (WBC.User && WBC.SC.checked) ? WBC.User : {
                     Username: WBC.Users[I]
                 };
-                queueSave(WBC, function() {
-                    saveUser(User, WBC, function() {
+                queueSave(WBC, function () {
+                    saveUser(User, WBC, function () {
                         GM_setValue("LastSave", 0);
                         SavedUser = getUser(User);
                         User.WBC = SavedUser.WBC;
@@ -16770,7 +16780,7 @@ ${Results.join(``)}
                         if (esgst.wbc_n) {
                             User.Notes = SavedUser.Notes;
                         }
-                        checkWBCUser(WBC, User, function() {
+                        checkWBCUser(WBC, User, function () {
                             setTimeout(setWBCResult, 0, WBC, User, (Result != User.WBC.Result) ? true : false, I, N, Callback);
                         });
                     });
@@ -16791,10 +16801,10 @@ ${Results.join(``)}
             if (!WBC.ShowResults) {
                 WBC.Popup.reposition();
                 if ((WBC.RW.checked && (User.WBC.Result == "Whitelisted") && !User.Whitelisted) || (WBC.B && WBC.RB.checked && (User.WBC.Result == "Blacklisted") && !User.Blacklisted)) {
-                    getUserID(User, WBC, function() {
-                        returnWBCWhitelistBlacklist(WBC, User, function() {
-                            queueSave(WBC, function() {
-                                saveUser(User, WBC, function() {
+                    getUserID(User, WBC, function () {
+                        returnWBCWhitelistBlacklist(WBC, User, function () {
+                            queueSave(WBC, function () {
+                                saveUser(User, WBC, function () {
                                     GM_setValue("LastSave", 0);
                                     setTimeout(checkWBCUsers, 0, WBC, ++I, N, Callback);
                                 });
@@ -16802,8 +16812,8 @@ ${Results.join(``)}
                         });
                     });
                 } else {
-                    queueSave(WBC, function() {
-                        saveUser(User, WBC, function() {
+                    queueSave(WBC, function () {
+                        saveUser(User, WBC, function () {
                             GM_setValue("LastSave", 0);
                             setTimeout(checkWBCUsers, 0, WBC, ++I, N, Callback);
                         });
@@ -16835,7 +16845,7 @@ ${Results.join(``)}
                 }
                 Callback();
             } else {
-                queueRequest(WBC, "xsrf_token=" + esgst.xsrfToken + "&do=" + Type + "&child_user_id=" + User.ID + "&action=insert", "/ajax.php", function(Response) {
+                queueRequest(WBC, "xsrf_token=" + esgst.xsrfToken + "&do=" + Type + "&child_user_id=" + User.ID + "&action=insert", "/ajax.php", function (Response) {
                     if (JSON.parse(Response.responseText).type == "success") {
                         User.Whitelisted = User.Blacklisted = false;
                         User[Key] = true;
@@ -16885,7 +16895,7 @@ ${Results.join(``)}
     function checkWBCGiveaway(WBC, User, Callback) {
         var ResponseText;
         if (!WBC.Canceled) {
-            queueRequest(WBC, null, User.WBC.WhitelistGiveaway || User.WBC.Giveaway, function(Response) {
+            queueRequest(WBC, null, User.WBC.WhitelistGiveaway || User.WBC.Giveaway, function (Response) {
                 var responseHtml = DOM.parse(Response.responseText);
                 var errorMessage = responseHtml.getElementsByClassName(`table--summary`)[0];
                 var stop;
@@ -16929,7 +16939,7 @@ ${Results.join(``)}
                 }
             }
             if (User.WBC.Giveaway) {
-                checkWBCGiveaway(WBC, User, function(stop) {
+                checkWBCGiveaway(WBC, User, function (stop) {
                     var WhitelistGiveaways, I, N, GroupGiveaway;
                     if ((User.WBC.Result == "NotBlacklisted") && !stop && WBC.FC.checked) {
                         WhitelistGiveaways = Context.getElementsByClassName("giveaway__column--whitelist");
@@ -16946,7 +16956,7 @@ ${Results.join(``)}
                         } else if (((WBC.Timestamp >= User.WBC.Timestamp) || (WBC.Timestamp === 0)) && Pagination && !Pagination.lastElementChild.classList.contains("is-selected")) {
                             window.setTimeout(getWBCGiveaways, 0, WBC, User, NextPage, CurrentPage, URL, Callback);
                         } else if ((User.WBC.GroupGiveaways && User.WBC.GroupGiveaways.length) || WBC.GroupGiveaways.length) {
-                            getWBCGroupGiveaways(WBC, 0, WBC.GroupGiveaways.length, User, function(Result) {
+                            getWBCGroupGiveaways(WBC, 0, WBC.GroupGiveaways.length, User, function (Result) {
                                 var Groups, GroupGiveaways, Found, J, NumGroups;
                                 if (Result) {
                                     Callback();
@@ -16993,7 +17003,7 @@ ${Results.join(``)}
                 "<i class=\"fa fa-circle-o-notch fa-spin\"></i> " +
                 "<span>Retrieving " + User.Username + "'s giveaways (page " + NextPage + ")...</span>";
             if (CurrentPage != NextPage) {
-                queueRequest(WBC, null, URL + NextPage, function(Response) {
+                queueRequest(WBC, null, URL + NextPage, function (Response) {
                     if (Response.finalUrl.match(/\/user\//)) {
                         window.setTimeout(getWBCGiveaways, 0, WBC, User, ++NextPage, CurrentPage, URL, Callback, DOM.parse(Response.responseText));
                     } else {
@@ -17015,7 +17025,7 @@ ${Results.join(``)}
                 WBC.Progress.innerHTML =
                     "<i class=\"fa fa-circle-o-notch\"></i> " +
                     "<span>Retrieving " + User.Username + "'s group giveaways (" + I + " of " + N + ")...</span>";
-                getWBCGroups(WBC, WBC.GroupGiveaways[I] + "/search?page=", 1, User, function(Result) {
+                getWBCGroups(WBC, WBC.GroupGiveaways[I] + "/search?page=", 1, User, function (Result) {
                     if (Result) {
                         Callback(Result);
                     } else {
@@ -17030,7 +17040,7 @@ ${Results.join(``)}
 
     function getWBCGroups(WBC, URL, NextPage, User, Callback) {
         if (!WBC.Canceled) {
-            queueRequest(WBC, null, URL + NextPage, function(Response) {
+            queueRequest(WBC, null, URL + NextPage, function (Response) {
                 var ResponseText, ResponseHTML, Groups, N, GroupGiveaway, I, Group, Pagination;
                 ResponseText = Response.responseText;
                 ResponseHTML = DOM.parse(ResponseText);
@@ -17093,7 +17103,7 @@ ${Results.join(``)}
                 "<i class=\"fa fa-circle-o-notch fa-spin\"></i> " +
                 "<span>Retrieving users (page " + NextPage + ")...</span>";
             if (CurrentPage != NextPage) {
-                queueRequest(WBC, null, URL + NextPage, function(Response) {
+                queueRequest(WBC, null, URL + NextPage, function (Response) {
                     window.setTimeout(getWBCUsers, 0, WBC, ++NextPage, CurrentPage, URL, Callback, DOM.parse(Response.responseText));
                 });
             } else {
@@ -17203,7 +17213,7 @@ ${Results.join(``)}
         var Key, Username;
         Key = window.location.pathname.match(/\/giveaway\/(.+?)\//)[1];
         Username = Context.closest(".table__row-inner-wrap").getElementsByClassName("table__column__heading")[0].querySelector("a[href*='/user/']").textContent;
-        Context.addEventListener("click", function() {
+        Context.addEventListener("click", function () {
             var Winners;
             Winners = GM_getValue("Winners");
             if (!Winners[Key]) {
@@ -17287,7 +17297,7 @@ ${Results.join(``)}
             Progress: Context.lastElementChild
         };
         URL = Context.getElementsByClassName("table__column__heading")[0].getAttribute("href") + "/users/search?q=" + GM_getValue("Username");
-        queueRequest(GS, null, URL, function(Response) {
+        queueRequest(GS, null, URL, function (Response) {
             var Matches, I, N;
             GS.Progress.remove();
             Matches = DOM.parse(Response.responseText).getElementsByClassName("table__row-inner-wrap")[0].getElementsByClassName("table__column--width-small");
@@ -17310,7 +17320,7 @@ ${Results.join(``)}
     /* Comment History */
 
     function saveChComment(id, timestamp) {
-        createLock(`${esgst.name}CommentHistoryLock`, 300, function(deleteLock) {
+        createLock(`${esgst.name}CommentHistoryLock`, 300, function (deleteLock) {
             var comments, key;
             key = `${esgst.name}CommentHistory`;
             comments = JSON.parse(GM_getValue(key, `[]`));
@@ -17323,13 +17333,13 @@ ${Results.join(``)}
         });
     }
 
-     function getChComments(comments, i, n, popup, callback) {
+    function getChComments(comments, i, n, popup, callback) {
         var comment, id;
         if (i < n) {
             comment = comments[i];
             if (comment) {
                 id = comment.id;
-                request(null, false, `https://${window.location.hostname}/go/comment/${id}`, function(response) {
+                request(null, false, `https://${window.location.hostname}/go/comment/${id}`, function (response) {
                     var html, parent, responseHtml;
                     responseHtml = DOM.parse(response.responseText);
                     comment = responseHtml.getElementById(id);
@@ -17421,11 +17431,11 @@ ${Results.join(``)}
         if (steamLink) {
             var el = steamLink.getAttribute(`href`) || steamLink.getAttribute(`style`);
             if (el) {
-            info = el.match(/\/(app|sub)s?\/(\d+)/);
-            return {
-                type: `${info[1]}s`,
-                id: info[2]
-            };
+                info = el.match(/\/(app|sub)s?\/(\d+)/);
+                return {
+                    type: `${info[1]}s`,
+                    id: info[2]
+                };
             } else {
                 return null;
             }
@@ -17441,7 +17451,7 @@ ${Results.join(``)}
             if (esgst.giveawayPath) {
                 setEghObserver(document);
             }
-            esgst.gameFeatures.push(function(games) {
+            esgst.gameFeatures.push(function (games) {
                 var savedGames;
                 savedGames = JSON.parse(GM_getValue(`games`));
                 highlightEghGames(games.apps, savedGames.apps, `apps`);
@@ -17455,24 +17465,26 @@ ${Results.join(``)}
         button = context.querySelector(`.sidebar__entry-insert, .ELGBButton`);
         if (button) {
             info = getGameInfo(context);
-            id = info.id;
-            type = info.type;
-            button.addEventListener(`click`, function() {
-                var games;
-                games = JSON.parse(GM_getValue(`games`));
-                if (!games[type][id] || !games[type][id].entered) {
-                createLock(`gameLock`, 300, function(deleteLock) {
+            if (info) {
+                id = info.id;
+                type = info.type;
+                button.addEventListener(`click`, function () {
+                    var games;
                     games = JSON.parse(GM_getValue(`games`));
-                    if (!games[type][id]) {
-                        games[type][id] = {};
+                    if (!games[type][id] || !games[type][id].entered) {
+                        createLock(`gameLock`, 300, function (deleteLock) {
+                            games = JSON.parse(GM_getValue(`games`));
+                            if (!games[type][id]) {
+                                games[type][id] = {};
+                            }
+                            games[type][id].entered = true;
+                            GM_setValue(`games`, JSON.stringify(games));
+                            deleteLock();
+                            loadGameFeatures(document);
+                        });
                     }
-                    games[type][id].entered = true;
-                    GM_setValue(`games`, JSON.stringify(games));
-                    deleteLock();
-                    loadGameFeatures(document);
                 });
-                }
-            });
+            }
         }
     }
 
@@ -17501,7 +17513,7 @@ ${Results.join(``)}
         function unhighlightGame() {
             icon.removeEventListener(`click`, unhighlightGame);
             icon.innerHTML = `<i class="fa fa-circle-o-notch fa-spin"></i>`;
-            createLock(`gameLock`, 300, function(deleteLock) {
+            createLock(`gameLock`, 300, function (deleteLock) {
                 var games;
                 games = JSON.parse(GM_getValue(`games`));
                 delete games[type][id].entered;
@@ -17517,7 +17529,7 @@ ${Results.join(``)}
     function loadGt() {
         var savedGames;
         if (esgst.sg) {
-            esgst.gameFeatures.push(function(games) {
+            esgst.gameFeatures.push(function (games) {
                 savedGames = JSON.parse(GM_getValue(`games`));
                 getGtGames(games.apps, savedGames.apps, `apps`);
                 getGtGames(games.subs, savedGames.subs, `subs`);
@@ -17542,42 +17554,42 @@ ${Results.join(``)}
     function addGtPanel(context, id, type) {
         var games, input, popup, set;
         if (!context.container.getElementsByClassName(`esgst-gt-panel`)[0]) {
-        insertHtml(context.heading.lastElementChild || context.heading, `afterEnd`, `
+            insertHtml(context.heading.lastElementChild || context.heading, `afterEnd`, `
             <a class="esgst-gt-panel" title="Add game tags.">
                 <i class="fa fa-tag"></i>
                 <span class="esgst-gt-tags"></span>
             </a>
-        `).addEventListener(`click`, function() {
-            popup = createPopup_v6(`fa-tag`, `Edit game tags for <span>${context.name}</span>:`, true);
-            input = insertHtml(popup.description, `beforeEnd`, `
+        `).addEventListener(`click`, function () {
+                    popup = createPopup_v6(`fa-tag`, `Edit game tags for <span>${context.name}</span>:`, true);
+                    input = insertHtml(popup.description, `beforeEnd`, `
                 <input type="text"/>
             `);
-            popup.description.insertAdjacentHTML(`beforeEnd`, createDescription(`Use commas to separate tags, for example: Tag1, Tag2, ...`));
-            set = createButtonSet(`green`, `grey`, `fa-check`, `fa-circle-o-notch fa-spin`, `Save`, `Saving...`, saveGtTags.bind(null, id, input, popup, type));
-            popup.description.appendChild(set.set);
-            input.addEventListener(`keydown`, function(event) {
-                if (event.key === `Enter`) {
-                    set.toggle();
-                    saveGtTags(id, input, popup, type, set.toggle);
-                }
-            });
-            popup.open(function() {
-                input.focus();
-                games = JSON.parse(GM_getValue(`games`));
-                if (games[type][id] && games[type][id].tags) {
-                    input.value = (games[type][id].tags.join && games[type][id].tags.join(`, `)) || games[type][id].tags;
-                }
-            });
-        });
+                    popup.description.insertAdjacentHTML(`beforeEnd`, createDescription(`Use commas to separate tags, for example: Tag1, Tag2, ...`));
+                    set = createButtonSet(`green`, `grey`, `fa-check`, `fa-circle-o-notch fa-spin`, `Save`, `Saving...`, saveGtTags.bind(null, id, input, popup, type));
+                    popup.description.appendChild(set.set);
+                    input.addEventListener(`keydown`, function (event) {
+                        if (event.key === `Enter`) {
+                            set.toggle();
+                            saveGtTags(id, input, popup, type, set.toggle);
+                        }
+                    });
+                    popup.open(function () {
+                        input.focus();
+                        games = JSON.parse(GM_getValue(`games`));
+                        if (games[type][id] && games[type][id].tags) {
+                            input.value = (games[type][id].tags.join && games[type][id].tags.join(`, `)) || games[type][id].tags;
+                        }
+                    });
+                });
         }
     }
 
     function saveGtTags(id, input, popup, type, callback) {
         var games, tags;
-        tags = input.value.replace(/(,\s*)+/g, function(match, p1, offset, string) {
+        tags = input.value.replace(/(,\s*)+/g, function (match, p1, offset, string) {
             return (((offset === 0) || (offset == (string.length - match.length))) ? `` : `, `);
         }).split(`, `);
-        createLock(`gameLock`, 300, function(closeLock) {
+        createLock(`gameLock`, 300, function (closeLock) {
             games = JSON.parse(GM_getValue(`games`));
             if (!games[type][id]) {
                 games[type][id] = {};
@@ -17594,7 +17606,7 @@ ${Results.join(``)}
         var html, i, n, prefix, suffix;
         prefix = `<span class=\"global__image-outer-wrap author_avatar is_icon\">`;
         suffix = `</span>`;
-        html = tags ? ((tags.join && tags.join(`, `)) || tags).replace(/^|,\s|$/g, function(match, offset, string) {
+        html = tags.length ? tags.join(`, `).replace(/^|,\s|$/g, function (match, offset, string) {
             return ((offset === 0) ? prefix : ((offset == (string.length - match.length)) ? suffix : (`${suffix}${prefix}`)));
         }) : "";
         if (!games) {
@@ -17611,45 +17623,45 @@ ${Results.join(``)}
 
     function loadGc() {
         if (esgst.sg) {
-        if (esgst.newGiveawayPath) {
-            if (esgst.gc_b && GM_getValue(`LastBundleSync`)) {
-                var table = document.getElementsByClassName(`js__autocomplete-data`)[0];
-                if (table) {
-                    var backup = table.innerHTML;
-                    var games = JSON.parse(GM_getValue(`games`));
-                    window.setInterval(function() {
-                        if (table.innerHTML && (backup != table.innerHTML)) {
-                            var matches = table.getElementsByClassName(`table__column--width-fill`);
-                            for (var i = 0, n = matches.length; i < n; ++i) {
-                                var info = getGameInfo(matches[i]);
-                                var id = info.id;
-                                var type = info.type;
-                                if (games[type][id] && ((esgst.gc_b_r && !games[type][id].bundled) || (!esgst.gc_b_r && games[type][id].bundled))) {
-                                    var key, text;
-                                    if (games[type][id].bundled) {
-                                        text = `Bundled`;
-                                    } else {
-                                        text = `Not Bundled`;
-                                    }
-                                    if (!matches[i].parentElement.getElementsByClassName(`esgst-gc bundled`)[0]) {
-                                        var html = `
+            if (esgst.newGiveawayPath) {
+                if (esgst.gc_b && GM_getValue(`LastBundleSync`)) {
+                    var table = document.getElementsByClassName(`js__autocomplete-data`)[0];
+                    if (table) {
+                        var backup = table.innerHTML;
+                        var games = JSON.parse(GM_getValue(`games`));
+                        window.setInterval(function () {
+                            if (table.innerHTML && (backup != table.innerHTML)) {
+                                var matches = table.getElementsByClassName(`table__column--width-fill`);
+                                for (var i = 0, n = matches.length; i < n; ++i) {
+                                    var info = getGameInfo(matches[i]);
+                                    var id = info.id;
+                                    var type = info.type;
+                                    if (games[type][id] && ((esgst.gc_b_r && !games[type][id].bundled) || (!esgst.gc_b_r && games[type][id].bundled))) {
+                                        var key, text;
+                                        if (games[type][id].bundled) {
+                                            text = `Bundled`;
+                                        } else {
+                                            text = `Not Bundled`;
+                                        }
+                                        if (!matches[i].parentElement.getElementsByClassName(`esgst-gc bundled`)[0]) {
+                                            var html = `
 <div class="nav__notification esgst-gc bundled">${text}</div>
 `;
-                                        matches[i].insertAdjacentHTML(`beforeEnd`, html);
+                                            matches[i].insertAdjacentHTML(`beforeEnd`, html);
+                                        }
                                     }
                                 }
+                                backup = table.innerHTML;
                             }
-                            backup = table.innerHTML;
-                        }
-                    }, 500);
+                        }, 500);
+                    }
                 }
+            } else {
+                esgst.gameFeatures.push(function (games) {
+                    getGcGames(games.apps, `apps`);
+                    getGcGames(games.subs, `subs`);
+                });
             }
-        } else {
-            esgst.gameFeatures.push(function(games) {
-                getGcGames(games.apps, `apps`);
-                getGcGames(games.subs, `subs`);
-            });
-        }
         }
     }
 
@@ -17673,15 +17685,15 @@ ${Results.join(``)}
             id = ids[i];
             if (!savedGames[type][id] || (typeof savedGames[type][id].lastCheck === `undefined`) || ((Date.now() - savedGames[type][id].lastCheck) > 604800000)) {
                 url = (type === `apps`) ? `appdetails?appids` : `packagedetails?packageids`;
-                request(null, false, `http://store.steampowered.com/api/${url}=${id}&cc=us`, function(response) {
+                request(null, false, `http://store.steampowered.com/api/${url}=${id}&cc=us`, function (response) {
                     if (esgst.gc_g_udt || esgst.gc_r) {
-                        request(null, false, `http://store.steampowered.com/${type.slice(0, -1)}/${id}`, function(response2) {
-                            getGcCategories(games, id, response, response2, type, function() {
+                        request(null, false, `http://store.steampowered.com/${type.slice(0, -1)}/${id}`, function (response2) {
+                            getGcCategories(games, id, response, response2, type, function () {
                                 window.setTimeout(addGcCategories, 0, games, ++i, ids, n, type);
                             });
                         });
                     } else {
-                        getGcCategories(games, id, response, null, type, function() {
+                        getGcCategories(games, id, response, null, type, function () {
                             window.setTimeout(addGcCategories, 0, games, ++i, ids, n, type);
                         });
                     }
@@ -17690,13 +17702,11 @@ ${Results.join(``)}
                 addGcCategory(games[id], savedGames[type][id]);
                 window.setTimeout(addGcCategories, 0, games, ++i, ids, n, type);
             }
-        } else if (esgst.gf && esgst.giveawaysPath) {
-            filterGfGiveaways();
         }
     }
 
     function getGcCategories(games, id, response, response2, type, callback) {
-        createLock(`gameLock`, 300, function(deleteLock) {
+        createLock(`gameLock`, 300, function (deleteLock) {
             var appId, count, i, match, n, responseHtml, responseJson, savedGames, summary, summaries, tag, tags;
             responseJson = JSON.parse(response.responseText)[id];
             savedGames = JSON.parse(GM_getValue(`games`));
@@ -17926,6 +17936,9 @@ ${Results.join(``)}
             panel = games[j].container.getElementsByClassName(`esgst-gc-panel`)[0];
             if (panel && !panel.innerHTML) {
                 panel.innerHTML = html;
+                if (esgst.gf && esgst.giveawaysPath) {
+                    filterGfGiveaways();
+                }
             }
         }
     }
@@ -17957,7 +17970,7 @@ ${Results.join(``)}
         MTButton = MTContainer.firstElementChild;
         MTBox = createPopout(MTContainer);
         MTBox.Popout.classList.add("MTBox");
-        MTBox.customRule = function(Target) {
+        MTBox.customRule = function (Target) {
             return (!MTContainer.contains(Target) && !Target.closest(".MTUserCheckbox") && !Target.closest(".MTGameCheckbox"));
         };
         Context = SM ? SM.Popup.Options : MTBox.Popout;
@@ -17994,7 +18007,7 @@ ${Results.join(``)}
                 "A [*] tag means that the selected users / games have individual tags (not shared between all of them). Removing the [*] tag will delete those individual tags."
             )
         );
-        createButton(MT.Tag, "fa-tags", "Multi-Tag", "", "", function(Callback) {
+        createButton(MT.Tag, "fa-tags", "Multi-Tag", "", "", function (Callback) {
             var Tags, Shared, I, N, UserID, User, SavedUser, SavedTags, J, NumTags, SavedTag, SavedGames, SavedGame, Game, Key, Individual;
             Callback();
             if (!MTButton.classList.contains("rhBusy")) {
@@ -18039,7 +18052,7 @@ ${Results.join(``)}
                     }
                 }
                 for (Key in Tags) {
-                    Shared = Shared.filter(function(N) {
+                    Shared = Shared.filter(function (N) {
                         if (Tags[Key].indexOf(N) >= 0) {
                             return true;
                         } else {
@@ -18058,15 +18071,15 @@ ${Results.join(``)}
                 }
                 Popup.TextInput.value = Shared.length ? (Shared.join(", ") + (Individual ? ", [*]" : "")) : (Individual ? "[*]" : "");
             }
-            Popup.popUp(function() {
+            Popup.popUp(function () {
                 Popup.TextInput.focus();
             });
         });
-        createButton(Popup.Button, "fa-check", "Save", "fa-times-circle", "Cancel", function(Callback) {
+        createButton(Popup.Button, "fa-check", "Save", "fa-times-circle", "Cancel", function (Callback) {
             var Shared, I, Individual, Keys;
             MT.Canceled = false;
             MTButton.classList.add("rhBusy");
-            Shared = Popup.TextInput.value.replace(/(,\s*)+/g, function(Match, P1, Offset, String) {
+            Shared = Popup.TextInput.value.replace(/(,\s*)+/g, function (Match, P1, Offset, String) {
                 return (((Offset === 0) || (Offset == (String.length - Match.length))) ? "" : ", ");
             }).split(", ");
             I = Shared.indexOf("[*]");
@@ -18078,27 +18091,27 @@ ${Results.join(``)}
             }
             Shared = Shared.join(", ");
             Keys = Object.keys(MT.UserTags);
-            saveMTUserTags(MT, 0, Keys.length, Keys, Individual, Shared, MT.UserTags, function() {
+            saveMTUserTags(MT, 0, Keys.length, Keys, Individual, Shared, MT.UserTags, function () {
                 Keys = Object.keys(MT.GameTags);
-                saveMTGameTags(MT, 0, Keys.length, Keys, Individual, Shared, MT.GameTags, function() {
+                saveMTGameTags(MT, 0, Keys.length, Keys, Individual, Shared, MT.GameTags, function () {
                     MTButton.classList.remove("rhBusy");
                     MT.Progress.innerHTML = MT.OverallProgress.innerHTML = "";
                     Callback();
                     Popup.Close.click();
                 });
             });
-        }, function() {
+        }, function () {
             clearInterval(MT.Request);
             clearInterval(MT.Save);
             MT.Canceled = true;
-            setTimeout(function() {
+            setTimeout(function () {
                 MT.Progress.innerHTML = MT.OverallProgress.innerHTML = "";
             }, 500);
             MTButton.classList.remove("rhBusy");
         });
         MT.Progress = Popup.Progress;
         MT.OverallProgress = Popup.OverallProgress;
-        MTButton.addEventListener("click", function() {
+        MTButton.addEventListener("click", function () {
             if (MTBox.Popout.classList.contains("rhHidden")) {
                 MTBox.popOut(MTContainer);
             } else {
@@ -18108,7 +18121,7 @@ ${Results.join(``)}
     }
 
     function setMTCheckboxes(Element, Checkbox, Selection, Type, InsertionPosition, Position, MT) {
-        Element.addEventListener("click", function() {
+        Element.addEventListener("click", function () {
             var Key, Matches, I, N, Context, MTCheckbox;
             if (Checkbox.checked) {
                 addMTCheckboxes(Selection, Type, InsertionPosition, Position, MT);
@@ -18136,7 +18149,7 @@ ${Results.join(``)}
     }
 
     function setMTCheckbox(Type, Context, MT, Key, Checkbox) {
-        Context.addEventListener("click", function() {
+        Context.addEventListener("click", function () {
             checkMTCheckbox(MT, Type, Key, Checkbox);
         });
     }
@@ -18176,7 +18189,7 @@ ${Results.join(``)}
     }
 
     function setMTSelect(Element, MT, Call) {
-        Element.addEventListener("click", function() {
+        Element.addEventListener("click", function () {
             selectMTCheckboxes(MT.UserCheckboxes, Call, MT, "User");
             selectMTCheckboxes(MT.GameCheckboxes, Call, MT, "Game");
         });
@@ -18207,8 +18220,8 @@ ${Results.join(``)}
                     Tags: Individual ? (Shared + ", " + Tags[UserID]) : Shared
                 };
                 User[esgst.sg ? "Username" : "SteamID64"] = UserID;
-                queueSave(MT, function() {
-                    saveUser(User, MT, function() {
+                queueSave(MT, function () {
+                    saveUser(User, MT, function () {
                         GM_setValue("LastSave", 0);
                         addPUTTags(UserID, getUser(User).Tags);
                         setTimeout(saveMTUserTags, 0, MT, ++I, N, Keys, Individual, Shared, Tags, Callback);
@@ -18341,16 +18354,16 @@ ${esgst.sg ? `
         }
         var button = menu.lastElementChild;
         button.addEventListener(`click`, toggleHeaderButton);
-        SMChangelog.addEventListener(`click`, function() {
-            makeRequest(null, `https://raw.githubusercontent.com/revilheart/ESGST/master/changelog.txt`, null, function(response) {
+        SMChangelog.addEventListener(`click`, function () {
+            makeRequest(null, `https://raw.githubusercontent.com/revilheart/ESGST/master/changelog.txt`, null, function (response) {
                 var changelogPopup = createPopup();
                 changelogPopup.Icon.classList.add(`fa-file-text-o`);
                 changelogPopup.Title.textContent = `Changelog`;
-                var html = response.responseText.replace(/\/\*\n\s\*(.+)\n\s\*\//g, function(m, p1) {
+                var html = response.responseText.replace(/\/\*\n\s\*(.+)\n\s\*\//g, function (m, p1) {
                     return `<strong>${p1}</strong>`;
                 }).replace(/\* (.+)/g, function (m, p1) {
                     return `<li>${p1}</li>`;
-                }).replace(/\n/g, `<br/>`).replace(/#(\d+)/g, function(m, p1) {
+                }).replace(/\n/g, `<br/>`).replace(/#(\d+)/g, function (m, p1) {
                     return `<a href="https://github.com/revilheart/ESGST/issues/${p1}">#${p1}</a>`;
                 });
                 changelogPopup.Description.insertAdjacentHTML(`afterBegin`, html);
@@ -18358,8 +18371,8 @@ ${esgst.sg ? `
                 changelogPopup.popUp();
             });
         });
-        SMCheckUpdate.addEventListener(`click`, function() {
-            makeRequest(null, `https://raw.githubusercontent.com/revilheart/ESGST/master/ESGST.meta.js`, null, function(response) {
+        SMCheckUpdate.addEventListener(`click`, function () {
+            makeRequest(null, `https://raw.githubusercontent.com/revilheart/ESGST/master/ESGST.meta.js`, null, function (response) {
                 var version = response.responseText.match(/@version (.+)/);
                 if (version) {
                     if (version[1] != GM_info.script.version) {
@@ -18404,7 +18417,7 @@ ${esgst.sg ? `
         esgst.ged.popup = createPopup();
         esgst.ged.popup.Icon.classList.add(`fa-star`);
         esgst.ged.popup.Title.textContent = `Decrypted Giveaways`;
-        esgst.ged.button.addEventListener(`click`, function() {
+        esgst.ged.button.addEventListener(`click`, function () {
             esgst.ged.popup.popUp();
         });
         getEncryptedGiveaways(document);
@@ -18448,7 +18461,7 @@ ${esgst.sg ? `
                     window.setTimeout(getEncryptedGiveaway, 0, ++i, n, matches);
                 }
             } else {
-                makeRequest(null, `/giveaway/${id}/`, esgst.ged.popup.Progress, function(response) {
+                makeRequest(null, `/giveaway/${id}/`, esgst.ged.popup.Progress, function (response) {
                     var responseHtml = DOM.parse(response.responseText);
                     var container = responseHtml.getElementsByClassName(`featured__outer-wrap--giveaway`)[0];
                     if (container) {
@@ -18593,7 +18606,7 @@ ${avatar.outerHTML}
             URL: "/discussion/TDyzv/"
         }]));
         SMButton = Sidebar.getElementsByClassName("SMButton")[0];
-        SMButton.addEventListener("click", function() {
+        SMButton.addEventListener("click", function () {
             window.location.hash = "ESGST";
             window.location.reload();
         });
@@ -18659,26 +18672,26 @@ ${avatar.outerHTML}
                     "</div>"
                 )
             },
-                              {
-                                  Title: "Sync Bundle List",
-                                  HTML: (
-                                      "<div class=\"form__sync\">" +
-                                      "    <div class=\"form__sync-data\">" +
-                                      "        <div class=\"notification notification--warning SMLastBundleSync\">" +
-                                      "            <i class=\"fa fa-question-circle\"></i> Never synced." +
-                                      "        </div>" +
-                                      "    </div>" +
-                                      "    <div class=\"form__submit-button SMBundleSync\">" +
-                                      "        <i class=\"fa fa-refresh\"></i> Sync" +
-                                      "    </div>" +
-                                      "</div>"
-                                  )
-                              }, {
-                                  Title: "Steam API Key",
-                                  HTML: "<input class=\"SMAPIKey\" type=\"text\"/>" +
-                                  createDescription("This is optional for Entries Remover (syncs new games faster). " +
-                                                    "Get a Steam API Key <a class=\"rhBold\" href=\"https://steamcommunity.com/dev/apikey\" target=\"_blank\">here</a>.")
-                              }]) +
+            {
+                Title: "Sync Bundle List",
+                HTML: (
+                    "<div class=\"form__sync\">" +
+                    "    <div class=\"form__sync-data\">" +
+                    "        <div class=\"notification notification--warning SMLastBundleSync\">" +
+                    "            <i class=\"fa fa-question-circle\"></i> Never synced." +
+                    "        </div>" +
+                    "    </div>" +
+                    "    <div class=\"form__submit-button SMBundleSync\">" +
+                    "        <i class=\"fa fa-refresh\"></i> Sync" +
+                    "    </div>" +
+                    "</div>"
+                )
+            }, {
+                Title: "Steam API Key",
+                HTML: "<input class=\"SMAPIKey\" type=\"text\"/>" +
+                createDescription("This is optional for Entries Remover (syncs new games faster). " +
+                    "Get a Steam API Key <a class=\"rhBold\" href=\"https://steamcommunity.com/dev/apikey\" target=\"_blank\">here</a>.")
+            }]) +
             "</div>";
         createSMButtons([{
             Check: true,
@@ -18755,7 +18768,7 @@ ${avatar.outerHTML}
             SMLastSync.classList.add("notification--success");
             SMLastSync.innerHTML = "<i class=\"fa fa-check-circle\"></i> Last synced " + (new Date(LastSync).toLocaleString()) + ".";
         }
-        checkSync(true, function(CurrentDate) {
+        checkSync(true, function (CurrentDate) {
             SMLastSync.classList.remove("notification--warning");
             SMLastSync.classList.add("notification--success");
             SMLastSync.innerHTML =
@@ -18767,7 +18780,7 @@ ${avatar.outerHTML}
             SMLastBundleSync.classList.add("notification--success");
             SMLastBundleSync.innerHTML = "<i class=\"fa fa-check-circle\"></i> Last synced " + (new Date(LastBundleSync).toLocaleString()) + ".";
         }
-        document.getElementsByClassName("SMBundleSync")[0].addEventListener("click", function() {
+        document.getElementsByClassName("SMBundleSync")[0].addEventListener("click", function () {
             if (((new Date().getTime()) - LastBundleSync) > 604800000) {
                 syncBundleList();
             } else {
@@ -18778,10 +18791,10 @@ ${avatar.outerHTML}
         if (key) {
             SMAPIKey.value = key;
         }
-        SMSyncFrequency.addEventListener("change", function() {
+        SMSyncFrequency.addEventListener("change", function () {
             GM_setValue("SyncFrequency", SMSyncFrequency.selectedIndex);
         });
-        SMManageData.addEventListener("click", function() {
+        SMManageData.addEventListener("click", function () {
             var Popup, SM, SMImport, SMExport, SMDelete;
             Popup = createPopup(true);
             Popup.Icon.classList.add("fa-cog");
@@ -18789,20 +18802,21 @@ ${avatar.outerHTML}
             SM = {
                 Names: {
                     Users: "U",
-                    Games: "G",
+                    games: `G`,
                     Groups: "GP",
                     Comments: "C",
                     Comments_ST: "C_ST",
                     Emojis: "E",
                     Rerolls: "R",
-                    CommentHistory: "CH",
+                    sgCommentHistory: `CH_SG`,
+                    stCommentHistory: `CH_ST`,
                     StickiedGroups: "SG",
                     Templates: "T",
                     decryptedGiveaways: "DG"
                 }
             };
             createOptions(Popup.Options, SM, [{
-                Check: function() {
+                Check: function () {
                     return true;
                 },
                 Description: "Users data.",
@@ -18811,16 +18825,34 @@ ${avatar.outerHTML}
                 Key: "U",
                 ID: "SM_U"
             }, {
-                Check: function() {
-                    return false;// true
+                Check: function () {
+                    return true;
                 },
-                Description: "Games data.",
-                Title: "Includes game tags and Entered Games Highlighter data.",
-                Name: "Games",
-                Key: "G",
-                ID: "SM_G"
+                Description: "Game Tags data.",
+                Title: "Includes Game Tags data.",
+                Name: "gt",
+                Key: "GT",
+                ID: "SM_GT"
             }, {
-                Check: function() {
+                Check: function () {
+                    return true;
+                },
+                Description: "Entered Games Highlighter data.",
+                Title: "Includes Entered Games Highlighter data.",
+                Name: "egh",
+                Key: "EGH",
+                ID: "SM_EGH"
+            }, {
+                Check: function () {
+                    return true;
+                },
+                Description: "Game Categories data.",
+                Title: "Includes Game Categories data.",
+                Name: "gc",
+                Key: "GC",
+                ID: "SM_GC"
+            }, {
+                Check: function () {
                     return true;
                 },
                 Description: "Groups data.",
@@ -18829,7 +18861,7 @@ ${avatar.outerHTML}
                 Key: "GP",
                 ID: "SM_GP"
             }, {
-                Check: function() {
+                Check: function () {
                     return true;
                 },
                 Description: "Comments data (SteamGifts).",
@@ -18838,7 +18870,7 @@ ${avatar.outerHTML}
                 Key: "C",
                 ID: "SM_C"
             }, {
-                Check: function() {
+                Check: function () {
                     return true;
                 },
                 Description: "Comments data (SteamTrades).",
@@ -18847,7 +18879,7 @@ ${avatar.outerHTML}
                 Key: "C_ST",
                 ID: "SM_C_ST"
             }, {
-                Check: function() {
+                Check: function () {
                     return true;
                 },
                 Description: "Emojis data.",
@@ -18856,7 +18888,7 @@ ${avatar.outerHTML}
                 Key: "E",
                 ID: "SM_E"
             }, {
-                Check: function() {
+                Check: function () {
                     return true;
                 },
                 Description: "Rerolls data.",
@@ -18865,16 +18897,25 @@ ${avatar.outerHTML}
                 Key: "R",
                 ID: "SM_R"
             }, {
-                Check: function() {
-                    return false;// true
+                Check: function () {
+                    return true;
                 },
-                Description: "Comment history data.",
-                Title: "Includes Comment History data.",
-                Name: "CommentHistory",
-                Key: "CH",
-                ID: "SM_CH"
+                Description: "SteamGifts comment history data.",
+                Title: "Includes SteamGifts' comment History data.",
+                Name: "sgCommentHistory",
+                Key: "CH_SG",
+                ID: "SM_CH_SG"
             }, {
-                Check: function() {
+                Check: function () {
+                    return true;
+                },
+                Description: "SteamTrades comment history data.",
+                Title: "Includes SteamTrades' comment History data.",
+                Name: "stCommentHistory",
+                Key: "CH_ST",
+                ID: "SM_CH_ST"
+            }, {
+                Check: function () {
                     return true;
                 },
                 Description: "Stickied groups data.",
@@ -18883,7 +18924,7 @@ ${avatar.outerHTML}
                 Key: "SG",
                 ID: "SM_SG"
             }, {
-                Check: function() {
+                Check: function () {
                     return true;
                 },
                 Description: "Templates data.",
@@ -18892,7 +18933,7 @@ ${avatar.outerHTML}
                 Key: "T",
                 ID: "SM_T"
             }, {
-                Check: function() {
+                Check: function () {
                     return true;
                 },
                 Description: "Decrypted giveaways data.",
@@ -18901,7 +18942,7 @@ ${avatar.outerHTML}
                 Key: "DG",
                 ID: "SM_DG"
             }, {
-                Check: function() {
+                Check: function () {
                     return true;
                 },
                 Description: "Settings data.",
@@ -18910,7 +18951,7 @@ ${avatar.outerHTML}
                 Key: "S",
                 ID: "SM_S"
             }, {
-                Check: function() {
+                Check: function () {
                     return true;
                 },
                 Description: "Merge current data with the imported one.",
@@ -18927,22 +18968,22 @@ ${avatar.outerHTML}
             SMImport = Popup.Button.firstElementChild;
             SMExport = SMImport.nextElementSibling;
             SMDelete = SMExport.nextElementSibling;
-            createButton(SMImport, "fa-arrow-circle-up", "Import", "", "", function(Callback) {
+            createButton(SMImport, "fa-arrow-circle-up", "Import", "", "", function (Callback) {
                 Callback();
                 importSMData(SM);
             });
-            createButton(SMExport, "fa-arrow-circle-down", "Export", "", "", function(Callback) {
+            createButton(SMExport, "fa-arrow-circle-down", "Export", "", "", function (Callback) {
                 Callback();
                 exportSMData(SM);
             });
-            createButton(SMDelete, "fa-trash", "Delete", "", "", function(Callback) {
+            createButton(SMDelete, "fa-trash", "Delete", "", "", function (Callback) {
                 Callback();
                 deleteSMData(SM);
             });
             Popup.popUp();
         });
         if (SMManageTags) {
-            SMManageTags.addEventListener("click", function() {
+            SMManageTags.addEventListener("click", function () {
                 var Popup, MT, SMManageTagsPopup;
                 Popup = createPopup(true);
                 Popup.Icon.classList.add("fa-cog");
@@ -18957,7 +18998,7 @@ ${avatar.outerHTML}
                     "afterEnd",
                     createDescription("Filter users by tag (use commas to separate filters, for example: Filter1, Filter2, ...). Filters are not case sensitive.")
                 );
-                SMManageTagsPopup = Popup.popUp(function() {
+                SMManageTagsPopup = Popup.popUp(function () {
                     var SavedUsers, MTUsers, Tags, I, N, Context, Username, SavedTags, J, NumTags, Key;
                     Popup.TextInput.focus();
                     SavedUsers = GM_getValue("Users");
@@ -18990,7 +19031,7 @@ ${avatar.outerHTML}
                     }
                     addMTCheckboxes(MTUsers, "User", "beforeBegin", "previousElementSibling", MT);
                     loadEndlessFeatures(Popup.Results);
-                    Popup.TextInput.addEventListener("input", function() {
+                    Popup.TextInput.addEventListener("input", function () {
                         var MTUsers, Matches, Filters, Context, Username;
                         selectMTCheckboxes(MT.UserCheckboxes, "uncheck", MT, "User");
                         removeMTCheckboxes("User", MT);
@@ -19043,7 +19084,7 @@ ${avatar.outerHTML}
         if (SMCommentHistory) {
             setSMCommentHistory(SMCommentHistory);
         }
-        SMAPIKey.addEventListener("input", function() {
+        SMAPIKey.addEventListener("input", function () {
             GM_setValue(`steamApiKey`, SMAPIKey.value);
         });
     }
@@ -19056,9 +19097,9 @@ ${avatar.outerHTML}
             "beforeEnd",
             "<span></span>" + (ID.match(/_/) ? (
                 "<span> " + Feature.name + "</span>") : (
-                "<span class=\"popup__actions\">" +
-                "    <a href=\"https://github.com/rafaelgs18/ESGST#" + Feature.name.replace(/(-|\s)/g, "-").replace(/\//g, "").toLowerCase() + "\" target=\"_blank\">" + Feature.name + "</a>" +
-                "</span>")) +
+                    "<span class=\"popup__actions\">" +
+                    "    <a href=\"https://github.com/rafaelgs18/ESGST#" + Feature.name.replace(/(-|\s)/g, "-").replace(/\//g, "").toLowerCase() + "\" target=\"_blank\">" + Feature.name + "</a>" +
+                    "</span>")) +
             "<div class=\"form__row__indent SMFeatures rhHidden\"></div>"
         );
         Checkbox = Menu.firstElementChild;
@@ -19084,7 +19125,7 @@ Background: <input type="color" value="${bgColor}">
             var bgColorContext = colorContext.nextElementSibling;
             addColorObserver(colorContext, Feature.id, `color`);
             addColorObserver(bgColorContext, Feature.id, `bgColor`);
-            bgColorContext.nextElementSibling.addEventListener(`click`, function() {
+            bgColorContext.nextElementSibling.addEventListener(`click`, function () {
                 colorContext.value = esgst.defaultValues[`${Feature.id}_color`];
                 GM_setValue(`${Feature.id}_color`, colorContext.value);
                 bgColorContext.value = esgst.defaultValues[`${Feature.id}_bgColor`];
@@ -19094,7 +19135,7 @@ Background: <input type="color" value="${bgColor}">
         if (CheckboxInput.checked && SMFeatures.children.length) {
             SMFeatures.classList.remove("rhHidden");
         }
-        Checkbox.addEventListener("click", function() {
+        Checkbox.addEventListener("click", function () {
             GM_setValue(ID, CheckboxInput.checked);
             if (CheckboxInput.checked && SMFeatures.children.length) {
                 SMFeatures.classList.remove("rhHidden");
@@ -19106,7 +19147,7 @@ Background: <input type="color" value="${bgColor}">
     }
 
     function addColorObserver(context, id, key) {
-        context.addEventListener(`change`, function() {
+        context.addEventListener(`change`, function () {
             GM_setValue(`${id}_${key}`, context.value);
         });
     }
@@ -19147,12 +19188,12 @@ Background: <input type="color" value="${bgColor}">
         File = document.createElement("input");
         File.type = "file";
         File.click();
-        File.addEventListener("change", function() {
+        File.addEventListener("change", function () {
             File = File.files[0];
             if (File.name.match(/\.json/)) {
                 Reader = new FileReader();
                 Reader.readAsText(File);
-                Reader.onload = function() {
+                Reader.onload = function () {
                     var Key, Setting;
                     File = JSON.parse(Reader.result);
                     if ((File.rhSGST && (File.rhSGST == "Data")) || (File.ESGST && (File.ESGST == "Data"))) {
@@ -19248,7 +19289,9 @@ Background: <input type="color" value="${bgColor}">
                                             }
                                         }
                                         GM_setValue(`Users`, savedUsers);
-                                    } else if (Key.match(/^(Games|Comments|Comments_ST)$/) && SM[SM.Names[Key]].checked) {
+                                    } else if (Key.match(/^(games|Games)$`/)) {
+                                        importGamesAndMerge(File, Key, SM);
+                                    } else if (Key.match(/^(Comments|Comments_ST)$/) && SM[SM.Names[Key]].checked) {
                                         saved = GM_getValue(Key);
                                         for (var key in File.Data[Key]) {
                                             value = File.Data[Key][key];
@@ -19285,36 +19328,8 @@ Background: <input type="color" value="${bgColor}">
                                             }
                                         }
                                         GM_setValue(`Emojis`, savedEmojis);
-                                    } else if (Key == `CommentHistory` && SM.CH.checked) {
-                                        var savedCommentsHtml = GM_getValue(`CommentHistory`);
-                                        var savedComments = DOM.parse(savedCommentsHtml).getElementsByTagName(`div`);
-                                        var comments = DOM.parse(File.Data.CommentHistory).getElementsByTagName(`div`);
-                                        var newComments = [];
-                                        i = 0;
-                                        j = 0;
-                                        var nS = savedComments.length, nC = comments.length;
-                                        while (i < nS && j < nC) {
-                                            var savedTimestamp = parseInt(savedComments[i].querySelector(`[data-timestamp]`).getAttribute(`data-timestamp`));
-                                            var timestamp = parseInt(comments[j].querySelector(`[data-timestamp]`).getAttribute(`data-timestamp`));
-                                            if (savedTimestamp > timestamp) {
-                                                newComments.push(savedComments[i].outerHTML);
-                                                ++i;
-                                            } else {
-                                                if (savedCommentsHtml.indexOf(comments[j].outerHTML) < 0) {
-                                                    newComments.push(comments[j].outerHTML);
-                                                }
-                                                ++j;
-                                            }
-                                        }
-                                        while (i < nS) {
-                                            newComments.push(savedComments[i].outerHTML);
-                                            ++i;
-                                        }
-                                        while (j < nC) {
-                                            newComments.push(comments[j].outerHTML);
-                                            ++j;
-                                        }
-                                        GM_setValue(`CommentHistory`, newComments.join(``));
+                                    } else if (Key.match(/^(CommentHistory|sgCommentHistory|stCommentHistory)$/)) {
+                                        importCommentHistoryAndMerge(File, Key, SM);
                                     } else if (Key.match(/^(Rerolls|StickiedGroups)$/) && SM[SM.Names[Key]].checked) {
                                         saved = GM_getValue(Key);
                                         for (i = 0, n = File.Data[Key].length; i < n; ++i) {
@@ -19334,10 +19349,14 @@ Background: <input type="color" value="${bgColor}">
                                             }
                                         }
                                         GM_setValue(`Templates`, savedTemplates);
-                                    } else if (SM[SM.Names[Key]].checked) {
+                                    } else if (SM.Names[Key] && SM[SM.Names[Key]] && SM[SM.Names[Key]].checked) {
                                         GM_setValue(Key, File.Data[Key]);
                                     }
-                                } else if (SM[SM.Names[Key]].checked) {
+                                } else if (Key.match(/^(games|Games)$`/)) {
+                                    importGames(File, Key, SM);
+                                } else if (Key.match(/^(CommentHistory|sgCommentHistory|stCommentHistory)$/)) {
+                                    importCommentHistory(File, Key, SM);
+                                } else if (SM.Names[Key] && SM[SM.Names[Key]] && SM[SM.Names[Key]].checked) {
                                     GM_setValue(Key, File.Data[Key]);
                                 }
                             }
@@ -19353,13 +19372,310 @@ Background: <input type="color" value="${bgColor}">
         });
     }
 
+    function importCommentHistoryAndMerge(File, kk, SM) {
+        createLock(`${kk === `CommentHistory` ? `sgCommentHistory` : kk}Lock`, 300, function (deleteLock) {
+            var i, j, nS, nC, k, nK, newComments, comments, savedComments;
+            savedComments = JSON.parse(GM_getValue(kk === `CommentHistory` ? `sgCommentHistory` : kk));
+            newComments = savedComments;
+            if (kk === `CommentHistory` && SM.CH_SG.checked) {
+                newComments = [];
+                comments = getCommentHistoryStorageV6(File.Data.CommentHistory);
+                i = 0;
+                j = 0;
+                nS = savedComments.length;
+                nC = comments.length;
+                while (i < nS && j < nC) {
+                    if (savedComments[i].timestamp > comments[j].timestamp) {
+                        newComments.push(savedComments[i]);
+                        ++i;
+                    } else {
+                        for (k = 0, nK = savedComments.length; k < nK && savedComments[k].id !== comments[j].id; ++k);
+                        if (k >= nK) {
+                            newComments.push(comments[j]);
+                        }
+                        ++j;
+                    }
+                }
+                while (i < nS) {
+                    newComments.push(savedComments[i]);
+                    ++i;
+                }
+                while (j < nC) {
+                    for (k = 0, nK = savedComments.length; k < nK && savedComments[k].id !== comments[j].id; ++k);
+                    if (k >= nK) {
+                        newComments.push(comments[j]);
+                    }
+                    ++j;
+                }
+                savedComments = newComments;
+            } else if ((kk === `sgCommentHistory` && SM.CH_SG.checked) || (kk === `stCommentHistory` && SM.CH_ST.checked)) {
+                newComments = [];
+                comments = File.Data[kk];
+                i = 0;
+                j = 0;
+                nS = savedComments.length;
+                nC = comments.length;
+                while (i < nS && j < nC) {
+                    if (savedComments[i].timestamp > comments[j].timestamp) {
+                        newComments.push(savedComments[i]);
+                        ++i;
+                    } else {
+                        for (k = 0, nK = savedComments.length; k < nK && savedComments[k].id !== comments[j].id; ++k);
+                        if (k >= nK) {
+                            newComments.push(comments[j]);
+                        }
+                        ++j;
+                    }
+                }
+                while (i < nS) {
+                    newComments.push(savedComments[i]);
+                    ++i;
+                }
+                while (j < nC) {
+                    for (k = 0, nK = savedComments.length; k < nK && savedComments[k].id !== comments[j].id; ++k);
+                    if (k >= nK) {
+                        newComments.push(comments[j]);
+                    }
+                    ++j;
+                }
+            }
+            GM_setValue(kk === `CommentHistory` ? `sgCommentHistory` : kk, JSON.stringify(newComments));
+            deleteLock();
+        });
+    }
+
+    function importCommentHistory(File, Key, SM) {
+        var key = `${Key === `CommentHistory` ? `sgCommentHistory` : Key}`;
+        if ((key === `sgCommentHistory` && SM.CH_SG.checked) || (key === `stCommentHistory` && SM.CH_ST.checked)) {
+            createLock(`${key}Lock`, 300, function (deleteLock) {
+                GM_setValue(key, JSON.stringify(Key === `CommentHistory` ? getCommentHistoryStorageV6(File.Data.CommentHistory) : File.Data[Key]));
+                deleteLock();
+            });
+        }
+    }
+
+    function importGamesAndMerge(File, Key, SM) {
+        var i, n, types, categories, savedGames, games, type, id;
+        createLock(`gameLock`, 300, function (deleteLock) {
+            types = { apps: ``, subs: `` };
+            categories = [`rating`, `bundled`, `owned`, `wishlisted`, `ignored`, `tradingCards`, `achievements`, `multiplayer`, `steamCloud`, `linux`, `mac`, `dlc`, `genres`];
+            savedGames = JSON.parse(GM_getValue(`games`));
+            if (Key === `Games`) {
+                games = getGameStorageV6(File.Data.Games);
+                for (type in types) {
+                    for (id in games[type]) {
+                        if (savedGames[type][id]) {
+                            if (games[type][id].tags && SM.GT.checked) {
+                                if (!Array.isArray(games[type][id].tags)) {
+                                    games[type][id].tags = games[type][id].tags.split(`, `);
+                                }
+                                if (savedGames[type][id].tags) {
+                                    for (i = 0, n = games[type][id].tags.length; i < n; ++i) {
+                                        if (savedGames[type][id].tags.indexOf(games[type][id].tags[i]) < 0) {
+                                            savedGames[type][id].tags.push(games[type][id].tags[i]);
+                                        }
+                                    }
+                                } else {
+                                    savedGames[type][id].tags = games[type][id].tags;
+                                }
+                            }
+                            if (games[type][id].entered && SM.EGH.checked) {
+                                savedGames[type][id].entered = true;
+                            }
+                            if (games[type][id].lastCheck && SM.GC.checked) {
+                                if (savedGames[type][id].lastCheck) {
+                                    if (games[type][id].lastCheck > savedGames[type][id].lastCheck) {
+                                        savedGames[type][id].lastCheck = games[type][id].lastCheck;
+                                        for (i = 0, n = categories.length; i < n; ++i) {
+                                            savedGames[type][id][categories[i]] = games[type][id][categories[i]];
+                                        }
+                                    }
+                                } else {
+                                    savedGames[type][id].lastCheck = games[type][id].lastCheck;
+                                    for (i = 0, n = categories.length; i < n; ++i) {
+                                        savedGames[type][id][categories[i]] = games[type][id][categories[i]];
+                                    }
+                                }
+                            }
+                        } else if (SM.GT.checked || SM.EGH.checked || SM.GC.checked) {
+                            if (!savedGames[type][id]) {
+                                savedGames[type][id] = {};
+                            }
+                            if (games[type][id].tags && SM.GT.checked) {
+                                savedGames[type][id].tags = games[type][id].tags;
+                            }
+                            if (games[type][id].entered && SM.EGH.checked) {
+                                savedGames[type][id].entered = true;
+                            }
+                            if (games[type][id].lastCheck && SM.GC.checked) {
+                                savedGames[type][id].lastCheck = games[type][id].lastCheck;
+                                for (i = 0, n = categories.length; i < n; ++i) {
+                                    savedGames[type][id][categories[i]] = games[type][id][categories[i]];
+                                }
+                            }
+                        }
+                    }
+                }
+            } else {
+                games = File.Data.games;
+                for (type in types) {
+                    for (id in games[type]) {
+                        if (savedGames[type][id]) {
+                            if (games[type][id].tags && SM.GT.checked) {
+                                if (!Array.isArray(games[type][id].tags)) {
+                                    games[type][id].tags = games[type][id].tags.split(`, `);
+                                }
+                                if (savedGames[type][id].tags) {
+                                    for (i = 0, n = games[type][id].tags.length; i < n; ++i) {
+                                        if (savedGames[type][id].tags.indexOf(games[type][id].tags[i]) < 0) {
+                                            savedGames[type][id].tags.push(games[type][id].tags[i]);
+                                        }
+                                    }
+                                } else {
+                                    savedGames[type][id].tags = games[type][id].tags;
+                                }
+                            }
+                            if (games[type][id].entered && SM.EGH.checked) {
+                                savedGames[type][id].entered = true;
+                            }
+                            if (games[type][id].lastCheck && SM.GC.checked) {
+                                if (savedGames[type][id].lastCheck) {
+                                    if (games[type][id].lastCheck > savedGames[type][id].lastCheck) {
+                                        savedGames[type][id].lastCheck = games[type][id].lastCheck;
+                                        for (i = 0, n = categories.length; i < n; ++i) {
+                                            savedGames[type][id][categories[i]] = games[type][id][categories[i]];
+                                        }
+                                    }
+                                } else {
+                                    savedGames[type][id].lastCheck = games[type][id].lastCheck;
+                                    for (i = 0, n = categories.length; i < n; ++i) {
+                                        savedGames[type][id][categories[i]] = games[type][id][categories[i]];
+                                    }
+                                }
+                            }
+                        } else if (SM.GT.checked || SM.EGH.checked || SM.GC.checked) {
+                            if (!savedGames[type][id]) {
+                                savedGames[type][id] = {};
+                            }
+                            if (games[type][id].tags && SM.GT.checked) {
+                                savedGames[type][id].tags = games[type][id].tags;
+                            }
+                            if (games[type][id].entered && SM.EGH.checked) {
+                                savedGames[type][id].entered = true;
+                            }
+                            if (games[type][id].lastCheck && SM.GC.checked) {
+                                savedGames[type][id].lastCheck = games[type][id].lastCheck;
+                                for (i = 0, n = categories.length; i < n; ++i) {
+                                    savedGames[type][id][categories[i]] = games[type][id][categories[i]];
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            GM_setValue(`games`, JSON.stringify(savedGames));
+            deleteLock();
+        });
+    }
+
+    function importGames(File, Key, SM) {
+        createLock(`gameLock`, 300, function (deleteLock) {
+            var games, savedGames;
+            if (Key === `Games`) {
+                games = getGameStorageV6(File.Data.Games);
+            } else {
+                games = File.Data.games;
+            }
+            if (SM.GT.checked && SM.EGH.checked && SM.GC.checked) {
+                GM_setValue(`games`, JSON.stringify(games));
+            } else {
+                savedGames = JSON.parse(GM_getValue(`games`));
+                if (SM.GT.checked) {
+                    getSMGames(games, `tags`, savedGames, `apps`);
+                    getSMGames(games, `tags`, savedGames, `subs`);
+                }
+                if (SM.EGH.checked) {
+                    getSMGames(games, `entered`, savedGames, `apps`);
+                    getSMGames(games, `entered`, savedGames, `subs`);
+                }
+                if (SM.GC.checked) {
+                    getSMGames(games, `lastCheck`, savedGames, `apps`);
+                    getSMGames(games, `lastCheck`, savedGames, `subs`);
+                }
+                GM_setValue(`games`, JSON.stringify(savedGames));
+            }
+            deleteLock();
+        });
+    }
+
+    function getSMGames(games, key, selected, type, deleteData) {
+        var categories, i, id, n;
+        categories = [`rating`, `bundled`, `owned`, `wishlisted`, `ignored`, `tradingCards`, `achievements`, `multiplayer`, `steamCloud`, `linux`, `mac`, `dlc`, `genres`];
+        for (id in games[type]) {
+            if (typeof games[type][id][key] !== `undefined`) {
+                if (deleteData) {
+                    if (key === `lastCheck`) {
+                        for (i = 0, n = categories.length; i < n; ++i) {
+                            if (games[type][id][categories[i]]) {
+                                delete games[type][id][categories[i]];
+                            }
+                        }
+                        delete games[type][id][key];
+                    } else {
+                        delete games[type][id][key];
+                    }
+                } else {
+                    if (!selected[type][id]) {
+                        selected[type][id] = {};
+                    }
+                    if (key === `lastCheck`) {
+                        for (i = 0, n = categories.length; i < n; ++i) {
+                            if (games[type][id][categories[i]]) {
+                                selected[type][id][categories[i]] = games[type][id][categories[i]];
+                            }
+                        }
+                        selected[type][id][key] = games[type][id][key];
+                    } else if (key === `tags`) {
+                        if (!Array.isArray(games[type][id].tags)) {
+                            games[type][id].tags = games[type][id].tags.split(`, `);
+                        }
+                        selected[type][id][key] = games[type][id][key];
+                    } else {
+                        selected[type][id][key] = games[type][id][key];
+                    }
+                }
+            }
+        }
+    }
+
     function exportSMData(SM) {
         var File, Data, Key, URL;
         File = document.createElement("a");
         File.download = "ESGST.json";
-        Data = {};
+        Data = {
+            games: {
+                apps: {},
+                subs: {}
+            }
+        };
         for (Key in SM.Names) {
-            if (SM[SM.Names[Key]].checked) {
+            if (Key === `games`) {
+                var games = JSON.parse(GM_getValue(`games`));
+                if (SM.GT.checked) {
+                    getSMGames(games, `tags`, Data.games, `apps`);
+                    getSMGames(games, `tags`, Data.games, `subs`);
+                }
+                if (SM.EGH.checked) {
+                    getSMGames(games, `entered`, Data.games, `apps`);
+                    getSMGames(games, `entered`, Data.games, `subs`);
+                }
+                if (SM.GC.checked) {
+                    getSMGames(games, `lastCheck`, Data.games, `apps`);
+                    getSMGames(games, `lastCheck`, Data.games, `subs`);
+                }
+            } else if (Key.match(/sgCommentHistory|stCommentHistory/)) {
+                Data[Key] = JSON.parse(GM_getValue(Key));
+            } else if (SM[SM.Names[Key]].checked) {
                 Data[Key] = GM_getValue(Key);
             }
         }
@@ -19391,7 +19707,32 @@ Background: <input type="color" value="${bgColor}">
         if (window.confirm("Are you sure you want to delete this data? A copy will be downloaded as precaution.")) {
             exportSMData(SM);
             for (Key in SM.Names) {
-                if (SM[SM.Names[Key]].checked) {
+                if (Key === `games`) {
+                    createLock(`gameLock`, 300, function (deleteLock) {
+                        var games = JSON.parse(GM_getValue(`games`));
+                        if (SM.GT.checked && SM.EGH.checked && SM.GC.checked) {
+                            GM_setValue(`games`, JSON.stringify({
+                                apps: {},
+                                subs: {}
+                            }));
+                        } else {
+                            if (SM.GT.checked) {
+                                getSMGames(games, `tags`, null, `apps`, true);
+                                getSMGames(games, `tags`, null, `subs`, true);
+                            }
+                            if (SM.EGH.checked) {
+                                getSMGames(games, `entered`, null, `apps`, true);
+                                getSMGames(games, `entered`, null, `subs`, true);
+                            }
+                            if (SM.GC.checked) {
+                                getSMGames(games, `lastCheck`, null, `apps`, true);
+                                getSMGames(games, `lastCheck`, null, `subs`, true);
+                            }
+                            GM_setValue(`games`, JSON.stringify(games));
+                        }
+                        deleteLock();
+                    });
+                } else if (SM[SM.Names[Key]].checked) {
                     GM_deleteValue(Key);
                 }
             }
@@ -19413,7 +19754,7 @@ Background: <input type="color" value="${bgColor}">
     }
 
     function setSMRecentUsernameChanges(SMRecentUsernameChanges) {
-        SMRecentUsernameChanges.addEventListener("click", function() {
+        SMRecentUsernameChanges.addEventListener("click", function () {
             var Popup, SMRecentUsernameChangesPopup;
             Popup = createPopup(true);
             Popup.Results.classList.add("SMRecentUsernameChangesPopup");
@@ -19422,7 +19763,7 @@ Background: <input type="color" value="${bgColor}">
             Popup.Progress.innerHTML =
                 "<i class=\"fa fa-circle-o-notch fa-spin\"></i> " +
                 "<span>Loading recent username changes...</span>";
-            makeRequest(null, "https://script.google.com/macros/s/AKfycbzvOuHG913mRIXOsqHIeAuQUkLYyxTHOZim5n8iP-k80iza6g0/exec?Action=2", Popup.Progress, function(Response) {
+            makeRequest(null, "https://script.google.com/macros/s/AKfycbzvOuHG913mRIXOsqHIeAuQUkLYyxTHOZim5n8iP-k80iza6g0/exec?Action=2", Popup.Progress, function (Response) {
                 var RecentChanges, HTML, I, N;
                 Popup.Progress.innerHTML = "";
                 RecentChanges = JSON.parse(Response.responseText).RecentChanges;
@@ -19441,14 +19782,14 @@ Background: <input type="color" value="${bgColor}">
     }
 
     function setSMCommentHistory(SMCommentHistory) {
-        SMCommentHistory.addEventListener("click", function() {
+        SMCommentHistory.addEventListener("click", function () {
             var comments, i, popup, set;
             popup = createPopup_v6(`fa-comments`, `Comment History`);
             popup.commentHistory = insertHtml(popup.description, `afterBegin`, `<div class="comments esgst-text-left"></div>`);
             comments = JSON.parse(GM_getValue(`${esgst.name}CommentHistory`, `[]`));
             i = 0;
-            set = createButtonSet(`green`, `grey`, `fa-plus`, `fa-circle-o-notch fa-spin`, `Load more...`, `Loading more...`, function(callback) {
-                getChComments(comments, i, i + 5, popup, function(value) {
+            set = createButtonSet(`green`, `grey`, `fa-plus`, `fa-circle-o-notch fa-spin`, `Load more...`, `Loading more...`, function (callback) {
+                getChComments(comments, i, i + 5, popup, function (value) {
                     i = value;
                     if (i > comments.length) {
                         set.set.remove();
@@ -19465,7 +19806,7 @@ Background: <input type="color" value="${bgColor}">
     function checkNewVersion() {
         var version = GM_getValue(`version`, `0`);
         if (version != GM_info.script.version) {
-            makeRequest(null, `https://raw.githubusercontent.com/revilheart/ESGST/master/changelog.txt`, null, function(response) {
+            makeRequest(null, `https://raw.githubusercontent.com/revilheart/ESGST/master/changelog.txt`, null, function (response) {
                 version = GM_info.script.version;
                 GM_setValue(`version`, version);
                 var reg = new RegExp(`v${version}\\n\\s\\*\\/\\n\\n([\\s\\S]*?)\\n\\n\\/\\*`);
@@ -19476,7 +19817,7 @@ Background: <input type="color" value="${bgColor}">
                     popup.Title.textContent = `ESGST v${version} Changelog`;
                     var html = changelog[1].replace(/\* (.+)/g, function (m, p1) {
                         return `<li>${p1}</li>`;
-                    }).replace(/\n/g, `<br/>`).replace(/#(\d+)/g, function(m, p1) {
+                    }).replace(/\n/g, `<br/>`).replace(/#(\d+)/g, function (m, p1) {
                         return `<a href="https://github.com/revilheart/ESGST/issues/${p1}">#${p1}</a>`;
                     });
                     popup.Description.insertAdjacentHTML(`afterBegin`, html);

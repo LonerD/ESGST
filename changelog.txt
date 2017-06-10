@@ -1,5 +1,13 @@
 /*
- * June 9, 2017 - v6.Beta.3.16
+ * June 10, 2017 - v6.Beta.3.18
+ */
+
+* You can manage Comment History/Game data again through the settings menu.
+* You can now manage Game data individually between Game Tags, Entered Games Highlighter and Game Categories data.
+* Fixed some bugs and improved some things.
+
+/*
+ * June 9, 2017 - v6.Beta.3.17
  */
 
 * Fixed a bug in Level Progress Visualizer.
