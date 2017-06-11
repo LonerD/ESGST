@@ -1,4 +1,20 @@
 /*
+ * June 11, 2017 - v6.Beta.4.0
+ */
+
+* Revamped Header Refresher to work better with Enter/Leave Giveaway Button and discontinued its support for Greasemonkey (if you are using Greasemonkey and you open multiple tabs, only one tab will refresh the header).
+* Level Progress Visualizer now takes up the entire main button. As a result, the hover effect has been disabled.
+
+Upgraded the following features to v6:
+
+* Giveaway Winning Chance - Separated it into Giveaway Winning Chance and Giveaway Winning Ratio.
+* Enter/Leave Giveaway Button - Fixed some bugs (closes #136 and #146). The feature now automatically detects if you own the game (you must of course sync through the settings menu) or if the giveaway is for a higher level than you and does not show the Enter button in case one of these is true (closes #132). Entered giveaways are now immediately hidden if the filter is enabled (closes #129). If an error occurs while entering a giveaway or if you don't have enough points, the button will simply turn red instead of adding an additional button to its side (partial solution to #89). Brought back the option to add a comment to the giveaway upon entering.
+
+Added the following features:
+
+* Quick Giveaway Browsing
+
+/*
  * June 10, 2017 - v6.Beta.3.18
  */
 
