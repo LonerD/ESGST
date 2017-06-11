@@ -3,7 +3,7 @@
 // @namespace ESGST
 // @description Enhances SteamGifts and SteamTrades by adding some cool features to them.
 // @icon https://github.com/revilheart/ESGST/raw/master/Resources/esgstIcon.ico
-// @version 6.Beta.4.1
+// @version 6.Beta.4.2
 // @author revilheart
 // @contributor Royalgamer06
 // @downloadURL https://github.com/revilheart/ESGST/raw/master/ESGST.user.js
@@ -124,9 +124,71 @@
         return comments;
     }
 
+    function updateCommentStorageToV6() {
+        if (!GM_getValue(`commentStorageV6`, false)) {
+            GM_setValue(`comments`, JSON.stringify(getCommentStorageV6(GM_getValue(`Comments`, {}), GM_getValue(`Comments_ST`, {}))));
+            GM_setValue(`commentStorageV6`, true);
+        }
+    }
+
+    function getCommentStorageV6(savedSg, savedSt) {
+        var comments, key, subKey;
+        comments = {
+            giveaways: {},
+            discussions: {},
+            tickets: {},
+            trades: {}
+        };
+        for (key in savedSg) {
+            if (!comments.discussions[key]) {
+                comments.discussions[key] = {
+                    comments: {}
+                };
+            }
+            if (comments.discussions[key].Visited) {
+                comments.discussions[key].visited = true;
+            }
+            if (comments.discussions[key].Highlighted) {
+                comments.discussions[key].highlighted = true;
+            }
+            for (subKey in savedSg[key]) {
+                if (!subKey.match(/^(Visited|Highlighted)$/)) {
+                    comments.discussions[key].comments[subKey] = {
+                        timestamp: savedSg[key][subKey]
+                    };
+                }
+            }
+            if (!comments.discussions[key].visited && !comments.discussions[key].highlighted && !Object.keys(comments.discussions[key].comments).length) {
+                delete comments.discussions[key];
+            }
+        }
+        for (key in savedSt) {
+            if (!comments.trades[key]) {
+                comments.trades[key] = {
+                    comments: {}
+                };
+            }
+            if (comments.trades[key].Visited) {
+                comments.trades[key].visited = true;
+            }
+            for (subKey in savedSt[key]) {
+                if (!subKey.match(/^(Visited|Highlighted)$/)) {
+                    comments.trades[key].comments[subKey] = {
+                        timestamp: savedSt[key][subKey]
+                    };
+                }
+            }
+            if (!comments.trades[key].visited && !Object.keys(comments.trades[key].comments).length) {
+                delete comments.trades[key];
+            }
+        }
+        return comments;
+    }
+
     function loadEsgst() {
         updateGameStorageToV6();
         updateCommentHistoryStorageToV6();
+        updateCommentStorageToV6();
         addStyles();
         checkNewVersion();
         esgst.sg = window.location.hostname.match(/www.steamgifts.com/);
@@ -311,8 +373,7 @@
             ded: `DED`,
             ch: `CH`,
             ct: `CT`,
-            ct_g: `CT_G`,
-            ct_lu: `CT_LU`,
+            ct_r: `ct_lu`,
             cfh: `CFH`,
             cfh_i: `CFH_I`,
             cfh_b: `CFH_B`,
@@ -665,17 +726,17 @@
                 load: loadPinnedGiveawaysButton
             },
             {
-                id: `gf`,
-                name: `Giveaway Filters`,
-                check: getValue(`gf`),
-                load: loadGf
-            },
-            {
                 id: `gv`,
                 name: `Grid View`,
                 check: getValue(`gv`) && esgst.giveawaysPath,
                 load: loadGridView,
                 endless: true
+            },
+            {
+                id: `gf`,
+                name: `Giveaway Filters`,
+                check: getValue(`gf`),
+                load: loadGf
             },
             {
                 id: `gwc`,
@@ -778,8 +839,8 @@
             {
                 id: `dh`,
                 name: `Discussions Highlighter`,
-                check: getValue(`dh`) && (esgst.discussionsPath || esgst.discussionPath),
-                load: loadDiscussionsHighlighter
+                check: getValue(`dh`),
+                load: loadDh
             },
             {
                 id: `mpp`,
@@ -810,18 +871,13 @@
                 name: `Comment Tracker`,
                 options: [
                     {
-                        id: `ct_g`,
-                        name: `Fade out visited giveaways.`,
-                        check: getValue(`ct_g`)
-                    },
-                    {
-                        id: `ct_lu`,
-                        name: `Go to the last unread comment of a discussion instead of the first one from the discussions page.`,
-                        check: getValue(`ct_lu`)
+                        id: `ct_r`,
+                        name: `Search for first unread comment in reverse order (from newest to oldest).`,
+                        check: getValue(`ct_r`)
                     }
                 ],
                 check: getValue(`ct`),
-                load: loadCommentTracker
+                load: loadCt
             },
             {
                 id: `cfh`,
@@ -951,6 +1007,13 @@
                 name: `Reply From Inbox`,
                 check: getValue(`rfi`) && esgst.inboxPath,
                 load: loadMultiReply,
+                endless: true
+            },
+            {
+                check: esgst.commentsPath || esgst.inboxPath,
+                hidden: true,
+                name: `Comment Features`,
+                load: loadCommentFeatures,
                 endless: true
             },
             {
@@ -1351,6 +1414,7 @@
         esgst.endlessFeatures = [];
         esgst.gameFeatures = [];
         esgst.giveawayFeatures = [];
+        esgst.commentFeatures = [];
         esgst.profileFeatures = [];
         for (var key in esgst.defaultValues) {
             getValue(key);
@@ -2817,6 +2881,11 @@ max-height: 75%;
 overflow: auto;
 }
 
+.esgst-heading-button {
+display: inline-block;
+cursor: pointer;
+}
+
 .esgst-popup .popup__actions {
 margin-top: 25px;
 }
@@ -2850,7 +2919,7 @@ vertical-align: middle;
 vertical-align: baseline;
 }
 
-.esgst-checkboxm, .esgst-hb-update, .esgst-hb-changelog {
+.esgst-checkboxm, .esgst-hb-update, .esgst-hb-changelog, .esgst-dh-view-button {
 cursor: pointer;
 }
 
@@ -3436,7 +3505,7 @@ margin: 0;
             ".APBox .featured__table__row {" +
             "    padding: 2px;" +
             "}" +
-            ".GTSApply, .GTSDelete, .CTButton {" +
+            ".GTSApply, .GTSDelete, .esgst-ct-comment-button {" +
             "    cursor: pointer;" +
             "}" +
             ".GTSSave {" +
@@ -3485,20 +3554,22 @@ margin: 0;
             "    line-height: inherit;" +
             "    margin: 0;" +
             "}" +
-            ".DHHighlight, .GHHighlight {" +
-            "    background-color: " + Positive.replace(/rgb/, "rgba").replace(/\)/, ", 0.2)") + ";" +
+            ".esgst-dh-highlighted, .esgst-dh-highlighted.table__row-outer-wrap, .GHHighlight {" +
+            "    background-color: " + Positive.replace(/rgb/, "rgba").replace(/\)/, ", 0.2)") + " !important;" +
+            "    padding: 5px !important;" +
             "}" +
-            ".DHIcon {" +
-            "    cursor: pointer;" +
+            ".esgst-ct-comment-read, .esgst-ct-visited {" +
+            "    background-color: " + Unknown.replace(/rgb/, "rgba").replace(/\)/, ", 0.1)") + " !important;" +
+            "    padding: 5px !important;" +
+            "}" +
+            ".esgst-dh-button {" +
+            "    cursor: pointer; display: inline-block;" +
             "    margin: 0 5px 0 0;" +
             "}" +
-            ".page__heading .DHIcon {" +
-            "    margin: 0;" +
-            "}" +
-            ".comment__actions .CTButton {" +
+            ".comment__actions .esgst-ct-comment-button {" +
             "    margin: 0 0 0 10px;" +
             "}" +
-            ".comment__actions >:first-child + .CTButton {" +
+            ".comment__actions >:first-child + .esgst-ct-comment-button {" +
             "    margin: 0;" +
             "}" +
             ".CFHPanel {" +
@@ -3571,14 +3642,14 @@ margin: 0;
         );
     }
 
-    function goToComment(hash) {
-        var ID, Element, Top, Heading, Permalink;
+    function goToComment(hash, Element) {
+        var ID, Top, Heading, Permalink;
         if (!hash) {
             hash = window.location.hash;
         }
         ID = hash.replace(/#/, "");
         if (ID && !window.location.pathname.match(/^\/account/)) {
-            Element = document.getElementById(ID);
+            if (!Element) Element = document.getElementById(ID);
             if (Element) {
                 Top = Element.offsetTop;
                 window.scrollTo(0, Top);
@@ -5824,91 +5895,6 @@ ${Results.join(``)}
         parent.insertBefore(esgst.activeDiscussions, parent.firstElementChild);
     }
 
-    function loadDiscussionsHighlighter() {
-        if (esgst.discussionPath) {
-            highlightDHDiscussion();
-        } else {
-            getDHDiscussions(document);
-            esgst.endlessFeatures.push(getDHDiscussions);
-        }
-    }
-
-    function getDHDiscussions(context) {
-        var matches = context.getElementsByClassName(`table__row-outer-wrap`);
-        highlightDHDiscussions(matches);
-    }
-
-    function highlightDHDiscussions(Matches) {
-        var Comments, I, N, Match, Key, Container;
-        Comments = GM_getValue("Comments");
-        for (I = 0, N = Matches.length; I < N; ++I) {
-            Match = Matches[I].getElementsByClassName("table__column__heading")[0].getAttribute("href").match(/\/discussion\/(.+?)\//);
-            if (Match) {
-                Key = Match[1];
-                if (!Comments[Key]) {
-                    Comments[Key] = {
-                        Highlighted: false
-                    };
-                }
-                Container = Matches[I].getElementsByClassName("table__column--width-fill")[0].firstElementChild;
-                if (Comments[Key].Highlighted) {
-                    Matches[I].classList.add("DHHighlight");
-                    Container.insertAdjacentHTML("afterBegin", "<i class=\"fa fa-star DHIcon\" title=\"Unhighlight discussion.\"></i>");
-                } else {
-                    Container.insertAdjacentHTML("afterBegin", "<i class=\"fa fa-star-o DHIcon\" title=\"Highlight discussion.\"></i>");
-                }
-                setDHIcon(Container.firstElementChild, Matches[I], Key);
-            }
-        }
-        GM_setValue("Comments", Comments);
-    }
-
-    function highlightDHDiscussion() {
-        var Comments, Key, Context, Container;
-        Comments = GM_getValue("Comments");
-        Key = window.location.pathname.match(/\/discussion\/(.+?)\//)[1];
-        if (!Comments[Key]) {
-            Comments[Key] = {
-                Highlighted: false
-            };
-        }
-        Context = document.getElementsByClassName("page__heading")[0];
-        Container = Context.firstElementChild;
-        if (Comments[Key].Highlighted) {
-            Container.classList.add("DHHighlight");
-            Context.insertAdjacentHTML(
-                "afterBegin",
-                "<div>" +
-                "    <i class=\"fa fa-star DHIcon\" title=\"Unhighlight discussion.\"></i>" +
-                "</div>"
-            );
-        } else {
-            Context.insertAdjacentHTML(
-                "afterBegin",
-                "<div>" +
-                "    <i class=\"fa fa-star-o DHIcon\" title=\"Highlight discussion.\"></i>" +
-                "</div>"
-            );
-        }
-        setDHIcon(Context.firstElementChild.firstElementChild, Container, Key);
-        GM_setValue("Comments", Comments);
-    }
-
-    function setDHIcon(DHIcon, Context, Key) {
-        DHIcon.addEventListener("click", function () {
-            var Comments;
-            DHIcon.classList.toggle("fa-star");
-            DHIcon.classList.toggle("fa-star-o");
-            DHIcon.title = DHIcon.classList.contains("fa-star") ? "Unhighlight discussion." : "Highlight discussion.";
-            if (Context) {
-                Context.classList.toggle("DHHighlight");
-            }
-            Comments = GM_getValue("Comments");
-            Comments[Key].Highlighted = Comments[Key].Highlighted ? false : true;
-            GM_setValue("Comments", Comments);
-        });
-    }
-
     function loadMainPostPopup() {
         var MPPPost, Sibling, Visited, Timestamp, Hidden;
         var Context = esgst.mainPageHeading;
@@ -5991,280 +5977,6 @@ ${Results.join(``)}
                 saveComment(TradeCode, ParentID.value, Description.value, URL, DEDStatus, Callback, DEDCallback);
             }
         }, null, true);
-    }
-
-    function loadCommentTracker() {
-        if (esgst.commentsPath) {
-            addCTPanel(esgst.mainPageHeading);
-            esgst.endlessFeatures.push(getCTComments);
-            getCTComments(document);
-        }
-        esgst.endlessFeatures.push(loadCTVisited);
-        loadCTVisited(document);
-    }
-
-    function loadCTVisited(context) {
-        var matches = context.querySelectorAll(`.table__column__heading, .giveaway__heading__name, .column_flex h3 a`);
-        checkCTVisited(matches);
-    }
-
-    function getCTComments(context) {
-        var matches = context.querySelectorAll(`.comment__summary, .comment_inner`);
-        setCTComment(matches);
-    }
-
-    function checkCTVisited(Matches) {
-        var ID, Comments, I, N, Link, Match, Type, Key, Element, CommentsCount, Count, Read, LastUnread, CTPanel;
-        ID = "Comments" + (esgst.sg ? "" : "_ST");
-        Comments = GM_getValue(ID);
-        for (I = 0, N = Matches.length; I < N; ++I) {
-            Link = Matches[I].getAttribute("href");
-            if (Link) {
-                Match = Link.match(/\/(giveaway|discussion|support\/ticket|trade)\/(.+?)\//);
-                if (Match) {
-                    Type = Match[1];
-                    Key = Match[2];
-                    if (Match && (((Type == "giveaway") && esgst.ct_g) || (Type != "giveaway")) && Comments[Key] && Comments[Key].Visited) {
-                        Element = Matches[I].closest("div");
-                        Element.style.opacity = "0.5";
-                        setHoverOpacity(Element, "1", "0.5");
-                    }
-                    if (Type == "discussion") {
-                        Element = Matches[I].closest(".table__column--width-fill");
-                        CommentsCount = Element.nextElementSibling.firstElementChild;
-                        Count = parseInt(CommentsCount.textContent.replace(/,/g, ""));
-                        if (!Comments[Key]) {
-                            Comments[Key] = {};
-                        }
-                        delete Comments[Key].Count;
-                        Read = Object.keys(Comments[Key]).length - 3;
-                        if (Read < 0) {
-                            Read = 0;
-                        }
-                        if (Read <= Count) {
-                            LastUnread = esgst.ct_lu;
-                            CommentsCount.insertAdjacentHTML(
-                                "afterEnd",
-                                " <span class=\"CTPanel\">" + ((Read < Count) ? (
-                                    "<a class=\"CTGoToUnread\" title=\"Go to the " + (LastUnread ? "last" : "first") + " unread comment.\">" +
-                                    "    <i class=\"fa fa-comments-o\"></i>" +
-                                    "</a>" +
-                                    "<a class=\"CTMarkRead\" title=\"Mark all comments as read.\">" +
-                                    "    <i class=\"fa fa-eye\"></i>" +
-                                    "</a>") : "") +
-                                "</span>"
-                            );
-                            CTPanel = CommentsCount.nextElementSibling;
-                            if (Read < Count) {
-                                CommentsCount.insertAdjacentText("beforeEnd", " (+" + (Count - Read) + ")");
-                                setCTPanel(CTPanel, CommentsCount.href, Key, LastUnread, Element);
-                            }
-                            if (!Comments[Key].Visited) {
-                                CTPanel.insertAdjacentHTML(
-                                    "beforeEnd",
-                                    "<a class=\"CTMarkVisited\" title=\"Mark discussion as visited.\">" +
-                                    "    <i class=\"fa fa-check\"></i>" +
-                                    "</a>"
-                                );
-                                setCTVisited(CTPanel, Key, Element);
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    function setCTPanel(CTPanel, URL, Key, LastUnread, Element) {
-        var CTGoToUnread, CTMarkRead;
-        CTGoToUnread = CTPanel.firstElementChild;
-        CTMarkRead = CTGoToUnread.nextElementSibling;
-        CTGoToUnread.addEventListener("click", function () {
-            CTPanel.innerHTML = "<i class=\"fa fa-circle-o-notch fa-spin\"></i>";
-            markCTDiscussionRead({
-                Progress: CTPanel
-            }, URL + "/search?page=", 1, Key, true, LastUnread, LastUnread, function (ID) {
-                window.location.href = ID ? "/go/comment/" + ID : URL;
-            });
-        });
-        CTMarkRead.addEventListener("click", function () {
-            Element.style.opacity = "0.5";
-            setHoverOpacity(Element, "1", "0.5");
-            CTPanel.innerHTML = "<i class=\"fa fa-circle-o-notch fa-spin\"></i>";
-            markCTDiscussionRead({
-                Progress: CTPanel
-            }, URL + "/search?page=", 1, Key, false, false, false, function () {
-                CTPanel.remove();
-            });
-        });
-    }
-
-    function markCTDiscussionRead(CT, URL, NextPage, Key, Unread, LastUnread, LastUnreadFirst, Callback) {
-        queueRequest(CT, null, URL + NextPage, function (Response) {
-            var ResponseHTML, Matches, I, N, Comments, ID, Timestamp, Found, Pagination;
-            ResponseHTML = DOM.parse(Response.responseText);
-            Matches = ResponseHTML.getElementsByClassName("comment__summary");
-            for (I = 0, N = Matches.length; I < N; ++I) {
-                if (!Matches[I].closest(".comment--submit")) {
-                    Comments = GM_getValue("Comments");
-                    if (!Comments[Key]) {
-                        Comments[Key] = {
-                            Visited: true
-                        };
-                    } else if (!Comments[Key].Visited) {
-                        Comments[Key].Visited = true;
-                    }
-                    ID = Matches[I].id;
-                    if (!Comments[Key][ID]) {
-                        Comments[Key][ID] = 0;
-                    }
-                    Timestamp = Matches[I].getElementsByClassName("comment__actions")[0].firstElementChild.querySelectorAll("[data-timestamp]");
-                    Timestamp = parseInt(Timestamp[Timestamp.length - 1].getAttribute("data-timestamp"));
-                    if (Comments[Key][ID] < Timestamp) {
-                        if (Unread) {
-                            Found = true;
-                            break;
-                        } else {
-                            Comments[Key][ID] = Timestamp;
-                            GM_setValue("Comments", Comments);
-                        }
-                    }
-                }
-            }
-            Pagination = ResponseHTML.getElementsByClassName("pagination__navigation")[0];
-            if (Matches.length && !Found && ((LastUnread && (NextPage >= 1)) || (!LastUnread && Pagination && !Pagination.lastElementChild.classList.contains("is-selected")))) {
-                if (LastUnreadFirst) {
-                    if (Pagination) {
-                        NextPage = parseInt(Pagination.lastElementChild.getAttribute("data-page-number")) + 1;
-                    } else {
-                        Callback(ID);
-                    }
-                } else if (LastUnread && (NextPage == 1)) {
-                    Callback(ID);
-                }
-                setTimeout(markCTDiscussionRead, 0, CT, URL, LastUnread ? --NextPage : ++NextPage, Key, Unread, LastUnread, false, Callback);
-            } else {
-                Callback(ID);
-            }
-        });
-    }
-
-    function setCTVisited(CTPanel, Key, Element) {
-        var CTMarkVisited;
-        CTMarkVisited = CTPanel.lastElementChild;
-        CTMarkVisited.addEventListener("click", function () {
-            var Comments;
-            Comments = GM_getValue("Comments");
-            if (!Comments[Key]) {
-                Comments[Key] = {};
-            }
-            Comments[Key].Visited = true;
-            GM_setValue("Comments", Comments);
-            Element.style.opacity = "0.5";
-            setHoverOpacity(Element, "1", "0.5");
-            CTMarkVisited.remove();
-        });
-    }
-
-    function addCTPanel(Context) {
-        var CTGoToUnread;
-        Context.insertAdjacentHTML(
-            "afterBegin",
-            "<div class=\"page_heading_btn CTPanel\">" +
-            "    <a class=\"CTGoToUnread\" title=\"Go to the first unread comment.\">" +
-            "        <i class=\"fa fa-comments-o\"></i>" +
-            "    </a>" +
-            "    <a class=\"CTMarkRead\" title=\"Mark all comments as read.\">" +
-            "        <i class=\"fa fa-eye\"></i>" +
-            "    </a>" +
-            "</span>"
-        );
-        CTGoToUnread = Context.firstElementChild.firstElementChild;
-        CTGoToUnread.addEventListener("click", function () {
-            var Unread, ID;
-            Unread = document.getElementsByClassName("CTButton")[0];
-            if (Unread) {
-                ID = esgst.sg ? Unread.closest(".comment__summary").id : Unread.closest(".comment_inner").parentElement.id;
-                if (ID) {
-                    window.location.hash = "";
-                    window.location.hash = ID;
-                } else {
-                    window.scrollTo(0, 0);
-                }
-            }
-        });
-        CTGoToUnread.nextElementSibling.addEventListener("click", function () {
-            var Matches, ID, Key, I, N;
-            Matches = document.getElementsByClassName("CTButton");
-            ID = "Comments" + (esgst.sg ? "" : "_ST");
-            Key = window.location.pathname.match(/^\/(giveaway(?!.+(entries|winners))|discussion|support\/ticket|trade)\/(.+?)\//)[3];
-            for (I = 0, N = Matches.length; I < N; ++I) {
-                Matches[0].closest(".comment__summary, .comment_inner").style.opacity = "0.5";
-                markCTRead(Matches[0], ID, Key);
-            }
-        });
-    }
-
-    function setCTComment(Matches) {
-        var ID, Comments, Key, I, N, Comment, CommentID, Timestamp, Context;
-        ID = "Comments" + (esgst.sg ? "" : "_ST");
-        Comments = GM_getValue(ID);
-        Key = window.location.pathname.match(/^\/(giveaway(?!.+(entries|winners))|discussion|support\/ticket|trade)\/(.+?)\//)[3];
-        if (!Comments[Key]) {
-            Comments[Key] = {
-                Visited: true
-            };
-            GM_setValue(ID, Comments);
-        } else if (!Comments[Key].Visited) {
-            Comments[Key].Visited = true;
-            GM_setValue(ID, Comments);
-        }
-        for (I = 0, N = Matches.length; I < N; ++I) {
-            Comment = Matches[I];
-            if (!Comment.closest(".comment--submit")) {
-                var Username = Comment.getElementsByClassName(esgst.sg ? `comment__username` : `author_name`)[0].textContent;
-                CommentID = esgst.sg ? Comment.id : Comment.parentElement.id;
-                if (Username != GM_getValue(`Username`)) {
-                    CommentID = esgst.sg ? Comment.id : Comment.parentElement.id;
-                    Timestamp = Comment.querySelectorAll("[data-timestamp]");
-                    Timestamp = parseInt(Timestamp[Timestamp.length - 1].getAttribute("data-timestamp"));
-                    if (Timestamp == Comments[Key][CommentID]) {
-                        Comment.style.opacity = "0.5";
-                        setHoverOpacity(Comment, "1", "0.5");
-                    } else {
-                        delete Comments[Key][CommentID];
-                        Context = Matches[I].getElementsByClassName(esgst.sg ? "comment__actions" : "action_list")[0];
-                        Context.insertAdjacentHTML(
-                            "beforeEnd",
-                            "<a class=\"CTButton\" title=\"Mark comment as read.\">" +
-                            "    <i class=\"fa fa-eye\"></i>" +
-                            "</a>"
-                        );
-                        Context.lastElementChild.addEventListener("click", function (Event) {
-                            markCTRead(Event.currentTarget, ID, Key);
-                        });
-                    }
-                } else {
-                    Comments[Key][CommentID] = 0;
-                    Comment.style.opacity = "0.5";
-                    setHoverOpacity(Comment, "1", "0.5");
-                }
-            }
-        }
-        GM_setValue(ID, Comments);
-    }
-
-    function markCTRead(CTButton, ID, Key) {
-        var Timestamp, Comments, CommentID, Comment;
-        Timestamp = CTButton.parentElement.firstElementChild.querySelectorAll("[data-timestamp]");
-        Timestamp = parseInt(Timestamp[Timestamp.length - 1].getAttribute("data-timestamp"));
-        Comments = GM_getValue(ID);
-        Comment = CTButton.closest(".comment__summary, .comment_inner");
-        CommentID = esgst.sg ? Comment.id : Comment.parentElement.id;
-        Comments[Key][CommentID] = Timestamp;
-        GM_setValue(ID, Comments);
-        CTButton.remove();
-        setHoverOpacity(Comment, "1", "0.5");
     }
 
     function loadCommentFormattingHelper(context) {
@@ -15386,7 +15098,7 @@ ${Results.join(``)}
                 highlight = `negative`;
                 icon = `fa-thumbs-down`;
             }
-            var i, n, context, title = `${user.Username} has ${(user.NAMWC.Results.Unknown ? `?` : user.NAMWC.Results.NotActivated)} not activated wins and ${user.NAMWC.Results.Multiple} multiple wins.`;
+            var i, n, context, title = `${user.Username} has ${(user.NAMWC.Results.Unknown ? `?` : user.NAMWC.Results.NotActivated)} not activated wins and ${user.NAMWC.Results.Multiple} multiple wins (last checked ${getTimestamp(user.NAMWC.LastSearch / 1e3)}).`;
             if (esgst.namwc_h_i || esgst.wbh_cw || esgst.wbh_cb) {
                 var html = `
 <span class="esgst-namwc-icon ${highlight}" title="${title}">
@@ -16395,7 +16107,7 @@ ${Results.join(``)}
             Result = User.WBC.Result;
             if ((Result == "Whitelisted") || ((Result == "Blacklisted") && esgst.wbc_b)) {
                 HTML =
-                    "<span class=\"sidebar__shortcut-inner-wrap WBCIcon rhWBIcon\" title=\"" + User.Username + " has " + Result.toLowerCase() + " you.\">" +
+                    "<span class=\"sidebar__shortcut-inner-wrap WBCIcon rhWBIcon\" title=\"" + User.Username + " has " + Result.toLowerCase() + " you (last checked " + getTimestamp(User.WBC.LastSearch / 1e3) + ").\">" +
                     "    <i class=\"fa sidebar__shortcut__" + ((Result == "Whitelisted") ? "whitelist fa-check" : "blacklist fa-times") + " is-disabled is-selected\"" +
                     "    style=\"background: none !important;\"></i>" +
                     "</span>";
@@ -17997,8 +17709,7 @@ ${avatar.outerHTML}
                     Users: "U",
                     games: `G`,
                     Groups: "GP",
-                    Comments: "C",
-                    Comments_ST: "C_ST",
+                    comments: "C",
                     Emojis: "E",
                     Rerolls: "R",
                     sgCommentHistory: `CH_SG`,
@@ -18057,20 +17768,11 @@ ${avatar.outerHTML}
                 Check: function () {
                     return true;
                 },
-                Description: "Comments data (SteamGifts).",
-                Title: "Includes Comment Tracker data from SteamGifts.",
-                Name: "Comments",
+                Description: "Comments data.",
+                Title: "Includes Comment Tracker & Discussion Highlighter data.",
+                Name: "comments",
                 Key: "C",
                 ID: "SM_C"
-            }, {
-                Check: function () {
-                    return true;
-                },
-                Description: "Comments data (SteamTrades).",
-                Title: "Includes Comment Tracker data from SteamTrades.",
-                Name: "Comments_ST",
-                Key: "C_ST",
-                ID: "SM_C_ST"
             }, {
                 Check: function () {
                     return true;
@@ -18484,34 +18186,8 @@ Background: <input type="color" value="${bgColor}">
                                         GM_setValue(`Users`, savedUsers);
                                     } else if (Key.match(/^(games|Games)$`/)) {
                                         importGamesAndMerge(File, Key, SM);
-                                    } else if (Key.match(/^(Comments|Comments_ST)$/) && SM[SM.Names[Key]].checked) {
-                                        saved = GM_getValue(Key);
-                                        for (var key in File.Data[Key]) {
-                                            value = File.Data[Key][key];
-                                            if (saved[key]) {
-                                                for (var subKey in value) {
-                                                    if (subKey == `Tags`) {
-                                                        if (saved.Tags) {
-                                                            tags = value.Tags.split(/,\s/);
-                                                            for (k = 0, numTags = tags.length; k < numTags; ++k) {
-                                                                if (tags[k] && saved.Tags.indexOf(tags[k]) < 0) {
-                                                                    saved.Tags += `, ${tags[k]}`;
-                                                                }
-                                                            }
-                                                        } else {
-                                                            saved.Tags = value.Tags;
-                                                        }
-                                                    } else if (Key == `Games`) {
-                                                        saved[key][subKey] = value[subKey];
-                                                    } else if (saved[key][subKey] && saved[key][subKey] < value[subKey]) {
-                                                        saved[key][subKey] = value[subKey];
-                                                    }
-                                                }
-                                            } else {
-                                                saved[key] = value;
-                                            }
-                                        }
-                                        GM_setValue(Key, saved);
+                                    } else if (Key.match(/^(comments|Comments|Comments_ST)$/) && SM.C.checked) {
+                                        importCommentsAndMerge(File, Key, SM);
                                     } else if (Key == `Emojis` && SM.E.checked) {
                                         var savedEmojis = GM_getValue(`Emojis`);
                                         var emojis = DOM.parse(File.Data.Emojis).getElementsByTagName(`span`);
@@ -18549,6 +18225,8 @@ Background: <input type="color" value="${bgColor}">
                                     importGames(File, Key, SM);
                                 } else if (Key.match(/^(CommentHistory|sgCommentHistory|stCommentHistory)$/)) {
                                     importCommentHistory(File, Key, SM);
+                                } else if (Key === `comments` && SM.C.checked) {
+                                    importComments(File, Key, SM);
                                 } else if (SM.Names[Key] && SM[SM.Names[Key]] && SM[SM.Names[Key]].checked) {
                                     GM_setValue(Key, File.Data[Key]);
                                 }
@@ -18645,6 +18323,52 @@ Background: <input type="color" value="${bgColor}">
                 deleteLock();
             });
         }
+    }
+
+    function importCommentsAndMerge(File, Key, SM) {
+        createLock(`commentLock`, 300, function(deleteLock) {
+            var comments, id, key, savedComments, sgComments, stComments, subKey, type;
+            savedComments = JSON.parse(GM_getValue(`comments`));
+            if (Key.match(/Comments|Comments_ST/)) {
+                sgComments = File.Data.Comments ? File.Data.Comments : {};
+                stComments = File.Data.Comments_ST ? File.Data.Comments_ST : {};
+                comments = getCommentStorageV6(sgComments, stComments);
+            } else {
+                comments = File.Data.comments;
+            }
+            for (type in comments) {
+                for (key in comments[type]) {
+                    if (savedComments[type][key]) {
+                        for (subKey in comments[type][key]) {
+                            if (subKey === `comments`) {
+                                for (id in comments[type][key].comments) {
+                                    if (savedComments[type][key].comments[id]) {
+                                        if (comments[type][key].comments[id].timestamp > savedComments[type][key].comments[id].timestamp) {
+                                            savedComments[type][key].comments[id].timestamp = comments[type][key].comments[id].timestamp;
+                                        }
+                                    } else {
+                                        savedComments[type][key].comments[id] = comments[type][key].comments.id;
+                                    }
+                                }
+                            } else {
+                                savedComments[type][key][subKey] = comments[type][key][subKey];
+                            }
+                        }
+                    } else {
+                        savedComments[type][key] = comments[type][key];
+                    }
+                }
+            }
+            GM_setValue(`comments`, JSON.stringify(savedComments));
+            deleteLock();
+        });
+    }
+
+    function importComments(File, Key, SM) {
+        createLock(`commentLock`, 300, function(deleteLock) {
+            GM_setValue(`comments`, JSON.parse(File.Data.comments));
+            deleteLock();
+        });
     }
 
     function importGamesAndMerge(File, Key, SM) {
@@ -18868,6 +18592,8 @@ Background: <input type="color" value="${bgColor}">
                 }
             } else if (Key.match(/sgCommentHistory|stCommentHistory/) && SM[SM.Names[Key]].checked) {
                 Data[Key] = JSON.parse(GM_getValue(Key, `{}`));
+            } else if (Key === `comments` && SM.C.checked) {
+                Data[Key] = JSON.parse(GM_getValue(Key, `{}`));
             } else if (SM[SM.Names[Key]].checked) {
                 Data[Key] = GM_getValue(Key);
             }
@@ -19058,7 +18784,7 @@ Background: <input type="color" value="${bgColor}">
                 giveaway.wishlisted = true;
             }
         }
-        giveaway.innerWrap = giveaway.outerWrap.firstElementChild;
+        giveaway.innerWrap = giveaway.outerWrap.querySelector(`.giveaway__row-inner-wrap, .featured__inner-wrap, .table__row-inner-wrap`);
         giveaway.entered = giveaway.innerWrap.classList.contains(`esgst-faded`);
         giveaway.headingName = giveaway.innerWrap.querySelector(`.giveaway__heading__name, .featured__heading__medium, .table__column__heading`);
         giveaway.name = giveaway.headingName.textContent;
@@ -19836,36 +19562,558 @@ Background: <input type="color" value="${bgColor}">
     }
 
     /*
-     * Features - Commenting
+     * Features - Comments
      */
-function loadReplyMentionLink(context) {
-        var matches = context.getElementsByClassName(esgst.sg ? "comment__children" : "comment_children");
-        for (var i = 0, n = matches.length; i < n; ++i) {
-            var Matches = matches[i].children;
-            if (Matches.length) {
-                addRMLLink(esgst.sg ? matches[i].parentElement.getElementsByClassName("comment__summary")[0] : matches[i].parentElement, Matches);
-            }
+
+    function loadCommentFeatures(context, goToUnread, markRead, markUnread) {
+        var comments, i, n;
+        comments = getComments(context);
+        for (i = 0, n = esgst.commentFeatures.length; i < n; ++i) {
+            esgst.commentFeatures[i](comments, goToUnread, markRead, markUnread);
         }
     }
 
-    function addRMLLink(Context, Matches) {
-        var Username, ID, I, N, RMLLink;
-        Username = Context.getElementsByClassName(esgst.sg ? "comment__username" : "author_name")[0].textContent.trim();
-        ID = Context.id;
-        for (I = 0, N = Matches.length; I < N; ++I) {
-            Context = Matches[I].getElementsByClassName(esgst.sg ? "comment__actions" : "action_list")[0];
-            RMLLink = Context.getElementsByClassName("RMLLink")[0];
-            if (RMLLink) {
-                RMLLink.textContent = "@" + Username;
+    function getComments(context) {
+        var comments, i, matches, n, sourceLink;
+        comments = [];
+        matches = context.querySelectorAll(`:not(.comment--submit) > .comment__parent, .comment__child, .comment_inner`);
+        sourceLink = context.querySelector(`.page__heading__breadcrumbs a[href*="/giveaway/"], .page__heading__breadcrumbs a[href*="/discussion/"], .page__heading__breadcrumbs a[href*="/ticket/"], .page_heading_breadcrumbs a[href*="/trade/"]`);
+        for (i = 0, n = matches.length; i < n; ++i) {
+            comments.push(getCommentInfo(matches[i], sourceLink));
+        }
+        return comments;
+    }
+
+    function getCommentInfo(context, sourceLink) {
+        var comment, source;
+        comment = {};
+        comment.comment = context;
+        comment.author = comment.comment.querySelector(`.comment__author, .author_name`).textContent.trim();
+        comment.actions = comment.comment.querySelector(`.comment__actions, .action_list`);
+        comment.permalink = comment.actions.querySelector(`:last-of-type[href*="/comment/"]`);
+        comment.id = comment.permalink ? comment.permalink.getAttribute(`href`).match(/\/comment\/(.+)/)[1] : ``;
+        comment.timestamp = parseInt(comment.actions.firstElementChild.lastElementChild.getAttribute(`data-timestamp`));
+        if (esgst.inboxPath) {
+            if (esgst.sg) {
+                source = comment.comment.closest(`.comments`).previousElementSibling.firstElementChild.firstElementChild.getAttribute(`href`);
             } else {
-                Context.insertAdjacentHTML("beforeEnd", "<a class=\"comment__actions__button RMLLink\" href=\"#" + ID + "\">@" + Username + "</a>");
+                source = comment.actions.querySelector(`[href*="/trade/"]`).getAttribute(`href`);
+            }
+        } else {
+            source = sourceLink.getAttribute(`href`);
+        }
+        source = source.match(/(giveaway|discussion|ticket|trade)\/(.+?)(\/.*)?$/);
+        comment.type = `${source[1]}s`;
+        comment.code = source[2];
+        return comment;
+    }
+
+    /* Comment Tracker */
+
+    function loadCt() {
+        if (esgst.commentsPath || esgst.inboxPath || esgst.discussionsPath) {
+            esgst.commentFeatures.push(getCtComments);
+            if (esgst.commentsPath || esgst.inboxPath) {
+                addCtCommentPanel();
+            } else {
+                esgst.endlessFeatures.push(addCtDiscussionPanels);
+                addCtDiscussionPanels(document);
+            }
+        }
+        esgst.endlessFeatures.push(checkCtVisited);
+        checkCtVisited(document);
+    }
+
+    function getCtComments(comments, goToUnread, markRead, markUnread) {
+        if (goToUnread) {
+            checkCtComments(comments, true);
+        } else {
+            createLock(`commentLock`, 300, function(deleteLock) {
+                checkCtComments(comments, false, markRead, markUnread);
+                deleteLock();
+            });
+        }
+    }
+
+    function checkCtComments(comments, goToUnread, markRead, markUnread) {
+        var button, code, comment, i, key, n, saved, source, type;
+        saved = JSON.parse(GM_getValue(`comments`));
+        n = comments.length;
+        if (n > 0) {
+            for (i = 0; i < n; ++i) {
+                comment = comments[i];
+                if (!saved[comment.type][comment.code]) {
+                    saved[comment.type][comment.code] = {
+                        comments: {}
+                    };
+                }
+                saved[comment.type][comment.code].visited = true;
+                button = comment.comment.getElementsByClassName(`esgst-ct-comment-button`)[0];
+                if (comment.author === GM_getValue(`Username`)) {
+                    markCtCommentRead(comment, saved);
+                } else if (!saved[comment.type][comment.code].comments[comment.id] || comment.timestamp !== saved[comment.type][comment.code].comments[comment.id].timestamp) {
+                    if (goToUnread) {
+                        if (esgst.discussionsPath) {
+                            esgst.ctUnreadFound = true;
+                            if (comment.id) {
+                                window.open(`/go/comment/${comment.id}`);
+                            } else {
+                                window.open(`/discussion/${comment.code}/`);
+                            }
+                        } else {
+                            goToComment(comment.id, comment.comment);
+                        }
+                        break;
+                    } else if (markRead) {
+                        markCtCommentRead(comment, saved);
+                        addCtUnreadCommentButton(button, comment);
+                    } else {
+                        markCtCommentUnread(comment, saved);
+                        addCtReadCommentButton(button, comment);
+                    }
+                } else if (markUnread) {
+                    markCtCommentUnread(comment, saved);
+                    addCtReadCommentButton(button, comment);
+                } else {
+                    markCtCommentRead(comment, saved);
+                    addCtUnreadCommentButton(button, comment);
+                }
+            }
+            if (!goToUnread) {
+                GM_setValue(`comments`, JSON.stringify(saved));
+            }
+        } else {
+            source = window.location.pathname.match(/(giveaway|discussion|trade|ticket)\/(.+?)(\/.*)?$/);
+            if (source) {
+                type = `${source[1]}s`;
+                code = source[2];
+                if (!saved[type][code]) {
+                    saved[type][code] = {
+                        comments: {},
+                        visited: true
+                    };
+                }
+                GM_setValue(`comments`, JSON.stringify(saved));
             }
         }
     }
-    function loadCommentingFeatures(context) {
+
+    function markCtCommentRead(comment, comments, save) {
+        if (save) {
+            createLock(`commentLock`, 300, function(deleteLock) {
+                comments = JSON.parse(GM_getValue(`comments`));
+                if (!comments[comment.type][comment.code].comments[comment.id]) {
+                    comments[comment.type][comment.code].comments[comment.id] = {};
+                }
+                comments[comment.type][comment.code].comments[comment.id].timestamp = comment.timestamp;
+                GM_setValue(`comments`, JSON.stringify(comments));
+                deleteLock();
+            });
+        } else if (comments) {
+            if (!comments[comment.type][comment.code].comments[comment.id]) {
+                comments[comment.type][comment.code].comments[comment.id] = {};
+            }
+            comments[comment.type][comment.code].comments[comment.id].timestamp = comment.timestamp;
+        }
+        comment.comment.classList.add(`esgst-ct-comment-read`);
     }
 
-    function getComments() {
+    function markCtCommentUnread(comment, comments, save) {
+        if (save) {
+            createLock(`commentLock`, 300, function(deleteLock) {
+                var comments;
+                comments = JSON.parse(GM_getValue(`comments`));
+                if (!comments[comment.type][comment.code].comments[comment.id]) {
+                    comments[comment.type][comment.code].comments[comment.id] = {};
+                }
+                comments[comment.type][comment.code].comments[comment.id].timestamp = 0;
+                GM_setValue(`comments`, JSON.stringify(comments));
+                deleteLock();
+            });
+        } else if (comments) {
+            if (!comments[comment.type][comment.code].comments[comment.id]) {
+                comments[comment.type][comment.code].comments[comment.id] = {};
+            }
+            comments[comment.type][comment.code].comments[comment.id].timestamp = 0;
+        }
+        comment.comment.classList.remove(`esgst-ct-comment-read`);
+    }
+
+    function addCtReadCommentButton(button, comment) {
+        if (!button) {
+            button = insertHtml(comment.actions, `beforeEnd`, `<div class="esgst-ct-comment-button"></div>`);
+        }
+        button.innerHTML = `<i class="fa fa-eye" title="Mark comment as read.">`;
+        button.firstElementChild.addEventListener(`click`, function() {
+            markCtCommentRead(comment, null, true);
+            button.innerHTML = ``;
+            addCtUnreadCommentButton(button, comment);
+        });
+    }
+
+    function addCtUnreadCommentButton(button, comment) {
+        if (!button) {
+            button = insertHtml(comment.actions, `beforeEnd`, `<div class="esgst-ct-comment-button"></div>`);
+        }
+        button.innerHTML = `<i class="fa fa-eye-slash" title="Mark comment as unread.">`;
+        button.firstElementChild.addEventListener(`click`, function() {
+            markCtCommentUnread(comment, null, true);
+            button.innerHTML = ``;
+            addCtReadCommentButton(button, comment);
+        });
+    }
+
+    function addCtCommentPanel() {
+        var goToUnread, markRead, markUnread;
+        goToUnread = insertHtml(esgst.mainPageHeading, `afterBegin`, `
+            <div class="page_heading_btn esgst-heading-button" title="Go to the first unread comment of this page">
+                <i class="fa fa-comments-o"></i>
+            </div>
+            <div class="page_heading_btn esgst-heading-button" title="Mark all comments in this page as read.">
+                <i class="fa fa-eye"></i>
+            </div>
+            <div class="page_heading_btn esgst-heading-button" title="Marl all comments in this page as unread.">
+                <i class="fa fa-eye-slash"></i>
+            </div>
+        `);
+        markRead = goToUnread.nextElementSibling;
+        markUnread = markRead.nextElementSibling;
+        goToUnread.addEventListener(`click`, function() {
+            loadCommentFeatures(document, true);
+        });
+        markRead.addEventListener(`click`, function() {
+            loadCommentFeatures(document, false, true);
+        });
+        markUnread.addEventListener(`click`, function() {
+            loadCommentFeatures(document, false, false, true);
+        });
+    }
+
+    function addCtDiscussionPanels(context) {
+        var code, comments, count, countLink, diff, i, id, match, matches, n, read, url;
+        comments = JSON.parse(GM_getValue(`comments`)).discussions;
+        matches = context.getElementsByClassName(`table__row-outer-wrap`);
+        for (i = 0, n = matches.length; i < n; ++i) {
+            match = matches[i];
+            countLink = match.getElementsByClassName(`table__column--width-small text-center`)[0];
+            count = parseInt(countLink.textContent.replace(/,/g, ``)) + 1;
+            url = match.getElementsByClassName(`table__column__heading`)[0].getAttribute(`href`);
+            code = url.match(/\/discussion\/(.+?)(\/.*)?$/)[1];
+            if (comments[code]) {
+                read = 0;
+                for (id in comments[code].comments) {
+                    if (comments[code].comments[id].timestamp) {
+                        ++read;
+                    }
+                }
+                diff = count === read ? 0 : count - read;
+            } else {
+                diff = count;
+            }
+            addCtDiscussionPanel(countLink, count, diff, url);
+        }
+    }
+
+    function addCtDiscussionPanel(context, count, diff, url) {
+        var diffContainer, goToUnread, loadingIcon, markRead, markUnread, panel;
+        panel = insertHtml(context, `beforeEnd`, `
+            <span>
+                <span class="esgst-hidden">(+${diff})</span>
+                <div class="esgst-heading-button esgst-hidden" title="Go to first unread comment of this discussion">
+                    <i class="fa fa-comments-o"></i>
+                </div>
+                <div class="esgst-heading-button esgst-hidden" title="Mark all comments in this discussion as read.">
+                    <i class="fa fa-eye"></i>
+                </div>
+                <div class="esgst-heading-button esgst-hidden" title="Marl all comments in this discussion as unread.">
+                    <i class="fa fa-eye-slash"></i>
+                </div>
+                <i class="fa fa-circle-o-notch fa-spin esgst-hidden"></i>
+            </span>
+        `);
+        diffContainer = panel.firstElementChild;
+        goToUnread = diffContainer.nextElementSibling;
+        markRead = goToUnread.nextElementSibling;
+        markUnread = markRead.nextElementSibling;
+        loadingIcon = markUnread.nextElementSibling;
+        if (diff > 0) {
+            diffContainer.classList.remove(`esgst-hidden`);
+            goToUnread.classList.remove(`esgst-hidden`);
+            markRead.classList.remove(`esgst-hidden`);
+            if (diff !== count) {
+                markUnread.classList.remove(`esgst-hidden`);
+            }
+        } else {
+            markUnread.classList.remove(`esgst-hidden`);
+        }
+        goToUnread.addEventListener(`click`, function() {
+            goToUnread.classList.add(`esgst-hidden`);
+            markRead.classList.add(`esgst-hidden`);
+            markUnread.classList.add(`esgst-hidden`);
+            loadingIcon.classList.remove(`esgst-hidden`);
+            esgst.ctUnreadFound = false;
+            markCtCommentsReadUnread(true, true, false, false, 1, `${url}/search?page=`, function() {
+                loadingIcon.classList.add(`esgst-hidden`);
+                diffContainer.classList.add(`esgst-hidden`);
+                goToUnread.classList.remove(`esgst-hidden`);
+                markRead.classList.remove(`esgst-hidden`);
+                markUnread.classList.remove(`esgst-hidden`);
+            });
+        });
+        markRead.addEventListener(`click`, function() {
+            goToUnread.classList.add(`esgst-hidden`);
+            markRead.classList.add(`esgst-hidden`);
+            markUnread.classList.add(`esgst-hidden`);
+            loadingIcon.classList.remove(`esgst-hidden`);
+            markCtCommentsReadUnread(true, false, true, false, 1, `${url}/search?page=`, function() {
+                loadingIcon.classList.add(`esgst-hidden`);
+                diffContainer.classList.add(`esgst-hidden`);
+                markUnread.classList.remove(`esgst-hidden`);
+            });
+        });
+        markUnread.addEventListener(`click`, function() {
+            goToUnread.classList.add(`esgst-hidden`);
+            markRead.classList.add(`esgst-hidden`);
+            markUnread.classList.add(`esgst-hidden`);
+            loadingIcon.classList.remove(`esgst-hidden`);
+            markCtCommentsReadUnread(true, false, false, true, 1, `${url}/search?page=`, function() {
+                loadingIcon.classList.add(`esgst-hidden`);
+                diffContainer.classList.remove(`esgst-hidden`);
+                diffContainer.textContent = `(+${count})`;
+                goToUnread.classList.remove(`esgst-hidden`);
+                markRead.classList.remove(`esgst-hidden`);
+            });
+        });
+    }
+
+    function markCtCommentsReadUnread(firstRun, goToUnread, markRead, markUnread, nextPage, url, callback) {
+        request(null, true, `${url}${nextPage}`, function(response) {
+            var context, found, pagination;
+            context = DOM.parse(response.responseText);
+            loadCommentFeatures(context, goToUnread, markRead, markUnread);
+            if ((goToUnread && !esgst.ctUnreadFound) || !goToUnread) {
+                pagination = context.getElementsByClassName(`pagination__navigation`)[0];
+                if (pagination && ((esgst.ct_r && nextPage > 1) || (!esgst.ct_r && !pagination.lastElementChild.classList.contains(`is-selected`)))) {
+                    if (esgst.ct_r) {
+                        if (firstRun) {
+                            nextPage = parseInt(pagination.lastElementChild.getAttribute(`data-page-number`));
+                        } else {
+                            --nextPage;
+                        }
+                    } else {
+                        ++nextPage;
+                    }
+                    window.setTimeout(markCtCommentsReadUnread, 0, false, goToUnread, markRead, markUnread, nextPage, url, callback);
+                } else {
+                    callback();
+                }
+            } else {
+                callback();
+            }
+        });
+    }
+
+    function checkCtVisited(context) {
+        var code, comments, container, heading, i, match, matches, n, source, type, url;
+        comments = JSON.parse(GM_getValue(`comments`));
+        matches = context.querySelectorAll(`.table__column__heading, .giveaway__heading__name, .column_flex h3 a`);
+        for (i = 0, n = matches.length; i < n; ++i) {
+            match = matches[i];
+            url = match.getAttribute(`href`);
+            if (url) {
+                source = url.match(/(giveaway|discussion|ticket|trade)\/(.+?)(\/.*)?$/);
+                if (source) {
+                    type = `${source[1]}s`;
+                    code = source[2];
+                    container = match.closest(`.table__row-outer-wrap, .giveaway__row-outer-wrap, .row_outer_wrap`);
+                    if (comments[type][code] && comments[type][code].visited && container) {
+                        container.classList.add(`esgst-ct-visited`);
+                    }
+                    if (esgst.dh && type === `discussions`) {
+                        heading = container.querySelector(`.table__column--width-fill h3`);
+                        if (comments[type][code] && comments[type][code].highlighted) {
+                            highlightDhDiscussion(code, container);
+                            addDhUnhighlightButton(code, container, heading);
+                        } else {
+                            addDhHighlightButton(code, container, heading);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    /* Discussions Highlighter */
+
+    function loadDh() {
+        var button, code, comments, container, heading, source, type;
+        if (esgst.sg) {
+            button = insertHtml(document.getElementsByClassName(`nav__absolute-dropdown`)[1], `beforeEnd`, `
+                <div class="nav__row esgst-dh-view-button">
+				    <i class="icon-yellow fa fa-fw fa-star"></i>
+					<div class="nav__row__summary">
+					    <p class="nav__row__summary__name">Highlighted Discussions</p>
+					    <p class="nav__row__summary__description">View your highlighted discussions.</p>
+					</div>
+				</div>
+            `);
+            button.addEventListener(`click`, function() {
+                var discussions, i, keys, popup, set;
+                popup = createPopup_v6(`fa-star`, `Highlighted Discussions`);
+                popup.highlightedDiscussions = insertHtml(popup.description, `afterBegin`, `
+                    <div class="table esgst-text-left">
+                        <div class="table__heading">
+							<div class="table__column--width-fill">Summary</div>
+							<div class="table__column--width-small text-center">Comments</div>
+						</div>
+                    </div>
+                `);
+                discussions = JSON.parse(GM_getValue(`comments`)).discussions;
+                keys = Object.keys(discussions);
+                i = 0;
+                set = createButtonSet(`green`, `grey`, `fa-plus`, `fa-circle-o-notch fa-spin`, `Load more...`, `Loading more...`, function (callback) {
+                    getDhDiscussions(discussions, i, 0, keys, i + 5, popup, function (value) {
+                        i = value;
+                        if (i > keys.length) {
+                            set.set.remove();
+                        }
+                        callback();
+                    });
+                });
+                popup.description.appendChild(set.set);
+                popup.open();
+                set.trigger();
+            });
+            if (esgst.discussionPath) {
+                comments = JSON.parse(GM_getValue(`comments`)).discussions;
+                source = window.location.pathname.match(/^\/discussion\/(.+?)(\/.*)?$/);
+                if (source) {
+                    code = source[1];
+                    container = document.getElementsByClassName(`page__heading`)[0];
+                    heading = container.getElementsByClassName(`page__heading__breadcrumbs`)[0];
+                    if (comments[code] && comments[code].highlighted) {
+                        highlightDhDiscussion(code, heading);
+                        addDhUnhighlightButton(code, heading, container);
+                    } else {
+                        addDhHighlightButton(code, heading, container);
+                    }
+                }
+            }
+        }
+    }
+
+    function highlightDhDiscussion(code, context, save) {
+        if (save) {
+            createLock(`commentLock`, 300, function(deleteLock) {
+                var comments;
+                comments = JSON.parse(GM_getValue(`comments`));
+                if (!comments.discussions[code]) {
+                    comments.discussions[code] = {
+                        comments: {}
+                    };
+                }
+                comments.discussions[code].highlighted = true;
+                GM_setValue(`comments`, JSON.stringify(comments));
+                context.classList.add(`esgst-dh-highlighted`);
+                deleteLock();
+            });
+        } else {
+            context.classList.add(`esgst-dh-highlighted`);
+        }
+    }
+
+    function unhighlightDhDiscussion(code, context, save) {
+        if (save) {
+            createLock(`commentLock`, 300, function(deleteLock) {
+                var comments;
+                comments = JSON.parse(GM_getValue(`comments`));
+                delete comments.discussions[code].highlighted;
+                GM_setValue(`comments`, JSON.stringify(comments));
+                context.classList.remove(`esgst-dh-highlighted`);
+                deleteLock();
+            });
+        } else {
+            context.classList.remove(`esgst-dh-highlighted`);
+        }
+    }
+
+    function addDhHighlightButton(code, container, context) {
+        var button;
+        button = insertHtml(context, `afterBegin`, `
+            <div class="esgst-dh-button" title="Click to highlight this discussion.">
+                <i class="fa fa-star-o"></i>
+            <div>
+        `);
+        button.addEventListener(`click`, function() {
+            highlightDhDiscussion(code, container, true);
+            button.remove();
+            addDhUnhighlightButton(code, container, context);
+        });
+    }
+
+    function addDhUnhighlightButton(code, container, context) {
+        var button;
+        button = insertHtml(context, `afterBegin`, `
+            <div class="esgst-dh-button" title="Click to unhighlight this discussion.">
+                <i class="fa fa-star"></i>
+            </div>
+        `);
+        button.addEventListener(`click`, function() {
+            unhighlightDhDiscussion(code, container, true);
+            button.remove();
+            addDhHighlightButton(code, container, context);
+        });
+    }
+
+    function getDhDiscussions(discussions, i, j, keys, n, popup, callback) {
+        var key;
+        if (i < n) {
+            key = keys[j];
+            if (key) {
+                if (discussions[key].highlighted) {
+                    request(null, false, `/discussion/${key}/`, function(response) {
+                        var breadcrumbs, categoryLink, context, usernameLink;
+                        context = DOM.parse(response.responseText);
+                        breadcrumbs = context.getElementsByClassName(`page__heading__breadcrumbs`);
+                        categoryLink = breadcrumbs[0].firstElementChild.nextElementSibling.nextElementSibling;
+                        usernameLink = context.getElementsByClassName(`comment__username`)[0];
+                        popup.highlightedDiscussions.insertAdjacentHTML(`beforeEnd`, `
+                            <div>
+                                <div class="table__row-outer-wrap">
+    						        <div class="table__row-inner-wrap">
+	    						        <div>
+                                            ${context.getElementsByClassName(`global__image-outer-wrap`)[0].outerHTML}
+                                        </div>
+				    			        <div class="table__column--width-fill">
+    								        <h3>
+                                                <a class="table__column__heading" href="/discussion/${key}/">${categoryLink.nextElementSibling.nextElementSibling.firstElementChild.textContent}</a>
+                                            </h3>
+			    					        <p>
+                                                <a class="table__column__secondary-link" href="${categoryLink.getAttribute(`href`)}">${categoryLink.textContent}</a> -
+                                                ${context.querySelector(`[data-timestamp]`).outerHTML} ago by
+                                                <a class="table__column__secondary-link" href="${usernameLink.getAttribute(`href`)}">${usernameLink.textContent}</a>
+                                            </p>
+							            </div>
+							            <div class="table__column--width-small text-center">
+                                            <a class="table__column__secondary-link" href="/discussion/${key}/">${breadcrumbs[1].textContent.match(/(.+) Comments/)[1]}</a>
+                                        </div>
+								    </div>
+							    </div>
+                            </div>
+                        `);
+                        loadEndlessFeatures(popup.highlightedDiscussions.lastElementChild);
+                        popup.reposition();
+                        window.setTimeout(getDhDiscussions, 0, discussions, ++i, ++j, keys, n, popup, callback);
+                    });
+                } else {
+                    window.setTimeout(getDhDiscussions, 0, discussions, i, ++j, keys, n, popup, callback);
+                }
+            } else {
+                callback(j + 1);
+            }
+        } else {
+            callback(j);
+        }
     }
 
     /* Comment History */
@@ -19931,6 +20179,31 @@ function loadReplyMentionLink(context) {
             }
         } else {
             callback(i);
+        }
+    }
+
+    function loadReplyMentionLink(context) {
+        var matches = context.getElementsByClassName(esgst.sg ? "comment__children" : "comment_children");
+        for (var i = 0, n = matches.length; i < n; ++i) {
+            var Matches = matches[i].children;
+            if (Matches.length) {
+                addRMLLink(esgst.sg ? matches[i].parentElement.getElementsByClassName("comment__summary")[0] : matches[i].parentElement, Matches);
+            }
+        }
+    }
+
+    function addRMLLink(Context, Matches) {
+        var Username, ID, I, N, RMLLink;
+        Username = Context.getElementsByClassName(esgst.sg ? "comment__username" : "author_name")[0].textContent.trim();
+        ID = Context.id;
+        for (I = 0, N = Matches.length; I < N; ++I) {
+            Context = Matches[I].getElementsByClassName(esgst.sg ? "comment__actions" : "action_list")[0];
+            RMLLink = Context.getElementsByClassName("RMLLink")[0];
+            if (RMLLink) {
+                RMLLink.textContent = "@" + Username;
+            } else {
+                Context.insertAdjacentHTML("beforeEnd", "<a class=\"comment__actions__button RMLLink\" href=\"#" + ID + "\">@" + Username + "</a>");
+            }
         }
     }
 

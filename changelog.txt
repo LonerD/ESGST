@@ -1,4 +1,15 @@
 /*
+ * June 11, 2017 - v6.Beta.4.2
+ */
+
+* Added "Last Checked" information to the tooltip of Whitelist/Blacklist Checker and Not Activated/Multiple Wins Checker highlights (closes #142).
+
+Upgraded the following features to v6:
+
+* Comment Tracker - Fixed some bugs (possible solution to #134). Changed how the data is stored (your data should be transferred without any losses, but let me know about any missing data). You can now mark comments as unread (closes #128). Read comments and visited giveaways/discussions are no longer faded out - their background now changes to grey (possible solution to #143). The feature now works in the inbox page.
+* Discussion Highlighter - You can now view your highlighted discussions through the Discussions header button (closes #133).
+
+/*
  * June 11, 2017 - v6.Beta.4.1
  */
 
