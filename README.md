@@ -103,6 +103,14 @@ Tested on Microsoft Edge and most of it seems to work fine, but for some reason 
 
 * [Other Info](#other-info)
 
+### Quick Giveaway Browsing
+
+`steamgifts.com/*`
+
+* Allows you to quickly go to recommended/wishlist/group/new giveaways without having to first go to the main page and then select it at the sidebar.
+
+![](http://imgur.com/NDgqzFj.png)
+
 ### Game Categories
 
 `steamgifts.com/*`
