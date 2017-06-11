@@ -1,4 +1,10 @@
 /*
+ * June 11, 2017 - v6.Beta.4.3
+ */
+
+* Fixed a couple bugs in Header Refresher on SteamTrades.
+
+/*
  * June 11, 2017 - v6.Beta.4.2
  */
 
