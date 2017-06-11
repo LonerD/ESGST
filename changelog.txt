@@ -1,9 +1,18 @@
 /*
+ * June 11, 2017 - v6.Beta.4.1
+ */
+
+* Fixed a bug that was erasing game data when syncing owned games.
+
+/*
  * June 11, 2017 - v6.Beta.4.0
  */
 
 * Revamped Header Refresher to work better with Enter/Leave Giveaway Button and discontinued its support for Greasemonkey (if you are using Greasemonkey and you open multiple tabs, only one tab will refresh the header).
 * Level Progress Visualizer now takes up the entire main button. As a result, the hover effect has been disabled.
+* Giveaway Filters now has a separate setting for each of the giveaway pages (all, recommended, wishlist, group, new).
+* Added some titles and tooltips to Giveaway Filters.
+* Giveaway Filters now works if an advanced search was made, but the basic filters and the region restricted/dlc filters are disabled, as they are part of the advanced search.
 
 Upgraded the following features to v6:
 
