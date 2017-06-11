@@ -2,6 +2,7 @@
  * June 11, 2017 - v6.Beta.4.2
  */
 
+* Fixed a bug in Grid View.
 * Added "Last Checked" information to the tooltip of Whitelist/Blacklist Checker and Not Activated/Multiple Wins Checker highlights (closes #142).
 
 Upgraded the following features to v6:
