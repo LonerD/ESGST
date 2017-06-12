@@ -3,7 +3,7 @@
 // @namespace ESGST
 // @description Enhances SteamGifts and SteamTrades by adding some cool features to them.
 // @icon https://github.com/revilheart/ESGST/raw/master/Resources/esgstIcon.ico
-// @version 6.Beta.4.3
+// @version 6.Beta.4.4
 // @author revilheart
 // @contributor Royalgamer06
 // @downloadURL https://github.com/revilheart/ESGST/raw/master/ESGST.user.js
@@ -125,9 +125,9 @@
     }
 
     function updateCommentStorageToV6() {
-        if (!GM_getValue(`commentStorageV6`, false)) {
+        if (!GM_getValue(`commentStorageV6_2`, false)) {
             GM_setValue(`comments`, JSON.stringify(getCommentStorageV6(GM_getValue(`Comments`, {}), GM_getValue(`Comments_ST`, {}))));
-            GM_setValue(`commentStorageV6`, true);
+            GM_setValue(`commentStorageV6_2`, true);
         }
     }
 
@@ -145,10 +145,10 @@
                     comments: {}
                 };
             }
-            if (comments.discussions[key].Visited) {
+            if (savedSg[key].Visited) {
                 comments.discussions[key].visited = true;
             }
-            if (comments.discussions[key].Highlighted) {
+            if (savedSg[key].Highlighted) {
                 comments.discussions[key].highlighted = true;
             }
             for (subKey in savedSg[key]) {
@@ -168,7 +168,7 @@
                     comments: {}
                 };
             }
-            if (comments.trades[key].Visited) {
+            if (savedSt[key].Visited) {
                 comments.trades[key].visited = true;
             }
             for (subKey in savedSt[key]) {
@@ -3684,7 +3684,7 @@ margin: 0;
         }
     }
 
-    function syncBundleList() {
+    function syncBundleList(callback) {
         var popup = createPopup();
         popup.Icon.classList.add("fa-refresh");
         popup.Title.textContent = "Syncing...";
@@ -3697,7 +3697,7 @@ margin: 0;
         sync.OverallProgress = popup.OverallProgress;
         popup.popUp().reposition();
         sync.games = JSON.parse(GM_getValue(`games`));
-        syncBundles(sync, `/bundle-games/search?page=`, 1, function () {
+        syncBundles(sync, `/bundle-games/search?page=`, 0, function () {
             queueSave(sync.Progress, function () {
                 updateGames(sync.games);
                 GM_setValue(`LastSave`, 0);
@@ -3708,6 +3708,7 @@ margin: 0;
                 sync.Progress.innerHTML = sync.OverallProgress.innerHTML = "";
                 popup.Close.click();
                 GM_setValue("LastBundleSync", new Date().getTime());
+                callback();
             });
         });
     }
@@ -15523,7 +15524,7 @@ ${Results.join(``)}
     function loadWhitelistBlacklistChecker() {
         if (esgst.esgstHash) {
             addWBCButton();
-        } else {
+        } else if (Object.keys(esgst.currentUsers).length) {
             addWBCButton(esgst.mainPageHeading);
         }
         if (esgst.wbc_h) {
@@ -15571,7 +15572,7 @@ ${Results.join(``)}
             ID: "WBC_FC"
         }, {
             Check: function () {
-                return ((((WBC.User && !WBC.SC.checked) || !WBC.User) && !WBC.Update && !window.location.pathname.match(/^\/($|giveaways|discussions|users|archive)/)) ? true : false);
+                return ((((WBC.User && !WBC.SC.checked) || !WBC.User) && !WBC.Update && !window.location.pathname.match(/^\/(discussions|users|archive)/)) ? true : false);
             },
             Description: "Check all pages.",
             Title: "If disabled, only the current page will be checked.",
@@ -15726,12 +15727,10 @@ ${Results.join(``)}
                 }
             }
             if (WBC.FLC.checked) {
-                Match = window.location.href.match(/(.+?)(\/search\?(page=(\d+))?(.*))?$/);
-                getWBCUsers(WBC, 1, Match[4] ? parseInt(Match[4]) : 1, Match[1] + (window.location.pathname.match(/^\/$/) ? "giveaways/" : "/") + "search?" + (Match[5] ? (Match[5].replace(/^&|&$/g, "") + "&") :
-                    "") + "page=", function () {
-                        WBC.Users = sortArray(WBC.Users);
-                        checkWBCUsers(WBC, 0, WBC.Users.length, Callback);
-                    });
+                getWBCUsers(WBC, 1, esgst.currentPage, esgst.searchUrl, function () {
+                    WBC.Users = sortArray(WBC.Users);
+                    checkWBCUsers(WBC, 0, WBC.Users.length, Callback);
+                });
             } else {
                 WBC.Users = sortArray(WBC.Users);
                 checkWBCUsers(WBC, 0, WBC.Users.length, Callback);
@@ -16855,7 +16854,9 @@ ${Results.join(``)}
     /* */
 
     function loadMultiTag() {
-        addMTContainer(esgst.mainPageHeading);
+        if (Object.keys(esgst.currentUsers).length) {
+            addMTContainer(esgst.mainPageHeading);
+        }
     }
 
     function addMTContainer(Context, MT, SM) {
@@ -17691,7 +17692,13 @@ ${avatar.outerHTML}
         }
         document.getElementsByClassName("SMBundleSync")[0].addEventListener("click", function () {
             if (((new Date().getTime()) - LastBundleSync) > 604800000) {
-                syncBundleList();
+                syncBundleList(function() {
+                    var current = new Date();
+                    SMLastBundleSync.classList.remove("notification--warning");
+                    SMLastBundleSync.classList.add("notification--success");
+                    SMLastBundleSync.innerHTML =
+                        "<i class=\"fa fa-check-circle\"></i> Last synced " + current.toLocaleString() + ".";
+                });
             } else {
                 window.alert(`You synced the bundle list in less than a week ago. You can sync only once per week.`);
             }
@@ -18370,7 +18377,7 @@ Background: <input type="color" value="${bgColor}">
 
     function importComments(File, Key, SM) {
         createLock(`commentLock`, 300, function(deleteLock) {
-            GM_setValue(`comments`, JSON.parse(File.Data.comments));
+            GM_setValue(`comments`, JSON.stringify(File.Data.comments));
             deleteLock();
         });
     }
@@ -18838,6 +18845,7 @@ Background: <input type="color" value="${bgColor}">
         if (esgst.userPath) {
             giveaway.creator = window.location.pathname.match(/^\/user\/(.+)/)[1];
         }
+        giveaway.created = giveaway.creator === GM_getValue(`Username`);
         giveaway.links = giveaway.innerWrap.getElementsByClassName(`giveaway__links`)[0];
         if (giveaway.links) {
             giveaway.links.classList.add(`esgst-giveaway-links`);
@@ -18985,6 +18993,10 @@ Background: <input type="color" value="${bgColor}">
                 {
                     name: `Whitelist`,
                     key: `whitelist`
+                },
+                {
+                    name: `Created`,
+                    key: `created`
                 },
                 {
                     name: `Entered`,
@@ -19394,7 +19406,7 @@ Background: <input type="color" value="${bgColor}">
     }
 
     function addElgbButton(games, giveaway) {
-        if (!giveaway.ended && giveaway.creator !== GM_getValue(`Username`) && giveaway.level <= esgst.headerData.level && ((giveaway.id && ((games[giveaway.type][giveaway.id] && !games[giveaway.type][giveaway.id].owned) || !games[giveaway.type][giveaway.id])) || !giveaway.id)) {
+        if (!giveaway.ended && !giveaway.created && giveaway.level <= esgst.headerData.level && ((giveaway.id && ((games[giveaway.type][giveaway.id] && !games[giveaway.type][giveaway.id].owned) || !games[giveaway.type][giveaway.id])) || !giveaway.id)) {
             if (giveaway.entered) {
                 giveaway.elgbButton = createButtonSet(`yellow`, `grey`, `fa-minus-circle`, `fa-circle-o-notch fa-spin`, `Leave`, `Leaving...`, leaveElgbGiveaway.bind(null, giveaway)).set;
                 giveaway.panel.appendChild(giveaway.elgbButton);
@@ -19569,19 +19581,22 @@ Background: <input type="color" value="${bgColor}">
      * Features - Comments
      */
 
-    function loadCommentFeatures(context, goToUnread, markRead, markUnread) {
+    function loadCommentFeatures(context, goToUnread, markRead, markUnread, mainContext) {
         var comments, i, n;
-        comments = getComments(context);
+        if (!mainContext) {
+            mainContext = document;
+        }
+        comments = getComments(context, mainContext);
         for (i = 0, n = esgst.commentFeatures.length; i < n; ++i) {
             esgst.commentFeatures[i](comments, goToUnread, markRead, markUnread);
         }
     }
 
-    function getComments(context) {
+    function getComments(context, mainContext) {
         var comments, i, matches, n, sourceLink;
         comments = [];
         matches = context.querySelectorAll(`:not(.comment--submit) > .comment__parent, .comment__child, .comment_inner`);
-        sourceLink = context.querySelector(`.page__heading__breadcrumbs a[href*="/giveaway/"], .page__heading__breadcrumbs a[href*="/discussion/"], .page__heading__breadcrumbs a[href*="/ticket/"], .page_heading_breadcrumbs a[href*="/trade/"]`);
+        sourceLink = mainContext.querySelector(`.page__heading__breadcrumbs a[href*="/giveaway/"], .page__heading__breadcrumbs a[href*="/discussion/"], .page__heading__breadcrumbs a[href*="/ticket/"], .page_heading_breadcrumbs a[href*="/trade/"]`);
         for (i = 0, n = matches.length; i < n; ++i) {
             comments.push(getCommentInfo(matches[i], sourceLink));
         }
@@ -19894,7 +19909,7 @@ Background: <input type="color" value="${bgColor}">
         request(null, true, `${url}${nextPage}`, function(response) {
             var context, found, pagination;
             context = DOM.parse(response.responseText);
-            loadCommentFeatures(context, goToUnread, markRead, markUnread);
+            loadCommentFeatures(context, goToUnread, markRead, markUnread, context);
             if ((goToUnread && !esgst.ctUnreadFound) || !goToUnread) {
                 pagination = context.getElementsByClassName(`pagination__navigation`)[0];
                 if (pagination && ((esgst.ct_r && nextPage > 1) || (!esgst.ct_r && !pagination.lastElementChild.classList.contains(`is-selected`)))) {

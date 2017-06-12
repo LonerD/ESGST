@@ -1,4 +1,15 @@
 /*
+ * June 11, 2017 - v6.Beta.4.4
+ */
+
+* Fixed a bug that was not updating the sync date after syncing the bundle list (closes #99).
+* Prevented some buttons from appearing in places where they shouldn't (closes #103).
+* Added "Created" filter to Giveaway Filters (closes #137).
+* Fixed some bugs in Comment Tracker.
+* Fixed a bug in Whitelist/Blacklist Checker that was retrieving the wrong pages if the URL had a hash (closes #57).
+* Re-enabled the full list check option for the main giveaway pages in Whitelist/Blacklist Checker.
+
+/*
  * June 11, 2017 - v6.Beta.4.3
  */
 
