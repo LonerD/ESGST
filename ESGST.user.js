@@ -3,7 +3,7 @@
 // @namespace ESGST
 // @description Enhances SteamGifts and SteamTrades by adding some cool features to them.
 // @icon https://github.com/revilheart/ESGST/raw/master/Resources/esgstIcon.ico
-// @version 6.Beta.4.7
+// @version 6.Beta.4.8
 // @author revilheart
 // @contributor Royalgamer06
 // @downloadURL https://github.com/revilheart/ESGST/raw/master/ESGST.user.js
@@ -15828,7 +15828,7 @@ ${Results.join(``)}
                     WBC.Users.push(Username);
                 }
             }
-            if (WBC.FLC.checked) {
+            if (WBC.FLC.checked && ((((WBC.User && !WBC.SC.checked) || !WBC.User) && !WBC.Update && !window.location.pathname.match(/^\/(discussions|users|archive)/)))) {
                 getWBCUsers(WBC, 1, esgst.currentPage, esgst.searchUrl, function () {
                     WBC.Users = sortArray(WBC.Users);
                     checkWBCUsers(WBC, 0, WBC.Users.length, Callback);
