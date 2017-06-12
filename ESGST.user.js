@@ -3,7 +3,7 @@
 // @namespace ESGST
 // @description Enhances SteamGifts and SteamTrades by adding some cool features to them.
 // @icon https://github.com/revilheart/ESGST/raw/master/Resources/esgstIcon.ico
-// @version 6.Beta.4.5
+// @version 6.Beta.4.6
 // @author revilheart
 // @contributor Royalgamer06
 // @downloadURL https://github.com/revilheart/ESGST/raw/master/ESGST.user.js
@@ -65,7 +65,7 @@
         });
     } catch (error) {
         console.log(error);
-        window.alert(`ESGST has failed to load. Check the console for more info.`);
+        window.alert(`ESGST has failed to load. Check the console (F12) for errors and report them in the script's discussion/GitHub page.`);
     }
 
     function updateGameStorageToV6() {
@@ -373,6 +373,8 @@
             ded: `DED`,
             ch: `CH`,
             ct: `CT`,
+            ct_b: `ct_b`,
+            ct_g: `ct_g`,
             ct_r: `ct_lu`,
             cfh: `CFH`,
             cfh_i: `CFH_I`,
@@ -870,6 +872,16 @@
                 id: `ct`,
                 name: `Comment Tracker`,
                 options: [
+                    {
+                        id: `ct_g`,
+                        name: `Fade out/change background of visited giveaways.`,
+                        check: getValue(`ct_g`)
+                    },
+                    {
+                        id: `ct_b`,
+                        name: `Change background instead of fading out.`,
+                        check: getValue(`ct_b`)
+                    },
                     {
                         id: `ct_r`,
                         name: `Search for first unread comment in reverse order (from newest to oldest).`,
@@ -1423,24 +1435,12 @@
             addSMButton();
         }
         getUsersGames(document);
-        fixFadedClass(document);
-        esgst.endlessFeatures.push(fixFadedClass);
         loadFeatures();
         if (esgst.sg) {
             checkSync();
             updateGroups();
         }
         goToComment(esgst.originalHash);
-    }
-
-    function fixFadedClass(context) {
-        var matches = context.getElementsByClassName(`giveaway__row-inner-wrap`);
-        for (var i = 0, n = matches.length; i < n; ++i) {
-            if (matches[i].classList.contains(`is-faded`)) {
-                matches[i].classList.remove(`is-faded`);
-                matches[i].classList.add(`esgst-faded`);
-            }
-        }
     }
 
     function getUsersGames(Context) {
@@ -1488,7 +1488,7 @@
         }
         var numFailed = esgst.failedToLoad.length;
         if (numFailed > 0) {
-            window.alert(`${numFailed} ESGST features failed to load: ${esgst.failedToLoad.join(`, `)}. Check the console for more info.`);
+            window.alert(`${numFailed} ESGST features failed to load: ${esgst.failedToLoad.join(`, `)}. Check the console (F12) for errors and report them in the script's discussion/GitHub page.`);
         }
     }
 
@@ -3180,10 +3180,6 @@ margin-bottom: 0;
 min-width: 0;
 }
 
-.esgst-faded .giveaway__summary >:not(.esgst-giveaway-panel):not(.giveaway__columns) {
-opacity: 0.5;
-}
-
 .GVContainer .giveaway__columns:not(.esgst-giveaway-panel) {
 display: block;
 }
@@ -3208,9 +3204,6 @@ margin: 0;
             "}" +
             ".rhBusy >*, .CFHALIPF {" +
             "    opacity: 0.2;" +
-            "}" +
-            ".esgst-faded .giveaway__columns >:not(.GGPContainer), .esgst-faded .global__image-outer-wrap--game-medium {" +
-            "    opacity: 0.5;" +
             "}" +
             ".rhPopup {" +
             "    max-height: 75%;" +
@@ -3559,7 +3552,7 @@ margin: 0;
             "    padding: 5px !important;" +
             "}" +
             ".esgst-ct-comment-read, .esgst-ct-visited {" +
-            "    background-color: " + Unknown.replace(/rgb/, "rgba").replace(/\)/, ", 0.2)") + " !important;" +
+            "    background-color: " + Unknown.replace(/rgb/, "rgba").replace(/\)/, ", 0.1)") + " !important;" +
             "    padding: 5px !important;" +
             "}" +
             ".esgst-dh-button {" +
@@ -18796,7 +18789,7 @@ Background: <input type="color" value="${bgColor}">
             }
         }
         giveaway.innerWrap = giveaway.outerWrap.querySelector(`.giveaway__row-inner-wrap, .featured__inner-wrap, .table__row-inner-wrap`);
-        giveaway.entered = giveaway.innerWrap.classList.contains(`esgst-faded`);
+        giveaway.entered = giveaway.innerWrap.classList.contains(`is-faded`);
         giveaway.headingName = giveaway.innerWrap.querySelector(`.giveaway__heading__name, .featured__heading__medium, .table__column__heading`);
         giveaway.name = giveaway.headingName.textContent;
         match = giveaway.name.match(/\s\((.+) Copies\)/);
@@ -19478,7 +19471,7 @@ Background: <input type="color" value="${bgColor}">
             var responseJson;
             responseJson = JSON.parse(response.responseText);
             if (responseJson.type === `success`) {
-                giveaway.innerWrap.classList.add(`esgst-faded`);
+                giveaway.innerWrap.classList.add(`is-faded`);
                 giveaway.elgbButton.remove();
                 giveaway.elgbButton = createButtonSet(`yellow`, `grey`, `fa-minus-circle`, `fa-circle-o-notch fa-spin`, `Leave`, `Leaving...`, leaveElgbGiveaway.bind(null, giveaway)).set;
                 giveaway.panel.appendChild(giveaway.elgbButton);
@@ -19513,7 +19506,7 @@ Background: <input type="color" value="${bgColor}">
             var responseJson;
             responseJson = JSON.parse(response.responseText);
             if (responseJson.type === `success`) {
-                giveaway.innerWrap.classList.remove(`esgst-faded`);
+                giveaway.innerWrap.classList.remove(`is-faded`);
                 giveaway.elgbButton.remove();
                 giveaway.elgbButton = createButtonSet(`green`, `grey`, `fa-plus-circle`, `fa-circle-o-notch fa-spin`, `Enter`, `Entering...`, checkElgbDescription.bind(null, giveaway)).set;
                 giveaway.panel.appendChild(giveaway.elgbButton);
@@ -19738,7 +19731,12 @@ Background: <input type="color" value="${bgColor}">
             }
             comments[comment.type][comment.code].comments[comment.id].timestamp = comment.timestamp;
         }
-        comment.comment.classList.add(`esgst-ct-comment-read`);
+        if (esgst.ct_b) {
+            comment.comment.classList.add(`esgst-ct-comment-read`);
+        } else {
+            comment.comment.style.opacity = `0.5`;
+            setHoverOpacity(comment.comment, `1`, `0.5`);
+        }
     }
 
     function markCtCommentUnread(comment, comments, save) {
@@ -19953,7 +19951,14 @@ Background: <input type="color" value="${bgColor}">
                     code = source[2];
                     container = match.closest(`.table__row-outer-wrap, .giveaway__row-outer-wrap, .row_outer_wrap`);
                     if (comments[type][code] && comments[type][code].visited && container) {
-                        container.classList.add(`esgst-ct-visited`);
+                        if ((type === `giveaways` && esgst.ct_g) || type !== `giveaways`) {
+                            if (esgst.ct_b) {
+                                container.classList.add(`esgst-ct-visited`);
+                            } else {
+                                container.style.opacity = `0.5`;
+                                setHoverOpacity(container, `1`, `0.5`);
+                            }
+                        }
                     }
                     if (esgst.dh && type === `discussions`) {
                         heading = container.querySelector(`.table__column--width-fill h3`);

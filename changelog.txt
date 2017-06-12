@@ -1,4 +1,11 @@
 /*
+ * June 12, 2017 - v6.Beta.4.6
+ */
+
+* Added additional information to error alerts, so that the users properly report errors when they happen.
+* Reverted Comment History's default behavior to fading out.
+
+/*
  * June 11, 2017 - v6.Beta.4.5
  */
 
