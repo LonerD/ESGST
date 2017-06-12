@@ -1,4 +1,18 @@
 /*
+ * June 12, 2017 - v6.Beta.4.7
+ */
+
+* Fixed some bugs.
+* Added back the option to disable description popups to Enter/Leave Giveaway Button, but made the popups enabled by default.
+* Fixed a bug in Comment Tracker that wasn't resetting the loading icon when using reverse order to find an unread comment.
+* Fixed a typo in Comment Tracker (closes #154).
+* Enhanced the option to mark all comments as unread in a discussion in Comment Tracker to prevent it from making any requests (closes #152).
+
+Upgraded the following features to v6:
+
+* Avatar Popout - Completely revamped the feature using the styling from SquishedPotatoe's dark theme (it might also be incompatible with the theme for the moment because of class name changing) (closes #67).
+
+/*
  * June 12, 2017 - v6.Beta.4.6
  */
 

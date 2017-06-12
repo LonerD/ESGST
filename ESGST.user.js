@@ -3,7 +3,7 @@
 // @namespace ESGST
 // @description Enhances SteamGifts and SteamTrades by adding some cool features to them.
 // @icon https://github.com/revilheart/ESGST/raw/master/Resources/esgstIcon.ico
-// @version 6.Beta.4.6
+// @version 6.Beta.4.7
 // @author revilheart
 // @contributor Royalgamer06
 // @downloadURL https://github.com/revilheart/ESGST/raw/master/ESGST.user.js
@@ -317,7 +317,7 @@
         }
         esgst.pageTop = 25;
         esgst.commentsTop = 0;
-        esgst.APBoxes = {};
+        esgst.apPopouts = {};
         esgst.users = {};
         esgst.games = {};
         esgst.giveaways = [];
@@ -356,7 +356,7 @@
             gwc: `gpGwc`,
             gwr: `gpGwc`,
             elgb: `gpElgb`,
-            elgb_p: `elgb_p`,
+            elgb_d: `elgb_d`,
             elgb_rb: `elgb_rb`,
             qgb: `qgb`,
             ggp: `GGP`,
@@ -448,6 +448,7 @@
             ged: `ged`
         };
         esgst.defaultValues = {
+            elgb_d: true,
             ged: true,
             sm_hb: true,
             sm_ebd: false,
@@ -757,13 +758,13 @@
                 name: `Enter/Leave Giveaway Button`,
                 options: [
                     {
-                        id: `elgb_p`,
-                        name: `Popup description instead of opening giveaway in a new tab.`,
-                        check: getValue(`elgb_p`)
+                        id: `elgb_d`,
+                        name: `Popup description when entering.`,
+                        check: getValue(`elgb_d`)
                     },
                     {
                         id: `elgb_rb`,
-                        name: `Popup reply box when entering a giveaway / include it in the description popup.`,
+                        name: `Popup reply box when entering / include it in the description popup.`,
                         check: getValue(`elgb_rb`)
                     }
                 ],
@@ -1038,9 +1039,8 @@
             {
                 id: `ap`,
                 name: `Avatar Popout`,
-                check: getValue(`ap`) && esgst.sg,
-                load: loadAvatarPopout,
-                endless: true
+                check: getValue(`ap`),
+                load: loadAp
             },
             {
                 id: `uh`,
@@ -2363,7 +2363,49 @@
         return Popup;
     }
 
-    // Popout
+    /* Popout */
+
+    function createPopout_v6(className) {
+        var currentContext, popout;
+        popout = {};
+        popout.popout = insertHtml(document.body, `beforeEnd`, `<div class="${className} esgst-popout esgst-hidden"></div>`);
+        popout.open = function(context) {
+            currentContext = context;
+            popout.popout.classList.remove(`esgst-hidden`);
+            popout.reposition(context);
+        };
+        popout.close = function() {
+            popout.popout.classList.add(`esgst-hidden`);
+        };
+        popout.reposition = function() {
+            var contextHeight, contextLeft, contextRect, contextTop, contextWidth, popoutHeight, popoutWidth;
+            popout.popout.style.left = `0`;
+            popout.popout.style.top = `0`;
+            contextRect = currentContext.getBoundingClientRect();
+            contextHeight = contextRect.height;
+            contextLeft = contextRect.left;
+            contextTop = contextRect.top;
+            contextWidth = contextRect.width;
+            popoutHeight = popout.popout.offsetHeight;
+            popoutWidth = popout.popout.offsetWidth;
+            if (contextLeft + popoutWidth > document.documentElement.clientWidth) {
+                popout.popout.style.left = `${contextLeft - popoutWidth + contextWidth}px`;
+            } else {
+                popout.popout.style.left = `${contextLeft}px`;
+            }
+            if (contextTop + popoutHeight > document.documentElement.clientHeight) {
+                popout.popout.style.top = `${contextTop - popoutHeight + window.scrollY}px`;
+            } else {
+                popout.popout.style.top = `${contextTop + contextWidth + window.scrollY}px`;
+            }
+        };
+        document.addEventListener(`click`, function(event) {
+            if (!popout.popout.contains(event.target) && !currentContext.contains(event.target)) {
+                popout.close();
+            }
+        });
+        return popout;
+    }
 
     function createPopout(Context) {
         var Popout;
@@ -2874,6 +2916,12 @@ background-color: ${backgroundColor} !important;
 border-bottom: 1px dotted;
 }
 
+.esgst-popout {
+position: absolute;
+left: 0;
+top: 0;
+};
+
 .esgst-popup {
 display: none;
 max-width: 75%;
@@ -3284,7 +3332,7 @@ margin: 0;
             "    white-space: nowrap;" +
             "    z-index: 997;" +
             "}" +
-            ".rhCheckbox, .APAvatar, .APLink, .APLink >* {" +
+            ".rhCheckbox, .esgst-ap-avatar {" +
             "    cursor: pointer;" +
             "}" +
             ".rhWBIcon, .esgst-wbh-icon, .esgst-namwc-icon {" +
@@ -3330,7 +3378,7 @@ margin: 0;
             "    margin: 5px 0 15px;" +
             "    padding: 0;" +
             "}" +
-            ".ESPanel >*:not(:last-child), .APBox .featured__table__row__left:not(.esgst-uh-title), .MRReply, .MREdit {" +
+            ".ESPanel >*:not(:last-child), .esgst-ap-popout .featured__table__row__left:not(.esgst-uh-title), .MRReply, .MREdit {" +
             "    margin: 0 10px 0 0;" +
             "}" +
             ".ESStatus {" +
@@ -3374,6 +3422,12 @@ margin: 0;
             "}" +
             ".GVBox >:first-child {" +
             "    margin: 0 !important;" +
+            "}" +
+            ".is-faded.GVBox {" +
+            "    opacity: 1;" +
+            "}" +
+            ".is-faded.GVBox .global__image-outer-wrap--game-medium {" +
+            "    opacity: 0.5;" +
             "}" +
             ".GVInfo {" +
             "    align-items: center;" +
@@ -3471,33 +3525,96 @@ margin: 0;
             "}" +
             ".IWHIcon {" +
             "    margin: 0 0 0 5px;" +
-            "}" +
-            ".APBox .featured__outer-wrap:not(.esgst-uh-box) {" +
-            "    padding: 5px;" +
-            "    width: auto;" +
-            "    white-space: normal;" +
-            "}" +
-            ".APBox .featured__inner-wrap, .MPPPostDefault {" +
-            "    padding: 0;" +
-            "}" +
-            ".APBox .global__image-outer-wrap--avatar-large {" +
-            "    height: 64px;" +
-            "    margin: 5px;" +
-            "    width: 64px;" +
-            "}" +
-            ".APBox .featured__heading, .APBox .sidebar__shortcut-inner-wrap {" +
-            "    margin: 0;" +
-            "}" +
-            ".APBox .featured__heading__medium {" +
-            "    font-size: 18px;" +
-            "}" +
-            ".APBox .featured__table {" +
-            "    display: inline-block;" +
-            "    width: 100%;" +
-            "}" +
-            ".APBox .featured__table__row {" +
-            "    padding: 2px;" +
-            "}" +
+            "}" + /* from SquishedPotato's dark theme */ `
+.APBox .featured__inner-wrap .APLink[href*="group"] {
+	top: -30px;
+            }
+            .esgst-ap-popout {
+                border-radius: 5px;
+            	box-shadow: 0 0 10px 2px hsla(0, 0%, 0%, 0.8);
+            	min-width: 400px;
+                padding: 0;
+                text-shadow: none;
+                z-index: 9999;
+            }
+
+            .esgst-ap-popout .featured__outer-wrap:not(.esgst-uh-box) {
+    	        border-radius: 5px;
+                padding: 5px;
+                width: auto;
+                white-space: normal;
+            }
+
+            .esgst-ap-popout .featured__inner-wrap {
+                align-items: flex-start;
+	            padding: 0 5px 0 0;
+            }
+
+            .esgst-ap-popout .featured__heading {
+                margin: 0;
+            }
+
+            .esgst-ap-popout .featured__heading__medium {
+                font-size: 18px;
+            }
+
+            .esgst-ap-link {
+	            width: 100px;
+            }
+
+            .esgst-ap-link .global__image-outer-wrap--avatar-large {
+	            box-sizing: content-box !important;
+	            height: 64px !important;
+                margin: 5px;
+	            width: 64px !important;
+            }
+
+            .esgst-ap-popout .global__image-outer-wrap--avatar-large:hover {
+            	background-color: hsla(0, 0%, 25%, 0.2) !important;
+            }
+
+            .esgst-ap-link .global__image-inner-wrap {
+	            background-size: cover !important;
+            }
+
+            .esgst-ap-popout .sidebar__shortcut-inner-wrap {
+            	margin: 10px 0;
+            }
+
+            .esgst-ap-popout .sidebar__shortcut-inner-wrap i {
+	            height: 18px;
+	            font-size: 12px;
+            }
+
+            .esgst-ap-popout .sidebar__shortcut-inner-wrap * {
+            	line-height: 18px;
+            	vertical-align: middle;
+            }
+
+            .esgst-ap-popout .sidebar__shortcut-inner-wrap img {
+            	height: 16px;
+            	vertical-align: baseline !important;
+            	width: 16px;
+            }
+
+            .esgst-ap-popout .featured__table {
+                display: inline-block;
+                width: 100%;
+            }
+
+            .esgst-ap-popout .featured__table__row {
+                padding: 2px;
+            }
+
+            .esgst-ap-popout .featured__table__row:nth-child(n + 3) {
+            	margin-left: -95px;
+            }
+
+            .esgst-ap-popout .featured__table__row:last-of-type .featured__table__row__right * {
+            	font-size: 11px;
+            }
+
+            ` +
             ".GTSApply, .GTSDelete, .esgst-ct-comment-button {" +
             "    cursor: pointer;" +
             "}" +
@@ -13972,87 +14089,79 @@ ${Results.join(``)}
         }
     }
 
-    
+    /* Avatar Popout */
 
-    function loadAvatarPopout(context) {
-        var matches = context.getElementsByClassName(`global__image-outer-wrap--avatar-small`);
-        for (var i = 0, n = matches.length; i < n; ++i) {
-            addAPContainer(matches[i]);
+    function loadAp() {
+        if (esgst.sg) {
+            esgst.endlessFeatures.push(getApAvatars);
+            getApAvatars(document);
         }
     }
 
-    function addAPContainer(APAvatar) {
-        var URL, Match, Key, ID, APContainer, Context;
-        URL = APAvatar.getAttribute("href");
-        Match = URL ? URL.match(/\/(user|group)\/(.+)/) : null;
-        if (Match) {
-            Key = Match[1];
-            ID = Match[2];
-            APAvatar.classList.add("APAvatar");
-            APAvatar.removeAttribute("href");
-            APAvatar.insertAdjacentHTML("afterEnd", "<span class=\"APContainer\"></span>");
-            APContainer = APAvatar.nextElementSibling;
-            APContainer.appendChild(APAvatar);
-            Context = APContainer.closest(".SGCBox") || APContainer.closest(".GGPBox");
-            if (Context) {
-                Context.insertAdjacentHTML("afterEnd", "<div></div>");
-                Context = Context.nextElementSibling;
-            } else {
-                Context = APContainer;
-            }
-            APAvatar.addEventListener("click", function () {
-                var APBox;
-                APBox = esgst.APBoxes[ID];
-                if (APBox) {
-                    if (APBox.Popout.classList.contains("rhHidden")) {
-                        Context.appendChild(APBox.Popout);
-                        APBox.customRule = function (Target) {
-                            return (!APContainer.contains(Target) && !Context.contains(Target));
-                        };
-                        APBox.popOut(APAvatar);
+    function getApAvatars(context) {
+        var i, matches, n;
+        matches = context.getElementsByClassName(`global__image-outer-wrap--avatar-small`);
+        for (i = 0, n = matches.length; i < n; ++i) {
+            setApAvatar(matches[i]);
+        }
+    }
+
+    function setApAvatar(apAvatar) {
+        var id, match, type, url;
+        url = apAvatar.getAttribute(`href`);
+        if (url) {
+            match = url.match(/\/(user|group)\/(.+)/);
+            if (match) {
+                id = match[2];
+                type = match[1];
+                apAvatar.classList.add(`esgst-ap-avatar`);
+                apAvatar.removeAttribute(`href`);
+                apAvatar.addEventListener(`click`, function() {
+                    var popout;
+                    popout = esgst.apPopouts[id];
+                    if (popout) {
+                        popout.open(apAvatar);
                     } else {
-                        APBox.Popout.classList.add("rhHidden");
+                        esgst.apPopouts[id] = popout = createPopout_v6(`page__outer-wrap esgst-ap-popout`);
+                        popout.popout.innerHTML = `
+                            <i class="fa fa-circle-o-notch fa-spin"></i>
+                            <span>Loading ${type}...</span>
+                        `;
+                        popout.open(apAvatar);
+                        request(null, false, url, function (response) {
+                            var avatar, columns, i, link, n, reportButton, responseHtml, table;
+                            responseHtml = DOM.parse(response.responseText);
+                            popout.popout.innerHTML = ``;
+                            popout.popout.appendChild(responseHtml.getElementsByClassName(`featured__outer-wrap`)[0]);
+                            avatar = popout.popout.getElementsByClassName(`global__image-outer-wrap--avatar-large`)[0];
+                            link = insertHtml(avatar, `afterEnd`, `<a class="esgst-ap-link"></a>`);
+                            link.appendChild(avatar);
+                            link.setAttribute(`href`, url);
+                            table = popout.popout.getElementsByClassName(`featured__table`)[0];
+                            table.parentElement.insertBefore(responseHtml.getElementsByClassName(`sidebar__shortcut-inner-wrap`)[0], table);
+                            reportButton = popout.popout.getElementsByClassName(`js__submit-form-inner`)[0];
+                            if (reportButton) {
+                                reportButton.addEventListener(`click`, function() {
+                                    return reportButton.getElementsByTagName(`form`)[0].submit();
+                                });
+                            }
+                            columns = table.children;
+                            for (i = 0, n = columns[1].children.length; i < n; ++i) {
+                                columns[0].appendChild(columns[1].firstElementChild);
+                            }
+                            columns[1].remove();
+                            if (type === `user`) {
+                                loadProfileFeatures(popout.popout);
+                            }
+                            popout.reposition();
+                        });
                     }
-                } else {
-                    esgst.APBoxes[ID] = APBox = createPopout(Context);
-                    APBox.Popout.classList.add("APBox");
-                    APBox.Popout.innerHTML =
-                        "<i class=\"fa fa-circle-o-notch fa-spin\"></i> " +
-                        "<span>Loading " + Key + "...</span>";
-                    APBox.customRule = function (Target) {
-                        return (!APContainer.contains(Target) && !Context.contains(Target));
-                    };
-                    APBox.popOut(APAvatar);
-                    makeRequest(null, URL, APBox.Popout, function (Response) {
-                        var ResponseHTML, Avatar, Columns, ReportButton, APLink, I, N;
-                        ResponseHTML = DOM.parse(Response.responseText);
-                        APBox.Popout.innerHTML =
-                            ResponseHTML.getElementsByClassName("featured__outer-wrap")[0].outerHTML +
-                            "<div class=\"sidebar__shortcut-outer-wrap\">" + ResponseHTML.getElementsByClassName("sidebar__shortcut-inner-wrap")[0].outerHTML + "</div>";
-                        Avatar = APBox.Popout.getElementsByClassName("global__image-outer-wrap--avatar-large")[0];
-                        Columns = APBox.Popout.getElementsByClassName("featured__table__column");
-                        ReportButton = APBox.Popout.getElementsByClassName("js__submit-form-inner")[0];
-                        Avatar.insertAdjacentHTML("afterEnd", "<a class=\"APLink\"></a>");
-                        APLink = Avatar.nextElementSibling;
-                        APLink.appendChild(Avatar);
-                        APLink.setAttribute("href", URL);
-                        for (I = 0, N = Columns[1].children.length; I < N; ++I) {
-                            Columns[0].appendChild(Columns[1].firstElementChild);
-                        }
-                        if (ReportButton) {
-                            ReportButton.addEventListener("click", function () {
-                                return ReportButton.getElementsByTagName("form")[0].submit();
-                            });
-                        }
-                        if (Key == "user") {
-                            loadProfileFeatures(APBox.Popout);
-                        }
-                        APBox.reposition(APAvatar);
-                    });
-                }
-            });
+                });
+            }
         }
     }
+
+    /* */
 
     function loadProfileFeatures(Context) {
         var Heading, SteamButton, User;
@@ -19399,16 +19508,18 @@ Background: <input type="color" value="${bgColor}">
     }
 
     function addElgbButton(games, giveaway) {
+        var callback;
         if (!giveaway.ended && !giveaway.created && giveaway.level <= esgst.headerData.level && ((giveaway.id && ((games[giveaway.type][giveaway.id] && !games[giveaway.type][giveaway.id].owned) || !games[giveaway.type][giveaway.id])) || !giveaway.id)) {
             if (giveaway.entered) {
                 giveaway.elgbButton = createButtonSet(`yellow`, `grey`, `fa-minus-circle`, `fa-circle-o-notch fa-spin`, `Leave`, `Leaving...`, leaveElgbGiveaway.bind(null, giveaway)).set;
                 giveaway.panel.appendChild(giveaway.elgbButton);
             } else {
+                callback = esgst.elgb_d ? checkElgbDescription : enterElgbGiveaway;
                 if (giveaway.points <= esgst.headerData.points) {
-                    giveaway.elgbButton = createButtonSet(`green`, `grey`, `fa-plus-circle`, `fa-circle-o-notch fa-spin`, `Enter`, `Entering...`, checkElgbDescription.bind(null, giveaway)).set;
+                    giveaway.elgbButton = createButtonSet(`green`, `grey`, `fa-plus-circle`, `fa-circle-o-notch fa-spin`, `Enter`, `Entering...`, callback.bind(null, giveaway)).set;
                     giveaway.panel.appendChild(giveaway.elgbButton);
                 } else {
-                    giveaway.elgbButton = createButtonSet(`red`, `grey`, `fa-plus-circle`, `fa-circle-o-notch fa-spin`, `Enter`, `Entering...`, checkElgbDescription.bind(null, giveaway)).set;
+                    giveaway.elgbButton = createButtonSet(`red`, `grey`, `fa-plus-circle`, `fa-circle-o-notch fa-spin`, `Enter`, `Entering...`, callback.bind(null, giveaway)).set;
                     giveaway.panel.appendChild(giveaway.elgbButton);
                     giveaway.elgbButton.setAttribute(`data-error`, true);
                     giveaway.elgbButton.title = `Not Enough Points`;
@@ -19424,42 +19535,38 @@ Background: <input type="color" value="${bgColor}">
             var box, description, popup, set;
             description = DOM.parse(response.responseText).getElementsByClassName(`page__description`)[0];
             if (description || esgst.elgb_rb) {
-                if (esgst.elgb_p || esgst.elgb_rb) {
-                    popup = createPopup_v6(`fa-file-text-o`, `Giveaway Description`, true);
-                    if (description) {
-                        description.classList.add(`esgst-text-left`);
-                        popup.description.insertAdjacentHTML(`beforeEnd`, description.outerHTML);
-                    }
-                    if (esgst.elgb_rb) {
-                        box = insertHtml(popup.description, `beforeEnd`, `<textarea></textarea>`);
-                        addCFHPanel(box);
-                    }
-                    set = createButtonSet(`green`, `grey`, `fa-plus-circle`, `fa-circle-o-notch fa-spin`, `Enter Giveaway`, `Entering...`, function (callback) {
-                        enterElgbGiveaway(giveaway, function() {
-                            mainCallback();
-                            if (box && box.value) {
-                                request(`xsrf_token=${esgst.xsrfToken}&do=comment_new&description=${box.value}`, false, giveaway.url, function(response) {
-                                    callback();
-                                    popup.opened.close();
-                                });
-                            } else {
+                popup = createPopup_v6(`fa-file-text-o`, `Giveaway Description`, true);
+                if (description) {
+                    description.classList.add(`esgst-text-left`);
+                    popup.description.insertAdjacentHTML(`beforeEnd`, description.outerHTML);
+                }
+                if (esgst.elgb_rb) {
+                    box = insertHtml(popup.description, `beforeEnd`, `<textarea></textarea>`);
+                    addCFHPanel(box);
+                }
+                set = createButtonSet(`green`, `grey`, `fa-plus-circle`, `fa-circle-o-notch fa-spin`, `Enter Giveaway`, `Entering...`, function (callback) {
+                    enterElgbGiveaway(giveaway, function() {
+                        mainCallback();
+                        if (box && box.value) {
+                            request(`xsrf_token=${esgst.xsrfToken}&do=comment_new&description=${box.value}`, false, giveaway.url, function(response) {
                                 callback();
                                 popup.opened.close();
-                            }
-                        });
-                    });
-                    popup.description.appendChild(set.set);
-                    popup.open(function() {
-                        if (box) {
-                            box.focus();
+                            });
+                        } else {
+                            callback();
+                            popup.opened.close();
                         }
                     });
-                    popup.close = function () {
-                        mainCallback();
-                    };
-                } else {
-                    window.open(giveaway.url);
-                }
+                });
+                popup.description.appendChild(set.set);
+                popup.open(function() {
+                    if (box) {
+                        box.focus();
+                    }
+                });
+                popup.close = function () {
+                    mainCallback();
+                };
             } else {
                 enterElgbGiveaway(giveaway, mainCallback);
             }
@@ -19664,7 +19771,7 @@ Background: <input type="color" value="${bgColor}">
                     };
                 }
                 saved[comment.type][comment.code].visited = true;
-                button = comment.comment.getElementsByClassName(`esgst-ct-comment-button`)[0];console.log(comment, comment.id);
+                button = comment.comment.getElementsByClassName(`esgst-ct-comment-button`)[0];
                 if (comment.author === GM_getValue(`Username`)) {
                     markCtCommentRead(comment, saved);
                 } else if (!saved[comment.type][comment.code].comments[comment.id] || comment.timestamp !== saved[comment.type][comment.code].comments[comment.id].timestamp) {
@@ -19793,7 +19900,7 @@ Background: <input type="color" value="${bgColor}">
             <div class="page_heading_btn esgst-heading-button" title="Mark all comments in this page as read.">
                 <i class="fa fa-eye"></i>
             </div>
-            <div class="page_heading_btn esgst-heading-button" title="Marl all comments in this page as unread.">
+            <div class="page_heading_btn esgst-heading-button" title="Mark all comments in this page as unread.">
                 <i class="fa fa-eye-slash"></i>
             </div>
         `);
@@ -19817,25 +19924,32 @@ Background: <input type="color" value="${bgColor}">
         for (i = 0, n = matches.length; i < n; ++i) {
             match = matches[i];
             countLink = match.getElementsByClassName(`table__column--width-small text-center`)[0];
-            count = parseInt(countLink.textContent.replace(/,/g, ``)) + 1;
-            url = match.getElementsByClassName(`table__column__heading`)[0].getAttribute(`href`);
-            code = url.match(/\/discussion\/(.+?)(\/.*)?$/)[1];
-            if (comments[code]) {
-                read = 0;
-                for (id in comments[code].comments) {
-                    if (comments[code].comments[id].timestamp) {
-                        ++read;
+            if (countLink) {
+                count = parseInt(countLink.textContent.replace(/,/g, ``)) + 1;
+                url = match.getElementsByClassName(`table__column__heading`)[0].getAttribute(`href`);
+                if (url) {
+                    code = url.match(/\/discussion\/(.+?)(\/.*)?$/);
+                    if (code) {
+                        code = code[1];
+                        if (comments[code]) {
+                            read = 0;
+                            for (id in comments[code].comments) {
+                                if (comments[code].comments[id].timestamp) {
+                                    ++read;
+                                }
+                            }
+                            diff = count === read ? 0 : count - read;
+                        } else {
+                            diff = count;
+                        }
+                        addCtDiscussionPanel(code, countLink, count, diff, url);
                     }
                 }
-                diff = count === read ? 0 : count - read;
-            } else {
-                diff = count;
             }
-            addCtDiscussionPanel(countLink, count, diff, url);
         }
     }
 
-    function addCtDiscussionPanel(context, count, diff, url) {
+    function addCtDiscussionPanel(code, context, count, diff, url) {
         var diffContainer, goToUnread, loadingIcon, markRead, markUnread, panel;
         panel = insertHtml(context, `beforeEnd`, `
             <span>
@@ -19846,7 +19960,7 @@ Background: <input type="color" value="${bgColor}">
                 <div class="esgst-heading-button esgst-hidden" title="Mark all comments in this discussion as read.">
                     <i class="fa fa-eye"></i>
                 </div>
-                <div class="esgst-heading-button esgst-hidden" title="Marl all comments in this discussion as unread.">
+                <div class="esgst-heading-button esgst-hidden" title="Mark all comments in this discussion as unread.">
                     <i class="fa fa-eye-slash"></i>
                 </div>
                 <i class="fa fa-circle-o-notch fa-spin esgst-hidden"></i>
@@ -19897,7 +20011,14 @@ Background: <input type="color" value="${bgColor}">
             markRead.classList.add(`esgst-hidden`);
             markUnread.classList.add(`esgst-hidden`);
             loadingIcon.classList.remove(`esgst-hidden`);
-            markCtCommentsReadUnread(true, false, false, true, 1, `${url}/search?page=`, function() {
+            createLock(`commentLock`, 300, function(deleteLock) {
+                var comments, key;
+                comments = JSON.parse(GM_getValue(`comments`));
+                for (key in comments.discussions[code].comments) {
+                    comments.discussions[code].comments[key].timestamp = 0;
+                }
+                GM_setValue(`comments`, JSON.stringify(comments));
+                deleteLock();
                 loadingIcon.classList.add(`esgst-hidden`);
                 diffContainer.classList.remove(`esgst-hidden`);
                 diffContainer.textContent = `(+${count})`;
@@ -19915,8 +20036,8 @@ Background: <input type="color" value="${bgColor}">
             if ((goToUnread && !esgst.ctUnreadFound) || !goToUnread) {
                 pagination = context.getElementsByClassName(`pagination__navigation`)[0];
                 ++nextPage;
-                if (pagination && ((esgst.ct_r && nextPage > 1) || (!esgst.ct_r && !pagination.lastElementChild.classList.contains(`is-selected`)))) {
-                    if (esgst.ct_r) {
+                if (pagination && ((goToUnread && ((esgst.ct_r && nextPage > 1) || (!esgst.ct_r && !pagination.lastElementChild.classList.contains(`is-selected`)))) || (!goToUnread && !pagination.lastElementChild.classList.contains(`is-selected`)))) {
+                    if (goToUnread && esgst.ct_r) {
                         if (firstRun) {
                             nextPage = parseInt(pagination.lastElementChild.getAttribute(`data-page-number`));
                         } else {
@@ -19924,6 +20045,8 @@ Background: <input type="color" value="${bgColor}">
                         }
                         if (nextPage > 1) {
                             window.setTimeout(markCtCommentsReadUnread, 0, false, goToUnread, markRead, markUnread, nextPage, url, callback);
+                        } else {
+                            callback();
                         }
                     } else {
                         window.setTimeout(markCtCommentsReadUnread, 0, false, goToUnread, markRead, markUnread, nextPage, url, callback);
