@@ -3,7 +3,7 @@
 // @namespace ESGST
 // @description Enhances SteamGifts and SteamTrades by adding some cool features to them.
 // @icon https://github.com/revilheart/ESGST/raw/master/Resources/esgstIcon.ico
-// @version 6.Beta.4.4
+// @version 6.Beta.4.5
 // @author revilheart
 // @contributor Royalgamer06
 // @downloadURL https://github.com/revilheart/ESGST/raw/master/ESGST.user.js
@@ -3559,7 +3559,7 @@ margin: 0;
             "    padding: 5px !important;" +
             "}" +
             ".esgst-ct-comment-read, .esgst-ct-visited {" +
-            "    background-color: " + Unknown.replace(/rgb/, "rgba").replace(/\)/, ", 0.1)") + " !important;" +
+            "    background-color: " + Unknown.replace(/rgb/, "rgba").replace(/\)/, ", 0.2)") + " !important;" +
             "    padding: 5px !important;" +
             "}" +
             ".esgst-dh-button {" +
@@ -19604,12 +19604,16 @@ Background: <input type="color" value="${bgColor}">
     }
 
     function getCommentInfo(context, sourceLink) {
-        var comment, source;
+        var comment, matches, n, source;
         comment = {};
         comment.comment = context;
         comment.author = comment.comment.querySelector(`.comment__author, .author_name`).textContent.trim();
         comment.actions = comment.comment.querySelector(`.comment__actions, .action_list`);
-        comment.permalink = comment.actions.querySelector(`:last-of-type[href*="/comment/"]`);
+        matches = comment.actions.querySelectorAll(`[href*="/comment/"]`);
+        n = matches.length;
+        if (n > 0) {
+            comment.permalink = matches[n - 1];
+        }
         comment.id = comment.permalink ? comment.permalink.getAttribute(`href`).match(/\/comment\/(.+)/)[1] : ``;
         comment.timestamp = parseInt(comment.actions.firstElementChild.lastElementChild.getAttribute(`data-timestamp`));
         if (esgst.inboxPath) {
@@ -19667,7 +19671,7 @@ Background: <input type="color" value="${bgColor}">
                     };
                 }
                 saved[comment.type][comment.code].visited = true;
-                button = comment.comment.getElementsByClassName(`esgst-ct-comment-button`)[0];
+                button = comment.comment.getElementsByClassName(`esgst-ct-comment-button`)[0];console.log(comment, comment.id);
                 if (comment.author === GM_getValue(`Username`)) {
                     markCtCommentRead(comment, saved);
                 } else if (!saved[comment.type][comment.code].comments[comment.id] || comment.timestamp !== saved[comment.type][comment.code].comments[comment.id].timestamp) {
@@ -19912,17 +19916,20 @@ Background: <input type="color" value="${bgColor}">
             loadCommentFeatures(context, goToUnread, markRead, markUnread, context);
             if ((goToUnread && !esgst.ctUnreadFound) || !goToUnread) {
                 pagination = context.getElementsByClassName(`pagination__navigation`)[0];
+                ++nextPage;
                 if (pagination && ((esgst.ct_r && nextPage > 1) || (!esgst.ct_r && !pagination.lastElementChild.classList.contains(`is-selected`)))) {
                     if (esgst.ct_r) {
                         if (firstRun) {
                             nextPage = parseInt(pagination.lastElementChild.getAttribute(`data-page-number`));
                         } else {
-                            --nextPage;
+                            nextPage -= 2;
+                        }
+                        if (nextPage > 1) {
+                            window.setTimeout(markCtCommentsReadUnread, 0, false, goToUnread, markRead, markUnread, nextPage, url, callback);
                         }
                     } else {
-                        ++nextPage;
+                        window.setTimeout(markCtCommentsReadUnread, 0, false, goToUnread, markRead, markUnread, nextPage, url, callback);
                     }
-                    window.setTimeout(markCtCommentsReadUnread, 0, false, goToUnread, markRead, markUnread, nextPage, url, callback);
                 } else {
                     callback();
                 }
@@ -19991,7 +19998,7 @@ Background: <input type="color" value="${bgColor}">
                 keys = Object.keys(discussions);
                 i = 0;
                 set = createButtonSet(`green`, `grey`, `fa-plus`, `fa-circle-o-notch fa-spin`, `Load more...`, `Loading more...`, function (callback) {
-                    getDhDiscussions(discussions, i, 0, keys, i + 5, popup, function (value) {
+                    getDhDiscussions(discussions, i, i, keys, i + 5, popup, function (value) {
                         i = value;
                         if (i > keys.length) {
                             set.set.remove();

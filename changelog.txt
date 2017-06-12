@@ -1,4 +1,11 @@
 /*
+ * June 11, 2017 - v6.Beta.4.5
+ */
+
+* Fixed more Comment Tracker bugs.
+* Darkened the highlight in Comment Tracker.
+
+/*
  * June 11, 2017 - v6.Beta.4.4
  */
 
