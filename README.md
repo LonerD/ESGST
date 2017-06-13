@@ -549,14 +549,20 @@ Tested on Microsoft Edge and most of it seems to work fine, but for some reason 
 
 * Shows your status in groups from your groups page.
 
-### Giveaway Groups Popup
+### One-Click Hide Giveaway Button
 
 `steamgifts.com/*`
 
-![](http://i.imgur.com/XiThr1l.png)
+* Allows you to hide giveaways with one click.
 
-* Pops out a box with all the groups of a giveaway upon clicking on the groups button.
-* Has Avatar Popout and Groups Highlighter built-in.
+### Giveaway Groups Loader
+
+`steamgifts.com/*`
+
+![](http://i.imgur.com/PN73phv.png)
+
+* Loads the groups of a giveaway and shows them below it.
+* Groups that you are a member of are highlighted in bold.
 
 ### Giveaway Error Search Links
 
