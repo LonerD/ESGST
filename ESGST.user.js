@@ -3,7 +3,7 @@
 // @namespace ESGST
 // @description Enhances SteamGifts and SteamTrades by adding some cool features to them.
 // @icon https://github.com/revilheart/ESGST/raw/master/Resources/esgstIcon.ico
-// @version 6.Beta.4.8
+// @version 6.Beta.5.0
 // @author revilheart
 // @contributor Royalgamer06
 // @downloadURL https://github.com/revilheart/ESGST/raw/master/ESGST.user.js
@@ -66,6 +66,99 @@
     } catch (error) {
         console.log(error);
         window.alert(`ESGST has failed to load. Check the console (F12) for errors and report them in the script's discussion/GitHub page.`);
+    }
+
+    function updateUserStorageToV6() {
+        if (!GM_getValue(`userStorageV6`, false)) {
+            GM_setValue(`users`, JSON.stringify(getUserStorageV6(GM_getValue(`Users`, []))));
+            GM_setValue(`userStorageV6`, true);
+        }
+    }
+
+    function getUserStorageV6(saved) {
+        var i, n, users, steamId;
+        users = {
+            users: {},
+            steamIds: {}
+        };
+        for (i = 0, n = saved.length; i < n; ++i) {
+            steamId = saved[i].SteamID64;
+            users.users[steamId] = {
+                id: saved[i].ID,
+                username: saved[i].Username
+            };
+            if (saved[i].Tags) {
+                users.users[steamId].tags = saved[i].Tags.split(`, `);
+            }
+            if (saved[i].Notes) {
+                users.users[steamId].notes = saved[i].Notes;
+            }
+            if (saved[i].Whitelisted) {
+                users.users[steamId].whitelisted = true;
+            }
+            if (saved[i].Blacklisted) {
+                users.users[steamId].blacklisted = true;
+            }
+            if (saved[i].WBC) {
+                users.users[steamId].wbc = {
+                    result: saved[i].WBC.Result.replace(/^(.)/, function (m, p1) {
+                        return p1.toLowerCase();
+                    }),
+                    giveaway: saved[i].WBC.Giveaway,
+                    whitelistGiveaway: saved[i].WBC.WhitelistGiveaway,
+                    groupGiveaways: saved[i].WBC.GroupGiveaways,
+                    lastCheck: saved[i].WBC.LastSearch,
+                    timestamp: saved[i].WBC.Timestamp
+                };
+            }
+            if (saved[i].NAMWC) {
+                users.users[steamId].namwc = {};
+                if (saved[i].NAMWC.Results) {
+                    users.users[steamId].namwc.results = {};
+                    users.users[steamId].namwc.results.activated = saved[i].NAMWC.Results.Activated;
+                    users.users[steamId].namwc.results.notActivated = saved[i].NAMWC.Results.NotActivated;
+                    users.users[steamId].namwc.results.multiple = saved[i].NAMWC.Results.Multiple;
+                    users.users[steamId].namwc.results.notMultiple = saved[i].NAMWC.Results.NotMultiple;
+                    users.users[steamId].namwc.results.unknown = saved[i].NAMWC.Results.Unknown;
+                }
+                if (saved[i].NAMWC.LastSearch) {
+                    users.users[steamId].namwc.lastCheck = saved[i].NAMWC.LastSearch;
+                }
+            }
+            if (saved[i].NRF) {
+                users.users[steamId].nrf = {};
+                var found = saved[i].NRF.OverallProgress;
+                found = found ? found.match(/(\d+) of (\d+)/) : null;
+                if (found) {
+                    users.users[steamId].nrf.found = parseInt(found[1]);
+                    users.users[steamId].nrf.total = parseInt(found[2]);
+                } else {
+                    users.users[steamId].nrf.found = 0;
+                    users.users[steamId].nrf.total = 0;
+                }
+                users.users[steamId].nrf.results = ``;
+                var matches = DOM.parse(saved[i].NRF.Results).getElementsByClassName(`giveaway__summary`);
+                for (var j = 0, nj = matches.length; j < nj; ++j) {
+                    var outerWrap = document.createElement(`div`);
+                    var innerWrap = document.createElement(`div`);
+                    outerWrap.className = `giveaway__row-outer-wrap`;
+                    innerWrap.className = `giveaway__row-inner-wrap`;
+                    innerWrap.appendChild(matches[0]);
+                    outerWrap.appendChild(innerWrap);
+                    users.users[steamId].nrf.results += outerWrap.outerHTML;
+                }
+                users.users[steamId].nrf.lastCheck = saved[i].NRF.LastSearch;
+            }
+            if (saved[i].RWSCVL) {
+                users.users[steamId].rwscvl = {
+                    won: saved[i].RWSCVL.WonCV,
+                    sent: saved[i].RWSCVL.SentCV,
+                    lastCheck: saved[i].RWSCVL.LastSentCheck
+                };
+            }
+            users.steamIds[saved[i].Username] = steamId;
+        }
+        return users;
     }
 
     function updateGameStorageToV6() {
@@ -186,6 +279,7 @@
     }
 
     function loadEsgst() {
+        updateUserStorageToV6();
         updateGameStorageToV6();
         updateCommentHistoryStorageToV6();
         updateCommentStorageToV6();
@@ -266,7 +360,7 @@
         esgst.accountPath = window.location.pathname.match(/^\/account/);
         esgst.inboxPath = window.location.pathname.match(/^\/messages/);
         esgst.groupsPath = window.location.pathname.match(/^\/account\/steam\/groups/);
-        esgst.esgstHash = window.location.hash.match(/#ESGST/);
+        esgst.menuPath = window.location.hash.match(/#ESGST/);
         esgst.header = document.getElementsByTagName(`header`)[0];
         esgst.pagination = document.getElementsByClassName(`pagination`)[0];
         esgst.featuredContainer = document.getElementsByClassName(`featured__container`)[0];
@@ -359,7 +453,8 @@
             elgb_d: `elgb_d`,
             elgb_rb: `elgb_rb`,
             qgb: `qgb`,
-            ggp: `GGP`,
+            ggl: `ggp`,
+            ochgb: `ochgb`,
             gt: `GTS`,
             sgg: `SGG`,
             rcvc: `rcvc`,
@@ -772,11 +867,16 @@
                 load: loadElgb
             },
             {
-                id: `ggp`,
-                name: `Giveaway Groups Popup`,
-                check: getValue(`ggp`) && esgst.sg,
-                load: loadGiveawayGroupsPopup,
-                endless: true
+                id: `ggl`,
+                name: `Giveaway Groups Loader`,
+                check: getValue(`ggl`),
+                load: loadGgl
+            },
+            {
+                id: `ochgb`,
+                name: `One-Click Hide Giveaway Button`,
+                check: getValue(`ochgb`),
+                load: loadOchgb
             },
             {
                 id: `gt`,
@@ -1111,7 +1211,7 @@
                         check: getValue(`namwc_h`)
                     }
                 ],
-                check: getValue(`namwc`) && esgst.sg && (esgst.userPath || esgst.winnersPath || esgst.esgstHash || esgst.ap || esgst.namwc_h),
+                check: getValue(`namwc`) && esgst.sg && (esgst.userPath || esgst.winnersPath || esgst.menuPath || esgst.ap || esgst.namwc_h),
                 load: loadNotActivatedMultipleWinsChecker
             },
             {
@@ -1599,6 +1699,76 @@
         }
     }
 
+    function getSteamId(steamId, id, username, users, callback) {
+        var user;
+        if (steamId && username) {
+            if (users.users[steamId]) {
+                callback(steamId, checkUsernameChange(users, steamId, username));
+            } else {
+                users.users[steamId] = {
+                    username: username
+                };
+                if (id) {
+                    users.users[steamId].id = id;
+                }
+                users.steamIds[username] = steamId;
+                callback(steamId);
+            }
+        } else if (steamId) {
+            if (users.users[steamId]) {
+                callback(steamId);
+            } else {
+            request(null, false, `https://www.steamgifts.com/go/user/${steamId}`, function(response) {
+                var id;
+                users.users[steamId] = {};
+                username = response.finalUrl.match(/\/user\/(.+)/);
+                if (username) {
+                    users.users[steamId].username = username[1];
+                    users.steamIds[username[1]] = steamId;
+                    id = DOM.parse(response.responseText).querySelector(`[name="child_user_id"]`);
+                    if (id) {
+                        users.users[steamId].id = id;
+                    }
+                }
+                callback(steamId);
+            });
+            }
+        } else {
+            steamId = users.steamIds[username];
+            if (steamId && users.users[steamId]) {
+                callback(steamId, checkUsernameChange(users, steamId, username));
+            } else {
+            request(null, false, `https://www.steamgifts.com/user/${username}`, function(response) {
+                var id, responseHtml;
+                responseHtml = DOM.parse(response.responseText);
+                steamId = responseHtml.querySelector(`[href*="/profiles/"]`).getAttribute(`href`).match(/\d+/)[0];
+                if (users.users[steamId]) {
+                    callback(steamId, checkUsernameChange(users, steamId, username));
+                } else {
+                    users.users[steamId] = {
+                        username: username
+                    };
+                    id = responseHtml.querySelector(`[name="child_user_id"]`);
+                    if (id) {
+                        users.users[steamId].id = id.value;
+                    }
+                    users.steamIds[username] = steamId;
+                    callback(steamId);
+                }
+            });
+            }
+        }
+    }
+
+    function checkUsernameChange(users, steamId, username) {
+        if (users.users[steamId].username && users.users[steamId].username !== username) {
+            delete users.steamIds[users.users[steamId].username];
+            users.steamIds[username] = steamId;
+            return true;
+        }
+        return false;
+    }
+
     function queueSave(Element, Callback) {
         var CurrentDate;
         Element.Save = setInterval(function () {
@@ -1618,116 +1788,14 @@
         }, 100);
     }
 
-    function updateUsers(UpdatedUsers) {
-        var SavedUsers, I, N, User, J, Key;
-        SavedUsers = GM_getValue("Users");
-        for (I = 0, N = UpdatedUsers.length; I < N; ++I) {
-            User = UpdatedUsers[I];
-            J = getUserIndex(User, SavedUsers);
-            if (J >= 0) {
-                for (Key in User) {
-                    SavedUsers[J][Key] = User[Key];
-                }
-            } else {
-                SavedUsers.push(User);
-            }
-        }
-        GM_setValue("Users", SavedUsers);
-    }
-
-    function saveUser(User, Element, Callback) {
-        var SavedUsers, I;
-        SavedUsers = GM_getValue("Users");
-        I = getUserIndex(User, SavedUsers);
-        if (I >= 0) {
-            checkUsernameChange(User, SavedUsers[I]);
-            GM_setValue("Users", SavedUsers);
-            Callback();
-        } else if (User.Username && User.SteamID64) {
-            SavedUsers.push(User);
-            GM_setValue("Users", SavedUsers);
-            Callback();
+    function getUserID(steamId, users, callback) {
+        if (users[steamId].id) {
+            callback(users[steamId].id);
         } else {
-            setUser(Element, User, function () {
-                if (esgst.sg) {
-                    I = getUserIndex(User, SavedUsers);
-                    if (I >= 0) {
-                        checkUsernameChange(User, SavedUsers[I]);
-                    } else {
-                        SavedUsers.push(User);
-                    }
-                } else {
-                    SavedUsers.push(User);
-                }
-                GM_setValue("Users", SavedUsers);
-                Callback();
+            request(null, false, `/user/${users[steamId].username}`, function(response) {
+                users[steamId].id = DOM.parse(response.responseText).querySelector(`[name="child_user_id"]`).value;
+                callback(users[steamId].id);
             });
-        }
-    }
-
-    function setUser(Element, User, Callback) {
-        queueRequest(Element, null, "https://www.steamgifts.com" + (esgst.sg ? "" : "/go") + "/user/" + (esgst.sg ? User.Username : User.SteamID64), function (Response) {
-            var ResponseHTML;
-            ResponseHTML = DOM.parse(Response.responseText);
-            if (esgst.sg) {
-                User.SteamID64 = ResponseHTML.querySelector("a[href*='/profiles/']").getAttribute("href").match(/\d+/)[0];
-            } else {
-                User.Username = Response.finalUrl.match(/\/user\/(.+)/)[1];
-            }
-            User.ID = ResponseHTML.querySelector("input[name='child_user_id']");
-            User.ID = User.ID ? User.ID.value : "";
-            Callback();
-        });
-    }
-
-    function getUserID(User, Element, Callback) {
-        var SavedUser;
-        SavedUser = getUser(User);
-        if (SavedUser.ID) {
-            User.ID = SavedUser.ID;
-            Callback();
-        } else {
-            queueRequest(Element, null, "/user/" + User.Username, function (Response) {
-                User.ID = DOM.parse(Response.responseText).querySelector("[name='child_user_id']").value;
-                Callback();
-            });
-        }
-    }
-
-    function getUser(User) {
-        var SavedUsers, I;
-        SavedUsers = GM_getValue("Users");
-        I = getUserIndex(User, SavedUsers);
-        return ((I >= 0) ? SavedUsers[I] : null);
-    }
-
-    function getUserIndex(User, SavedUsers) {
-        var Query, Key, I;
-        if (User.SteamID64) {
-            Query = User.SteamID64;
-            Key = "SteamID64";
-        } else {
-            Query = User.Username;
-            Key = "Username";
-        }
-        for (I = SavedUsers.length - 1; (I >= 0) && (SavedUsers[I][Key] != Query); --I);
-        return I;
-    }
-
-    function checkUsernameChange(User, SavedUser) {
-        var Key;
-        for (Key in User) {
-            if (User.Username && (User.Username != SavedUser.Username) && (Key == "Tags")) {
-                if (SavedUser.Tags) {
-                    if (User.Tags) {
-                        SavedUser.Tags += ", " + User.Tags;
-                    }
-                } else if (User.Tags) {
-                    SavedUser.Tags = User.Tags;
-                }
-            } else {
-                SavedUser[Key] = User[Key];
-            }
         }
     }
 
@@ -1934,56 +2002,40 @@
     function syncWhitelistBlacklist(Sync, Callback) {
         var SavedUsers;
         if (!Sync.Canceled) {
-            Sync.Users = [];
-            SavedUsers = GM_getValue("Users");
-            clearWhitelistBlacklist(Sync, 0, SavedUsers.length, SavedUsers, function () {
+            createLock(`userLock`, 300, function(deleteLock) {
+                SavedUsers = JSON.parse(GM_getValue(`users`));
+                for (var key in SavedUsers.users) {
+                    delete SavedUsers.users[key].whitelisted;
+                    delete SavedUsers.users[key].whitelistedDate;
+                    delete SavedUsers.users[key].blacklisted;
+                    delete SavedUsers.users[key].blacklistedData;
+                }
+                GM_setValue(`users`, JSON.stringify(SavedUsers));
+                deleteLock();
                 Sync.OverallProgress.innerHTML =
                     "<i class=\"fa fa-circle-o-notch fa-spin\"></i> " +
                     "<span>Syncing your whitelist...</span>";
-                getWhitelistBlacklist(Sync, "/account/manage/whitelist/search?page=", 1, "Whitelisted", function () {
+                window.setTimeout(getWhitelistBlacklist, 0, Sync, "/account/manage/whitelist/search?page=", 1, "whitelisted", function () {
                     Sync.OverallProgress.innerHTML =
                         "<i class=\"fa fa-circle-o-notch fa-spin\"></i> " +
                         "<span>Syncing your blacklist...</span>";
-                    getWhitelistBlacklist(Sync, "/account/manage/blacklist/search?page=", 1, "Blacklisted", function () {
-                        queueSave(Sync, function () {
-                            updateUsers(Sync.Users);
-                            GM_setValue("LastSave", 0);
-                            Callback();
-                        });
-                    });
+                    window.setTimeout(getWhitelistBlacklist, 0, Sync, "/account/manage/blacklist/search?page=", 1, "blacklisted", Callback);
                 });
             });
         }
     }
 
-    function clearWhitelistBlacklist(Sync, I, N, SavedUsers, Callback) {
-        if (!Sync.Canceled) {
-            if (I < N) {
-                Sync.Users.push({
-                    Username: SavedUsers[I].Username,
-                    ID: SavedUsers[I].ID,
-                    SteamID64: SavedUsers[I].SteamID64,
-                    Whitelisted: false,
-                    Blacklisted: false
-                });
-                setTimeout(clearWhitelistBlacklist, 0, Sync, ++I, N, SavedUsers, Callback);
-            } else {
-                Callback();
-            }
-        }
-    }
-
     function getWhitelistBlacklist(Sync, URL, NextPage, Key, Callback) {
         if (!Sync.Canceled) {
-            queueRequest(Sync, null, URL + NextPage, function (Response) {
+            request(null, true, URL + NextPage, function (Response) {
                 var ResponseHTML, Matches;
                 ResponseHTML = DOM.parse(Response.responseText);
-                Matches = ResponseHTML.getElementsByClassName("table__column__heading");
+                Matches = ResponseHTML.getElementsByClassName("table__row-outer-wrap");
                 getWhitelistBlacklistUsers(Sync, 0, Matches.length, Matches, Key, function () {
                     var Pagination;
                     Pagination = ResponseHTML.getElementsByClassName("pagination__navigation")[0];
                     if (Pagination && !Pagination.lastElementChild.classList.contains("is-selected")) {
-                        setTimeout(getWhitelistBlacklist, 0, Sync, URL, ++NextPage, Key, Callback);
+                        window.setTimeout(getWhitelistBlacklist, 0, Sync, URL, ++NextPage, Key, Callback);
                     } else {
                         Callback();
                     }
@@ -1996,20 +2048,18 @@
         var User, J;
         if (!Sync.Canceled) {
             if (I < N) {
-                User = {
-                    Username: Matches[I].textContent
-                };
-                J = getUserIndex(User, Sync.Users);
-                if (J >= 0) {
-                    Sync.Users[J][Key] = true;
-                    setTimeout(getWhitelistBlacklistUsers, 0, Sync, ++I, N, Matches, Key, Callback);
-                } else {
-                    setUser(Sync, User, function () {
-                        User[Key] = true;
-                        Sync.Users.push(User);
-                        setTimeout(getWhitelistBlacklistUsers, 0, Sync, ++I, N, Matches, Key, Callback);
+                var username = Matches[I].getElementsByClassName(`table__column__heading`)[0].textContent;
+                var date = parseInt(Matches[I].querySelector(`[data-timestamp]`).getAttribute(`data-timestamp`)) * 1e3;
+                createLock(`userLock`, 300, function(deleteLock) {
+                    var users = JSON.parse(GM_getValue(`users`));
+                    getSteamId(null, null, username, users, function(steamId) {
+                        users.users[steamId][Key] = true;
+                        users.users[steamId][Key + "Date"] = date;
+                        GM_setValue(`users`, JSON.stringify(users));
+                        deleteLock();
+                        window.setTimeout(getWhitelistBlacklistUsers, 0, Sync, ++I, N, Matches, Key, Callback);
                     });
-                }
+                });
             } else {
                 Callback();
             }
@@ -2179,24 +2229,20 @@
         var lock, locked;
         locked = JSON.parse(GM_getValue(key, `{}`));
         if (!locked || !locked.uuid || locked.timestamp < Date.now() - threshold) {
-            console.log(`[ESGST] ${uuid} preparing to lock ${key}...`);
             doLock(key, uuid);
             window.setTimeout(function () {
                 locked = JSON.parse(GM_getValue(key, `{}`));
                 if (locked && locked.uuid === uuid) {
-                    console.log(`[ESGST] ${uuid} locked ${key}...`);
                     lock = window.setInterval(doLock, threshold / 2, key, uuid);
                     callback(function () {
                         window.clearInterval(lock);
                         GM_deleteValue(key);
                     });
                 } else {
-                    console.log(`[ESGST] ${uuid} failed to lock ${key}...`);
                     checkLock(key, threshold, uuid, callback);
                 }
             }, threshold / 2);
         } else {
-            console.log(`[ESGST] ${uuid} waiting to lock ${key}...`);
             window.setTimeout(checkLock, threshold / 3, key, threshold, uuid, callback);
         }
     }
@@ -2916,6 +2962,27 @@ background-color: ${backgroundColor} !important;
 border-bottom: 1px dotted;
 }
 
+.esgst-ggl-panel {
+padding: 5px;
+}
+
+.esgst-ggl-panel >*:not(:last-child) {
+margin-right: 10px;
+}
+
+.esgst-ggl-panel >* {
+box-shadow: none;
+}
+
+.esgst-ggl-panel i {
+cursor: default;
+border: 0;
+}
+
+.esgst-ggl-member {
+font-weight: bold;
+}
+
 .esgst-popout {
 position: absolute;
 left: 0;
@@ -3167,7 +3234,11 @@ cursor: pointer;
 margin-right: 5px;
 }
 
-.table__column__heading {
+p.table__column__heading {
+display: inline-block;
+}
+
+.MTGameCheckbox ~ .table__row-outer-wrap {
 display: inline-block;
 }
 
@@ -3413,9 +3484,6 @@ margin: 0;
             "    padding: 2px;" +
             "    margin: 0 !important;" +
             "}" +
-            ".GVIcons .GGPButton {" +
-            "    padding: 0;" +
-            "}" +
             ".GVBox {" +
             "    display: block;" +
             "    margin: 0 0 0 25px;" +
@@ -3455,7 +3523,7 @@ margin: 0;
             "    height: 14px;" +
             "    width: 14px;" +
             "}" +
-            ".SGCBox .table__row-inner-wrap, .GGPBox .table__row-inner-wrap {" +
+            ".SGCBox .table__row-inner-wrap {" +
             "    padding: 0 10px;" +
             "}" +
             ".PUTButton i, .MTUserCheckbox i, .MTGameCheckbox i, .CFHPanel span >:first-child >* {" +
@@ -3646,13 +3714,6 @@ margin: 0;
             ".AGSPanel input, .AGSPanel select {" +
             "    padding: 0 5px;" +
             "    width: 50px;" +
-            "}" +
-            ".GGPContainer {" +
-            "    padding: 0;" +
-            "}" +
-            ".GGPButton {" +
-            "    cursor: pointer;" +
-            "    padding: 0 8px;" +
             "}" +
             ".ELGBButton, .ELGBButton + div {" +
             "    background: none;" +
@@ -4859,60 +4920,136 @@ ${title}
         esgst.pinnedGiveawaysButton.addEventListener("click", togglePGBButton);
     }
 
-    function loadGiveawayGroupsPopup(context) {
-        var matches = context.getElementsByClassName(`giveaway__column--group`);
-        for (var i = 0, n = matches.length; i < n; ++i) {
-            addGGPBox(matches[i]);
+    /* One-Click Hide Giveaway Button */
+
+    function loadOchgb() {
+        if (esgst.sg) {
+            esgst.giveawayFeatures.push(setOchgbButtons);
         }
     }
 
-    function addGGPBox(Context) {
-        var URL, GGPButton, Popup;
-        URL = Context.getAttribute("href");
-        GGPButton = Context;
-        GGPButton.classList.add("GGPButton");
-        GGPButton.removeAttribute("href");
-        GGPButton.addEventListener("click", function () {
-            var GGPPopup;
-            if (Popup) {
-                Popup.popUp();
-            } else {
-                Popup = createPopup();
-                Popup.Icon.classList.add("fa-user");
-                Popup.Title.innerHTML = "<a href=\"" + URL + "\">Giveaway Groups</a>";
-                Popup.OverallProgress.innerHTML =
-                    "<i class=\"fa fa-circle-o-notch fa-spin\"></i> " +
-                    "<span>Loading giveaway groups...</span>";
-                GGPPopup = Popup.popUp();
-                getGGPGroups(URL + "/search?page=", 1, Popup.Progress, [], function (Groups) {
-                    var I, N;
-                    Popup.OverallProgress.innerHTML = "";
-                    for (I = 0, N = Groups.length; I < N; ++I) {
-                        Popup.Results.appendChild(Groups[I]);
+    function setOchgbButtons(giveaways) {
+        var i, n;
+        for (i = 0, n = giveaways.length; i < n; ++i) {
+            setOchgbButton(giveaways[i]);
+        }
+    }
+
+    function setOchgbButton(giveaway) {
+        var button, i, matches, n, newButton;
+        button = giveaway.innerWrap.querySelector(`.giveaway__hide, .featured__giveaway__hide`);
+        if (button) {
+            if (esgst.giveawayPath) {
+                button = button.parentElement;
+            }
+            newButton = insertHtml(button, `afterEnd`, `<a><i class="${esgst.giveawayPath ? `` : `giveaway__icon`} fa fa-eye-slash"></i></a>`);
+            button.remove();
+            newButton.addEventListener(`click`, function() {
+                newButton.firstElementChild.className = `giveaway__icon fa fa-circle-o-notch fa-spin`;
+                request(`xsrf_token=${esgst.xsrfToken}&do=hide_giveaways_by_game_id&game_id=${giveaway.gameId}`, false, `/ajax.php`, function() {
+                    newButton.remove();
+                    if (!esgst.giveawayPath) {
+                        giveaway.outerWrap.remove();
+                        matches = document.querySelectorAll(`.giveaway__row-outer-wrap[data-game-id="${giveaway.gameId}"]`);
+                        for (i = 0, n = matches.length; i < n; ++i) {
+                            matches[i].remove();
+                        }
                     }
-                    loadEndlessFeatures(Popup.Results);
-                    GGPPopup.reposition();
                 });
+            });
+        }
+    }
+
+    /* Giveaway Groups Loader */
+
+    function loadGgl() {
+        if (esgst.sg) {
+            esgst.giveawayFeatures.push(getGglGiveaways);
+        }
+    }
+
+    function getGglGiveaways(giveaways) {
+        var savedGiveaways, savedGroups;
+        savedGiveaways = JSON.parse(GM_getValue(`giveaways`, `{}`));
+        savedGroups = GM_getValue(`Groups`);
+        loadGglGroups(giveaways, 0, giveaways.length, savedGiveaways, savedGroups);
+    }
+
+    function loadGglGroups(giveaways, i, n, savedGiveaways, savedGroups) {
+        var giveaway;
+        if (i < n) {
+            giveaway = giveaways[i];
+            if (giveaway.group) {
+                if (savedGiveaways[giveaway.code] && savedGiveaways[giveaway.code].groups) {
+                    addGglPanel(giveaway, savedGiveaways[giveaway.code].groups, savedGroups);
+                    window.setTimeout(loadGglGroups, 0, giveaways, ++i, n, savedGiveaways, savedGroups);
+                } else {
+                    getGglGroups({}, 1, `${giveaway.url}/groups/search?page=`, function(groups) {
+                        if (groups) {
+                            createLock(`giveawayLock`, 300, function(deleteLock) {
+                                savedGiveaways = JSON.parse(GM_getValue(`giveaways`, `{}`));
+                                if (!savedGiveaways[giveaway.code]) {
+                                    savedGiveaways[giveaway.code] = {};
+                                }
+                                savedGiveaways[giveaway.code].groups = groups;
+                                GM_setValue(`giveaways`, JSON.stringify(savedGiveaways));
+                                deleteLock();
+                                addGglPanel(giveaway, groups, savedGroups);
+                                window.setTimeout(loadGglGroups, 0, giveaways, ++i, n, savedGiveaways, savedGroups);
+                            });
+                        } else {
+                            window.setTimeout(loadGglGroups, 0, giveaways, ++i, n, savedGiveaways, savedGroups);
+                        }
+                    });
+                }
+            } else {
+                window.setTimeout(loadGglGroups, 0, giveaways, ++i, n, savedGiveaways, savedGroups);
+            }
+        }
+    }
+
+    function addGglPanel(giveaway, groups, savedGroups) {
+        var className, i, key, n, panel;
+        if (!giveaway.summary.getElementsByClassName(`esgst-ggl-panel`)[0]) {
+            panel = insertHtml(giveaway.summary, `beforeEnd`, `
+                <div class="popup__actions esgst-ggl-panel">
+                    <i class="fa fa-user"></i>
+                </div>
+            `);
+            for (key in groups) {
+                for (i = 0, n = savedGroups.length; i < n && savedGroups[i].Code !== key; ++i);
+                className = i < n ? `esgst-ggl-member` : ``;
+                panel.insertAdjacentHTML(`beforeEnd`, `<a class="${className}" href="/group/${key}/">${groups[key]}</a>`);
+            }
+        }
+    }
+
+    function getGglGroups(groups, nextPage, url, callback) {
+        request(null, false, `${url}${nextPage}`, function(response) {
+            var code, error, i, matches, n, name, pagination, responseHtml;
+            responseHtml = DOM.parse(response.responseText);
+            error = responseHtml.getElementsByClassName(`table--summary`)[0];
+            if (error) {
+                window.setTimeout(callback, 0, null);
+            } else {
+                matches = responseHtml.getElementsByClassName(`table__column__heading`);
+                for (i = 0, n = matches.length; i < n; ++i) {
+                    url = matches[i].getAttribute(`href`);
+                    code = url.match(/\/group\/(.+?)\//)[1];
+                    name = matches[i].textContent;
+                    groups[code] = name;
+                }
+                pagination = responseHtml.getElementsByClassName(`pagination__navigation`)[0];
+                if (pagination && !pagination.lastElementChild.classList.contains(`is-selected`)) {
+                    window.setTimeout(getGglGroups, 0, groups, ++nextPage, url, callback);
+                } else {
+                    window.setTimeout(callback, 0, groups);
+                }
             }
         });
     }
 
-    function getGGPGroups(URL, NextPage, Context, Groups, Callback) {
-        makeRequest(null, URL + NextPage, Context, function (Response) {
-            var ResponseHTML, Matches, I, N, Pagination;
-            ResponseHTML = DOM.parse(Response.responseText);
-            Matches = ResponseHTML.getElementsByClassName("table__row-outer-wrap");
-            for (I = 0, N = Matches.length; I < N; ++I) {
-                Groups.push(Matches[I]);
-            }
-            Pagination = ResponseHTML.getElementsByClassName("pagination__navigation")[0];
-            if (Pagination && !Pagination.lastElementChild.classList.contains("is-selected")) {
-                getGGPGroups(URL, ++NextPage, Context, Groups, Callback);
-            } else {
-                Callback(Groups);
-            }
-        });
-    }
+    /* */
 
     function loadGiveawayTemplates() {
         var GTS;
@@ -5201,19 +5338,20 @@ ${title}
                     Username: GM_getValue(`Username`),
                     SteamID64: GM_getValue(`SteamID64`)
                 };
-                var savedUser = getUser(user);
+                var users = JSON.parse(GM_getValue(`users`));
+                var savedUser = users.users[user.SteamID64];
                 var sent = 0;
-                if (savedUser && savedUser.UGD && savedUser.UGD.Sent && savedUser.UGD.Sent[id]) {
-                    var giveaways = savedUser.UGD.Sent[id];
+                if (savedUser && savedUser.ugd && savedUser.ugd.sent && savedUser.ugd.sent[type][id]) {
+                    var giveaways = savedUser.ugd.sent[type][id];
                     for (i = 0, n = giveaways.length; i < n; ++i) {
                         var giveaway = giveaways[i];
-                        if (((giveaways.Entries < 5) && !giveaway.Private && !giveaway.Group && !giveaway.Whitelist) ||
-                            (giveaway.Entries >= 5)
+                        if (((giveaways.entries < 5) && !giveaway.inviteOnly && !giveaway.group && !giveaway.whitelist) ||
+                            (giveaway.entries >= 5)
                         ) {
-                            if (giveaway.Entries >= giveaway.Copies) {
-                                sent += giveaway.Copies;
+                            if (giveaway.entries >= giveaway.copies) {
+                                sent += giveaway.copies;
                             } else {
-                                sent += giveaway.Entries;
+                                sent += giveaway.entries;
                             }
                         }
                     }
@@ -5538,7 +5676,7 @@ ${title}
     }
 
     function sendUGSGifts(UGS, I, N, J, Keys, Winners, Callback) {
-        var Reroll, SANM, SW, User;
+        var Reroll, SANM, SW, G;
         if (!UGS.Canceled) {
             UGS.OverallProgress.innerHTML = I + " of " + N + " winners checked...";
             if (I < N) {
@@ -5551,19 +5689,17 @@ ${title}
                     SW = UGS.SW.checked;
                     G = UGS.G.checked;
                     if (SANM || SW || G) {
-                        User = {
-                            Username: Keys[I]
-                        };
-                        queueSave(UGS, function () {
-                            saveUser(User, UGS, function () {
-                                var SavedUser;
-                                GM_setValue("LastSave", 0);
-                                SavedUser = getUser(User);
+                        createLock(`userLock`, 300, function(deleteLock) {
+                            var users = JSON.parse(GM_getValue(`users`));
+                            getSteamId(null, null, Keys[I], users, function(steamId) {
+                                GM_setValue(`users`, JSON.stringify(users));
+                                var username = users.users[steamId].username;
+                                deleteLock();
                                 if (G && UGS.Giveaways[J].Groups.length) {
                                     UGS.Progress.innerHTML =
                                         "<i class=\"fa fa-circle-o-notch fa-spin\"></i> " +
                                         "<span>Checking if user is a member of one of the " + UGS.Giveaways[J].Name + " groups...</span>";
-                                    checkUgsUserGroups(UGS, 0, UGS.Giveaways[J].Groups.length, J, SavedUser.SteamID64, function (member) {
+                                    checkUgsUserGroups(UGS, 0, UGS.Giveaways[J].Groups.length, J, steamId, function (member) {
                                         if (member) {
                                             sendUGSGift(UGS, Winners, Keys, I, J, N, Callback);
                                         } else {
@@ -5578,22 +5714,23 @@ ${title}
                                         }
                                     });
                                 } else if (SANM) {
-                                    if (SW && SavedUser.Whitelisted) {
+                                    if (SW && users.users[steamId].whitelisted) {
                                         sendUGSGift(UGS, Winners, Keys, I, J, N, Callback);
                                     } else {
-                                        User.NAMWC = SavedUser.NAMWC;
-                                        updateNAMWCResults(User, UGS, function () {
-                                            if (!User.NAMWC) {
-                                                User.NAMWC = {
-                                                    Results: {}
+                                        var namwc = users.users[steamId].namwc;
+                                            if (!namwc) {
+                                                namwc = {
+                                                    results: {}
                                                 };
                                             }
-                                            checkNAMWCNotActivated(UGS, User, function () {
-                                                checkNAMWCMultiple(UGS, User, function () {
-                                                    queueSave(UGS, function () {
-                                                        saveUser(User, UGS, function () {
-                                                            GM_setValue("LastSave", 0);
-                                                            if (User.NAMWC.Results.Activated && User.NAMWC.Results.NotMultiple) {
+                                            checkNAMWCNotActivated(UGS, namwc, username, function (namwc) {
+                                                checkNAMWCMultiple(UGS, namwc, username, function (namwc) {
+                                                    createLock(`userLock`, 300, function(deleteLock) {
+                                                        users = JSON.parse(GM_getValue(`users`));
+                                                        users.users[steamId].namwc = namwc;
+                                                        GM_setValue(`users`, users);
+                                                        deleteLock();
+                                                            if (namwc.results.activated && namwc.results.notMultiple) {
                                                                 sendUGSGift(UGS, Winners, Keys, I, J, N, Callback);
                                                             } else {
                                                                 UGS.Checked.push(Keys[I] + UGS.Giveaways[J].Name);
@@ -5609,10 +5746,8 @@ ${title}
                                                         });
                                                     });
                                                 });
-                                            });
-                                        });
                                     }
-                                } else if (SavedUser.Whitelisted) {
+                                } else if (users.users[steamId].whitelisted) {
                                     sendUGSGift(UGS, Winners, Keys, I, J, N, Callback);
                                 } else {
                                     UGS.Checked.push(Keys[I] + UGS.Giveaways[J].Name);
@@ -14198,7 +14333,7 @@ ${Results.join(``)}
         }
     }
 
-    // Username History
+    /* Username History */
 
     function loadUsernameHistory(context, user) {
         if (context == document) {
@@ -14265,7 +14400,7 @@ ${Results.join(``)}
         }
     }
 
-    // User Notes
+    /* User Notes */
 
     function loadUserNotes(mainContext, user) {
         var context;
@@ -14297,8 +14432,8 @@ ${Results.join(``)}
             };
             esgst.un.button = insertHtml(context, position, html);
             esgst.un.icon = esgst.un.button.firstElementChild;
-            var savedUser = getUser(user);
-            if (savedUser && savedUser.Notes) {
+            user = JSON.parse(GM_getValue(`users`)).users[user.SteamID64];
+            if (user && user.notes) {
                 esgst.un.icon.classList.add(`fa-sticky-note`);
             } else {
                 esgst.un.icon.classList.add(`fa-sticky-note-o`);
@@ -14328,30 +14463,39 @@ ${Results.join(``)}
         createButton(esgst.un.popup.Button, `fa-check`, `Save`, `fa-circle-o-notch fa-spin`, `Saving...`, saveNotes);
         esgst.un.popup.popUp(function () {
             esgst.un.popup.TextArea.focus();
-            var savedUser = getUser(esgst.un.user);
-            if (savedUser && savedUser.Notes) {
-                esgst.un.popup.TextArea.value = savedUser.Notes;
+            var user = JSON.parse(GM_getValue(`users`)).users[esgst.un.user.SteamID64];
+            if (user && user.notes) {
+                esgst.un.popup.TextArea.value = user.notes;
             }
         });
     }
 
     function saveNotes(callback) {
-        esgst.un.user.Notes = esgst.un.popup.TextArea.value.trim();
-        queueSave(esgst.un.popup, function () {
-            saveUser(esgst.un.user, esgst.un.popup, function () {
-                GM_setValue(`LastSave`, 0);
-                if (esgst.un.user.Notes) {
-                    esgst.un.icon.classList.remove(`fa-sticky-note-o`);
-                    esgst.un.icon.classList.add(`fa-sticky-note`);
-                } else {
-                    esgst.un.icon.classList.remove(`fa-sticky-note`);
-                    esgst.un.icon.classList.add(`fa-sticky-note-o`);
-                }
-                callback();
-                esgst.un.popup.Close.click();
-            });
-        });
+        var notes = esgst.un.popup.TextArea.value.trim();
+        var steamId = esgst.un.user.SteamID64;
+        var username = esgst.un.user.Username;
+        var id = esgst.un.user.ID;
+                createLock(`userLock`, 300, function (deleteLock) {
+                    var users;
+                    users = JSON.parse(GM_getValue(`users`));
+                    getSteamId(steamId, id, username, users, function(steamId) {
+                        users.users[steamId].notes = notes;
+                        GM_setValue(`users`, JSON.stringify(users));
+                        deleteLock();
+                        callback();
+                        esgst.un.popup.Close.click();
+                        if (notes) {
+                            esgst.un.icon.classList.remove(`fa-sticky-note-o`);
+                            esgst.un.icon.classList.add(`fa-sticky-note`);
+                        } else {
+                            esgst.un.icon.classList.remove(`fa-sticky-note`);
+                            esgst.un.icon.classList.add(`fa-sticky-note-o`);
+                        }
+                    });
+                });
     }
+
+    /* */
 
     function insertHtml(context, position, html) {
         context.insertAdjacentHTML(position, html);
@@ -14364,24 +14508,25 @@ ${Results.join(``)}
         return context[positions[position]];
     }
 
+    /* User Tags */
+
     function loadUserTags() {
-        for (var key in esgst.currentUsers) {
-            for (var i = 0, n = esgst.currentUsers[key].length; i < n; ++i) {
-                addPUTButton(esgst.currentUsers[key][i], key);
+        var key, i, n, steamId, user, username, users;
+        users = JSON.parse(GM_getValue(`users`));
+        for (key in esgst.currentUsers) {
+            steamId = esgst.sg ? users.steamIds[key] : key;
+            username = esgst.sg ? key : users.users[key] && users.users[key].username;
+            for (i = 0, n = esgst.currentUsers[key].length; i < n; ++i) {
+                addPUTButton(esgst.currentUsers[key][i], steamId, username, key);
             }
-        }
-        if (Object.keys(esgst.currentUsers).length) {
-            var SavedUsers = GM_getValue("Users");
-            for (var I = 0, N = SavedUsers.length; I < N; ++I) {
-                var UserID = esgst.sg ? SavedUsers[I].Username : SavedUsers[I].SteamID64;
-                if (esgst.currentUsers[UserID] && SavedUsers[I].Tags) {
-                    addPUTTags(UserID, SavedUsers[I].Tags);
-                }
+            user = esgst.sg ? steamId && users.users[steamId] : users.users[key];
+            if (user && user.tags) {
+                addPUTTags(key, user.tags);
             }
         }
     }
 
-    function addPUTButton(Context, UserID) {
+    function addPUTButton(Context, steamId, username, key) {
         var Container, User;
         Container = Context.parentElement;
         if (Container.classList.contains("comment__username")) {
@@ -14394,34 +14539,54 @@ ${Results.join(``)}
             "    <span class=\"PUTTags\"></span>" +
             "</a>"
         );
-        User = {};
-        User[esgst.sg ? "Username" : "SteamID64"] = UserID;
         Context.nextElementSibling.addEventListener("click", function () {
             var Popup;
             Popup = createPopup(true);
             Popup.Icon.classList.add("fa-tag");
-            Popup.Title.innerHTML = "Edit user tags for <span>" + UserID + "</span>:";
+            Popup.Title.innerHTML = "Edit user tags for <span>" + key + "</span>:";
             Popup.TextInput.classList.remove("rhHidden");
+            Popup.TextInput.addEventListener(`keydown`, function(e) {
+                if (e.key === `Enter`) {
+                    Popup.Button.firstElementChild.click();
+                }
+            });
             Popup.TextInput.insertAdjacentHTML("afterEnd", createDescription("Use commas to separate tags, for example: Tag1, Tag2, ..."));
             createButton(Popup.Button, "fa-check", "Save", "fa-circle-o-notch fa-spin", "Saving...", function (Callback) {
-                User.Tags = Popup.TextInput.value.replace(/(,\s*)+/g, function (Match, P1, Offset, String) {
+                var tags;
+                tags = Popup.TextInput.value.replace(/(,\s*)+/g, function (Match, P1, Offset, String) {
                     return (((Offset === 0) || (Offset == (String.length - Match.length))) ? "" : ", ");
-                });
-                queueSave(Popup, function () {
-                    saveUser(User, Popup, function () {
-                        GM_setValue("LastSave", 0);
-                        addPUTTags(UserID, getUser(User).Tags);
+                }).split(`, `);
+                createLock(`userLock`, 300, function (deleteLock) {
+                    var users;
+                    users = JSON.parse(GM_getValue(`users`));
+                    getSteamId(steamId, null, username, users, function(steamId, change) {
+                        if (change) {
+                            if (!users.users[steamId].tags) {
+                                users.users[steamId].tags = [];
+                            }
+                            for (var i = 0, n = tags.length; i < n; ++i) {
+                                if (users.users[steamId].tags.indexOf(tags[i]) < 0) {
+                                    users.users[steamId].tags.push(tags[i]);
+                                }
+                            }
+                        } else {
+                            users.users[steamId].tags = tags;
+                        }
+                        GM_setValue(`users`, JSON.stringify(users));
+                        deleteLock();
+                        addPUTTags(key, tags);
                         Callback();
                         Popup.Close.click();
                     });
                 });
             });
             Popup.popUp(function () {
-                var SavedUser;
+                var user, users;
+                users = JSON.parse(GM_getValue(`users`));
+                user = steamId && users.users[steamId];
                 Popup.TextInput.focus();
-                SavedUser = getUser(User);
-                if (SavedUser && SavedUser.Tags) {
-                    Popup.TextInput.value = SavedUser.Tags;
+                if (user && user.tags) {
+                    Popup.TextInput.value = user.tags;
                 }
             });
         });
@@ -14432,9 +14597,13 @@ ${Results.join(``)}
         Matches = esgst.users[UserID];
         Prefix = "<span class=\"global__image-outer-wrap author_avatar is_icon\">";
         Suffix = "</span>";
-        HTML = Tags ? Tags.replace(/^|,\s|$/g, function (Match, Offset, String) {
-            return ((Offset === 0) ? Prefix : ((Offset == (String.length - Match.length)) ? Suffix : (Suffix + Prefix)));
-        }) : "";
+        if (Tags.length) {
+            HTML = Prefix;
+            HTML += Tags.join(Suffix + Prefix);
+            HTML += Suffix;
+        } else {
+            HTML = ``;
+        }
         for (I = 0, N = Matches.length; I < N; ++I) {
             Context = Matches[I];
             Container = Context.parentElement;
@@ -14446,6 +14615,8 @@ ${Results.join(``)}
             }
         }
     }
+
+    /* Real Won/Sent CV Links */
 
     function loadRealWonSentCVLinks(context, user) {
         var wonRow, sentRow;
@@ -14460,6 +14631,9 @@ ${Results.join(``)}
         if (wonRow && sentRow) {
             addRWSCVLLink(wonRow, `Won`, user);
             addRWSCVLLink(sentRow, `Sent`, user);
+            if (esgst.rwscvl_al) {
+                getRwscvlData(wonRow, sentRow, user);
+            }
         }
     }
 
@@ -14468,51 +14642,63 @@ ${Results.join(``)}
         URL = "http://www.sgtools.info/" + Key.toLowerCase() + "/" + User.Username;
         Context.innerHTML = "<a class=\"RWSCVLLink\" href=\"" + URL + (esgst.rwscvl_ro ? "/newestfirst" : "") +
             "\" target=\"_blank\">Gifts " + Key + "</a>";
-        if (esgst.rwscvl_al) {
-            Context = (Key == "Won") ? Context.nextElementSibling : Context.nextElementSibling.firstElementChild;
-            Context.insertAdjacentHTML(
-                "beforeEnd",
-                " <span>" +
-                "    <i class=\"fa fa-circle-o-notch fa-spin\"></i>" +
-                "</span>"
-            );
-            RWSCVL = {
-                Progress: Context.lastElementChild
-            };
-            queueSave(RWSCVL, function () {
-                saveUser(User, RWSCVL, function () {
-                    GM_setValue("LastSave", 0);
-                    User.RWSCVL = getUser(User).RWSCVL;
-                    if (!User.RWSCVL) {
-                        User.RWSCVL = {
-                            WonCV: 0,
-                            SentCV: 0,
-                            LastWonCheck: 0,
-                            LastSentCheck: 0
-                        };
-                    }
-                    if ((new Date().getTime()) - User.RWSCVL["Last" + Key + "Check"] > 604800000) {
-                        queueRequest(RWSCVL, null, URL, function (Response) {
-                            var Value;
-                            RWSCVL.Progress.remove();
-                            Value = DOM.parse(Response.responseText).getElementById("data").textContent.replace(/\s\$/, "");
-                            User.RWSCVL[Key + "CV"] = Value;
-                            User.RWSCVL["Last" + Key + "Check"] = new Date().getTime();
-                            queueSave(RWSCVL, function () {
-                                saveUser(User, RWSCVL, function () {
-                                    GM_setValue("LastSave", 0);
-                                    Context.insertAdjacentText("beforeEnd", " ($" + Value + " Real CV)");
-                                });
+    }
+
+    function getRwscvlData(WonContext, SentContext, User) {
+        RWSCVL = {
+            WonProgress: insertHtml(WonContext.nextElementSibling, `beforeEnd`, `
+                <span>
+                    <i class="fa fa-circle-o-notch fa-spin"></i>
+                </span>
+            `),
+            SentProgress: insertHtml(SentContext.nextElementSibling.firstElementChild, `beforeEnd`, `
+                <span>
+                    <i class="fa fa-circle-o-notch fa-spin"></i>
+                </span>
+            `)
+        };
+        createLock(`userLock`, 300, function(deleteLock) {
+            var users = JSON.parse(GM_getValue(`users`));
+            getSteamId(User.SteamID64, User.ID, User.Username, users, function(steamId) {
+                GM_setValue(`users`, JSON.stringify(users));
+                deleteLock();
+                var rwscvl = users.users[steamId].rwscvl;
+                if (!rwscvl) {
+                    rwscvl = {
+                        won: 0,
+                        sent: 0,
+                        lastCheck: 0
+                    };
+                }
+                if (Date.now() - rwscvl.lastCheck > 604800000) {
+                    request(null, true, "http://www.sgtools.info/won/" + User.Username, function (Response) {
+                        var won;
+                        won = DOM.parse(Response.responseText).getElementById("data").textContent.replace(/\s\$/, "");
+                        request(null, true, "http://www.sgtools.info/sent/" + User.Username, function (Response) {
+                            var sent;
+                            sent = DOM.parse(Response.responseText).getElementById("data").textContent.replace(/\s\$/, "");
+                            rwscvl.won = won;
+                            rwscvl.sent = sent;
+                            rwscvl.lastCheck = Date.now();
+                            createLock(`userLock`, 300, function(deleteLock) {
+                                users = JSON.parse(GM_getValue(`users`));
+                                users.users[steamId].rwscvl = rwscvl;
+                                GM_setValue(`users`, JSON.stringify(users));
+                                deleteLock();
+                                RWSCVL.WonProgress.innerHTML = `(\$${won} Real CV)`;
+                                RWSCVL.SentProgress.innerHTML = `(\$${sent} Real CV)`;
                             });
                         });
-                    } else {
-                        RWSCVL.Progress.remove();
-                        Context.insertAdjacentText("beforeEnd", " ($" + User.RWSCVL[Key + "CV"] + " Real CV)");
-                    }
-                });
+                    });
+                } else {
+                    RWSCVL.WonProgress.innerHTML = `(\$${rwscvl.won} Real CV)`;
+                    RWSCVL.SentProgress.innerHTML = `(\$${rwscvl.sent} Real CV)`;
+                }
             });
-        }
+        });
     }
+
+    /* User Giveaways Data */
 
     function loadUserGiveawaysData(context, user) {
         var wonRow, sentRow;
@@ -14525,8 +14711,8 @@ ${Results.join(``)}
             user = esgst.user;
         }
         if (wonRow && sentRow) {
-            addUGDButton(wonRow, `Won`, user);
-            addUGDButton(sentRow, `Sent`, user);
+            addUGDButton(wonRow, `won`, user);
+            addUGDButton(sentRow, `sent`, user);
         }
     }
 
@@ -14537,7 +14723,7 @@ ${Results.join(``)}
         };
         Context.insertAdjacentHTML(
             "beforeEnd",
-            " <span class=\"UGDButton\" title=\"Get " + UGD.Key.toLowerCase() + " giveaways data.\">" +
+            " <span class=\"UGDButton\" title=\"Get " + UGD.Key + " giveaways data.\">" +
             "    <i class=\"fa fa-bar-chart\"></i>" +
             "</span>"
         );
@@ -14545,7 +14731,7 @@ ${Results.join(``)}
         Popup = createPopup();
         Popup.Popup.classList.add("rhPopupLarge");
         Popup.Icon.classList.add("fa-bar-chart");
-        Popup.Title.textContent = "Get " + User.Username + "'s " + UGD.Key.toLowerCase() + " giveaways data:";
+        Popup.Title.textContent = "Get " + User.Username + "'s " + UGD.Key + " giveaways data:";
         createOptions(Popup.Options, UGD, [{
             Check: function () {
                 return true;
@@ -14559,59 +14745,78 @@ ${Results.join(``)}
         createButton(Popup.Button, "fa-bar-chart", "Get Data", "fa-times-circle", "Cancel", function (Callback) {
             UGD.Canceled = false;
             UGDButton.classList.add("rhBusy");
-            queueSave(UGD, function () {
-                saveUser(User, UGD, function () {
+            createLock(`userLock`, 300, function(deleteLock) {
+                var users = JSON.parse(GM_getValue(`users`));
+                getSteamId(User.SteamID64, User.ID, User.Username, users, function(steamId) {
                     var Match, CurrentPage;
-                    GM_setValue("LastSave", 0);
-                    User.UGD = getUser(User).UGD;
+                    GM_setValue(`users`, JSON.stringify(users));
+                    deleteLock();
+                    var ugd = users.users[steamId].ugd;
+                    var username = users.users[steamId].username;
                     if (UGD.CC.checked) {
-                        delete User.UGD;
+                        ugd[UGD.Key] = null;
                     }
-                    if (!User.UGD) {
-                        User.UGD = {
-                            Sent: {},
-                            Won: {},
-                            SentTimestamp: 0,
-                            WonTimestamp: 0
+                    if (!ugd) {
+                        ugd = {
+                            sent: {
+                                apps: {},
+                                subs: {}
+                            },
+                            won: {
+                                apps: {},
+                                subs: {}
+                            },
+                            sentTimestamp: 0,
+                            wonTimestamp: 0
                         };
-                    } else if (!User.UGD.SentTimestamp) {
-                        User.UGD.Sent = {};
-                        User.UGD.SentTimestamp = 0;
-                    } else if (!User.UGD.WonTimestamp) {
-                        User.UGD.Won = {};
-                        User.UGD.WonTimestamp = 0;
+                    } else {
+                        if (!ugd.sent) {
+                            ugd.sent = {
+                                apps: {},
+                                subs: {}
+                            };
+                            ugd.sentTimestamp = 0;
+                        }
+                        if (!ugd.won) {
+                            ugd.won = {
+                                apps: {},
+                                subs: {}
+                            };
+                            ugd.wonTimestamp = 0;
+                        }
                     }
-                    Match = window.location.pathname.match(new RegExp("^\/user\/" + User.Username + ((UGD.Key == "Won") ? "/giveaways/won" : "")));
+                    Match = window.location.pathname.match(new RegExp("^\/user\/" + username + ((UGD.Key == "won") ? "/giveaways/won" : "")));
                     CurrentPage = window.location.href.match(/page=(\d+)/);
                     CurrentPage = Match ? (CurrentPage ? parseInt(CurrentPage[1]) : 1) : 0;
-                    getUGDGiveaways(UGD, User, 1, CurrentPage, Match, "/user/" + User.Username + ((UGD.Key == "Won") ? "/giveaways/won" : "") + "/search?page=", function () {
-                        queueSave(UGD, function () {
-                            saveUser(User, UGD, function () {
-                                var Giveaways, Types, TypesTotal, LevelsTotal, Total, Frequencies, Key, I, N, Giveaway, Private, Group, Whitelist, Region, Level, Copies, Value, HTML, Type,
-                                    Ordered;
-                                GM_setValue("LastSave", 0);
-                                UGDButton.classList.remove("rhBusy");
-                                Giveaways = User.UGD[UGD.Key];
+                    getUGDGiveaways(UGD, ugd, 1, CurrentPage, Match, "/user/" + username + ((UGD.Key == "won") ? "/giveaways/won" : "") + "/search?page=", function (ugd) {
+                        createLock(`userLock`, 300, function(deleteLock) {
+                            var Giveaways, Types, TypesTotal, Frequencies, Total, LevelsTotal;
+                            users = JSON.parse(GM_getValue(`users`));
+                            users.users[steamId].ugd = ugd;
+                            GM_setValue(`users`, JSON.stringify(users));
+                            deleteLock();
+                            UGDButton.classList.remove("rhBusy");
+                            Giveaways = ugd[UGD.Key];
                                 Types = {
-                                    Public: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-                                    Private: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                                    Everyone: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                                    Invite: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
                                     Group: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
                                     Whitelist: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
                                     Group_Whitelist: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
                                     Region: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-                                    Region_Private: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                                    Region_Invite: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
                                     Region_Group: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
                                     Region_Whitelist: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
                                     Region_Group_Whitelist: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
                                 };
                                 TypesTotal = {
-                                    Public: 0,
-                                    Private: 0,
+                                    Everyone: 0,
+                                    Invite: 0,
                                     Group: 0,
                                     Whitelist: 0,
                                     Group_Whitelist: 0,
                                     Region: 0,
-                                    Region_Private: 0,
+                                    Region_Invite: 0,
                                     Region_Group: 0,
                                     Region_Whitelist: 0,
                                     Region_Group_Whitelist: 0
@@ -14619,78 +14824,10 @@ ${Results.join(``)}
                                 LevelsTotal = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
                                 Total = 0;
                                 Frequencies = {};
-                                for (Key in Giveaways) {
-                                    for (I = 0, N = Giveaways[Key].length; I < N; ++I) {
-                                        Giveaway = Giveaways[Key][I];
-                                        if (Giveaway.Entries > 0) {
-                                            Private = Giveaway.Private;
-                                            Group = Giveaway.Group;
-                                            Whitelist = Giveaway.Whitelist;
-                                            Region = Giveaway.Region;
-                                            Level = Giveaway.Level;
-                                            Copies = (UGD.Key == "Sent") ? Giveaway.Copies : 1;
-                                            if (Private) {
-                                                if (Region) {
-                                                    Types.Region_Private[Level] += Copies;
-                                                    TypesTotal.Region_Private += Copies;
-                                                } else {
-                                                    Types.Private[Level] += Copies;
-                                                    TypesTotal.Private += Copies;
-                                                }
-                                            } else if (Group) {
-                                                if (Region) {
-                                                    Types.Region_Group[Level] += Copies;
-                                                    TypesTotal.Region_Group += Copies;
-                                                } else if (Whitelist) {
-                                                    if (Region) {
-                                                        Types.Region_Group_Whitelist[Level] += Copies;
-                                                        TypesTotal.Region_Group_Whitelist += Copies;
-                                                    } else {
-                                                        Types.Group_Whitelist[Level] += Copies;
-                                                        TypesTotal.Group_Whitelist += Copies;
-                                                    }
-                                                } else {
-                                                    Types.Group[Level] += Copies;
-                                                    TypesTotal.Group += Copies;
-                                                }
-                                            } else if (Whitelist) {
-                                                if (Region) {
-                                                    Types.Region_Whitelist[Level] += Copies;
-                                                    TypesTotal.Region_Whitelist += Copies;
-                                                } else {
-                                                    Types.Whitelist[Level] += Copies;
-                                                    TypesTotal.Whitelist += Copies;
-                                                }
-                                            } else if (Region) {
-                                                Types.Region[Level] += Copies;
-                                                TypesTotal.Region += Copies;
-                                            } else {
-                                                Types.Public[Level] += Copies;
-                                                TypesTotal.Public += Copies;
-                                            }
-                                            LevelsTotal[Level] += Copies;
-                                            Total += Copies;
-                                            if (UGD.Key == "Sent") {
-                                                if (!Frequencies[Giveaway.ID]) {
-                                                    Frequencies[Giveaway.ID] = {
-                                                        Name: Giveaway.Name,
-                                                        Frequency: 0
-                                                    };
-                                                }
-                                                Frequencies[Giveaway.ID].Frequency += Copies;
-                                            } else {
-                                                if (!Frequencies[Giveaway.Creator]) {
-                                                    Frequencies[Giveaway.Creator] = {
-                                                        Name: Giveaway.Creator,
-                                                        Frequency: 0
-                                                    };
-                                                }
-                                                ++Frequencies[Giveaway.Creator].Frequency;
-                                            }
-                                        }
-                                    }
-                                }
-                                HTML =
+                            countUgdGiveaways(Frequencies, Giveaways.apps, LevelsTotal, Total, UGD.Key === `won` ? `creators` : `apps`, Types, TypesTotal, UGD, function(LevelsTotal, Total) {
+                                countUgdGiveaways(Frequencies, Giveaways.subs, LevelsTotal, Total, UGD.Key === `won` ? `creators` : `subs`, Types, TypesTotal, UGD, function(LevelsTotal, Total) {
+                                    var HTML, Type, I, Value, Ordered;
+                                    HTML =
                                     "<table class=\"UGDData\">" +
                                     "    <tr>" +
                                     "        <th>Type</th>" +
@@ -14734,20 +14871,29 @@ ${Results.join(``)}
                                     "    </tr>" +
                                     "</table>";
                                 Ordered = [];
-                                for (Key in Frequencies) {
-                                    for (I = 0, N = Ordered.length; (I < N) && (Frequencies[Key].Frequency <= Ordered[I].Frequency); ++I);
-                                    Ordered.splice(I, 0, Frequencies[Key]);
+                                for (Key in Frequencies.apps) {
+                                    for (I = 0, N = Ordered.length; (I < N) && (Frequencies.apps[Key].frequency <= Ordered[I].frequency); ++I);
+                                    Ordered.splice(I, 0, Frequencies.apps[Key]);
+                                }
+                                for (Key in Frequencies.subs) {
+                                    for (I = 0, N = Ordered.length; (I < N) && (Frequencies.subs[Key].frequency <= Ordered[I].frequency); ++I);
+                                    Ordered.splice(I, 0, Frequencies.subs[Key]);
+                                }
+                                for (Key in Frequencies.creators) {
+                                    for (I = 0, N = Ordered.length; (I < N) && (Frequencies.creators[Key].frequency <= Ordered[I].frequency); ++I);
+                                    Ordered.splice(I, 0, Frequencies.creators[Key]);
                                 }
                                 HTML +=
-                                    "<div class=\"rhBold\">" + ((UGD.Key == "Sent") ? "Most given away:" : "Most won from:") + "</div>" +
+                                    "<div class=\"rhBold\">" + ((UGD.Key == "sent") ? "Most given away:" : "Most won from:") + "</div>" +
                                     "<ul>";
                                 for (Key in Ordered) {
                                     HTML +=
-                                        "<li>" + Ordered[Key].Name + " - <span class=\"rhBold\">" + Ordered[Key].Frequency + "</span></li>";
+                                        "<li>" + Ordered[Key].name + " - <span class=\"rhBold\">" + Ordered[Key].frequency + "</span></li>";
                                 }
                                 HTML +=
                                     "</ul>";
                                 Popup.Results.innerHTML = HTML;
+                                UGD.Progress.innerHTML = ``;
                                 UGD.Popup.reposition();
                                 Callback();
                             });
@@ -14755,7 +14901,8 @@ ${Results.join(``)}
                     });
                 });
             });
-        }, function () {
+        });
+    }, function () {
             clearInterval(UGD.Request);
             clearInterval(UGD.Save);
             UGD.Canceled = true;
@@ -14771,61 +14918,104 @@ ${Results.join(``)}
         });
     }
 
-    function getUGDGiveaways(UGD, User, NextPage, CurrentPage, CurrentContext, URL, Callback, Context) {
+    function countUgdGiveaways(Frequencies, Giveaways, LevelsTotal, Total, type, Types, TypesTotal, UGD, Callback) {
+        var Key, I, N, Giveaway, Private, Group, Whitelist, Region, Level, Copies, Value, HTML, Type, Ordered;
+                                for (Key in Giveaways) {
+                                    for (I = 0, N = Giveaways[Key].length; I < N; ++I) {
+                                        Giveaway = Giveaways[Key][I];
+                                        if (Giveaway.entries > 0) {
+                                            Private = Giveaway.inviteOnly;
+                                            Group = Giveaway.group;
+                                            Whitelist = Giveaway.whitelist;
+                                            Region = Giveaway.regionRestricted;
+                                            Level = Giveaway.level;
+                                            Copies = (UGD.Key == "sent") ? Giveaway.copies : 1;
+                                            if (Private) {
+                                                if (Region) {
+                                                    Types.Region_Invite[Level] += Copies;
+                                                    TypesTotal.Region_Invite += Copies;
+                                                } else {
+                                                    Types.Invite[Level] += Copies;
+                                                    TypesTotal.Invite += Copies;
+                                                }
+                                            } else if (Group) {
+                                                if (Region) {
+                                                    Types.Region_Group[Level] += Copies;
+                                                    TypesTotal.Region_Group += Copies;
+                                                } else if (Whitelist) {
+                                                    if (Region) {
+                                                        Types.Region_Group_Whitelist[Level] += Copies;
+                                                        TypesTotal.Region_Group_Whitelist += Copies;
+                                                    } else {
+                                                        Types.Group_Whitelist[Level] += Copies;
+                                                        TypesTotal.Group_Whitelist += Copies;
+                                                    }
+                                                } else {
+                                                    Types.Group[Level] += Copies;
+                                                    TypesTotal.Group += Copies;
+                                                }
+                                            } else if (Whitelist) {
+                                                if (Region) {
+                                                    Types.Region_Whitelist[Level] += Copies;
+                                                    TypesTotal.Region_Whitelist += Copies;
+                                                } else {
+                                                    Types.Whitelist[Level] += Copies;
+                                                    TypesTotal.Whitelist += Copies;
+                                                }
+                                            } else if (Region) {
+                                                Types.Region[Level] += Copies;
+                                                TypesTotal.Region += Copies;
+                                            } else {
+                                                Types.Everyone[Level] += Copies;
+                                                TypesTotal.Everyone += Copies;
+                                            }
+                                            LevelsTotal[Level] += Copies;
+                                            Total += Copies;
+                                            if (UGD.Key == "sent") {
+                                                if (!Frequencies[type]) {
+                                                    Frequencies[type] = {};
+                                                }
+                                                if (!Frequencies[type][Key]) {
+                                                    Frequencies[type][Key] = {
+                                                        name: Giveaway.name,
+                                                        frequency: 0
+                                                    };
+                                                }
+                                                Frequencies[type][Key].frequency += Copies;
+                                            } else {
+                                                if (!Frequencies[type]) {
+                                                    Frequencies[type] = {};
+                                                }
+                                                if (!Frequencies[type][Giveaway.creator]) {
+                                                    Frequencies[type][Giveaway.creator] = {
+                                                        name: Giveaway.creator,
+                                                        frequency: 0
+                                                    };
+                                                }
+                                                ++Frequencies[type][Giveaway.creator].frequency;
+                                            }
+                                        }
+                                    }
+                                }
+        Callback(LevelsTotal, Total);
+    }
+
+    function getUGDGiveaways(UGD, ugd, NextPage, CurrentPage, CurrentContext, URL, Callback, Context) {
         var Giveaways, I, NumGiveaways, Giveaway, Timestamp, Received, Data, Heading, SteamButton, Match, Matches, Links, J, NumLinks, Text, Found, Pagination;
         if (Context) {
-            Giveaways = Context.getElementsByClassName("giveaway__summary");
+            Giveaways = Context.getElementsByClassName("giveaway__row-outer-wrap");
             for (I = 0, NumGiveaways = Giveaways.length; I < NumGiveaways; ++I) {
-                Giveaway = Giveaways[I];
-                Timestamp = parseInt(Giveaway.getElementsByClassName("giveaway__columns")[0].querySelector("[data-timestamp]").getAttribute("data-timestamp")) * 1000;
-                if (Timestamp < (new Date().getTime())) {
+                Giveaway = getGiveawayInfo(Giveaways[I], null, true).data;
+                if (Giveaway.endTime < (new Date().getTime())) {
                     if (!UGD.Timestamp) {
-                        UGD.Timestamp = Timestamp;
+                        UGD.Timestamp = Giveaway.endTime;
                     }
-                    if (Timestamp > User.UGD[UGD.Key + "Timestamp"]) {
-                        Data = {};
-                        Heading = Giveaway.getElementsByClassName("giveaway__heading")[0];
-                        SteamButton = Heading.querySelector("[href*='store.steampowered.com']");
-                        if (SteamButton) {
-                            Match = Heading.getElementsByClassName("giveaway__heading__name")[0];
-                            Data.Code = Match.getAttribute("href");
-                            Data.Code = Data.Code ? Data.Code.match(/\/giveaway\/(.+?)\//)[1] : "";
-                            Data.Name = Match.textContent;
-                            Matches = Heading.getElementsByClassName("giveaway__heading__thin");
-                            if (Matches.length > 1) {
-                                Data.Copies = parseInt(Matches[0].textContent.replace(/,/, "").match(/\d+/)[0]);
-                                Data.Points = parseInt(Matches[1].textContent.replace(/,/, "").match(/\d+/)[0]);
-                            } else {
-                                Data.Copies = 1;
-                                Data.Points = parseInt(Matches[0].textContent.replace(/,/, "").match(/\d+/)[0]);
+                    if (Giveaway.endTime > ugd[UGD.Key + "Timestamp"]) {
+                        if (Giveaway.gameSteamId) {
+                            if (!ugd[UGD.Key][Giveaway.gameType][Giveaway.gameSteamId]) {
+                                ugd[UGD.Key][Giveaway.gameType][Giveaway.gameSteamId] = [];
                             }
-                            Data.ID = parseInt(SteamButton.getAttribute("href").match(/\d+/)[0]);
-                            if (UGD.Key == "Won") {
-                                Data.Creator = Giveaway.getElementsByClassName("giveaway__username")[0].textContent;
-                            }
-                            Data.Level = Giveaway.getElementsByClassName("giveaway__column--contributor-level")[0];
-                            Data.Level = Data.Level ? parseInt(Data.Level.textContent.match(/\d+/)[0]) : 0;
-                            Data.Private = Giveaway.getElementsByClassName("giveaway__column--invite-only")[0];
-                            Data.Private = Data.Private ? true : false;
-                            Data.Group = Giveaway.getElementsByClassName("giveaway__column--group")[0];
-                            Data.Group = Data.Group ? true : false;
-                            Data.Whitelist = Giveaway.getElementsByClassName("giveaway__column--whitelist")[0];
-                            Data.Whitelist = Data.Whitelist ? true : false;
-                            Data.Region = Giveaway.getElementsByClassName("giveaway__column--region-restricted")[0];
-                            Data.Region = Data.Region ? true : false;
-                            Links = Giveaway.getElementsByClassName("giveaway__links")[0].children;
-                            for (J = 0, NumLinks = Links.length; J < NumLinks; ++J) {
-                                Text = Links[J].textContent;
-                                if (Text.match(/(entry|entries)/)) {
-                                    Data.Entries = parseInt(Text.replace(/,/g, "").match(/\d+/)[0]);
-                                } else if (Text.match(/comment/)) {
-                                    Data.Comments = parseInt(Text.replace(/,/g, "").match(/\d+/)[0]);
-                                }
-                            }
-                            if (!User.UGD[UGD.Key][Data.ID]) {
-                                User.UGD[UGD.Key][Data.ID] = [];
-                            }
-                            User.UGD[UGD.Key][Data.ID].push(Data);
+                            ugd[UGD.Key][Giveaway.gameType][Giveaway.gameSteamId].push(Giveaway);
                         }
                     } else {
                         Found = true;
@@ -14835,35 +15025,29 @@ ${Results.join(``)}
             }
             Pagination = Context.getElementsByClassName("pagination__navigation")[0];
             if (!Found && Pagination && !Pagination.lastElementChild.classList.contains("is-selected")) {
-                getUGDGiveaways(UGD, User, NextPage, CurrentPage, CurrentContext, URL, Callback);
+                window.setTimeout(getUGDGiveaways, 0, UGD, ugd, NextPage, CurrentPage, CurrentContext, URL, Callback);
             } else {
-                User.UGD[UGD.Key + "Timestamp"] = UGD.Timestamp;
-                Callback();
+                ugd[UGD.Key + "Timestamp"] = UGD.Timestamp;
+                Callback(ugd);
             }
         } else if (!UGD.Canceled) {
             UGD.Progress.innerHTML =
                 "<i class=\"fa fa-circle-o-notch fa-spin\"></i> " +
                 "<span>Retrieving giveaways (page " + NextPage + ")...</span>";
-            if (CurrentPage != NextPage) {
-                if (CurrentContext && document.getElementById("esgst-es-page-" + NextPage)) {
-                    getUGDGiveaways(UGD, User, ++NextPage, CurrentPage, CurrentContext, URL, Callback);
-                } else {
-                    queueRequest(UGD, null, URL + NextPage, function (Response) {
-                        getUGDGiveaways(UGD, User, ++NextPage, CurrentPage, CurrentContext, URL, Callback, DOM.parse(Response.responseText));
-                    });
-                }
-            } else {
-                getUGDGiveaways(UGD, User, ++NextPage, CurrentPage, CurrentContext, URL, Callback, document);
-            }
+            queueRequest(UGD, null, URL + NextPage, function (Response) {
+                window.setTimeout(getUGDGiveaways, 0, UGD, ugd, ++NextPage, CurrentPage, CurrentContext, URL, Callback, DOM.parse(Response.responseText));
+            });
         }
     }
+
+    /* Not Activated/Multiple Wins Checker */
 
     function loadNotActivatedMultipleWinsChecker() {
         if (esgst.user) {
             addNAMWCProfileButton(esgst.wonRow, esgst.user);
         } else if (esgst.winnersPath) {
             addNAMWCButton(esgst.mainPageHeading);
-        } else if (esgst.esgstHash) {
+        } else if (esgst.menuPath) {
             addNAMWCButton();
         }
         if (esgst.ap) {
@@ -14957,23 +15141,23 @@ ${Results.join(``)}
         createResults(Popup.Results, NAMWC, [{
             Icon: "<i class=\"fa fa-check-circle giveaway__column--positive\"></i> ",
             Description: "Users with 0 not activated wins",
-            Key: "Activated"
+            Key: "activated"
         }, {
             Icon: "<i class=\"fa fa-check-circle giveaway__column--positive\"></i> ",
             Description: "Users with 0 multiple wins",
-            Key: "NotMultiple"
+            Key: "notMultiple"
         }, {
             Icon: "<i class=\"fa fa-times-circle giveaway__column--negative\"></i> ",
             Description: "Users with not activated wins",
-            Key: "NotActivated"
+            Key: "notActivated"
         }, {
             Icon: "<i class=\"fa fa-times-circle giveaway__column--negative\"></i> ",
             Description: "Users with multiple wins",
-            Key: "Multiple"
+            Key: "multiple"
         }, {
             Icon: "<i class=\"fa fa-question-circle\"></i> ",
             Description: "Users who cannot be checked for not activated wins either because they have a private profile or SteamCommunity is down",
-            Key: "Unknown"
+            Key: "unknown"
         }]);
         NAMWCButton.addEventListener("click", function () {
             NAMWC.Popup = Popup.popUp(function () {
@@ -14988,28 +15172,26 @@ ${Results.join(``)}
     function setNAMWCCheck(NAMWC, Callback) {
         var SavedUsers, I, N, Username;
         NAMWC.Progress.innerHTML = NAMWC.OverallProgress.innerHTML = "";
-        NAMWC.Activated.classList.add("rhHidden");
-        NAMWC.NotMultiple.classList.add("rhHidden");
-        NAMWC.NotActivated.classList.add("rhHidden");
-        NAMWC.Multiple.classList.add("rhHidden");
-        NAMWC.Unknown.classList.add("rhHidden");
-        NAMWC.ActivatedCount.textContent = NAMWC.NotMultipleCount.textContent = NAMWC.NotActivatedCount.textContent = NAMWC.MultipleCount.textContent = NAMWC.UnknownCount.textContent = "0";
-        NAMWC.ActivatedUsers.innerHTML = NAMWC.NotMultipleUsers.textContent = NAMWC.NotActivatedUsers.innerHTML = NAMWC.MultipleUsers.innerHTML = NAMWC.UnknownUsers.innerHTML = "";
+        NAMWC.activated.classList.add("rhHidden");
+        NAMWC.notMultiple.classList.add("rhHidden");
+        NAMWC.notActivated.classList.add("rhHidden");
+        NAMWC.multiple.classList.add("rhHidden");
+        NAMWC.unknown.classList.add("rhHidden");
+        NAMWC.activatedCount.textContent = NAMWC.notMultipleCount.textContent = NAMWC.notActivatedCount.textContent = NAMWC.multipleCount.textContent = NAMWC.unknownCount.textContent = "0";
+        NAMWC.activatedUsers.innerHTML = NAMWC.notMultipleUsers.textContent = NAMWC.notActivatedUsers.innerHTML = NAMWC.multipleUsers.innerHTML = NAMWC.unknownUsers.innerHTML = "";
         NAMWC.Popup.reposition();
         NAMWC.Users = [];
         NAMWC.Canceled = false;
         if (NAMWC.ShowResults) {
-            SavedUsers = GM_getValue("Users");
-            for (I = 0, N = SavedUsers.length; I < N; ++I) {
-                if (SavedUsers[I].NAMWC && SavedUsers[I].NAMWC.Results) {
-                    NAMWC.Users.push(SavedUsers[I].Username);
+            SavedUsers = JSON.parse(GM_getValue(`users`));
+            for (I in SavedUsers.users) {
+                if (SavedUsers.users[I].namwc && SavedUsers.users[I].namwc.results) {
+                    NAMWC.Users.push(SavedUsers.users[I].username);
                 }
             }
             NAMWC.Users = sortArray(NAMWC.Users);
             for (I = 0, N = NAMWC.Users.length; I < N; ++I) {
-                setNAMWCResult(NAMWC, SavedUsers[getUserIndex({
-                    Username: NAMWC.Users[I]
-                }, SavedUsers)], false);
+                setNAMWCResult(NAMWC, SavedUsers.steamIds[NAMWC.Users[I]], NAMWC.Users[I], SavedUsers.users[SavedUsers.steamIds[NAMWC.Users[I]]].namwc, false);
             }
         } else if (NAMWC.User) {
             NAMWC.Users.push(NAMWC.User.Username);
@@ -15030,7 +15212,7 @@ ${Results.join(``)}
     }
 
     function checkNAMWCUsers(NAMWC, I, N, Callback) {
-        var User, Results, Key, New;
+        var User, Results, Key, newR;
         if (!NAMWC.Canceled) {
             NAMWC.Progress.innerHTML = "";
             NAMWC.OverallProgress.textContent = I + " of " + N + " users checked...";
@@ -15038,29 +15220,30 @@ ${Results.join(``)}
                 User = NAMWC.User ? NAMWC.User : {
                     Username: NAMWC.Users[I]
                 };
-                queueSave(NAMWC, function () {
-                    saveUser(User, NAMWC, function () {
-                        GM_setValue("LastSave", 0);
-                        User.NAMWC = getUser(User).NAMWC;
-                        updateNAMWCResults(User, NAMWC, function () {
-                            if (User.NAMWC && User.NAMWC.Results) {
-                                Results = User.NAMWC.Results;
-                            }
-                            checkNAMWCUser(NAMWC, User, function () {
-                                if (Results) {
-                                    for (Key in Results) {
-                                        if (Results[Key] != User.NAMWC.Results[Key]) {
-                                            New = true;
-                                            break;
-                                        }
-                                    }
-                                } else {
-                                    New = true;
+                createLock(`userLock`, 300, function(deleteLock) {
+                var users = JSON.parse(GM_getValue(`users`));
+                getSteamId(User.SteamID64, User.ID, User.Username, users, function(steamId) {
+                    GM_setValue(`users`, JSON.stringify(users));
+                    deleteLock();
+                    var namwc = users.users[steamId].namwc;
+                    var username = users.users[steamId].username;
+                    if (namwc && namwc.results) {
+                        Results = namwc.results;
+                    }
+                    checkNAMWCUser(NAMWC, namwc, username, function(namwc) {
+                        if (Results) {
+                            for (Key in Results) {
+                                if (Results[Key] !== namwc.results[Key]) {
+                                    newR = true;
+                                    break;
                                 }
-                                setTimeout(setNAMWCResult, 0, NAMWC, User, New, I, N, Callback);
-                            });
-                        });
+                            }
+                        } else {
+                            newR = true;
+                        }
+                        window.setTimeout(setNAMWCResult, 0, NAMWC, steamId, username, namwc, newR, I, N, Callback);
                     });
+                });
                 });
             } else if (Callback) {
                 Callback();
@@ -15068,144 +15251,123 @@ ${Results.join(``)}
         }
     }
 
-    function updateNAMWCResults(User, NAMWC, Callback) {
-        var Results;
-        if (User.NAMWC && User.NAMWC.Results && (typeof User.NAMWC.Results.None != "undefined")) {
-            Results = User.NAMWC.Results;
-            User.NAMWC.Results = {
-                Activated: Results.None,
-                NotMultiple: Results.None,
-                NotActivated: Results.NotActivated,
-                Multiple: Results.Multiple,
-                Unknown: Results.PrivateDown
-            };
-            queueSave(NAMWC, function () {
-                saveUser(User, NAMWC, function () {
-                    GM_setValue("LastSave", 0);
-                    Callback();
-                });
-            });
-        } else {
-            Callback();
-        }
-    }
-
-    function setNAMWCResult(NAMWC, User, New, I, N, Callback) {
+    function setNAMWCResult(NAMWC, steamId, username, namwc, New, I, N, Callback) {
         var Key;
         if (!NAMWC.Canceled) {
-            for (Key in User.NAMWC.Results) {
-                if (User.NAMWC.Results[Key]) {
+            for (Key in namwc.results) {
+                if (namwc.results[Key]) {
                     NAMWC[Key].classList.remove("rhHidden");
                     NAMWC[Key + "Count"].textContent = parseInt(NAMWC[Key + "Count"].textContent) + 1;
                     NAMWC[Key + "Users"].insertAdjacentHTML(
                         "beforeEnd",
-                        "<a " + (New ? "class=\"rhBold rhItalic\" " : "") + "href=\"http://www.sgtools.info/" + (Key.match(/Multiple/) ? "multiple" : "nonactivated") + "/" + User.Username +
-                        "\" target=\"_blank\">" + User.Username + (Key.match(/^(NotActivated|Multiple)$/) ? (" (" + User.NAMWC.Results[Key] + ")") : "") + "</a>"
+                        "<a " + (New ? "class=\"rhBold rhItalic\" " : "") + "href=\"http://www.sgtools.info/" + (Key.match(/Multiple/) ? "multiple" : "nonactivated") + "/" + username +
+                        "\" target=\"_blank\">" + username + (Key.match(/^(NotActivated|Multiple)$/) ? (" (" + namwc.results[Key] + ")") : "") + "</a>"
                     );
                 }
             }
             if (!NAMWC.ShowResults) {
                 NAMWC.Popup.reposition();
-                queueSave(NAMWC, function () {
-                    saveUser(User, NAMWC, function () {
-                        GM_setValue("LastSave", 0);
-                        setTimeout(checkNAMWCUsers, 0, NAMWC, ++I, N, Callback);
-                    });
+                createLock(`userLock`, 300, function() {
+                    var users = JSON.parse(GM_getValue(`users`));
+                    users.users[steamId].namwc = namwc;
+                    GM_setValue(`users`, JSON.stringify(users));
+                    window.setTimeout(checkNAMWCUsers, 0, NAMWC, ++I, N, Callback);
                 });
             }
         }
     }
 
-    function checkNAMWCUser(NAMWC, User, Callback) {
+    function checkNAMWCUser(NAMWC, namwc, username, Callback) {
         if (!NAMWC.Canceled) {
-            if (!User.NAMWC) {
-                User.NAMWC = {
-                    LastSearch: 0,
-                    Results: {}
+            if (!namwc) {
+                namwc = {
+                    lastCheck: 0,
+                    results: {}
                 };
             }
-            if (((new Date().getTime()) - User.NAMWC.LastSearch) > 604800000) {
+            if ((Date.now() - namwc.lastCheck) > 604800000) {
                 if (NAMWC.NAC.checked) {
-                    checkNAMWCNotActivated(NAMWC, User, Callback);
+                    checkNAMWCNotActivated(NAMWC, namwc, username, Callback);
                 } else if (NAMWC.MC.checked) {
-                    checkNAMWCMultiple(NAMWC, User, Callback);
+                    checkNAMWCMultiple(NAMWC, namwc, username, Callback);
                 } else {
-                    checkNAMWCNotActivated(NAMWC, User, function () {
-                        checkNAMWCMultiple(NAMWC, User, Callback);
+                    checkNAMWCNotActivated(NAMWC, namwc, username, function (namwc) {
+                        checkNAMWCMultiple(NAMWC, namwc, username, Callback);
                     });
                 }
             } else {
-                Callback();
+                Callback(namwc);
             }
         }
     }
 
-    function checkNAMWCNotActivated(NAMWC, User, Callback) {
+    function checkNAMWCNotActivated(NAMWC, namwc, username, Callback) {
         var N, ResponseText;
         if (!NAMWC.Canceled) {
             NAMWC.Progress.innerHTML =
                 "<i class=\"fa fa-circle-o-notch fa-spin\"></i> " +
-                "<span>Retrieving " + User.Username + "'s not activated wins...</span>";
-            queueRequest(NAMWC, null, "http://www.sgtools.info/nonactivated/" + User.Username, function (Response) {
+                "<span>Retrieving " + username + "'s not activated wins...</span>";
+            queueRequest(NAMWC, null, "http://www.sgtools.info/nonactivated/" + username, function (Response) {
                 ResponseText = Response.responseText;
                 if (ResponseText.match(/has a private profile/)) {
-                    User.NAMWC.Results.Activated = false;
-                    User.NAMWC.Results.NotActivated = 0;
-                    User.NAMWC.Results.Unknown = true;
+                    namwc.results.activated = false;
+                    namwc.results.notActivated = 0;
+                    namwc.results.unknown = true;
                 } else {
                     N = DOM.parse(ResponseText).getElementsByClassName("notActivatedGame").length;
-                    User.NAMWC.Results.Activated = (N === 0) ? true : false;
-                    User.NAMWC.Results.NotActivated = N;
-                    User.NAMWC.Results.Unknown = false;
+                    namwc.results.activated = N === 0 ? true : false;
+                    namwc.results.notActivated = N;
+                    namwc.results.unknown = false;
                 }
-                User.NAMWC.LastSearch = new Date().getTime();
-                Callback();
+                namwc.lastCheck = Date.now();
+                Callback(namwc);
             });
         }
     }
 
-    function checkNAMWCMultiple(NAMWC, User, Callback) {
+    function checkNAMWCMultiple(NAMWC, namwc, username, Callback) {
         var N;
         if (!NAMWC.Canceled) {
             NAMWC.Progress.innerHTML =
                 "<i class=\"fa fa-circle-o-notch fa-spin\"></i> " +
-                "<span>Retrieving " + User.Username + "'s multiple wins...</span>";
-            queueRequest(NAMWC, null, "http://www.sgtools.info/multiple/" + User.Username, function (Response) {
+                "<span>Retrieving " + username + "'s multiple wins...</span>";
+            queueRequest(NAMWC, null, "http://www.sgtools.info/multiple/" + username, function (Response) {
                 N = DOM.parse(Response.responseText).getElementsByClassName("multiplewins").length;
-                User.NAMWC.Results.NotMultiple = (N === 0) ? true : false;
-                User.NAMWC.Results.Multiple = N;
-                User.NAMWC.LastSearch = new Date().getTime();
-                Callback();
+                namwc.results.notMultiple = N === 0 ? true : false;
+                namwc.results.multiple = N;
+                namwc.lastCheck = Date.now();
+                Callback(namwc);
             });
         }
     }
 
     function highlightNamwcUsers() {
+        var key;
         if (Object.keys(esgst.currentUsers).length) {
-            var SavedUsers = GM_getValue("Users");
-            for (var I = 0, N = SavedUsers.length; I < N; ++I) {
-                var UserID = esgst.sg ? SavedUsers[I].Username : SavedUsers[I].SteamID64;
-                if (esgst.currentUsers[UserID]) {
-                    highlightNamwcUser(SavedUsers[I], esgst.currentUsers[UserID]);
+            var users = JSON.parse(GM_getValue(`users`));
+            for (key in users.users) {
+                var id = esgst.sg ? users.users[key].username : key;
+                if (esgst.currentUsers[id]) {
+                    highlightNamwcUser(users.users[key], esgst.currentUsers[id]);
                 }
             }
         }
     }
 
     function highlightNamwcUser(user, matches) {
-        if (user.NAMWC && user.NAMWC.Results) {
+        if (user.namwc && user.namwc.results) {
             var highlight, icon;
-            if (user.NAMWC.Results.None || (user.NAMWC.Results.Activated && (user.NAMWC.Results.NotMultiple || (user.NAMWC.Results.Multiple && esgst.namwc_m)))) {
+            if (user.namwc.results.activated && (user.namwc.results.notMultiple || (user.namwc.results.multiple && esgst.namwc_m))) {
                 highlight = `positive`;
                 icon = `fa-thumbs-up`;
-            } else if (user.NAMWC.Results.Unknown) {
+            } else if (user.namwc.results.unknown) {
                 highlight = `unknown`;
                 icon = `fa-warning`;
             } else {
                 highlight = `negative`;
                 icon = `fa-thumbs-down`;
             }
-            var i, n, context, title = `${user.Username} has ${(user.NAMWC.Results.Unknown ? `?` : user.NAMWC.Results.NotActivated)} not activated wins and ${user.NAMWC.Results.Multiple} multiple wins (last checked ${getTimestamp(user.NAMWC.LastSearch / 1e3)}).`;
+            var i, n, context, title = `${user.username} has ${(user.namwc.results.unknown ? `?` : user.namwc.results.notActivated)} not activated wins and ${user.namwc.results.multiple} multiple wins (last checked ${getTimestamp(user.namwc.lastCheck / 1e3)}).`;
             if (esgst.namwc_h_i || esgst.wbh_cw || esgst.wbh_cb) {
                 var html = `
 <span class="esgst-namwc-icon ${highlight}" title="${title}">
@@ -15229,6 +15391,8 @@ ${Results.join(``)}
             }
         }
     }
+
+    /* Not Received Finder */
 
     function loadNotReceivedFinder(Context, User) {
         if (Context.context) {
@@ -15305,35 +15469,42 @@ ${Results.join(``)}
         NRF.Progress.innerHTML = NRF.OverallProgress.innerHTML = NRF.Results.innerHTML = "";
         NRF.Popup.reposition();
         NRF.Canceled = false;
-        queueSave(NRF, function () {
-            saveUser(User, NRF, function () {
+        createLock(`userLock`, 300, function(deleteLock) {
+            var users = JSON.parse(GM_getValue(`users`));
+            getSteamId(User.SteamID64, User.ID, User.Username, users, function(steamId) {
                 var Match;
-                GM_setValue("LastSave", 0);
-                User.NRF = getUser(User).NRF;
-                if (!User.NRF) {
-                    User.NRF = {
-                        LastSearch: 0,
-                        OverallProgress: "",
-                        Results: ""
+                GM_setValue(`users`, JSON.stringify(users));
+                deleteLock();
+                var nrf = users.users[steamId].nrf;
+                var username = users.users[steamId].username;
+                if (!nrf) {
+                    nrf = {
+                        lastCheck: 0,
+                        found: 0,
+                        total: 0,
+                        results: ``
                     };
                 }
-                if (((new Date().getTime()) - User.NRF.LastSearch) > 604800000) {
-                    Match = window.location.href.match(new RegExp("\/user\/" + User.Username + "(\/search\?page=(\d+))?"));
-                    searchNRFUser(NRF, User, 1, Match ? (Match[2] ? parseInt(Match[2]) : 1) : 0, "/user/" + User.Username + "/search?page=", function () {
-                        User.NRF.LastSearch = new Date().getTime();
-                        User.NRF.OverallProgress = NRF.OverallProgress.innerHTML;
-                        User.NRF.Results = NRF.Results.innerHTML;
-                        loadEndlessFeatures(NRF.Results);
-                        queueSave(NRF, function () {
-                            saveUser(User, NRF, function () {
-                                GM_setValue("LastSave", 0);
-                                Callback();
-                            });
+                if ((Date.now() - nrf.lastCheck) > 604800000) {
+                    Match = window.location.href.match(new RegExp("\/user\/" + username + "(\/search\?page=(\d+))?"));
+                    searchNRFUser(NRF, username, 1, 0, "/user/" + username + "/search?page=", function () {
+                        createLock(`userLock`, 300, function(deleteLock) {
+                            users = JSON.parse(GM_getValue(`users`));
+                            nrf.lastCheck = Date.now();
+                            nrf.found = NRF.I;
+                            nrf.total = NRF.N;
+                            nrf.results = NRF.Results.innerHTML;
+                            users.users[steamId].nrf = nrf;
+                            GM_setValue(`users`, JSON.stringify(users));
+                            deleteLock();
+                            loadEndlessFeatures(NRF.Results);
+                            NRF.Progress.innerHTML = ``;
+                            Callback();
                         });
                     });
                 } else {
-                    NRF.OverallProgress.innerHTML = User.NRF.OverallProgress;
-                    NRF.Results.innerHTML = User.NRF.Results;
+                    NRF.Results.innerHTML = nrf.results;
+                    NRF.OverallProgress.innerHTML = nrf.found + " of " + nrf.total + " not received giveaways found...";
                     NRF.Popup.reposition();
                     loadEndlessFeatures(NRF.Results);
                     Callback();
@@ -15342,13 +15513,13 @@ ${Results.join(``)}
         });
     }
 
-    function searchNRFUser(NRF, User, NextPage, CurrentPage, URL, Callback, Context) {
+    function searchNRFUser(NRF, username, NextPage, CurrentPage, URL, Callback, Context) {
         var Matches, I, N, Match, Pagination;
         if (Context) {
             Matches = Context.querySelectorAll("div.giveaway__column--negative");
             for (I = 0, N = Matches.length; I < N; ++I) {
                 NRF.I += Matches[I].querySelectorAll("a[href*='/user/']").length;
-                NRF.Results.appendChild(Matches[I].closest(".giveaway__summary").cloneNode(true));
+                NRF.Results.appendChild(Matches[I].closest(".giveaway__row-outer-wrap").cloneNode(true));
                 NRF.Popup.reposition();
             }
             NRF.OverallProgress.innerHTML = NRF.I + " of " + NRF.N + " not received giveaways found...";
@@ -15358,15 +15529,15 @@ ${Results.join(``)}
                     for (I = 0, N = Matches.length; I < N; ++I) {
                         Match = Matches[I].textContent.match(/\((.+) Copies\)/);
                         if (Match && (parseInt(Match[1]) > 3)) {
-                            NRF.Multiple.push(Matches[I].closest(".giveaway__summary").cloneNode(true));
+                            NRF.Multiple.push(Matches[I].closest(".giveaway__row-outer-wrap").cloneNode(true));
                         }
                     }
                 }
                 Pagination = Context.getElementsByClassName("pagination__navigation")[0];
                 if (Pagination && !Pagination.lastElementChild.classList.contains("is-selected")) {
-                    searchNRFUser(NRF, User, NextPage, CurrentPage, URL, Callback);
+                    window.setTimeout(searchNRFUser, 0, NRF, username, NextPage, CurrentPage, URL, Callback);
                 } else if (NRF.FS.checked && NRF.Multiple.length) {
-                    searchNRFMultiple(NRF, 0, NRF.Multiple.length, Callback);
+                    window.setTimeout(searchNRFMultiple, 0, NRF, 0, NRF.Multiple.length, Callback);
                 } else {
                     Callback();
                 }
@@ -15376,14 +15547,10 @@ ${Results.join(``)}
         } else if (!NRF.Canceled) {
             NRF.Progress.innerHTML =
                 "<i class=\"fa fa-circle-o-notch fa-spin\"></i> " +
-                "<span>Searching " + User.Username + "'s giveaways (page " + NextPage + ")...</span>";
-            if (CurrentPage != NextPage) {
-                queueRequest(NRF, null, URL + NextPage, function (Response) {
-                    searchNRFUser(NRF, User, ++NextPage, CurrentPage, URL, Callback, DOM.parse(Response.responseText));
-                });
-            } else {
-                searchNRFUser(NRF, User, ++NextPage, CurrentPage, URL, Callback, document);
-            }
+                "<span>Searching " + username + "'s giveaways (page " + NextPage + ")...</span>";
+            queueRequest(NRF, null, URL + NextPage, function (Response) {
+                window.setTimeout(searchNRFUser, 0, NRF, username, ++NextPage, CurrentPage, URL, Callback, DOM.parse(Response.responseText));
+            });
         }
     }
 
@@ -15398,7 +15565,7 @@ ${Results.join(``)}
                         NRF.Results.appendChild(NRF.Multiple[I].cloneNode(true));
                     }
                     if (NRF.I < NRF.N) {
-                        searchNRFMultiple(NRF, ++I, N, Callback);
+                        window.setTimeout(searchNRFMultiple, 0, NRF, ++I, N, Callback);
                     } else {
                         Callback();
                     }
@@ -15427,13 +15594,15 @@ ${Results.join(``)}
                 }
                 Pagination = ResponseHTML.getElementsByClassName("pagination__navigation")[0];
                 if ((NRF.I < NRF.N) && Pagination && !Pagination.lastElementChild.classList.contains("is-selected")) {
-                    searchNRFGiveaway(NRF, URL, ++NextPage, Callback);
+                    window.setTimeout(searchNRFGiveaway, 0, NRF, URL, ++NextPage, Callback);
                 } else {
                     Callback(Found);
                 }
             });
         }
     }
+
+    /* Sent/Won Ratio */
 
     function loadSentWonRatio(context, user) {
         var wonRow, sentRow;
@@ -15465,6 +15634,8 @@ ${Results.join(``)}
         );
     }
 
+    /* Level Up Calculator */
+
     function loadLevelUpCalculator(context) {
         if (context.context) {
             calculateLUCValue(context.contributorLevelRow);
@@ -15491,6 +15662,8 @@ ${Results.join(``)}
 
     }
 
+    /* SteamGifts Profile Button */
+
     function loadSteamGiftsProfileButton() {
         var Context;
         var User = esgst.user;
@@ -15510,6 +15683,8 @@ ${Results.join(``)}
         Context = Context.lastElementChild;
         Context.insertBefore(SteamButton, Context.firstElementChild);
     }
+
+    /* SteamTrades Profile Button */
 
     function loadSteamTradesProfileButton(Context, User) {
         var STPBButton;
@@ -15541,6 +15716,8 @@ ${Results.join(``)}
             }
         }
     }
+
+    /* Shared Groups Checker */
 
     function loadSharedGroupsChecker(Context, User) {
         var SGCButton, Popup;
@@ -15623,11 +15800,18 @@ ${Results.join(``)}
         }
     }
 
+    /* Whitelist/Blacklist Checker */
+
     function loadWhitelistBlacklistChecker() {
-        if (esgst.esgstHash) {
+        var keys, n;
+        keys = Object.keys(esgst.currentUsers);
+        n = keys.length;
+        if (esgst.menuPath) {
             addWBCButton();
-        } else if (Object.keys(esgst.currentUsers).length) {
-            addWBCButton(esgst.mainPageHeading);
+        } else if (n > 0) {
+            if (n > 1 || (keys[0] !== GM_getValue(`Username`) && keys[0] !== `cg`)) {
+                addWBCButton(esgst.mainPageHeading);
+            }
         }
         if (esgst.wbc_h) {
             addWbcIcons();
@@ -15755,7 +15939,7 @@ ${Results.join(``)}
                 "</span>"
             ),
             Description: "You are whitelisted by",
-            Key: "Whitelisted"
+            Key: "whitelisted"
         }, {
             Icon: (
                 "<span class=\"sidebar__shortcut-inner-wrap rhWBIcon\">" +
@@ -15763,19 +15947,19 @@ ${Results.join(``)}
                 "</span>"
             ),
             Description: "You are blacklisted by",
-            Key: "Blacklisted"
+            Key: "blacklisted"
         }, {
             Icon: "<i class=\"fa fa-check-circle\"></i> ",
             Description: "You are neither whitelisted nor blacklisted by",
-            Key: "None"
+            Key: "none"
         }, {
             Icon: "<i class=\"fa fa-question-circle\"></i> ",
             Description: "You are not blacklisted and there is not enough information to know if you are whitelisted by",
-            Key: "NotBlacklisted"
+            Key: "notBlacklisted"
         }, {
             Icon: "<i class=\"fa fa-question-circle\"></i> ",
             Description: "There is not enough information to know if you are whitelisted or blacklisted by",
-            Key: "Unknown"
+            Key: "unknown"
         }]);
         WBCButton.addEventListener("click", function () {
             WBC.Popup = Popup.popUp(function () {
@@ -15790,31 +15974,27 @@ ${Results.join(``)}
     function setWBCCheck(WBC, Callback) {
         var SavedUsers, I, N, Username, Match;
         WBC.Progress.innerHTML = WBC.OverallProgress.innerHTML = "";
-        WBC.Whitelisted.classList.add("rhHidden");
-        WBC.Blacklisted.classList.add("rhHidden");
-        WBC.None.classList.add("rhHidden");
-        WBC.NotBlacklisted.classList.add("rhHidden");
-        WBC.Unknown.classList.add("rhHidden");
-        WBC.WhitelistedCount.textContent = WBC.BlacklistedCount.textContent = WBC.NoneCount.textContent = WBC.NotBlacklistedCount.textContent = WBC.UnknownCount.textContent = "0";
-        WBC.WhitelistedUsers.innerHTML = WBC.BlacklistedUsers.innerHTML = WBC.NoneUsers.innerHTML = WBC.NotBlacklistedUsers.innerHTML = WBC.UnknownUsers.innerHTML = "";
+        WBC.whitelisted.classList.add("rhHidden");
+        WBC.blacklisted.classList.add("rhHidden");
+        WBC.none.classList.add("rhHidden");
+        WBC.notBlacklisted.classList.add("rhHidden");
+        WBC.unknown.classList.add("rhHidden");
+        WBC.whitelistedCount.textContent = WBC.blacklistedCount.textContent = WBC.noneCount.textContent = WBC.notBlacklistedCount.textContent = WBC.unknownCount.textContent = "0";
+        WBC.whitelistedUsers.innerHTML = WBC.blacklistedUsers.innerHTML = WBC.noneUsers.innerHTML = WBC.notBlacklistedUsers.innerHTML = WBC.unknownUsers.innerHTML = "";
         WBC.Popup.reposition();
         WBC.Users = [];
         WBC.Canceled = false;
         if (WBC.Update) {
-            SavedUsers = GM_getValue("Users");
-            for (I = 0, N = SavedUsers.length; I < N; ++I) {
-                if (SavedUsers[I].WBC && SavedUsers[I].WBC.Result && (WBC.ShowResults || (!WBC.ShowResults && ((WBC.SU.checked &&
-                    SavedUsers[I].WBC.Result.match(/^(Whitelisted|Blacklisted)$/)) ||
-                    !WBC.SU.checked)))) {
-                    WBC.Users.push(SavedUsers[I].Username);
+            SavedUsers = JSON.parse(GM_getValue(`users`));
+            for (I in SavedUsers.users) {
+                if (SavedUsers.users[I].wbc && SavedUsers.users[I].wbc.result && (WBC.ShowResults || (!WBC.ShowResults && ((WBC.SU.checked && SavedUsers.users[I].wbc.result.match(/^(whitelisted|blacklisted)$/)) || !WBC.SU.checked)))) {
+                    WBC.Users.push(SavedUsers.users[I].username);
                 }
             }
             WBC.Users = sortArray(WBC.Users);
             if (WBC.ShowResults) {
                 for (I = 0, N = WBC.Users.length; I < N; ++I) {
-                    setWBCResult(WBC, SavedUsers[getUserIndex({
-                        Username: WBC.Users[I]
-                    }, SavedUsers)], false);
+                    setWBCResult(WBC, SavedUsers.steamIds[WBC.Users[I]], WBC.Users[I], SavedUsers.users[SavedUsers.steamIds[WBC.Users[I]]].wbc, SavedUsers.users[SavedUsers.steamIds[WBC.Users[I]]].whitelisted, SavedUsers.users[SavedUsers.steamIds[WBC.Users[I]]].blacklisted, false);
                 }
             } else {
                 checkWBCUsers(WBC, 0, WBC.Users.length, Callback);
@@ -15849,21 +16029,20 @@ ${Results.join(``)}
                 User = (WBC.User && WBC.SC.checked) ? WBC.User : {
                     Username: WBC.Users[I]
                 };
-                queueSave(WBC, function () {
-                    saveUser(User, WBC, function () {
-                        GM_setValue("LastSave", 0);
-                        SavedUser = getUser(User);
-                        User.WBC = SavedUser.WBC;
-                        if (User.WBC && User.WBC.Result) {
-                            Result = User.WBC.Result;
+                createLock(`userLock`, 300, function(deleteLock) {
+                    var users = JSON.parse(GM_getValue(`users`));
+                    getSteamId(User.SteamID64, User.ID, User.Username, users, function(steamId) {
+                        GM_setValue(`users`, JSON.stringify(users));
+                        deleteLock();
+                        var username = users.users[steamId].username;
+                        var whitelisted = users.users[steamId].whitelisted;
+                        var blacklisted = users.users[steamId].blacklisted;
+                        var wbc = users.users[steamId].wbc;
+                        if (wbc && wbc.result) {
+                            Result = wbc.result;
                         }
-                        User.Whitelisted = SavedUser.Whitelisted;
-                        User.Blacklisted = SavedUser.Blacklisted;
-                        if (esgst.wbc_n) {
-                            User.Notes = SavedUser.Notes;
-                        }
-                        checkWBCUser(WBC, User, function () {
-                            setTimeout(setWBCResult, 0, WBC, User, (Result != User.WBC.Result) ? true : false, I, N, Callback);
+                        checkWBCUser(WBC, wbc, username, function (wbc) {
+                            setTimeout(setWBCResult, 0, WBC, steamId, username, wbc, whitelisted, blacklisted, (Result != wbc.result) ? true : false, I, N, Callback);
                         });
                     });
                 });
@@ -15873,144 +16052,150 @@ ${Results.join(``)}
         }
     }
 
-    function setWBCResult(WBC, User, New, I, N, Callback) {
+    function setWBCResult(WBC, steamId, username, wbc, whitelisted, blacklisted, New, I, N, Callback) {
         var Key;
         if (!WBC.Canceled) {
-            Key = ((User.WBC.Result == "Blacklisted") && !WBC.B) ? "Unknown" : User.WBC.Result;
+            Key = ((wbc.result === `blacklisted`) && !WBC.B) ? "unknown" : wbc.result;
             WBC[Key].classList.remove("rhHidden");
             WBC[Key + "Count"].textContent = parseInt(WBC[Key + "Count"].textContent) + 1;
-            WBC[Key + "Users"].insertAdjacentHTML("beforeEnd", "<a " + (New ? "class=\"rhBold rhItalic\" " : "") + "href=\"/user/" + User.Username + "\">" + User.Username + "</a>");
+            WBC[Key + "Users"].insertAdjacentHTML("beforeEnd", "<a " + (New ? "class=\"rhBold rhItalic\" " : "") + "href=\"/user/" + username + "\">" + username + "</a>");
             if (!WBC.ShowResults) {
                 WBC.Popup.reposition();
-                if ((WBC.RW.checked && (User.WBC.Result == "Whitelisted") && !User.Whitelisted) || (WBC.B && WBC.RB.checked && (User.WBC.Result == "Blacklisted") && !User.Blacklisted)) {
-                    getUserID(User, WBC, function () {
-                        returnWBCWhitelistBlacklist(WBC, User, function () {
-                            queueSave(WBC, function () {
-                                saveUser(User, WBC, function () {
-                                    GM_setValue("LastSave", 0);
-                                    setTimeout(checkWBCUsers, 0, WBC, ++I, N, Callback);
-                                });
+                if ((WBC.RW.checked && (wbc.result === `whitelisted`) && !whitelisted) || (WBC.B && WBC.RB.checked && (wbc.result === `blacklisted`) && !blacklisted)) {
+                    createLock(`userLock`, 300, function(deleteLock) {
+                        var users = JSON.parse(GM_getValue(`users`));
+                        getUserID(steamId, users, function(id) {
+                            returnWBCWhitelistBlacklist(WBC, wbc, username, id, users.users[steamId].notes, function (success, notes) {
+                                if (success) {
+                                    users.users[steamId].notes = notes;
+                                    delete users.users[steamId].whitelisted;
+                                    delete users.users[steamId].blacklisted;
+                                    users.users[steamId][wbc.result] = true;
+                                }
+                                users.users[steamId].wbc = wbc;
+                                GM_setValue(`users`, JSON.stringify(users));
+                                deleteLock();
+                                window.setTimeout(checkWBCUsers, 0, WBC, ++I, N, Callback);
                             });
                         });
                     });
                 } else {
-                    queueSave(WBC, function () {
-                        saveUser(User, WBC, function () {
-                            GM_setValue("LastSave", 0);
-                            setTimeout(checkWBCUsers, 0, WBC, ++I, N, Callback);
-                        });
+                    createLock(`userLock`, 300, function(deleteLock) {
+                        var users = JSON.parse(GM_getValue(`users`));
+                        users.users[steamId].wbc = wbc;
+                        GM_setValue(`users`, JSON.stringify(users));
+                        deleteLock();
+                        window.setTimeout(checkWBCUsers, 0, WBC, ++I, N, Callback);
                     });
                 }
             }
         }
     }
 
-    function returnWBCWhitelistBlacklist(WBC, User, Callback) {
+    function returnWBCWhitelistBlacklist(WBC, wbc, username, id, notes, Callback) {
         var Key, Type;
         if (!WBC.Canceled) {
-            Key = User.WBC.Result;
-            Type = Key.match(/(.+)ed/)[1].toLowerCase();
+            Key = wbc.result;
+            Type = Key.match(/(.+)ed/)[1];
             WBC.Progress.innerHTML =
                 "<i class=\"fa fa-circle-o-notch fa-spin\"></i> " +
-                "<span>Returning " + Type + " for " + User.Username + "...</span>";
-            if (window.location.pathname.match(new RegExp("^\/user\/" + User.Username))) {
+                "<span>Returning " + Type + " for " + username + "...</span>";
+            if (window.location.pathname.match(new RegExp("^\/user\/" + username))) {
                 document.getElementsByClassName("sidebar__shortcut__" + Type)[0].click();
-                User.Whitelisted = User.Blacklisted = false;
-                User[Key] = true;
                 if (esgst.wbc_n) {
-                    var msg = `${Key} in return.`;
-                    if (User.Notes) {
-                        User.Notes = `${msg}\n\n${User.Notes}`;
+                    var msg = `Returned ${Type}.`;
+                    if (notes) {
+                        notes = `${msg}\n\n${notes}`;
                     } else {
-                        User.Notes = msg;
+                        notes = msg;
                     }
                 }
-                Callback();
+                Callback(true, notes);
             } else {
-                queueRequest(WBC, "xsrf_token=" + esgst.xsrfToken + "&do=" + Type + "&child_user_id=" + User.ID + "&action=insert", "/ajax.php", function (Response) {
+                queueRequest(WBC, "xsrf_token=" + esgst.xsrfToken + "&do=" + Type + "&child_user_id=" + id + "&action=insert", "/ajax.php", function (Response) {
+                    var success = false;
                     if (JSON.parse(Response.responseText).type == "success") {
-                        User.Whitelisted = User.Blacklisted = false;
-                        User[Key] = true;
-                    }
-                    if (esgst.wbc_n) {
-                        var msg = `${Key} in return.`;
-                        if (User.Notes) {
-                            User.Notes = `${msg}\n\n${User.Notes}`;
-                        } else {
-                            User.Notes = msg;
+                        success = true;
+                        if (esgst.wbc_n) {
+                            var msg = `${Key} in return.`;
+                            if (notes) {
+                                notes = `${msg}\n\n${notes}`;
+                            } else {
+                                notes = msg;
+                            }
                         }
                     }
-                    Callback();
+                    Callback(success, notes);
                 });
             }
         }
     }
 
-    function checkWBCUser(WBC, User, Callback) {
+    function checkWBCUser(WBC, wbc, username, Callback) {
         var Match;
         if (!WBC.Canceled) {
             if (WBC.CC.checked) {
-                delete User.WBC;
+                wbc = null;
             }
-            if (!User.WBC) {
-                User.WBC = {
-                    LastSearch: 0,
-                    Timestamp: 0
+            if (!wbc) {
+                wbc = {
+                    lastCheck: 0,
+                    timestamp: 0
                 };
             }
-            if ((((new Date().getTime()) - User.WBC.LastSearch) > 86400000) || WBC.Update) {
-                if ((WBC.FC.checked && User.WBC.WhitelistGiveaway) || (!WBC.FC.checked && User.WBC.Giveaway)) {
-                    WBC.Timestamp = User.WBC.Timestamp;
-                    checkWBCGiveaway(WBC, User, Callback);
+            if (((Date.now() - wbc.lastCheck) > 86400000) || WBC.Update) {
+                if ((WBC.FC.checked && wbc.whitelistGiveaway) || (!WBC.FC.checked && wbc.giveaway)) {
+                    WBC.Timestamp = wbc.timestamp;
+                    checkWBCGiveaway(WBC, wbc, Callback);
                 } else {
                     WBC.Timestamp = 0;
                     WBC.GroupGiveaways = [];
-                    Match = window.location.href.match(new RegExp("\/user\/" + User.Username + "(\/search\?page=(\d+))?"));
-                    getWBCGiveaways(WBC, User, 1, Match ? (Match[2] ? parseInt(Match[2]) : 1) : 0, "/user/" + User.Username + "/search?page=", Callback);
+                    Match = window.location.href.match(new RegExp("\/user\/" + username + "(\/search\?page=(\d+))?"));
+                    getWBCGiveaways(WBC, wbc, username, 1, Match ? (Match[2] ? parseInt(Match[2]) : 1) : 0, "/user/" + username + "/search?page=", Callback);
                 }
             } else {
-                Callback();
+                Callback(wbc);
             }
         }
     }
 
-    function checkWBCGiveaway(WBC, User, Callback) {
+    function checkWBCGiveaway(WBC, wbc, Callback) {
         var ResponseText;
         if (!WBC.Canceled) {
-            queueRequest(WBC, null, User.WBC.WhitelistGiveaway || User.WBC.Giveaway, function (Response) {
+            queueRequest(WBC, null, wbc.whitelistGiveaway || wbc.giveaway, function (Response) {
                 var responseHtml = DOM.parse(Response.responseText);
                 var errorMessage = responseHtml.getElementsByClassName(`table--summary`)[0];
                 var stop;
                 if (errorMessage) {
                     errorMessage = errorMessage.textContent;
                     if (errorMessage.match(/blacklisted the giveaway creator/)) {
-                        User.WBC.Result = "NotBlacklisted";
+                        wbc.result = "notBlacklisted";
                         stop = true;
                     } else if (errorMessage.match(/blacklisted by the giveaway creator/)) {
-                        User.WBC.Result = "Blacklisted";
+                        wbc.result = "blacklisted";
                     } else if (errorMessage.match(/not a member of the giveaway creator's whitelist/)) {
-                        User.WBC.Result = "None";
+                        wbc.result = "none";
                     } else {
-                        User.WBC.Result = "NotBlacklisted";
+                        wbc.result = "notBlacklisted";
                     }
-                } else if (User.WBC.WhitelistGiveaway) {
-                    User.WBC.Result = "Whitelisted";
+                } else if (wbc.whitelistGiveaway) {
+                    wbc.result = "whitelisted";
                 } else {
-                    User.WBC.Result = "NotBlacklisted";
+                    wbc.result = "notBlacklisted";
                 }
-                User.WBC.LastSearch = new Date().getTime();
-                User.WBC.Timestamp = WBC.Timestamp;
-                Callback(stop);
+                wbc.lastCheck = Date.now();
+                wbc.timestamp = WBC.Timestamp;
+                Callback(wbc, stop);
             });
         }
     }
 
-    function getWBCGiveaways(WBC, User, NextPage, CurrentPage, URL, Callback, Context) {
+    function getWBCGiveaways(WBC, wbc, username, NextPage, CurrentPage, URL, Callback, Context) {
         var Giveaway, Pagination;
         if (Context) {
-            if (!User.WBC.Giveaway) {
+            if (!wbc.giveaway) {
                 Giveaway = Context.querySelector("[class='giveaway__heading__name'][href*='/giveaway/']");
-                User.WBC.Giveaway = Giveaway ? Giveaway.getAttribute("href") : null;
+                wbc.giveaway = Giveaway ? Giveaway.getAttribute("href") : null;
             }
             Pagination = Context.getElementsByClassName("pagination__navigation")[0];
             Giveaway = Context.getElementsByClassName("giveaway__summary")[0];
@@ -16020,33 +16205,33 @@ ${Results.join(``)}
                     WBC.Timestamp = 0;
                 }
             }
-            if (User.WBC.Giveaway) {
-                checkWBCGiveaway(WBC, User, function (stop) {
+            if (wbc.giveaway) {
+                checkWBCGiveaway(WBC, wbc, function (wbc, stop) {
                     var WhitelistGiveaways, I, N, GroupGiveaway;
-                    if ((User.WBC.Result == "NotBlacklisted") && !stop && WBC.FC.checked) {
+                    if ((wbc.result === `notBlacklisted`) && !stop && WBC.FC.checked) {
                         WhitelistGiveaways = Context.getElementsByClassName("giveaway__column--whitelist");
-                        for (I = 0, N = WhitelistGiveaways.length; (I < N) && !User.WBC.WhitelistGiveaway; ++I) {
+                        for (I = 0, N = WhitelistGiveaways.length; (I < N) && !wbc.whitelistGiveaway; ++I) {
                             GroupGiveaway = WhitelistGiveaways[I].parentElement.getElementsByClassName("giveaway__column--group")[0];
                             if (GroupGiveaway) {
                                 WBC.GroupGiveaways.push(GroupGiveaway.getAttribute("href"));
                             } else {
-                                User.WBC.WhitelistGiveaway = WhitelistGiveaways[I].closest(".giveaway__summary").getElementsByClassName("giveaway__heading__name")[0].getAttribute("href");
+                                wbc.whitelistGiveaway = WhitelistGiveaways[I].closest(".giveaway__summary").getElementsByClassName("giveaway__heading__name")[0].getAttribute("href");
                             }
                         }
-                        if (User.WBC.WhitelistGiveaway) {
-                            checkWBCGiveaway(WBC, User, Callback);
-                        } else if (((WBC.Timestamp >= User.WBC.Timestamp) || (WBC.Timestamp === 0)) && Pagination && !Pagination.lastElementChild.classList.contains("is-selected")) {
-                            window.setTimeout(getWBCGiveaways, 0, WBC, User, NextPage, CurrentPage, URL, Callback);
-                        } else if ((User.WBC.GroupGiveaways && User.WBC.GroupGiveaways.length) || WBC.GroupGiveaways.length) {
-                            getWBCGroupGiveaways(WBC, 0, WBC.GroupGiveaways.length, User, function (Result) {
+                        if (wbc.whitelistGiveaway) {
+                            checkWBCGiveaway(WBC, wbc, Callback);
+                        } else if (((WBC.Timestamp >= wbc.timestamp) || (WBC.Timestamp === 0)) && Pagination && !Pagination.lastElementChild.classList.contains("is-selected")) {
+                            window.setTimeout(getWBCGiveaways, 0, WBC, wbc, username, NextPage, CurrentPage, URL, Callback);
+                        } else if ((wbc.groupGiveaways && wbc.groupGiveaways.length) || WBC.GroupGiveaways.length) {
+                            getWBCGroupGiveaways(WBC, 0, WBC.GroupGiveaways.length, wbc, username, function (wbc, Result) {
                                 var Groups, GroupGiveaways, Found, J, NumGroups;
                                 if (Result) {
-                                    Callback();
+                                    Callback(wbc);
                                 } else {
                                     Groups = GM_getValue("Groups");
-                                    for (GroupGiveaway in User.WBC.GroupGiveaways) {
+                                    for (GroupGiveaway in wbc.groupGiveaways) {
                                         Found = false;
-                                        GroupGiveaways = User.WBC.GroupGiveaways[GroupGiveaway];
+                                        GroupGiveaways = wbc.groupGiveaways[GroupGiveaway];
                                         for (I = 0, N = GroupGiveaways.length; (I < N) && !Found; ++I) {
                                             for (J = 0, NumGroups = Groups.length; (J < NumGroups) && (Groups[J].Code != GroupGiveaways[I]); ++J);
                                             if (J < NumGroups) {
@@ -16058,69 +16243,69 @@ ${Results.join(``)}
                                         }
                                     }
                                     if (Found) {
-                                        Callback();
+                                        Callback(wbc);
                                     } else {
-                                        User.WBC.Result = "Whitelisted";
-                                        Callback();
+                                        wbc.result = "whitelisted";
+                                        Callback(wbc);
                                     }
                                 }
                             });
                         } else {
-                            Callback();
+                            Callback(wbc);
                         }
                     } else {
-                        Callback();
+                        Callback(wbc);
                     }
                 });
-            } else if (((WBC.Timestamp >= User.WBC.Timestamp) || (WBC.Timestamp === 0)) && Pagination && !Pagination.lastElementChild.classList.contains("is-selected")) {
-                window.setTimeout(getWBCGiveaways, 0, WBC, User, NextPage, CurrentPage, URL, Callback);
+            } else if (((WBC.Timestamp >= wbc.timestamp) || (WBC.Timestamp === 0)) && Pagination && !Pagination.lastElementChild.classList.contains("is-selected")) {
+                window.setTimeout(getWBCGiveaways, 0, WBC, wbc, username, NextPage, CurrentPage, URL, Callback);
             } else {
-                User.WBC.Result = "Unknown";
-                User.WBC.LastSearch = new Date().getTime();
-                User.WBC.Timestamp = WBC.Timestamp;
-                Callback();
+                wbc.result = "unknown";
+                wbc.lastCheck = Date.now();
+                wbc.timestamp = WBC.Timestamp;
+                Callback(wbc);
             }
         } else if (!WBC.Canceled) {
             WBC.Progress.innerHTML =
                 "<i class=\"fa fa-circle-o-notch fa-spin\"></i> " +
-                "<span>Retrieving " + User.Username + "'s giveaways (page " + NextPage + ")...</span>";
+                "<span>Retrieving " + username + "'s giveaways (page " + NextPage + ")...</span>";
             if (CurrentPage != NextPage) {
                 queueRequest(WBC, null, URL + NextPage, function (Response) {
                     if (Response.finalUrl.match(/\/user\//)) {
-                        window.setTimeout(getWBCGiveaways, 0, WBC, User, ++NextPage, CurrentPage, URL, Callback, DOM.parse(Response.responseText));
+                        window.setTimeout(getWBCGiveaways, 0, WBC, wbc, username, ++NextPage, CurrentPage, URL, Callback, DOM.parse(Response.responseText));
                     } else {
-                        User.WBC.Result = "Unknown";
-                        User.WBC.LastSearch = new Date().getTime();
-                        User.WBC.Timestamp = WBC.Timestamp;
-                        Callback();
+                        wbc.result = "unknown";
+                        wbc.lastCheck = Date.now();
+                        wbc.timestamp = WBC.Timestamp;
+                        Callback(wbc);
                     }
                 });
             } else {
-                window.setTimeout(getWBCGiveaways, 0, WBC, User, ++NextPage, CurrentPage, URL, Callback, document);
+                window.setTimeout(getWBCGiveaways, 0, WBC, wbc, username, ++NextPage, CurrentPage, URL, Callback, document);
             }
         }
     }
 
-    function getWBCGroupGiveaways(WBC, I, N, User, Callback) {
+    function getWBCGroupGiveaways(WBC, I, N, wbc, username, Callback) {
         if (!WBC.Canceled) {
             if (I < N) {
                 WBC.Progress.innerHTML =
                     "<i class=\"fa fa-circle-o-notch\"></i> " +
-                    "<span>Retrieving " + User.Username + "'s group giveaways (" + I + " of " + N + ")...</span>";
-                getWBCGroups(WBC, WBC.GroupGiveaways[I] + "/search?page=", 1, User, function (Result) {
+                    "<span>Retrieving " + username + "'s group giveaways (" + I + " of " + N + ")...</span>";
+                getWBCGroups(WBC, WBC.GroupGiveaways[I] + "/search?page=", 1, wbc, function (wbc, Result) {
                     if (Result) {
-                        Callback(Result);
+                        Callback(wbc, Result);
                     } else {
-                        window.setTimeout(getWBCGroupGiveaways, 0, WBC, ++I, N, User, Callback);
+                        window.setTimeout(getWBCGroupGiveaways, 0, WBC, ++I, N, wbc, username, Callback);
                     }
                 });
             } else {
-                Callback();
+                Callback(wbc);
             }
         }
     }
 
-    function getWBCGroups(WBC, URL, NextPage, User, Callback) {
+    function getWBCGroups(WBC, URL, NextPage, wbc, Callback) {
         if (!WBC.Canceled) {
             queueRequest(WBC, null, URL + NextPage, function (Response) {
                 var ResponseText, ResponseHTML, Groups, N, GroupGiveaway, I, Group, Pagination;
@@ -16129,32 +16314,32 @@ ${Results.join(``)}
                 Groups = ResponseHTML.getElementsByClassName("table__column__heading");
                 N = Groups.length;
                 if (N > 0) {
-                    if (!User.WBC.GroupGiveaways) {
-                        User.WBC.GroupGiveaways = {};
+                    if (!wbc.groupGiveaways) {
+                        wbc.groupGiveaways = {};
                     }
                     GroupGiveaway = URL.match(/\/giveaway\/(.+)\//)[1];
-                    if (!User.WBC.GroupGiveaways[GroupGiveaway]) {
-                        User.WBC.GroupGiveaways[GroupGiveaway] = [];
+                    if (!wbc.groupGiveaways[GroupGiveaway]) {
+                        wbc.groupGiveaways[GroupGiveaway] = [];
                     }
                     for (I = 0; I < N; ++I) {
                         Group = Groups[I].getAttribute("href").match(/\/group\/(.+)\//)[1];
-                        if (User.WBC.GroupGiveaways[GroupGiveaway].indexOf(Group) < 0) {
-                            User.WBC.GroupGiveaways[GroupGiveaway].push(Group);
+                        if (wbc.groupGiveaways[GroupGiveaway].indexOf(Group) < 0) {
+                            wbc.groupGiveaways[GroupGiveaway].push(Group);
                         }
                     }
                     Pagination = ResponseHTML.getElementsByClassName("pagination__navigation")[0];
                     if (Pagination && !Pagination.lastElementChild.classList.contains("is-selected")) {
-                        window.setTimeout(getWBCGroups, 0, WBC, URL, ++NextPage, User, Callback);
+                        window.setTimeout(getWBCGroups, 0, WBC, URL, ++NextPage, wbc, Callback);
                     } else {
-                        Callback();
+                        Callback(wbc);
                     }
                 } else {
                     var errorMessage = ResponseHTML.getElementsByClassName(`table--summary`)[0];
                     if (errorMessage && errorMessage.textContent.match(/not a member of the giveaway creator's whitelist/)) {
-                        User.WBC.Result = "None";
-                        Callback(true);
+                        wbc.result = "none";
+                        Callback(wbc, true);
                     } else {
-                        Callback(true);
+                        Callback(wbc, true);
                     }
                 }
             });
@@ -16195,25 +16380,26 @@ ${Results.join(``)}
     }
 
     function addWbcIcons() {
+        var key;
         if (Object.keys(esgst.currentUsers).length) {
-            var SavedUsers = GM_getValue("Users");
-            for (var I = 0, N = SavedUsers.length; I < N; ++I) {
-                var UserID = esgst.sg ? SavedUsers[I].Username : SavedUsers[I].SteamID64;
-                if (esgst.currentUsers[UserID]) {
-                    addWBCIcon(SavedUsers[I], esgst.currentUsers[UserID]);
+            var users = JSON.parse(GM_getValue(`users`));
+            for (key in users.users) {
+                var id = esgst.sg ? users.users[key].username : key;
+                if (esgst.currentUsers[id]) {
+                    addWBCIcon(users.users[key], esgst.currentUsers[id]);
                 }
             }
         }
     }
 
-    function addWBCIcon(User, Matches) {
+    function addWBCIcon(user, Matches) {
         var Result, HTML, I, N, Context, Container;
-        if (User.WBC) {
-            Result = User.WBC.Result;
-            if ((Result == "Whitelisted") || ((Result == "Blacklisted") && esgst.wbc_b)) {
+        if (user.wbc) {
+            Result = user.wbc.result;
+            if ((Result == "whitelisted") || ((Result == "blacklisted") && esgst.wbc_b)) {
                 HTML =
-                    "<span class=\"sidebar__shortcut-inner-wrap WBCIcon rhWBIcon\" title=\"" + User.Username + " has " + Result.toLowerCase() + " you (last checked " + getTimestamp(User.WBC.LastSearch / 1e3) + ").\">" +
-                    "    <i class=\"fa sidebar__shortcut__" + ((Result == "Whitelisted") ? "whitelist fa-check" : "blacklist fa-times") + " is-disabled is-selected\"" +
+                    "<span class=\"sidebar__shortcut-inner-wrap WBCIcon rhWBIcon\" title=\"" + user.username + " has " + Result.toLowerCase() + " you (last checked " + getTimestamp(user.wbc.lastCheck / 1e3) + ").\">" +
+                    "    <i class=\"fa sidebar__shortcut__" + ((Result == "whitelisted") ? "whitelist fa-check" : "blacklist fa-times") + " is-disabled is-selected\"" +
                     "    style=\"background: none !important;\"></i>" +
                     "</span>";
                 for (I = 0, N = Matches.length; I < N; ++I) {
@@ -16228,37 +16414,40 @@ ${Results.join(``)}
         }
     }
 
+    /* Whitelist/Blacklist Highlighter */
+
     function loadWhitelistBlacklistHighlighter() {
+        var key;
         if (Object.keys(esgst.currentUsers).length) {
-            var SavedUsers = GM_getValue("Users");
-            for (var I = 0, N = SavedUsers.length; I < N; ++I) {
-                var UserID = esgst.sg ? SavedUsers[I].Username : SavedUsers[I].SteamID64;
-                if (esgst.currentUsers[UserID]) {
-                    highlightWbhUser(SavedUsers[I], esgst.currentUsers[UserID]);
+            var users = JSON.parse(GM_getValue(`users`));
+            for (key in users.users) {
+                var id = esgst.sg ? users.users[key].username : key;
+                if (esgst.currentUsers[id]) {
+                    highlightWbhUser(users.users[key], esgst.currentUsers[id]);
                 }
             }
         }
     }
 
     function highlightWbhUser(user, matches) {
-        if (user.Whitelisted || user.Blacklisted) {
+        if (user.whitelisted || user.blacklisted) {
             var status, icon;
-            if (user.Whitelisted) {
+            if (user.whitelisted) {
                 status = `whitelisted`;
                 icon = `fa-heart sidebar__shortcut__whitelist`;
             } else {
                 status = `blacklisted`;
                 icon = `fa-ban sidebar__shortcut__blacklist`;
             }
-            var title = `You have ${status} ${user.Username}.`, i, n, context;
-            if ((user.Whitelisted && esgst.wbh_cw) || (user.Blacklisted && esgst.wbh_cb)) {
+            var title = `You ${status} ${user.username} on ${getTimestamp(user[`${status}Date`] / 1e3)}.`, i, n, context;
+            if ((user.whitelisted && esgst.wbh_cw) || (user.blacklisted && esgst.wbh_cb)) {
                 for (i = 0, n = matches.length; i < n; ++i) {
                     context = matches[i];
                     context.classList.add(`esgst-wbh-highlight`, status);
                     context.title = title;
                 }
             } else {
-                html = `
+                var html = `
 <span class="sidebar__shortcut-inner-wrap esgst-wbh-icon" title="${title}">
 <i class="fa ${icon} is-disabled is-selected" style="background: none !important;"></i>
 </span>
@@ -16274,6 +16463,8 @@ ${Results.join(``)}
             }
         }
     }
+
+    /* Inbox Winners Highlighter */
 
     function loadInboxWinnersHighlighter(context) {
         var className;
@@ -16327,6 +16518,8 @@ ${Results.join(``)}
         }
     }
 
+    /* Groups Highlighter */
+
     function loadGroupsHighlighter(context) {
         var matches = context.querySelectorAll(`.table__column__heading[href*="/group/"]`);
         highlightGHGroups(matches);
@@ -16343,6 +16536,8 @@ ${Results.join(``)}
             }
         }
     }
+
+    /* Group Stats */
 
     function loadGroupsStats(context) {
         if (context == document) {
@@ -16388,7 +16583,7 @@ ${Results.join(``)}
             }
         });
     }
-    
+
     /*
      * Features - Games
      */
@@ -16457,12 +16652,14 @@ ${Results.join(``)}
             if (esgst.giveawayPath) {
                 setEghObserver(document);
             }
+            if (!esgst.menuPath) {
             esgst.gameFeatures.push(function (games) {
                 var savedGames;
                 savedGames = JSON.parse(GM_getValue(`games`));
                 highlightEghGames(games.apps, savedGames.apps, `apps`);
                 highlightEghGames(games.subs, savedGames.subs, `subs`);
             });
+            }
         }
     }
 
@@ -16666,7 +16863,7 @@ ${Results.join(``)}
                         }, 500);
                     }
                 }
-            } else {
+            } else if (!esgst.menuPath) {
                 esgst.gameFeatures.push(function (games) {
                     getGcGames(games.apps, `apps`);
                     getGcGames(games.subs, `subs`);
@@ -17622,7 +17819,7 @@ ${avatar.outerHTML}
             window.location.hash = "ESGST";
             window.location.reload();
         });
-        if (esgst.esgstHash) {
+        if (esgst.menuPath) {
             loadSMMenu(Sidebar, SMButton);
         }
     }
@@ -17721,7 +17918,7 @@ ${avatar.outerHTML}
             Name: "SMCommentHistory",
             Title: "See comment history."
         }, {
-            Check: esgst.ut,
+            Check: false,
             Icons: ["fa-tags", "fa-cog"],
             Name: "SMManageTags",
             Title: "Manage tags."
@@ -17752,7 +17949,7 @@ ${avatar.outerHTML}
         SMLastBundleSync = Container.getElementsByClassName("SMLastBundleSync")[0];
         SMAPIKey = Container.getElementsByClassName("SMAPIKey")[0];
         SMGeneralFeatures = ["fh", "fs", "fmph", "ff", "hr", "lpv", "vai", "ev", "hbs", "at", "pnot", "es"];
-        SMGiveawayFeatures = ["dgn", "hfc", "ags", "pgb", "gf", "gv", "egf", "gp", "gwc", "gwr", "elgb", "qgb", "ggp", "gt", "sgg", "rcvc", "ugs", "er", "gwl", "gesl", "as"];
+        SMGiveawayFeatures = ["dgn", "hfc", "ags", "pgb", "gf", "gv", "egf", "gp", "gwc", "gwr", "elgb", "qgb", "ggl", "ochgb", "gt", "sgg", "rcvc", "ugs", "er", "gwl", "gesl", "as"];
         SMDiscussionFeatures = ["adot", "dh", "mpp", "ded"];
         SMCommentingFeatures = ["ch", "ct", "cfh", "rbot", "rbp", "mr", "rfi", "rml"];
         SMUserGroupGamesFeatures = ["ap", "uh", "un", "rwscvl", "ugd", "namwc", "nrf", "swr", "luc", "sgpb", "stpb", "sgc", "wbc", "wbh", "ut", "iwh", "gh", "gs", "egh", "ggt", "gc"];
@@ -17819,8 +18016,9 @@ ${avatar.outerHTML}
             Popup.Title.textContent = "Manage data:";
             SM = {
                 Names: {
-                    Users: "U",
+                    users:  `U`,
                     games: `G`,
+                    giveaways: `GG`,
                     Groups: "GP",
                     comments: "C",
                     Emojis: "E",
@@ -17836,17 +18034,63 @@ ${avatar.outerHTML}
                 Check: function () {
                     return true;
                 },
-                Description: "Users data.",
-                Title: "Includes user notes, tags and checker caches.",
-                Name: "Users",
-                Key: "U",
-                ID: "SM_U"
+                Description: "User Notes data.",
+                Name: "un",
+                Key: "UN",
+                ID: "SM_UN"
+            }, {
+                Check: function () {
+                    return true;
+                },
+                Description: "User Tags data.",
+                Name: "ut",
+                Key: "UT",
+                ID: "SM_UT"
+            }, {
+                Check: function () {
+                    return true;
+                },
+                Description: "User Giveaways Data data.",
+                Name: "udg",
+                Key: "UGD",
+                ID: "SM_UGD"
+            }, {
+                Check: function () {
+                    return true;
+                },
+                Description: "Not Activated/Multiple Wins Checker data.",
+                Name: "namwc",
+                Key: "NAMWC",
+                ID: "SM_NAMWC"
+            }, {
+                Check: function () {
+                    return true;
+                },
+                Description: "Not Received Finder data.",
+                Name: "nrf",
+                Key: "NRF",
+                ID: "SM_NRF"
+            }, {
+                Check: function () {
+                    return true;
+                },
+                Description: "Whitelist/Blacklist Checker data.",
+                Name: "wbc",
+                Key: "WBC",
+                ID: "SM_WBC"
+            }, {
+                Check: function () {
+                    return true;
+                },
+                Description: "Real Won/Sent CV Links data.",
+                Name: "rwscvl",
+                Key: "RWSCVL",
+                ID: "SM_RWSCVL"
             }, {
                 Check: function () {
                     return true;
                 },
                 Description: "Game Tags data.",
-                Title: "Includes Game Tags data.",
                 Name: "gt",
                 Key: "GT",
                 ID: "SM_GT"
@@ -17855,7 +18099,6 @@ ${avatar.outerHTML}
                     return true;
                 },
                 Description: "Entered Games Highlighter data.",
-                Title: "Includes Entered Games Highlighter data.",
                 Name: "egh",
                 Key: "EGH",
                 ID: "SM_EGH"
@@ -17864,10 +18107,18 @@ ${avatar.outerHTML}
                     return true;
                 },
                 Description: "Game Categories data.",
-                Title: "Includes Game Categories data.",
                 Name: "gc",
                 Key: "GC",
                 ID: "SM_GC"
+            }, {
+                Check: function () {
+                    return true;
+                },
+                Description: "Giveaways data.",
+                Title: "Includes Giveaway Groups Loader data.",
+                Name: "giveaways",
+                Key: "GG",
+                ID: "SM_GG"
             }, {
                 Check: function () {
                     return true;
@@ -18007,27 +18258,76 @@ ${avatar.outerHTML}
                     createDescription("Filter users by tag (use commas to separate filters, for example: Filter1, Filter2, ...). Filters are not case sensitive.")
                 );
                 SMManageTagsPopup = Popup.popUp(function () {
-                    var SavedUsers, MTUsers, Tags, I, N, Context, Username, SavedTags, J, NumTags, Key;
+                    var SavedGames, SavedUsers, MTApps, MTSubs, MTUsers, Tags, I, N, Context, Username, SavedTags, J, NumTags, Key;
                     Popup.TextInput.focus();
-                    SavedUsers = GM_getValue("Users");
-                    MTUsers = {};
+                    SavedUsers = JSON.parse(GM_getValue(`users`));
+                    SavedGames = JSON.parse(GM_getValue(`games`));
+                    MTUsers = {};MTApps = {}; MTSubs = {};
                     Tags = {};
-                    for (I = 0, N = SavedUsers.length; I < N; ++I) {
-                        if (SavedUsers[I].Tags) {
+                    for (I in SavedUsers.users) {
+                        if (SavedUsers.users[I].tags && SavedUsers.users[I].tags.length) {
                             Popup.Results.insertAdjacentHTML(
                                 "beforeEnd",
                                 "<div>" +
-                                "    <a href=\"/user/" + SavedUsers[I].Username + "\">" + SavedUsers[I].Username + "</a>" +
+                                "    <a href=\"/user/" + SavedUsers.users[I].username + "\">" + SavedUsers.users[I].username + "</a>" +
                                 "</div>"
                             );
                             Context = Popup.Results.lastElementChild.firstElementChild;
-                            Username = SavedUsers[I].Username;
+                            Username = SavedUsers.users[I].username;
                             if (!MTUsers[Username]) {
                                 MTUsers[Username] = [];
                             }
                             MTUsers[Username].push(Context);
                             SMManageTagsPopup.reposition();
-                            SavedTags = SavedUsers[I].Tags.split(/,\s/g);
+                            SavedTags = SavedUsers.users[I].tags;
+                            for (J = 0, NumTags = SavedTags.length; J < NumTags; ++J) {
+                                Key = SavedTags[J].toLowerCase();
+                                if (!Tags[Key]) {
+                                    Tags[Key] = [];
+                                }
+                                Tags[Key].push(Popup.Results.children.length - 1);
+                            }
+                        }
+                    }
+                    for (I in SavedGames.apps) {
+                        if (SavedGames.apps[I].tags && SavedGames.apps[I].tags) {
+                            Popup.Results.insertAdjacentHTML(
+                                "beforeEnd",
+                                "<div>" +
+                                "    <div class=\"table__row-outer-wrap\"><a class=\"table__column__heading\" href=\"https://store.steampowered.com/app/" + I + "\">App: " + I + "</a></div>" +
+                                "</div>"
+                            );
+                            Context = Popup.Results.lastElementChild.firstElementChild;
+                            if (!MTApps[I]) {
+                                MTApps[I] = [];
+                            }
+                            MTApps[I].push(Context);
+                            SMManageTagsPopup.reposition();
+                            SavedTags = SavedGames.apps[I].tags;
+                            for (J = 0, NumTags = SavedTags.length; J < NumTags; ++J) {
+                                Key = SavedTags[J].toLowerCase();
+                                if (!Tags[Key]) {
+                                    Tags[Key] = [];
+                                }
+                                Tags[Key].push(Popup.Results.children.length - 1);
+                            }
+                        }
+                    }
+                    for (I in SavedGames.subs) {
+                        if (SavedGames.subs[I].tags && SavedGames.subs[I].tags) {
+                            Popup.Results.insertAdjacentHTML(
+                                "beforeEnd",
+                                "<div>" +
+                                "    <div class=\"table__row-outer-wrap\"><a class=\"table__column__heading\" href=\"https://store.steampowered.com/sub/" + I + "\">Sub: " + I + "</a></div>" +
+                                "</div>"
+                            );
+                            Context = Popup.Results.lastElementChild.firstElementChild;
+                            if (!MTSubs[I]) {
+                                MTSubs[I] = [];
+                            }
+                            MTSubs[I].push(Context);
+                            SMManageTagsPopup.reposition();
+                            SavedTags = SavedGames.subs[I].tags;
                             for (J = 0, NumTags = SavedTags.length; J < NumTags; ++J) {
                                 Key = SavedTags[J].toLowerCase();
                                 if (!Tags[Key]) {
@@ -18038,6 +18338,8 @@ ${avatar.outerHTML}
                         }
                     }
                     addMTCheckboxes(MTUsers, "User", "beforeBegin", "previousElementSibling", MT);
+                    addMTCheckboxes(MTApps, "Game", "beforeBegin", "previousElementSibling", MT);
+                    addMTCheckboxes(MTSubs, "Game", "beforeBegin", "previousElementSibling", MT);
                     loadEndlessFeatures(Popup.Results);
                     Popup.TextInput.addEventListener("input", function () {
                         var MTUsers, Matches, Filters, Context, Username;
@@ -18216,89 +18518,12 @@ Background: <input type="color" value="${bgColor}">
                                     }
                                 } else if (SM.M.checked) {
                                     var i, j, n, tags, k, numTags, saved, value;
-                                    if (Key == "Users" && SM.U.checked) {
-                                        var savedUsers = GM_getValue(`Users`);
-                                        for (i = 0, n = File.Data.Users.length; i < n; ++i) {
-                                            var user = File.Data.Users[i];
-                                            j = getUserIndex(user, savedUsers);
-                                            if (j >= 0) {
-                                                var savedUser = savedUsers[j];
-                                                if (savedUser.Notes) {
-                                                    if (user.Notes && savedUser.Notes != user.Notes) {
-                                                        savedUser.Notes += `\n\n${user.Notes}`;
-                                                    }
-                                                } else {
-                                                    savedUser.Notes = user.Notes;
-                                                }
-                                                if (savedUser.Tags) {
-                                                    if (user.Tags) {
-                                                        tags = user.Tags.split(/,\s/);
-                                                        for (k = 0, numTags = tags.length; k < numTags; ++k) {
-                                                            if (tags[k] && savedUser.Tags.indexOf(tags[k]) < 0) {
-                                                                savedUser.Tags += `, ${tags[k]}`;
-                                                            }
-                                                        }
-                                                    }
-                                                } else {
-                                                    savedUser.Tags = user.Tags;
-                                                }
-                                                if (savedUser.RWSCVL) {
-                                                    if (user.RWSCVL) {
-                                                        if (user.RWSCVL.LastWonCheck > savedUser.RWSCVL.LastWonCheck) {
-                                                            savedUser.RWSCVL = user.RWSCVL;
-                                                        }
-                                                    }
-                                                } else {
-                                                    savedUser.RWSCVL = user.RWSCVL;
-                                                }
-                                                if (savedUser.UGD) {
-                                                    if (user.UGD) {
-                                                        if (user.UGD.SentTimestamp > savedUser.UGD.SentTimestamp) {
-                                                            savedUser.UGD.Sent = user.UGD.Sent;
-                                                            savedUser.UGD.SentTimestamp = user.UGD.SentTimestamp;
-                                                        }
-                                                        if (user.UGD.WonTimestamp > savedUser.UGD.WonTimestamp) {
-                                                            savedUser.UGD.Won = user.UGD.Won;
-                                                            savedUser.UGD.WonTimestamp = user.UGD.WonTimestamp;
-                                                        }
-                                                    }
-                                                } else {
-                                                    savedUser.UGD = user.UGD;
-                                                }
-                                                if (savedUser.NAMWC) {
-                                                    if (user.NAMWC) {
-                                                        if (user.NAMWC.LastSearch > savedUser.NAMWC.LastSearch) {
-                                                            savedUser.NAMWC = user.NAMWC;
-                                                        }
-                                                    }
-                                                } else {
-                                                    savedUser.NAMWC = user.NAMWC;
-                                                }
-                                                if (savedUser.NRF) {
-                                                    if (user.NRF) {
-                                                        if (user.NRF.LastSearch > savedUser.NRF.LastSearch) {
-                                                            savedUser.NRF = user.NRF;
-                                                        }
-                                                    }
-                                                } else {
-                                                    savedUser.NRF = user.NRF;
-                                                }
-                                                if (savedUser.WBC) {
-                                                    if (user.WBC) {
-                                                        if (user.WBC.LastSearch > savedUser.WBC.LastSearch) {
-                                                            savedUser.WBC = user.WBC;
-                                                        }
-                                                    }
-                                                } else {
-                                                    savedUser.WBC = user.WBC;
-                                                }
-                                            } else {
-                                                savedUsers.push(user);
-                                            }
-                                        }
-                                        GM_setValue(`Users`, savedUsers);
-                                    } else if (Key.match(/^(games|Games)$`/)) {
+                                    if (Key.match(/^(users|Users)$/)) {
+                                        importUsersAndMerge(File, Key, SM);
+                                    } else if (Key.match(/^(games|Games)$/)) {
                                         importGamesAndMerge(File, Key, SM);
+                                    } else if (Key === `giveaways`) {
+                                        importGiveawaysAndMerge(File, Key, SM);
                                     } else if (Key.match(/^(comments|Comments|Comments_ST)$/) && SM.C.checked) {
                                         importCommentsAndMerge(File, Key, SM);
                                     } else if (Key == `Emojis` && SM.E.checked) {
@@ -18334,8 +18559,12 @@ Background: <input type="color" value="${bgColor}">
                                     } else if (SM.Names[Key] && SM[SM.Names[Key]] && SM[SM.Names[Key]].checked) {
                                         GM_setValue(Key, File.Data[Key]);
                                     }
-                                } else if (Key.match(/^(games|Games)$`/)) {
+                                } else if (Key.match(/^(users|Users)$/)) {
+                                    importUsers(File, Key, SM);
+                                } else if (Key.match(/^(games|Games)$/)) {
                                     importGames(File, Key, SM);
+                                } else if (Key === `giveaways`) {
+                                    importGiveaways(File, Key, SM);
                                 } else if (Key.match(/^(CommentHistory|sgCommentHistory|stCommentHistory)$/)) {
                                     importCommentHistory(File, Key, SM);
                                 } else if (Key === `comments` && SM.C.checked) {
@@ -18353,6 +18582,153 @@ Background: <input type="color" value="${bgColor}">
             } else {
                 window.alert("File should be in the .json format.");
             }
+        });
+    }
+
+    function importGiveawaysAndMerge(File, Key, SM) {
+        createLock(`giveawayLock`, 300, function(deleteLock) {
+            var saved = JSON.parse(GM_getValue(`giveaways`));
+            var giveaways = File.Data.giveaways;
+            for (var key in giveaways) {
+                if (!saved[key]) {
+                    saved[key] = {};
+                }
+                for (var subKey in giveaways[key]) {
+                    saved[key][subKey] = giveaways[key][subKey];
+                }
+            }
+            GM_setValue(`giveaways`, JSON.stringify(saved));
+            deleteLock();
+        });
+    }
+
+    function importGiveaways(File, Key, SM) {
+        createLock(`giveawayLock`, 300, function(deleteLock) {
+            GM_setValue(`giveaways`, JSON.stringify(File.Data.giveaways));
+            deleteLock();
+        });
+    }
+
+    function importUsersAndMerge(File, Key, SM) {
+        createLock(`userLock`, 300, function (deleteLock) {
+            var savedUsers = JSON.parse(GM_getValue(`users`));
+            if (Key === `Users`) {
+                mergeUsers(savedUsers, getUserStorageV6(File.Data.Users), SM);
+            } else {
+                mergeUsers(savedUsers, File.Data.users, SM);
+            }
+            GM_setValue(`users`, JSON.stringify(savedUsers));
+            deleteLock();
+        });
+    }
+
+    function mergeUsers(savedUsers, users, SM) {
+        var keys = {
+            notes: `UN`,
+            tags: `UT`,
+            ugd: `UGD`,
+            namwc: `NAMWC`,
+            nrf: `NRF`,
+            rwscvl: `RWSCVL`,
+            wbc: `WBC`
+        };
+        for (var key in users.users) {
+            if (!savedUsers.users[key]) {
+                savedUsers.users[key] = users.users[key];
+                savedUsers.steamIds[users.users[key].username] = key;
+            } else {
+                savedUsers.users[key].id = users.users[key].id;
+                savedUsers.users[key].username = users.users[key].username;
+                savedUsers.steamIds[users.users[key].username] = key;
+                for (var subKey in keys) {
+                    if (SM[keys[subKey]].checked && users.users[key][subKey]) {
+                        if (subKey === `notes`) {
+                            if (savedUsers.users[key].notes) {
+                                savedUsers.users[key].notes += `\n\n${users.users[key].notes}`;
+                            } else {
+                                savedUsers.users[key].notes = users.users[key].notes;
+                            }
+                        } else if (subKey === `tags`) {
+                            if (savedUsers.users[key].tags && savedUsers.users[key].tags.length) {
+                                for (var i = 0, n = users.users[key].tags.length; i < n; ++i) {
+                                    if (savedUsers.users[key].tags.indexOf(users.users[key].tags[i]) < 0) {
+                                        savedUsers.users[key].tags.push(users.users[key].tags[i]);
+                                    }
+                                }
+                            } else {
+                                savedUsers.users[key].tags = users.users[key].tags;
+                            }
+                        } else if (subKey === `ugd`) {
+                            if (savedUsers.users[key].ugd) {
+                                if (users.users[key].ugd.wonTimestamp > savedUsers.users[key].ugd.wonTimestamp) {
+                                    savedUsers.users[key].ugd.won = users.users[key].ugd.won;
+                                    savedUsers.users[key].ugd.wonTimestamp = users.users[key].ugd.wonTimestamp;
+                                }
+                                if (users.users[key].ugd.sentTimestamp > savedUsers.users[key].ugd.sentTimestamp) {
+                                    savedUsers.users[key].ugd.sent = users.users[key].ugd.sent;
+                                    savedUsers.users[key].ugd.sentTimestamp = users.users[key].ugd.sentTimestamp;
+                                }
+                            } else {
+                                savedUsers.users[key].ugd = users.users[key].ugd;
+                            }
+                        } else {
+                            if (savedUsers.users[key][subKey]) {
+                                if (users.users[key][subKey].lastCheck > savedUsers.users[key][subKey].lastCheck) {
+                                    savedUsers.users[key][subKey] = users.users[key][subKey];
+                                }
+                            } else {
+                                savedUsers.users[key][subKey] = users.users[key][subKey];
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    function importUsers(File, Key, SM) {
+        createLock(`userLock`, 300, function(deleteLock) {
+            var users;
+            if (Key === `Users`) {
+                users = getUserStorageV6(File.Data.Users);
+            } else {
+                users = File.Data.users;
+            }
+            var keys = {
+                notes: `UN`,
+                tags: `UT`,
+                ugd: `UGD`,
+                namwc: `NAMWC`,
+                nrf: `NRF`,
+                rwscvl: `RWSCVL`,
+                wbc: `WBC`
+            };
+            var found = true, key;
+            for (key in keys) {
+                if (!SM[keys[key]].checked) {
+                    found = false;
+                }
+            }
+            if (found) {
+                GM_setValue(`users`, JSON.stringify(users));
+            } else {
+                var savedUsers = JSON.parse(GM_getValue(`users`));
+                for (key in users.users) {
+                    if (!savedUsers.users[key]) {
+                        savedUsers.users[key] = {};
+                    }
+                    savedUsers.users[key].id = users.users[key].id;
+                    savedUsers.users[key].username = users.users[key].username;
+                    savedUsers.steamIds[users.users[key].username] = key;
+                    for (var subKey in keys) {
+                        if (SM[keys[subKey]].checked && users.users[key][subKey]) {
+                            savedUsers.users[key][subKey] = users.users[key][subKey];
+                        }
+                    }
+                }
+                GM_setValue(`users`, JSON.stringify(savedUsers));
+            }
+            deleteLock();
         });
     }
 
@@ -18682,14 +19058,42 @@ Background: <input type="color" value="${bgColor}">
         var File, Data, Key, URL;
         File = document.createElement("a");
         File.download = "ESGST.json";
-        Data = {
-            games: {
-                apps: {},
-                subs: {}
-            }
-        };
+        Data = {};
         for (Key in SM.Names) {
-            if (Key === `games`) {
+            if (Key === `users`) {
+                Data.users = {};
+                var keys = {
+                    notes: `UN`,
+                    tags: `UT`,
+                    ugd: `UGD`,
+                    namwc: `NAMWC`,
+                    nrf: `NRF`,
+                    rwscvl: `RWSCVL`,
+                    wbc: `WBC`
+                };
+                var users = JSON.parse(GM_getValue(`users`));
+                Data.users.users = {};
+                for (var key in users.users) {
+                    Data.users.users[key] = {
+                        id: users.users[key].id,
+                        username: users.users[key].username
+                    };
+                    var added = false;
+                    for (var subKey in keys) {
+                        if (SM[keys[subKey]].checked && users.users[key][subKey]) {
+                            Data.users.users[key][subKey] = users.users[key][subKey];
+                            added = true;
+                        }
+                    }
+                    if (!added) {
+                        delete Data.users.users[key];
+                    }
+                }
+            } else if (Key === `games`) {
+                Data.games = {
+                    apps: {},
+                    subs: {}
+                };
                 var games = JSON.parse(GM_getValue(`games`));
                 if (SM.GT.checked) {
                     getSMGames(games, `tags`, Data.games, `apps`);
@@ -18705,7 +19109,7 @@ Background: <input type="color" value="${bgColor}">
                 }
             } else if (Key.match(/sgCommentHistory|stCommentHistory/) && SM[SM.Names[Key]].checked) {
                 Data[Key] = JSON.parse(GM_getValue(Key, `{}`));
-            } else if (Key === `comments` && SM.C.checked) {
+            } else if (Key.match(/comments|giveaways/) && SM[SM.Names[Key]].checked) {
                 Data[Key] = JSON.parse(GM_getValue(Key, `{}`));
             } else if (SM[SM.Names[Key]].checked) {
                 Data[Key] = GM_getValue(Key);
@@ -18739,7 +19143,29 @@ Background: <input type="color" value="${bgColor}">
         if (window.confirm("Are you sure you want to delete this data? A copy will be downloaded as precaution.")) {
             exportSMData(SM);
             for (Key in SM.Names) {
-                if (Key === `games`) {
+                if (Key === `users`) {
+                    createLock(`userLock`, 300, function(deleteLock) {
+                        var keys = {
+                            notes: `UN`,
+                            tags: `UT`,
+                            ugd: `UGD`,
+                            namwc: `NAMWC`,
+                            nrf: `NRF`,
+                            rwscvl: `RWSCVL`,
+                            wbc: `WBC`
+                        };
+                        var users = JSON.parse(GM_getValue(`users`));
+                        for (var key in users.users) {
+                            for (var subKey in keys) {
+                                if (SM[keys[subKey]].checked) {
+                                   delete users.users[key][subKey];
+                                }
+                            }
+                        }
+                        GM_setValue(`users`, JSON.stringify(users));
+                        deleteLock();
+                    });
+                } else if (Key === `games`) {
                     createLock(`gameLock`, 300, function (deleteLock) {
                         var games = JSON.parse(GM_getValue(`games`));
                         if (SM.GT.checked && SM.EGH.checked && SM.GC.checked) {
@@ -18875,29 +19301,31 @@ Background: <input type="color" value="${bgColor}">
         var games, giveaway, giveaways, i, matches, n;
         games = JSON.parse(GM_getValue(`games`));
         giveaways = [];
-        matches = context.querySelectorAll(`.giveaway__row-outer-wrap, .featured__outer-wrap--giveaway, .table__row-outer-wrap`);
+        matches = context.querySelectorAll(`.giveaway__row-outer-wrap, .featured__outer-wrap--giveaway, .table:not(.table--summary) .table__row-outer-wrap`);
         for (i = 0, n = matches.length; i < n; ++i) {
             giveaway = getGiveawayInfo(matches[i], games);
             if (giveaway) {
-                giveaways.push(giveaway);
+                giveaways.push(giveaway.giveaway);
             }
         }
         return giveaways;
     }
 
-    function getGiveawayInfo(context, games) {
+    function getGiveawayInfo(context, games, ugd) {
         var category, categories, chance, element, giveaway, i, id, info, match, n, thinHeadings;
         giveaway = {};
         giveaway.outerWrap = context;
+        giveaway.gameId = giveaway.outerWrap.getAttribute(`data-game-id`);
         info = getGameInfo(giveaway.outerWrap);
         if (info) {
             giveaway.id = info.id;
             giveaway.type = info.type;
-            if (games[giveaway.type][giveaway.id] && games[giveaway.type][giveaway.id].wishlisted) {
+            if (games && games[giveaway.type][giveaway.id] && games[giveaway.type][giveaway.id].wishlisted) {
                 giveaway.wishlisted = true;
             }
         }
         giveaway.innerWrap = giveaway.outerWrap.querySelector(`.giveaway__row-inner-wrap, .featured__inner-wrap, .table__row-inner-wrap`);
+        giveaway.summary = giveaway.innerWrap.querySelector(`.giveaway__summary, .featured__summary`);
         giveaway.entered = giveaway.innerWrap.classList.contains(`is-faded`);
         giveaway.headingName = giveaway.innerWrap.querySelector(`.giveaway__heading__name, .featured__heading__medium, .table__column__heading`);
         giveaway.name = giveaway.headingName.textContent;
@@ -18908,7 +19336,7 @@ Background: <input type="color" value="${bgColor}">
         } else {
             giveaway.copies = 1;
         }
-        giveaway.url = giveaway.headingName.getAttribute(`href`);
+        giveaway.url = esgst.giveawayPath && !ugd ? window.location.pathname : giveaway.headingName.getAttribute(`href`);
         if (giveaway.url) {
             match = giveaway.url.match(/\/giveaway\/(.+?)(\/.+?)$/);
             if (match) {
@@ -18933,18 +19361,18 @@ Background: <input type="color" value="${bgColor}">
             giveaway.endTimeColumn = giveaway.columns.firstElementChild;
             giveaway.endTime = parseInt(giveaway.endTimeColumn.lastElementChild.getAttribute(`data-timestamp`)) * 1e3;
             giveaway.ended = giveaway.endTime < Date.now();
-            if (giveaway.ended && esgst.userPath) {
+            if (giveaway.ended && (esgst.userPath || ugd)) {
                 giveaway.startTimeColumn = giveaway.endTimeColumn.nextElementSibling.nextElementSibling;
             } else {
                 giveaway.startTimeColumn = giveaway.endTimeColumn.nextElementSibling;
             }
             giveaway.startTime = parseInt(giveaway.startTimeColumn.firstElementChild.getAttribute(`data-timestamp`)) * 1e3;
-            if (!esgst.userPath) {
+            if (!esgst.userPath || ugd) {
                 giveaway.creator = giveaway.startTimeColumn.lastElementChild.textContent;
             }
             giveaway.winners = giveaway.columns.textContent.match(/No winners/) ? 0 : giveaway.copies;
         }
-        if (esgst.userPath) {
+        if (esgst.userPath && !ugd) {
             giveaway.creator = window.location.pathname.match(/^\/user\/(.+)/)[1];
         }
         giveaway.created = giveaway.creator === GM_getValue(`Username`);
@@ -18962,9 +19390,12 @@ Background: <input type="color" value="${bgColor}">
             giveaway.comments = parseInt(giveaway.commentsLink.textContent.replace(/,/g, ``).match(/\d+/)[0]);
         }
         giveaway.panel = giveaway.innerWrap.getElementsByClassName(`esgst-giveaway-panel`)[0];
-        if (!giveaway.panel) {
+        if (!giveaway.panel && (esgst.gwc || esgst.gwr || esgst.elgb)) {
             if (giveaway.links) {
-                giveaway.panel = insertHtml(giveaway.links, `afterEnd`, `<div class="giveaway__columns esgst-giveaway-panel"></div>`);
+                giveaway.panel = insertHtml(giveaway.links, `afterEnd`, `
+                    <div class="giveaway__columns esgst-giveaway-panel"></div>
+                    <div style="clear: both;"></div>
+                `);
                 element = giveaway.startTimeColumn.nextElementSibling;
                 while (element) {
                     giveaway.panel.appendChild(element);
@@ -18979,12 +19410,12 @@ Background: <input type="color" value="${bgColor}">
         if (!giveaway.entriesLink) {
             giveaway.entries = parseInt(giveaway.panel.nextElementSibling.textContent.replace(/,/g, ``));
         }
-        giveaway.levelColumn = giveaway.innerWrap.getElementsByClassName(`giveaway__column--contributor-level`)[0];
+        giveaway.levelColumn = giveaway.innerWrap.querySelector(`.giveaway__column--contributor-level, .featured__column--contributor-level`);
         giveaway.level = giveaway.levelColumn ? parseInt(giveaway.levelColumn.textContent.match(/\d+/)[0]) : 0;
-        giveaway.inviteOnly = giveaway.innerWrap.getElementsByClassName(`giveaway__column--invite-only`)[0];
-        giveaway.regionRestricted = giveaway.innerWrap.getElementsByClassName(`giveaway__column--region-restricted`)[0];
-        giveaway.group = giveaway.innerWrap.getElementsByClassName(`giveaway__column--group`)[0];
-        giveaway.whitelist = giveaway.innerWrap.getElementsByClassName(`giveaway__column--whitelist`)[0];
+        giveaway.inviteOnly = giveaway.innerWrap.querySelector(`.giveaway__column--invite-only, .featured__column--invite-only`);
+        giveaway.regionRestricted = giveaway.innerWrap.querySelector(`.giveaway__column--region-restricted, .featured__column--region-restricted`);
+        giveaway.group = giveaway.innerWrap.querySelector(`.giveaway__column--group, .featured__column--group`);
+        giveaway.whitelist = giveaway.innerWrap.querySelector(`.giveaway__column--whitelist, .featured__column--whitelist`);
         giveaway.pinned = giveaway.outerWrap.closest(`.pinned-giveaways__outer-wrap`);
         chance = context.getElementsByClassName(`esgst-gwc`)[0];
         giveaway.chance = chance ? parseFloat(chance.getAttribute(`data-chance`)) : 0;
@@ -19003,7 +19434,29 @@ Background: <input type="color" value="${bgColor}">
                 }
             }
         }
-        return giveaway;
+        return {
+            giveaway: giveaway,
+            data: {
+                gameId: giveaway.gameId,
+                gameSteamId: giveaway.id,
+                gameType: giveaway.type,
+                gameName: giveaway.name,
+                code: giveaway.code,
+                copies: giveaway.copies,
+                points: giveaway.points,
+                endTime: giveaway.endTime,
+                startTime: giveaway.startTime,
+                creator: giveaway.creator,
+                winners: giveaway.winners,
+                entries: giveaway.entries,
+                comments: giveaway.comments,
+                level: giveaway.level,
+                inviteOnly: giveaway.inviteOnly ? true : false,
+                regionRestricted: giveaway.regionRestricted ? true : false,
+                group: giveaway.group ? true : false,
+                whitelist: giveaway.whitelist ? true : false
+            }
+        };
     }
 
     /* Quick Giveaway Browsing */
@@ -19734,7 +20187,7 @@ Background: <input type="color" value="${bgColor}">
     /* Comment Tracker */
 
     function loadCt() {
-        if (esgst.commentsPath || esgst.inboxPath || esgst.discussionsPath) {
+        if ((esgst.commentsPath || esgst.inboxPath || esgst.discussionsPath) && !document.getElementsByClassName(`table--summary`)[0]) {
             esgst.commentFeatures.push(getCtComments);
             if (esgst.commentsPath || esgst.inboxPath) {
                 addCtCommentPanel();
@@ -20244,7 +20697,7 @@ Background: <input type="color" value="${bgColor}">
                                             </h3>
 			    					        <p>
                                                 <a class="table__column__secondary-link" href="${categoryLink.getAttribute(`href`)}">${categoryLink.textContent}</a> -
-                                                ${context.querySelector(`[data-timestamp]`).outerHTML} ago by
+                                                ${context.querySelector(`.comment [data-timestamp]`).outerHTML} ago by
                                                 <a class="table__column__secondary-link" href="${usernameLink.getAttribute(`href`)}">${usernameLink.textContent}</a>
                                             </p>
 							            </div>

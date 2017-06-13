@@ -1,4 +1,22 @@
 /*
+ * June 13, 2017 - v6.Beta.5.0
+ */
+
+* Fixed a bug that was happening when visiting deleted giveaways.
+* Major user storage upgrade to v6. As with the previous upgrades, your data should be transferred without any losses, but let me know about any missing data (if you do find missing data, do not panic - none of the v5 storage is deleted, so it can be easily recovered). As a result, managing tags from the settings menu has been temporarily disabled until it has been rewritten for v6.
+* Added options to manage user data individually to the settings menu (closes #139).
+* Fixed an issue that was breaking discussion titles (closes #153).
+* Disabled the giveaway panel, which makes the icons of the giveaway appear in the entries/comments row, if you don't have Giveaway Winning Chance, Giveaway Winning Ratio and Enter/Leave Giveaway Button, as these make the row too large with the icons in the default row.
+* Corrected created time for the list of highlighted discussions (closes #155).
+* You can now use the Enter key to save tags.
+* If you hover hover whitelist/blacklist highlights, you will now see when you whitelisted/blacklisted that user (must be synced through the settings menu).
+
+* Added the following features:
+
+* Giveaway Grops Loader - Replaces Giveaway Groups Popup (can be added back if there is demand for it).
+* One-Click Giveaway Hider (closes #156)
+
+/*
  * June 12, 2017 - v6.Beta.4.8
  */
 
