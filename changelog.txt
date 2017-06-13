@@ -1,4 +1,12 @@
 /*
+ * June 13, 2017 - v6.Beta.5.1
+ */
+
+* Fixed a bug that was preventing the script from running.
+* Decrypted Giveaways are no longer cached (they are now retrieved in real time for accurate number of entries/comments, etc) (closes #141).
+* Removed an extra underline that popup links had (closes #127).
+
+/*
  * June 13, 2017 - v6.Beta.5.0
  */
 
