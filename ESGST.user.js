@@ -3,7 +3,7 @@
 // @namespace ESGST
 // @description Enhances SteamGifts and SteamTrades by adding some cool features to them.
 // @icon https://github.com/revilheart/ESGST/raw/master/Resources/esgstIcon.ico
-// @version 6.Beta.5.1
+// @version 6.Beta.5.2
 // @author revilheart
 // @contributor Royalgamer06
 // @downloadURL https://github.com/revilheart/ESGST/raw/master/ESGST.user.js
@@ -869,6 +869,18 @@
             {
                 id: `ggl`,
                 name: `Giveaway Groups Loader`,
+                options: [
+                    {
+                        id: `ggl_m`,
+                        name: `Only show groups that you are a member of.`,
+                        check: getValue(`ggl_m`)
+                    },
+                    {
+                        id: `ggl_p`,
+                        name: `Only load groups when clicked on the group button, as a popup`,
+                        check: getValue(`ggl_p`)
+                    }
+                ],
                 check: getValue(`ggl`),
                 load: loadGgl
             },
@@ -989,7 +1001,7 @@
                         check: getValue(`ct_r`)
                     }
                 ],
-                check: getValue(`ct`),
+                check: getValue(`ct`) || getValue(`dh`),
                 load: loadCt
             },
             {
@@ -2979,6 +2991,10 @@ border: 0;
 font-weight: bold;
 }
 
+.esgst-ggl-button {
+cursor: pointer;
+}
+
 .esgst-popout {
 position: absolute;
 left: 0;
@@ -4960,7 +4976,75 @@ ${title}
 
     function loadGgl() {
         if (esgst.sg) {
-            esgst.giveawayFeatures.push(getGglGiveaways);
+            if (esgst.ggl_p) {
+                esgst.giveawayFeatures.push(setGglButtons);
+            } else {
+                esgst.giveawayFeatures.push(getGglGiveaways);
+            }
+        }
+    }
+
+    function setGglButtons(giveaways) {
+        var i, n;
+        for (i = 0, n = giveaways.length; i < n; ++i) {
+            setGglButton(giveaways[i]);
+        }
+    }
+
+    function setGglButton(giveaway) {
+        if (giveaway.group) {
+            giveaway.group.classList.add(`esgst-ggl-button`);
+            giveaway.group.removeAttribute(`href`);
+            giveaway.group.addEventListener(`click`, function() {
+                var panel, popup, progress, savedGroups;
+                popup = createPopup_v6(`fa-user`, `<a href="${giveaway.url}/groups">Giveaway Groups</a>`, true);
+                progress = insertHtml(popup.description, `beforeEnd`,  `
+                    <div>
+                        <i class="fa fa-circle-o-notch fa-spin"></i>
+                        <span>Loading groups...</span>
+                    </div>
+                `);
+                panel = insertHtml(popup.description, `beforeEnd`, `<div class="popup__keys__list"></div>`);
+                popup.open();
+                savedGroups = GM_getValue(`Groups`);
+                loadGglGroups([giveaway], 0, 1, JSON.parse(GM_getValue(`giveaways`)), savedGroups, function(groups) {
+                    var className, groupCount, i, key, link;
+                    if (groups) {
+                        groupCount = 0;
+                        for (key in groups) {
+                            for (i = 0, n = savedGroups.length; i < n && savedGroups[i].Code !== key; ++i);
+                            if (i < n) {
+                                className = `esgst-ggl-member`;
+                                groupCount += 1;
+                            } else if (esgst.ggl_m) {
+                                className = `esgst-hidden`;
+                            } else {
+                                className = ``;
+                                groupCount += 1;
+                            }
+                            link = insertHtml(panel, `beforeEnd`, `
+                                <div>
+                                    <a class="${className}" href="/group/${key}/"></a>
+                                </div>
+                            `).firstElementChild;
+                            link.textContent = groups[key];
+                        }
+                        if (groupCount === 0) {
+                            progress.innerHTML = `
+                                <i class="fa fa-exclamation-mark"></i>
+                                <span>You are not a member of any group in this giveaway.</span>
+                            `;
+                        } else {
+                            progress.remove();
+                        }
+                    } else {
+                        progress.innerHTML = `
+                            <i class="fa fa-times-circle"></i>
+                            <span>An error ocurred.</span>
+                        `;
+                    }
+                });
+            });
         }
     }
 
@@ -4971,13 +5055,17 @@ ${title}
         loadGglGroups(giveaways, 0, giveaways.length, savedGiveaways, savedGroups);
     }
 
-    function loadGglGroups(giveaways, i, n, savedGiveaways, savedGroups) {
+    function loadGglGroups(giveaways, i, n, savedGiveaways, savedGroups, callback) {
         var giveaway;
         if (i < n) {
             giveaway = giveaways[i];
             if (giveaway.group) {
                 if (savedGiveaways[giveaway.code] && savedGiveaways[giveaway.code].groups) {
-                    addGglPanel(giveaway, savedGiveaways[giveaway.code].groups, savedGroups);
+                    if (callback) {
+                        callback(savedGiveaways[giveaway.code].groups);
+                    } else {
+                        addGglPanel(giveaway, savedGiveaways[giveaway.code].groups, savedGroups);
+                    }
                     window.setTimeout(loadGglGroups, 0, giveaways, ++i, n, savedGiveaways, savedGroups);
                 } else {
                     getGglGroups({}, 1, `${giveaway.url}/groups/search?page=`, function(groups) {
@@ -4990,9 +5078,15 @@ ${title}
                                 savedGiveaways[giveaway.code].groups = groups;
                                 GM_setValue(`giveaways`, JSON.stringify(savedGiveaways));
                                 deleteLock();
-                                addGglPanel(giveaway, groups, savedGroups);
+                                if (callback) {
+                                    callback(savedGiveaways[giveaway.code].groups);
+                                } else {
+                                    addGglPanel(giveaway, groups, savedGroups);
+                                }
                                 window.setTimeout(loadGglGroups, 0, giveaways, ++i, n, savedGiveaways, savedGroups);
                             });
+                        } else if (callback) {
+                            callback(null);
                         } else {
                             window.setTimeout(loadGglGroups, 0, giveaways, ++i, n, savedGiveaways, savedGroups);
                         }
@@ -5001,21 +5095,36 @@ ${title}
             } else {
                 window.setTimeout(loadGglGroups, 0, giveaways, ++i, n, savedGiveaways, savedGroups);
             }
+        } else if (callback) {
+            callback(null);
         }
     }
 
     function addGglPanel(giveaway, groups, savedGroups) {
-        var className, i, key, n, panel;
+        var className, groupCount, i, key, link, n, panel;
         if (!giveaway.summary.getElementsByClassName(`esgst-ggl-panel`)[0]) {
             panel = insertHtml(giveaway.summary, `beforeEnd`, `
                 <div class="popup__actions esgst-ggl-panel">
                     <i class="fa fa-user"></i>
                 </div>
             `);
+            groupCount = 0;
             for (key in groups) {
                 for (i = 0, n = savedGroups.length; i < n && savedGroups[i].Code !== key; ++i);
-                className = i < n ? `esgst-ggl-member` : ``;
-                panel.insertAdjacentHTML(`beforeEnd`, `<a class="${className}" href="/group/${key}/">${groups[key]}</a>`);
+                if (i < n) {
+                    className = `esgst-ggl-member`;
+                    groupCount += 1;
+                } else if (esgst.ggl_m) {
+                    className = `esgst-hidden`;
+                } else {
+                    className = ``;
+                    groupCount += 1;
+                }
+                link = insertHtml(panel, `beforeEnd`, `<a class="${className}" href="/group/${key}/"></a>`);
+                link.textContent = groups[key];
+            }
+            if (groupCount === 0) {
+                panel.remove();
             }
         }
     }
@@ -15263,10 +15372,11 @@ ${Results.join(``)}
             }
             if (!NAMWC.ShowResults) {
                 NAMWC.Popup.reposition();
-                createLock(`userLock`, 300, function() {
+                createLock(`userLock`, 300, function(deleteLock) {
                     var users = JSON.parse(GM_getValue(`users`));
                     users.users[steamId].namwc = namwc;
                     GM_setValue(`users`, JSON.stringify(users));
+                    deleteLock();
                     window.setTimeout(checkNAMWCUsers, 0, NAMWC, ++I, N, Callback);
                 });
             }
@@ -20051,12 +20161,13 @@ Background: <input type="color" value="${bgColor}">
 
     function leaveElgbGiveaway(giveaway, callback) {
         request(`xsrf_token=${esgst.xsrfToken}&do=entry_delete&code=${giveaway.code}`, false, `/ajax.php`, function(response) {
-            var responseJson;
+            var enterCallback, responseJson;
             responseJson = JSON.parse(response.responseText);
             if (responseJson.type === `success`) {
                 giveaway.innerWrap.classList.remove(`is-faded`);
                 giveaway.elgbButton.remove();
-                giveaway.elgbButton = createButtonSet(`green`, `grey`, `fa-plus-circle`, `fa-circle-o-notch fa-spin`, `Enter`, `Entering...`, checkElgbDescription.bind(null, giveaway)).set;
+                enterCallback = esgst.elgb_d ? checkElgbDescription : enterElgbGiveaway;
+                giveaway.elgbButton = createButtonSet(`green`, `grey`, `fa-plus-circle`, `fa-circle-o-notch fa-spin`, `Enter`, `Entering...`, enterCallback.bind(null, giveaway)).set;
                 giveaway.panel.appendChild(giveaway.elgbButton);
                 giveaway.elgbButton.setAttribute(`data-not-entered`, true);
                 giveaway.elgbButton.setAttribute(`data-points`, giveaway.points);
@@ -20175,13 +20286,15 @@ Background: <input type="color" value="${bgColor}">
     /* Comment Tracker */
 
     function loadCt() {
-        if ((esgst.commentsPath || esgst.inboxPath || esgst.discussionsPath) && !document.getElementsByClassName(`table--summary`)[0]) {
-            esgst.commentFeatures.push(getCtComments);
-            if (esgst.commentsPath || esgst.inboxPath) {
-                addCtCommentPanel();
-            } else {
-                esgst.endlessFeatures.push(addCtDiscussionPanels);
-                addCtDiscussionPanels(document);
+        if (esgst.ct) {
+            if ((esgst.commentsPath || esgst.inboxPath || esgst.discussionsPath) && !document.getElementsByClassName(`table--summary`)[0]) {
+                esgst.commentFeatures.push(getCtComments);
+                if (esgst.commentsPath || esgst.inboxPath) {
+                    addCtCommentPanel();
+                } else {
+                    esgst.endlessFeatures.push(addCtDiscussionPanels);
+                    addCtDiscussionPanels(document);
+                }
             }
         }
         esgst.endlessFeatures.push(checkCtVisited);
@@ -20383,15 +20496,15 @@ Background: <input type="color" value="${bgColor}">
                         } else {
                             diff = count;
                         }
-                        addCtDiscussionPanel(code, countLink, count, diff, url);
+                        addCtDiscussionPanel(code, comments, match, countLink, count, diff, url);
                     }
                 }
             }
         }
     }
 
-    function addCtDiscussionPanel(code, context, count, diff, url) {
-        var diffContainer, goToUnread, loadingIcon, markRead, markUnread, panel;
+    function addCtDiscussionPanel(code, comments, container, context, count, diff, url) {
+        var comments, diffContainer, goToUnread, loadingIcon, markRead, markUnread, markVisited, panel;
         panel = insertHtml(context, `beforeEnd`, `
             <span>
                 <span class="esgst-hidden">(+${diff})</span>
@@ -20404,6 +20517,9 @@ Background: <input type="color" value="${bgColor}">
                 <div class="esgst-heading-button esgst-hidden" title="Mark all comments in this discussion as unread.">
                     <i class="fa fa-eye-slash"></i>
                 </div>
+                <div class="esgst-heading-button esgst-hidden" title="Mark this discussion as visited.">
+                    <i class="fa fa-check"></i>
+                </div>
                 <i class="fa fa-circle-o-notch fa-spin esgst-hidden"></i>
             </span>
         `);
@@ -20411,7 +20527,8 @@ Background: <input type="color" value="${bgColor}">
         goToUnread = diffContainer.nextElementSibling;
         markRead = goToUnread.nextElementSibling;
         markUnread = markRead.nextElementSibling;
-        loadingIcon = markUnread.nextElementSibling;
+        markVisited = markUnread.nextElementSibling;
+        loadingIcon = markVisited.nextElementSibling;
         if (diff > 0) {
             diffContainer.classList.remove(`esgst-hidden`);
             goToUnread.classList.remove(`esgst-hidden`);
@@ -20421,6 +20538,9 @@ Background: <input type="color" value="${bgColor}">
             }
         } else {
             markUnread.classList.remove(`esgst-hidden`);
+        }
+        if (!comments[code] || !comments[code].visited) {
+            markVisited.classList.remove(`esgst-hidden`);
         }
         goToUnread.addEventListener(`click`, function() {
             goToUnread.classList.add(`esgst-hidden`);
@@ -20453,7 +20573,7 @@ Background: <input type="color" value="${bgColor}">
             markUnread.classList.add(`esgst-hidden`);
             loadingIcon.classList.remove(`esgst-hidden`);
             createLock(`commentLock`, 300, function(deleteLock) {
-                var comments, key;
+                var key;
                 comments = JSON.parse(GM_getValue(`comments`));
                 for (key in comments.discussions[code].comments) {
                     comments.discussions[code].comments[key].timestamp = 0;
@@ -20465,6 +20585,34 @@ Background: <input type="color" value="${bgColor}">
                 diffContainer.textContent = `(+${count})`;
                 goToUnread.classList.remove(`esgst-hidden`);
                 markRead.classList.remove(`esgst-hidden`);
+            });
+        });
+        markVisited.addEventListener(`click`, function() {
+            goToUnread.classList.add(`esgst-hidden`);
+            markRead.classList.add(`esgst-hidden`);
+            markUnread.classList.add(`esgst-hidden`);
+            markVisited.classList.add(`esgst-hidden`);
+            loadingIcon.classList.remove(`esgst-hidden`);
+            createLock(`commentLock`, 300, function(deleteLock) {
+                comments = JSON.parse(GM_getValue(`comments`));
+                if (!comments.discussions[code]) {
+                    comments.discussions[code] = {
+                        comments: {}
+                    };
+                }
+                comments.discussions[code].visited = true;
+                GM_setValue(`comments`, JSON.stringify(comments));
+                deleteLock();
+                loadingIcon.classList.add(`esgst-hidden`);
+                goToUnread.classList.remove(`esgst-hidden`);
+                markRead.classList.remove(`esgst-hidden`);
+                markUnread.classList.remove(`esgst-hidden`);
+                if (esgst.ct_b) {
+                    container.classList.add(`esgst-ct-visited`);
+                } else {
+                    container.style.opacity = `0.5`;
+                    setHoverOpacity(container, `1`, `0.5`);
+                }
             });
         });
     }
@@ -20514,7 +20662,7 @@ Background: <input type="color" value="${bgColor}">
                     type = `${source[1]}s`;
                     code = source[2];
                     container = match.closest(`.table__row-outer-wrap, .giveaway__row-outer-wrap, .row_outer_wrap`);
-                    if (comments[type][code] && comments[type][code].visited && container) {
+                    if (esgst.ct && comments[type][code] && comments[type][code].visited && container) {
                         if ((type === `giveaways` && esgst.ct_g) || type !== `giveaways`) {
                             if (esgst.ct_b) {
                                 container.classList.add(`esgst-ct-visited`);

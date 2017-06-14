@@ -1,4 +1,15 @@
 /*
+ * June 13, 2017 - v6.Beta.5.2
+ */
+
+* Fixed a bug in Giveaway Groups Loader that wasn't showing some groups (closes #158).
+* Added an option to only show groups that you are a member of to Giveaway Groups Loader.
+* Added back the option to use a popup to load giveaway groups to Giveaway Groups Loader.
+* Fixed a bug in Enter/Leave Giveaway Button that was still popping up the description even if it was disabled when leaving a giveaway and entering it again.
+* Fixed a bug that was not enabling Discussions Highlighter in the main discussions page if Comment Tracker was disabled.
+* Fixed a bug in Not Activated/Multiple Wins Checker that was getting stuck at the first user while checking.
+
+/*
  * June 13, 2017 - v6.Beta.5.1
  */
 
