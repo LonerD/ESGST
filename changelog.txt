@@ -1,4 +1,21 @@
 /*
+ * June 14, 2017 - v6.Beta.6.0
+ */
+
+* Fixed a bug that was happening in the entered page if Giveaway Winning Chance, Giveaway Winning Ratio and Enter/Leave Giveaway Button were disabled.
+* Changed the position of Giveaway Filters to above the pinned giveaways, so that it is fixed when filtering the giveaways (closes #165).
+* Added back the background highlight to groups that you are a member of to the popup option in Giveaway Groups Loader.
+* Fixed a bug that was not running Comment Tracker in Active Discussions (closes #162).
+* Fixed a bug in Comment Tracker that was not showing the read/unread button under the OP.
+* Fixed a bug in Comment Tracker that was not unfading a comment when making it as unread.
+* OPs are no longer counted as comments in Comment Tracker (closes #159).
+* You can now mark discussions as unvisited in Comment Tracker.
+
+Added the following features:
+
+* Giveaway Bookmarks
+
+/*
  * June 14, 2017 - v6.Beta.5.5
  */
  

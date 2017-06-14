@@ -103,6 +103,17 @@ Tested on Microsoft Edge and most of it seems to work fine, but for some reason 
 
 * [Other Info](#other-info)
 
+### Giveaway Bookmarks
+
+`steamgifts.com/*`
+
+* Allows you to bookmark giveaways to enter later.
+* You can enable an option to highlight the button if a giveaway is about to end, given a certain amount of hours specified in the settings menu.
+
+![](http://i.imgur.com/6e8UyL3.png)
+![](http://i.imgur.com/kNxEDZV.png)
+![](http://i.imgur.com/7OAYXa9.png)
+
 ### Quick Giveaway Browsing
 
 `steamgifts.com/*`

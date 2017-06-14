@@ -3,7 +3,7 @@
 // @namespace ESGST
 // @description Enhances SteamGifts and SteamTrades by adding some cool features to them.
 // @icon https://github.com/revilheart/ESGST/raw/master/Resources/esgstIcon.ico
-// @version 6.Beta.5.5
+// @version 6.Beta.6.0
 // @author revilheart
 // @contributor Royalgamer06
 // @downloadURL https://github.com/revilheart/ESGST/raw/master/ESGST.user.js
@@ -368,6 +368,7 @@
         esgst.paginationNavigation = document.getElementsByClassName(esgst.paginationNavigationClass)[0];
         esgst.sidebar = document.getElementsByClassName(`sidebar`)[0];
         esgst.activeDiscussions = document.getElementsByClassName(`widget-container--margin-top`)[0];
+        esgst.pinnedGiveaways = document.getElementsByClassName(`pinned-giveaways__outer-wrap`)[0];
         esgst.pinnedGiveawaysButton = document.getElementsByClassName(`pinned-giveaways__button`)[0];
         var mainPageHeadingIndex;
         if (esgst.commentsPath) {
@@ -453,6 +454,7 @@
             elgb_d: `elgb_d`,
             elgb_rb: `elgb_rb`,
             qgb: `qgb`,
+            gb: `gb`,
             ggl: `ggp`,
             ochgb: `ochgb`,
             gt: `GTS`,
@@ -798,6 +800,20 @@
                 name: `Quick Giveaway Browsing`,
                 check: getValue(`qgb`),
                 load: loadQgb
+            },
+            {
+                id: `gb`,
+                name: `Giveaway Bookmarks`,
+                options: [
+                    {
+                        id: `gb_h`,
+                        name: `Highlight the header button if there is a giveaway about to end.`,
+                        select: true,
+                        check: getValue(`gb_h`)
+                    }
+                ],
+                check: getValue(`gb`),
+                load: loadGb
             },
             {
                 id: `dgn`,
@@ -3738,15 +3754,19 @@ margin: 0;
             "    line-height: inherit;" +
             "    margin: 0;" +
             "}" +
-            ".esgst-dh-highlighted, .esgst-dh-highlighted.table__row-outer-wrap, .GHHighlight {" +
+            ".popup__keys__list .esgst-ggl-member, .esgst-dh-highlighted, .esgst-dh-highlighted.table__row-outer-wrap, .GHHighlight {" +
             "    background-color: " + Positive.replace(/rgb/, "rgba").replace(/\)/, ", 0.2)") + " !important;" +
             "    padding: 5px !important;" +
+            "}" +
+            ".esgst-gb-highlighted {" +
+            "    background-color: " + Negative.replace(/rgb/, "rgba").replace(/\)/, ", 0.8)") + " !important;" +
+            "    background-image: none !important;" +
             "}" +
             ".esgst-ct-comment-read, .esgst-ct-visited {" +
             "    background-color: " + Unknown.replace(/rgb/, "rgba").replace(/\)/, ", 0.1)") + " !important;" +
             "    padding: 5px !important;" +
             "}" +
-            ".esgst-dh-button {" +
+            ".esgst-gb-button, .esgst-dh-button {" +
             "    cursor: pointer; display: inline-block;" +
             "    margin: 0 5px 0 0;" +
             "}" +
@@ -5023,12 +5043,14 @@ ${title}
                                 className = ``;
                                 groupCount += 1;
                             }
-                            link = insertHtml(panel, `beforeEnd`, `
-                                <div>
-                                    <a class="${className}" href="/group/${key}/"></a>
-                                </div>
-                            `).firstElementChild;
-                            link.textContent = groups[key];
+                            if (className !== `esgst-hidden`) {
+                                link = insertHtml(panel, `beforeEnd`, `
+                                    <div class="${className}">
+                                        <a href="/group/${key}/"></a>
+                                    </div>
+                                `).firstElementChild;
+                                link.textContent = groups[key];
+                            }
                         }
                         if (groupCount === 0) {
                             progress.innerHTML = `
@@ -5121,8 +5143,10 @@ ${title}
                     className = ``;
                     groupCount += 1;
                 }
-                link = insertHtml(panel, `beforeEnd`, `<a class="${className}" href="/group/${key}/"></a>`);
-                link.textContent = groups[key];
+                if (className !== `esgst-hidden`) {
+                    link = insertHtml(panel, `beforeEnd`, `<a class="${className}" href="/group/${key}/"></a>`);
+                    link.textContent = groups[key];
+                }
             }
             if (groupCount === 0) {
                 panel.remove();
@@ -15366,8 +15390,8 @@ ${Results.join(``)}
                     NAMWC[Key + "Count"].textContent = parseInt(NAMWC[Key + "Count"].textContent) + 1;
                     NAMWC[Key + "Users"].insertAdjacentHTML(
                         "beforeEnd",
-                        "<a " + (New ? "class=\"rhBold rhItalic\" " : "") + "href=\"http://www.sgtools.info/" + (Key.match(/Multiple/) ? "multiple" : "nonactivated") + "/" + username +
-                        "\" target=\"_blank\">" + username + (Key.match(/^(NotActivated|Multiple)$/) ? (" (" + namwc.results[Key] + ")") : "") + "</a>"
+                        "<a " + (New ? "class=\"rhBold rhItalic\" " : "") + "href=\"http://www.sgtools.info/" + (Key.match(/multiple/) ? "multiple" : "nonactivated") + "/" + username +
+                        "\" target=\"_blank\">" + username + (Key.match(/^(notActivated|multiple)$/) ? (" (" + namwc.results[Key] + ")") : "") + "</a>"
                     );
                 }
             }
@@ -18048,7 +18072,7 @@ ${avatar.outerHTML}
         SMLastBundleSync = Container.getElementsByClassName("SMLastBundleSync")[0];
         SMAPIKey = Container.getElementsByClassName("SMAPIKey")[0];
         SMGeneralFeatures = ["fh", "fs", "fmph", "ff", "hr", "lpv", "vai", "ev", "hbs", "at", "pnot", "es"];
-        SMGiveawayFeatures = ["dgn", "hfc", "ags", "pgb", "gf", "gv", "egf", "gp", "gwc", "gwr", "elgb", "qgb", "ggl", "ochgb", "gt", "sgg", "rcvc", "ugs", "er", "gwl", "gesl", "as"];
+        SMGiveawayFeatures = ["dgn", "hfc", "ags", "pgb", "gf", "gv", "egf", "gp", "gwc", "gwr", "elgb", "qgb", "gb", "ggl", "ochgb", "gt", "sgg", "rcvc", "ugs", "er", "gwl", "gesl", "as"];
         SMDiscussionFeatures = ["adot", "dh", "mpp", "ded"];
         SMCommentingFeatures = ["ch", "ct", "cfh", "rbot", "rbp", "mr", "rfi", "rml"];
         SMUserGroupGamesFeatures = ["ap", "uh", "un", "rwscvl", "ugd", "namwc", "nrf", "swr", "luc", "sgpb", "stpb", "sgc", "wbc", "wbh", "ut", "iwh", "gh", "gs", "egh", "ggt", "gc"];
@@ -18539,6 +18563,16 @@ Background: <input type="color" value="${bgColor}">
                 GM_setValue(`${Feature.id}_color`, colorContext.value);
                 bgColorContext.value = esgst.defaultValues[`${Feature.id}_bgColor`];
                 GM_setValue(`${Feature.id}_bgColor`, bgColorContext.value);
+            });
+        } else if (Feature.select) {
+            var hours = GM_getValue(`gbHours`, 1);
+            var input = insertHtml(SMFeatures, `beforeEnd`, `
+                <div class="esgst-sm-colors">
+                    Time range to trigger highlight: <input type="text" value=${hours}> hours
+                </div>
+            `);
+            input.firstElementChild.addEventListener(`change`, function() {
+                GM_setValue(`gbHours`, input.value);
             });
         }
         if (CheckboxInput.checked && SMFeatures.children.length) {
@@ -19507,7 +19541,7 @@ Background: <input type="color" value="${bgColor}">
             }
         }
         if (!giveaway.entriesLink) {
-            giveaway.entries = parseInt(giveaway.panel.nextElementSibling.textContent.replace(/,/g, ``));
+            giveaway.entries = parseInt((giveaway.panel || giveaway.innerWrap.firstElementChild.nextElementSibling).nextElementSibling.textContent.replace(/,/g, ``));
         }
         giveaway.levelColumn = giveaway.outerWrap.querySelector(`.giveaway__column--contributor-level, .featured__column--contributor-level`);
         giveaway.level = giveaway.levelColumn ? parseInt(giveaway.levelColumn.textContent.match(/\d+/)[0]) : 0;
@@ -19556,6 +19590,229 @@ Background: <input type="color" value="${bgColor}">
                 whitelist: giveaway.whitelist ? true : false
             }
         };
+    }
+
+    /* Giveaway Bookmarks */
+
+    function loadGb() {
+        if (esgst.sg) {
+            esgst.giveawayFeatures.push(getGbGiveaways);
+            getGbGiveaways(document);
+            addGbButton();
+        }
+    }
+
+    function addGbButton() {
+        var button, context, html;
+        context = document.getElementsByClassName(`nav__left-container`)[0];
+        html = `
+            <div class="nav__button-container esgst-hidden" title="View your bookmarked giveaways.">
+                <div class="nav__button">
+                    <i class="fa fa-bookmark"></i>
+                </div>
+            </div>
+        `;
+        button = insertHtml(context, `beforeEnd`, html);
+        var bookmarked = [], endingSoon = 0;
+        createLock(`giveawayLock`, 300, function(deleteLock) {
+            var giveaways = JSON.parse(GM_getValue(`giveaways`));
+            for (var key in giveaways) {
+                if (giveaways[key].bookmarked) {
+                    if (Date.now() >= giveaways[key].endTime) {
+                        delete giveaways[key].bookmarked;
+                    } else {
+                        bookmarked.push(giveaways[key]);
+                        endingSoon = giveaways[key].endTime - Date.now() - (GM_getValue(`gbHours`, 1) * 3600000);
+                    }
+                }
+            }
+            if (bookmarked.length) {
+                bookmarked.sort(function(a, b) {
+                    if (a.endTime > b.endTime) {
+                        return 1;
+                    } else if (a.endTime < b.endTime) {
+                        return -1;
+                    } else {
+                        return 0;
+                    }
+                });
+                button.classList.remove(`esgst-hidden`);
+                if (esgst.gb_h && endingSoon <= 0) {
+                    button.classList.add(`esgst-gb-highlighted`);
+                }
+            }
+            GM_setValue(`giveaways`, JSON.stringify(giveaways));
+            deleteLock();
+        });
+        button.addEventListener(`click`, function() {
+            var popup = createPopup_v6(`fa-bookmark`, `Bookmarked Giveaways`, true);
+            var i = 0;
+            var n = bookmarked.length;
+            var gbGiveaways = insertHtml(popup.description, `beforeEnd`, `<div class="esgst-text-left"></div>`);
+            var set = createButtonSet(`green`, `grey`, `fa-plus`, `fa-circle-o-notch fa-spin`, `Load more...`, `Loading more...`, function (callback) {
+                loadGbGiveaways(i, i + 5, bookmarked, gbGiveaways, popup, function (value) {
+                    i = value;
+                    if (i > n) {
+                        set.set.remove();
+                    }
+                    callback();
+                });
+            });
+            popup.description.appendChild(set.set);
+            popup.open();
+            set.trigger();
+        });
+    }
+
+    function loadGbGiveaways(i, n, bookmarked, gbGiveaways, popup, callback) {
+        if (i < n) {
+            if (bookmarked[i]) {
+                    request(null, true, `/giveaway/${bookmarked[i].code}/`, function (response) {
+                        var responseHtml = DOM.parse(response.responseText);
+                        var container = responseHtml.getElementsByClassName(`featured__outer-wrap--giveaway`)[0];
+                        if (container) {
+                            var heading = responseHtml.getElementsByClassName(`featured__heading`)[0];
+                            var columns = heading.nextElementSibling;
+                            var remaining = columns.firstElementChild;
+                            var timestamp = parseInt(remaining.lastElementChild.getAttribute(`data-timestamp`)) * 1000;
+                                var url = response.finalUrl;
+                                var gameId = container.getAttribute(`data-game-id`);
+                                var anchors = heading.getElementsByTagName(`a`);
+                                var j, numA, numT;
+                                for (j = 0, numA = anchors.length; j < numA; ++j) {
+                                    anchors[j].classList.add(`giveaway__icon`);
+                                }
+                                var hideButton = heading.getElementsByClassName(`featured__giveaway__hide`)[0];
+                                if (hideButton) {
+                                    hideButton.remove();
+                                }
+                                var headingName = heading.firstElementChild;
+                                headingName.outerHTML = `<a class="giveaway__heading__name" href="${url}">${headingName.innerHTML}</a>`;
+                                var thinHeadings = heading.getElementsByClassName(`featured__heading__small`);
+                                for (j = 0, numT = thinHeadings.length; j < numT; ++j) {
+                                    thinHeadings[0].outerHTML = `<span class="giveaway__heading__thin">${thinHeadings[0].innerHTML}</span>`;
+                                }
+                                remaining.classList.remove(`featured__column`);
+                                var created = remaining.nextElementSibling;
+                                created.classList.remove(`featured__column`, `featured__column--width-fill`);
+                                created.classList.add(`giveaway__column--width-fill`);
+                                created.lastElementChild.classList.add(`giveaway__username`);
+                                var avatar = columns.lastElementChild;
+                                avatar.remove();
+                                var element = created.nextElementSibling;
+                                while (element) {
+                                    element.classList.remove(`featured__column`);
+                                    element.className = element.className.replace(/featured/g, `giveaway`);
+                                    element = element.nextElementSibling;
+                                }
+                                var counts = responseHtml.getElementsByClassName(`sidebar__navigation__item__count`);
+                                var image = responseHtml.getElementsByClassName(`global__image-outer-wrap--game-large`)[0].firstElementChild.getAttribute(`src`);
+                                var popupHtml = `
+<div><div class="giveaway__row-outer-wrap" data-game-id="${gameId}">
+<div class="giveaway__row-inner-wrap">
+<div class="giveaway__summary">
+<h2 class="giveaway__heading">
+${heading.innerHTML}
+</h2>
+<div class="giveaway__columns">
+${columns.innerHTML}
+</div>
+<div class="giveaway__links">
+<a href="${url}/entries">
+<i class="fa fa-tag"></i>
+<span>${counts[1].textContent} entries</span>
+</a>
+<a href="${url}/comments">
+<i class="fa fa-comment"></i>
+<span>${counts[0].textContent} comments</span>
+</a>
+</div>
+</div>
+${avatar.outerHTML}
+<a class="global__image-outer-wrap global__image-outer-wrap--game-medium" href="${url}">
+<div class="global__image-inner-wrap" style="background-image:url(${image});"></div>
+</a>
+</div>
+</div></div>
+`;
+                                gbGiveaways.insertAdjacentHTML(`beforeEnd`, popupHtml);
+                                loadEndlessFeatures(gbGiveaways.lastElementChild);
+                                if (!esgst.giveawaysPath && !esgst.userPath && !esgst.giveawayPath && !esgst.enteredPath) {
+                                    loadGiveawayFeatures(gbGiveaways.lastElementChild);
+                                }
+                                popup.reposition();
+                                window.setTimeout(loadGbGiveaways, 0, ++i, n, bookmarked, gbGiveaways, popup, callback);
+                            } else {
+                                window.setTimeout(loadGbGiveaways, 0, ++i, n, bookmarked, gbGiveaways, popup, callback);
+                            }
+                    });
+                } else {
+                    callback(i + 1);
+                }
+        } else {
+            callback(i);
+        }
+    }
+
+    function getGbGiveaways(giveaways) {
+        var savedGiveaways = JSON.parse(GM_getValue(`giveaways`));
+        for (var i = 0, n = giveaways.length; i < n; ++i) {
+            var giveaway = giveaways[i];
+            if (giveaway.creator !== GM_getValue(`Username`) && !giveaway.ended && !giveaway.entered && giveaway.url && !giveaway.innerWrap.getElementsByClassName(`esgst-gb-button`)[0]) {
+                if (savedGiveaways[giveaway.code] && savedGiveaways[giveaway.code].bookmarked) {
+                    addGbUnbookmarkButton(giveaway);
+                } else {
+                    addGbBookmarkButton(giveaway);
+                }
+            }
+        }
+    }
+
+    function addGbBookmarkButton(giveaway) {
+        var button;
+        button = insertHtml(giveaway.headingName, `beforeBegin`, `
+            <div class="esgst-gb-button" title="Bookmark giveaway.">
+                <i class="fa fa-bookmark-o"></i>
+            </div>
+        `);
+        button.firstElementChild.addEventListener(`click`, function() {
+            button.innerHTML = `<i class="fa fa-circle-o-notch fa-spin"></i>`;
+            createLock(`giveawayLock`, 300, function(deleteLock) {
+                var giveaways;
+                giveaways = JSON.parse(GM_getValue(`giveaways`));
+                if (!giveaways[giveaway.code]) {
+                    giveaways[giveaway.code] = {};
+                }
+                giveaways[giveaway.code].code = giveaway.code;
+                giveaways[giveaway.code].endTime = giveaway.endTime;
+                giveaways[giveaway.code].bookmarked = true;
+                GM_setValue(`giveaways`, JSON.stringify(giveaways));
+                deleteLock();
+                button.remove();
+                addGbUnbookmarkButton(giveaway);
+            });
+        });
+    }
+
+    function addGbUnbookmarkButton(giveaway) {
+        var button;
+        button = insertHtml(giveaway.headingName, `beforeBegin`, `
+            <div class="esgst-gb-button" title="Unbookmark giveaway.">
+                <i class="fa fa-bookmark"></i>
+            </div>
+        `);
+        button.firstElementChild.addEventListener(`click`, function() {
+            button.innerHTML = `<i class="fa fa-circle-o-notch fa-spin"></i>`;
+            createLock(`giveawayLock`, 300, function(deleteLock) {
+                var giveaways;
+                giveaways = JSON.parse(GM_getValue(`giveaways`));
+                delete giveaways[giveaway.code].bookmarked;
+                GM_setValue(`giveaways`, JSON.stringify(giveaways));
+                deleteLock();
+                button.remove();
+                addGbBookmarkButton(giveaway);
+            });
+        });
     }
 
     /* Quick Giveaway Browsing */
@@ -19731,7 +19988,7 @@ Background: <input type="color" value="${bgColor}">
                 }
             ]
         };
-        container = insertHtml(esgst.mainPageHeading, `beforeBegin`, `
+        container = insertHtml(esgst.pinnedGiveaways || esgst.mainPageHeading, `beforeBegin`, `
             <div class="pinned-giveaways__outer-wrap esgst-gf-container">
                 <div class="pinned-giveaways__inner-wrap esgst-gf-box">
                     <div class="esgst-gf-filters esgst-hidden">
@@ -20288,7 +20545,7 @@ Background: <input type="color" value="${bgColor}">
 
     function loadCt() {
         if (esgst.ct) {
-            if ((esgst.commentsPath || esgst.inboxPath || esgst.discussionsPath) && !document.getElementsByClassName(`table--summary`)[0]) {
+            if ((esgst.giveawaysPath || esgst.commentsPath || esgst.inboxPath || esgst.discussionsPath) && !document.getElementsByClassName(`table--summary`)[0]) {
                 esgst.commentFeatures.push(getCtComments);
                 if (esgst.commentsPath || esgst.inboxPath) {
                     addCtCommentPanel();
@@ -20320,7 +20577,7 @@ Background: <input type="color" value="${bgColor}">
         if (n > 0) {
             for (i = 0; i < n; ++i) {
                 comment = comments[i];
-                if (comment.id) {
+                if (comment.id || comment.id.match(/^$/)) {
                 if (!saved[comment.type][comment.code]) {
                     saved[comment.type][comment.code] = {
                         comments: {}
@@ -20425,6 +20682,8 @@ Background: <input type="color" value="${bgColor}">
             comments[comment.type][comment.code].comments[comment.id].timestamp = 0;
         }
         comment.comment.classList.remove(`esgst-ct-comment-read`);
+        comment.comment.style.opacity = `1`;
+        setHoverOpacity(comment.comment, `1`, `1`);
     }
 
     function addCtReadCommentButton(button, comment) {
@@ -20485,7 +20744,7 @@ Background: <input type="color" value="${bgColor}">
             match = matches[i];
             countLink = match.getElementsByClassName(`table__column--width-small text-center`)[0];
             if (countLink) {
-                count = parseInt(countLink.textContent.replace(/,/g, ``)) + 1;
+                count = parseInt(countLink.textContent.replace(/,/g, ``));
                 url = match.getElementsByClassName(`table__column__heading`)[0].getAttribute(`href`);
                 if (url) {
                     code = url.match(/\/discussion\/(.+?)(\/.*)?$/);
@@ -20494,7 +20753,7 @@ Background: <input type="color" value="${bgColor}">
                         if (comments[code]) {
                             read = 0;
                             for (id in comments[code].comments) {
-                                if (!id.match(/^(Count|undefined)$/) && comments[code].comments[id].timestamp) {
+                                if (!id.match(/^(Count|undefined|)$/) && comments[code].comments[id].timestamp) {
                                     ++read;
                                 }
                             }
@@ -20510,7 +20769,7 @@ Background: <input type="color" value="${bgColor}">
     }
 
     function addCtDiscussionPanel(code, comments, container, context, count, diff, url) {
-        var comments, diffContainer, goToUnread, loadingIcon, markRead, markUnread, markVisited, panel;
+        var diffContainer, goToUnread, loadingIcon, markRead, markUnread, markVisited, markUnvisited, panel;
         panel = insertHtml(context, `beforeEnd`, `
             <span>
                 <span class="esgst-hidden">(+${diff})</span>
@@ -20526,6 +20785,9 @@ Background: <input type="color" value="${bgColor}">
                 <div class="esgst-heading-button esgst-hidden" title="Mark this discussion as visited.">
                     <i class="fa fa-check"></i>
                 </div>
+                <div class="esgst-heading-button esgst-hidden" title="Mark this discussion as unvisited.">
+                    <i class="fa fa-times"></i>
+                </div>
                 <i class="fa fa-circle-o-notch fa-spin esgst-hidden"></i>
             </span>
         `);
@@ -20534,7 +20796,8 @@ Background: <input type="color" value="${bgColor}">
         markRead = goToUnread.nextElementSibling;
         markUnread = markRead.nextElementSibling;
         markVisited = markUnread.nextElementSibling;
-        loadingIcon = markVisited.nextElementSibling;
+        markUnvisited = markVisited.nextElementSibling;
+        loadingIcon = markUnvisited.nextElementSibling;
         if (diff > 0) {
             diffContainer.classList.remove(`esgst-hidden`);
             goToUnread.classList.remove(`esgst-hidden`);
@@ -20547,6 +20810,8 @@ Background: <input type="color" value="${bgColor}">
         }
         if (!comments[code] || !comments[code].visited) {
             markVisited.classList.remove(`esgst-hidden`);
+        } else {
+            markUnvisited.classList.remove(`esgst-hidden`);
         }
         goToUnread.addEventListener(`click`, function() {
             goToUnread.classList.add(`esgst-hidden`);
@@ -20613,12 +20878,34 @@ Background: <input type="color" value="${bgColor}">
                 goToUnread.classList.remove(`esgst-hidden`);
                 markRead.classList.remove(`esgst-hidden`);
                 markUnread.classList.remove(`esgst-hidden`);
+                markUnvisited.classList.remove(`esgst-hidden`);
                 if (esgst.ct_b) {
                     container.classList.add(`esgst-ct-visited`);
                 } else {
                     container.style.opacity = `0.5`;
                     setHoverOpacity(container, `1`, `0.5`);
                 }
+            });
+        });
+        markUnvisited.addEventListener(`click`, function() {
+            goToUnread.classList.add(`esgst-hidden`);
+            markRead.classList.add(`esgst-hidden`);
+            markUnread.classList.add(`esgst-hidden`);
+            markUnvisited.classList.add(`esgst-hidden`);
+            loadingIcon.classList.remove(`esgst-hidden`);
+            createLock(`commentLock`, 300, function(deleteLock) {
+                comments = JSON.parse(GM_getValue(`comments`));
+                delete comments.discussions[code].visited;
+                GM_setValue(`comments`, JSON.stringify(comments));
+                deleteLock();
+                loadingIcon.classList.add(`esgst-hidden`);
+                goToUnread.classList.remove(`esgst-hidden`);
+                markRead.classList.remove(`esgst-hidden`);
+                markUnread.classList.remove(`esgst-hidden`);
+                markVisited.classList.remove(`esgst-hidden`);
+                container.classList.remove(`esgst-ct-visited`);
+                container.style.opacity = `1`;
+                setHoverOpacity(container, `1`, `1`);
             });
         });
     }

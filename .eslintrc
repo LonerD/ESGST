@@ -1,9 +1,0 @@
-{
-    extends: "eslint:recommended",
-    rules: {
-        "prefer-template": "error"
-    },
-     "parserOptions": {
-        "ecmaVersion": 6
-    },
-}
