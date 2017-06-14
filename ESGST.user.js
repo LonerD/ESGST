@@ -3,7 +3,7 @@
 // @namespace ESGST
 // @description Enhances SteamGifts and SteamTrades by adding some cool features to them.
 // @icon https://github.com/revilheart/ESGST/raw/master/Resources/esgstIcon.ico
-// @version 6.Beta.6.1
+// @version 6.Beta.6.2
 // @author revilheart
 // @contributor Royalgamer06
 // @downloadURL https://github.com/revilheart/ESGST/raw/master/ESGST.user.js
@@ -19755,7 +19755,7 @@ ${avatar.outerHTML}
     }
 
     function getGbGiveaways(giveaways) {
-        var savedGiveaways = JSON.parse(GM_getValue(`giveaways`. `{}`));
+        var savedGiveaways = JSON.parse(GM_getValue(`giveaways`, `{}`));
         for (var i = 0, n = giveaways.length; i < n; ++i) {
             var giveaway = giveaways[i];
             if (giveaway.creator !== GM_getValue(`Username`) && !giveaway.ended && !giveaway.entered && giveaway.url && !giveaway.innerWrap.getElementsByClassName(`esgst-gb-button`)[0]) {
