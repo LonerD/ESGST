@@ -1,4 +1,10 @@
 /*
+ * June 14, 2017 - v6.Beta.6.1
+ */
+
+* Fixed a bug that was preventing the script from running.
+
+/*
  * June 14, 2017 - v6.Beta.6.0
  */
 

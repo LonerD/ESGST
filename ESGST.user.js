@@ -3,7 +3,7 @@
 // @namespace ESGST
 // @description Enhances SteamGifts and SteamTrades by adding some cool features to them.
 // @icon https://github.com/revilheart/ESGST/raw/master/Resources/esgstIcon.ico
-// @version 6.Beta.6.0
+// @version 6.Beta.6.1
 // @author revilheart
 // @contributor Royalgamer06
 // @downloadURL https://github.com/revilheart/ESGST/raw/master/ESGST.user.js
@@ -5028,7 +5028,7 @@ ${title}
                 panel = insertHtml(popup.description, `beforeEnd`, `<div class="popup__keys__list"></div>`);
                 popup.open();
                 savedGroups = GM_getValue(`Groups`);
-                loadGglGroups([giveaway], 0, 1, JSON.parse(GM_getValue(`giveaways`)), savedGroups, function(groups) {
+                loadGglGroups([giveaway], 0, 1, JSON.parse(GM_getValue(`giveaways`, `{}`)), savedGroups, function(groups) {
                     var className, groupCount, i, key, link;
                     if (groups) {
                         groupCount = 0;
@@ -18720,7 +18720,7 @@ Background: <input type="color" value="${bgColor}">
 
     function importGiveawaysAndMerge(File, Key, SM) {
         createLock(`giveawayLock`, 300, function(deleteLock) {
-            var saved = JSON.parse(GM_getValue(`giveaways`));
+            var saved = JSON.parse(GM_getValue(`giveaways`, `{}`));
             var giveaways = File.Data.giveaways;
             for (var key in giveaways) {
                 if (!saved[key]) {
@@ -19615,7 +19615,7 @@ Background: <input type="color" value="${bgColor}">
         button = insertHtml(context, `beforeEnd`, html);
         var bookmarked = [], endingSoon = 0;
         createLock(`giveawayLock`, 300, function(deleteLock) {
-            var giveaways = JSON.parse(GM_getValue(`giveaways`));
+            var giveaways = JSON.parse(GM_getValue(`giveaways`, `{}`));
             for (var key in giveaways) {
                 if (giveaways[key].bookmarked) {
                     if (Date.now() >= giveaways[key].endTime) {
@@ -19755,7 +19755,7 @@ ${avatar.outerHTML}
     }
 
     function getGbGiveaways(giveaways) {
-        var savedGiveaways = JSON.parse(GM_getValue(`giveaways`));
+        var savedGiveaways = JSON.parse(GM_getValue(`giveaways`. `{}`));
         for (var i = 0, n = giveaways.length; i < n; ++i) {
             var giveaway = giveaways[i];
             if (giveaway.creator !== GM_getValue(`Username`) && !giveaway.ended && !giveaway.entered && giveaway.url && !giveaway.innerWrap.getElementsByClassName(`esgst-gb-button`)[0]) {
@@ -19779,7 +19779,7 @@ ${avatar.outerHTML}
             button.innerHTML = `<i class="fa fa-circle-o-notch fa-spin"></i>`;
             createLock(`giveawayLock`, 300, function(deleteLock) {
                 var giveaways;
-                giveaways = JSON.parse(GM_getValue(`giveaways`));
+                giveaways = JSON.parse(GM_getValue(`giveaways`, `{}`));
                 if (!giveaways[giveaway.code]) {
                     giveaways[giveaway.code] = {};
                 }
@@ -19805,7 +19805,7 @@ ${avatar.outerHTML}
             button.innerHTML = `<i class="fa fa-circle-o-notch fa-spin"></i>`;
             createLock(`giveawayLock`, 300, function(deleteLock) {
                 var giveaways;
-                giveaways = JSON.parse(GM_getValue(`giveaways`));
+                giveaways = JSON.parse(GM_getValue(`giveaways`, `{}`));
                 delete giveaways[giveaway.code].bookmarked;
                 GM_setValue(`giveaways`, JSON.stringify(giveaways));
                 deleteLock();
