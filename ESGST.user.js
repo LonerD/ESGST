@@ -3,7 +3,7 @@
 // @namespace ESGST
 // @description Enhances SteamGifts and SteamTrades by adding some cool features to them.
 // @icon https://github.com/revilheart/ESGST/raw/master/Resources/esgstIcon.ico
-// @version 6.Beta.5.2
+// @version 6.Beta.5.3
 // @author revilheart
 // @contributor Royalgamer06
 // @downloadURL https://github.com/revilheart/ESGST/raw/master/ESGST.user.js
@@ -3512,6 +3512,8 @@ margin: 0;
             ".GVInfo {" +
             "    align-items: center;" +
             "    display: flex;" +
+            "    max-width: 600px;" +
+            "    min-width: 600px;" +
             "    position: absolute;" +
             "    text-align: left;" +
             "    z-index: 1;" +
@@ -5060,7 +5062,7 @@ ${title}
         if (i < n) {
             giveaway = giveaways[i];
             if (giveaway.group) {
-                if (savedGiveaways[giveaway.code] && savedGiveaways[giveaway.code].groups) {
+                if (savedGiveaways[giveaway.code] && savedGiveaways[giveaway.code].groups && Object.keys(savedGiveaways[giveaway.code].groups).length) {
                     if (callback) {
                         callback(savedGiveaways[giveaway.code].groups);
                     } else {
@@ -19508,12 +19510,12 @@ Background: <input type="color" value="${bgColor}">
         if (!giveaway.entriesLink) {
             giveaway.entries = parseInt(giveaway.panel.nextElementSibling.textContent.replace(/,/g, ``));
         }
-        giveaway.levelColumn = giveaway.innerWrap.querySelector(`.giveaway__column--contributor-level, .featured__column--contributor-level`);
+        giveaway.levelColumn = giveaway.outerWrap.querySelector(`.giveaway__column--contributor-level, .featured__column--contributor-level`);
         giveaway.level = giveaway.levelColumn ? parseInt(giveaway.levelColumn.textContent.match(/\d+/)[0]) : 0;
-        giveaway.inviteOnly = giveaway.innerWrap.querySelector(`.giveaway__column--invite-only, .featured__column--invite-only`);
-        giveaway.regionRestricted = giveaway.innerWrap.querySelector(`.giveaway__column--region-restricted, .featured__column--region-restricted`);
-        giveaway.group = giveaway.innerWrap.querySelector(`.giveaway__column--group, .featured__column--group`);
-        giveaway.whitelist = giveaway.innerWrap.querySelector(`.giveaway__column--whitelist, .featured__column--whitelist`);
+        giveaway.inviteOnly = giveaway.outerWrap.querySelector(`.giveaway__column--invite-only, .featured__column--invite-only`);
+        giveaway.regionRestricted = giveaway.outerWrap.querySelector(`.giveaway__column--region-restricted, .featured__column--region-restricted`);
+        giveaway.group = giveaway.outerWrap.querySelector(`.giveaway__column--group, .featured__column--group`);
+        giveaway.whitelist = giveaway.outerWrap.querySelector(`.giveaway__column--whitelist, .featured__column--whitelist`);
         giveaway.pinned = giveaway.outerWrap.closest(`.pinned-giveaways__outer-wrap`);
         chance = context.getElementsByClassName(`esgst-gwc`)[0];
         giveaway.chance = chance ? parseFloat(chance.getAttribute(`data-chance`)) : 0;
@@ -20319,10 +20321,14 @@ Background: <input type="color" value="${bgColor}">
         if (n > 0) {
             for (i = 0; i < n; ++i) {
                 comment = comments[i];
+                if (comment.id) {
                 if (!saved[comment.type][comment.code]) {
                     saved[comment.type][comment.code] = {
                         comments: {}
                     };
+                } else {
+                    delete saved[comment.type][comment.code].comments.Count;
+                    delete saved[comment.type][comment.code].comments.undefined;
                 }
                 saved[comment.type][comment.code].visited = true;
                 button = comment.comment.getElementsByClassName(`esgst-ct-comment-button`)[0];
@@ -20354,6 +20360,7 @@ Background: <input type="color" value="${bgColor}">
                 } else {
                     markCtCommentRead(comment, saved);
                     addCtUnreadCommentButton(button, comment);
+                }
                 }
             }
             if (!goToUnread) {

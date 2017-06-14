@@ -1,4 +1,12 @@
 /*
+ * June 14, 2017 - v6.Beta.5.3
+ */
+
+* Fixed a bug in Grid View that wasn't working well with Giveaway Filters.
+* Set a fixed width to the Grid View popout to 600px to prevent things from inflating the page.
+* Possibly fixed a bug in Comment Tracker that was showing the wrong comment count for discussions (possibly closes #134 and #160).
+
+/*
  * June 13, 2017 - v6.Beta.5.2
  */
 
@@ -7,6 +15,7 @@
 * Added back the option to use a popup to load giveaway groups to Giveaway Groups Loader.
 * Fixed a bug in Enter/Leave Giveaway Button that was still popping up the description even if it was disabled when leaving a giveaway and entering it again.
 * Fixed a bug that was not enabling Discussions Highlighter in the main discussions page if Comment Tracker was disabled.
+* Added back the option that was missing from Comment Tracker to mark discussions as visited.
 * Fixed a bug in Not Activated/Multiple Wins Checker that was getting stuck at the first user while checking.
 
 /*
