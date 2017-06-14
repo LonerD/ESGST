@@ -3,7 +3,7 @@
 // @namespace ESGST
 // @description Enhances SteamGifts and SteamTrades by adding some cool features to them.
 // @icon https://github.com/revilheart/ESGST/raw/master/Resources/esgstIcon.ico
-// @version 6.Beta.5.3
+// @version 6.Beta.5.4
 // @author revilheart
 // @contributor Royalgamer06
 // @downloadURL https://github.com/revilheart/ESGST/raw/master/ESGST.user.js
@@ -20495,7 +20495,7 @@ Background: <input type="color" value="${bgColor}">
                         if (comments[code]) {
                             read = 0;
                             for (id in comments[code].comments) {
-                                if (comments[code].comments[id].timestamp) {
+                                if (!id.match(/^(Count|undefined)$/) && comments[code].comments[id].timestamp) {
                                     ++read;
                                 }
                             }

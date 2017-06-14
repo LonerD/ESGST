@@ -1,4 +1,10 @@
 /*
+ * June 14, 2017 - v6.Beta.5.4
+ */
+
+* Another possible fix to the Comment Tracker bug.
+
+/*
  * June 14, 2017 - v6.Beta.5.3
  */
 
