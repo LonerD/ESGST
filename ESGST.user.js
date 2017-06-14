@@ -3,7 +3,7 @@
 // @namespace ESGST
 // @description Enhances SteamGifts and SteamTrades by adding some cool features to them.
 // @icon https://github.com/revilheart/ESGST/raw/master/Resources/esgstIcon.ico
-// @version 6.Beta.5.4
+// @version 6.Beta.5.5
 // @author revilheart
 // @contributor Royalgamer06
 // @downloadURL https://github.com/revilheart/ESGST/raw/master/ESGST.user.js
@@ -3513,7 +3513,6 @@ margin: 0;
             "    align-items: center;" +
             "    display: flex;" +
             "    max-width: 600px;" +
-            "    min-width: 600px;" +
             "    position: absolute;" +
             "    text-align: left;" +
             "    z-index: 1;" +

@@ -1,4 +1,10 @@
 /*
+ * June 14, 2017 - v6.Beta.5.5
+ */
+ 
+* Removed the minimum popout size from Grid View.
+
+/*
  * June 14, 2017 - v6.Beta.5.4
  */
 
