@@ -1,4 +1,14 @@
 /*
+ * June 14, 2017 - v6.Beta.7.0
+ */
+
+* Moved Shared Groups Checker to the same place as Username History and User Notes.
+
+Added the following features:
+
+* User Filters (closes #51)
+
+/*
  * June 14, 2017 - v6.Beta.6.3
  */
 

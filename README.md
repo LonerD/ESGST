@@ -103,6 +103,16 @@ Tested on Microsoft Edge and most of it seems to work fine, but for some reason 
 
 * [Other Info](#other-info)
 
+### User Filters
+
+`steamgifts.com/*`
+
+* Allows you to filter out posts, discussions and giveaways from users.
+* Filtered posts are completely removed, along with all replies to it.
+* Each user has their own settings, which can be configured through their profile (or their avatar if you're using Avatar Popout).
+* You can enable an option in the settings menu to automatically filter out all users that you have blacklisted. If you set a custom setting to a blacklisted user on their profile, that setting will overwrite the automatic setting.
+* You can see a list of filtered users in the settings menu.
+
 ### Giveaway Bookmarks
 
 `steamgifts.com/*`
