@@ -1,4 +1,14 @@
 /*
+ * June 14, 2017 - v6.Beta.6.3
+ */
+
+* Removed periods from all tooltips (closes #166).
+* Added tooltip to User Notes button (closes #167).
+* Fixed a bug that was enabling some giveaway features where they shouldn't (closes #168).
+* Entered giveaways are now automatically unbookmarked in Giveaway Bookmarks.
+* The option to change the background instead of fading out has been removed from Comment Tracker and implemented by default on hover (#closes 143).
+
+/*
  * June 14, 2017 - v6.Beta.6.2
  */
 
@@ -30,7 +40,7 @@ Added the following features:
 /*
  * June 14, 2017 - v6.Beta.5.5
  */
- 
+
 * Removed the minimum popout size from Grid View.
 
 /*
@@ -89,7 +99,7 @@ Added the following features:
  * June 12, 2017 - v6.Beta.4.8
  */
 
-* Fixed an exploit that could be used to check all pages under "/discussions", "/users" and "/archive" in Whitelist/Blacklist Checker. 
+* Fixed an exploit that could be used to check all pages under "/discussions", "/users" and "/archive" in Whitelist/Blacklist Checker.
 
 /*
  * June 12, 2017 - v6.Beta.4.7

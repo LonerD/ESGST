@@ -3,7 +3,7 @@
 // @namespace ESGST
 // @description Enhances SteamGifts and SteamTrades by adding some cool features to them.
 // @icon https://github.com/revilheart/ESGST/raw/master/Resources/esgstIcon.ico
-// @version 6.Beta.6.2
+// @version 6.Beta.6.3
 // @author revilheart
 // @contributor Royalgamer06
 // @downloadURL https://github.com/revilheart/ESGST/raw/master/ESGST.user.js
@@ -470,7 +470,6 @@
             ded: `DED`,
             ch: `CH`,
             ct: `CT`,
-            ct_b: `ct_b`,
             ct_g: `ct_g`,
             ct_r: `ct_lu`,
             cfh: `CFH`,
@@ -1003,13 +1002,8 @@
                 options: [
                     {
                         id: `ct_g`,
-                        name: `Fade out/change background of visited giveaways.`,
+                        name: `Fade out visited giveaways.`,
                         check: getValue(`ct_g`)
-                    },
-                    {
-                        id: `ct_b`,
-                        name: `Change background instead of fading out.`,
-                        check: getValue(`ct_b`)
                     },
                     {
                         id: `ct_r`,
@@ -1572,7 +1566,7 @@
     }
 
     function getUsersGames(Context) {
-        var Matches, CurrentUsers, I, N, UserID, Match, SteamLink, Game, Title, CurrentGames, SavedUsers, SavedGames;
+        var Matches, I, N, UserID, Match;
         Matches = Context.querySelectorAll("a[href*='/user/']");
         esgst.currentUsers = {};
         for (I = 0, N = Matches.length; I < N; ++I) {
@@ -1728,7 +1722,6 @@
     }
 
     function getSteamId(steamId, id, username, users, callback) {
-        var user;
         if (steamId && username) {
             if (users.users[steamId]) {
                 callback(steamId, checkUsernameChange(users, steamId, username));
@@ -2073,7 +2066,6 @@
     }
 
     function getWhitelistBlacklistUsers(Sync, I, N, Matches, Key, Callback) {
-        var User, J;
         if (!Sync.Canceled) {
             if (I < N) {
                 var username = Matches[I].getElementsByClassName(`table__column__heading`)[0].textContent;
@@ -2095,7 +2087,7 @@
     }
 
     function syncGames(sync, callback) {
-        var SteamAPIKey, URL, key, ind;
+        var key, ind;
         sync.OverallProgress.innerHTML = `
 <i class="fa fa-circle-o-notch fa-spin"></i>
 <span>Syncing your wishlist / owned games / ignored games...</span>
@@ -2452,11 +2444,10 @@
             popout.popout.classList.add(`esgst-hidden`);
         };
         popout.reposition = function() {
-            var contextHeight, contextLeft, contextRect, contextTop, contextWidth, popoutHeight, popoutWidth;
+            var contextLeft, contextRect, contextTop, contextWidth, popoutHeight, popoutWidth;
             popout.popout.style.left = `0`;
             popout.popout.style.top = `0`;
             contextRect = currentContext.getBoundingClientRect();
-            contextHeight = contextRect.height;
             contextLeft = contextRect.left;
             contextTop = contextRect.top;
             contextWidth = contextRect.width;
@@ -3762,9 +3753,8 @@ margin: 0;
             "    background-color: " + Negative.replace(/rgb/, "rgba").replace(/\)/, ", 0.8)") + " !important;" +
             "    background-image: none !important;" +
             "}" +
-            ".esgst-ct-comment-read, .esgst-ct-visited {" +
+            ".esgst-ct-comment-read:hover, .esgst-ct-visited:hover {" +
             "    background-color: " + Unknown.replace(/rgb/, "rgba").replace(/\)/, ", 0.1)") + " !important;" +
-            "    padding: 5px !important;" +
             "}" +
             ".esgst-gb-button, .esgst-dh-button {" +
             "    cursor: pointer; display: inline-block;" +
@@ -3847,7 +3837,7 @@ margin: 0;
     }
 
     function goToComment(hash, Element) {
-        var ID, Top, Heading, Permalink;
+        var ID, Top, Permalink;
         if (!hash) {
             hash = window.location.hash;
         }
@@ -3879,7 +3869,7 @@ margin: 0;
             Popup.Icon.classList.add("fa-refresh", "fa-spin");
             Popup.Title.textContent = "ESGST is updating your groups. Please wait...";
             Popup.Groups = [];
-            syncGroups(Popup, "/account/steam/groups/search?page=", 1, function (Groups) {
+            syncGroups(Popup, "/account/steam/groups/search?page=", 1, function () {
                 GM_setValue("GSync", true);
                 GM_setValue("Groups", Popup.Groups);
                 Popup.Title.textContent = "Done. You can close this now.";
@@ -4141,7 +4131,6 @@ margin-bottom: ${esgst.footer.offsetHeight}px;
     /* Level Progress Visualizer */
 
     function loadLpv() {
-        var elements;
         if (esgst.sg && !esgst.hr) {
             setLpvStyle();
         }
@@ -4481,7 +4470,7 @@ ${title}
     function loadEndlessScrolling() {
         var pagination, context, currentPage, nextPage, reversePages,
             esPageHeading,
-            mainPageBottom, mainSearchUrlBackup, mainPaginationNavigationBackup,
+            mainPaginationNavigationBackup,
             esRefreshButton, esPauseButton;
         pagination = esgst.pagination;
         context = pagination.previousElementSibling;
@@ -4519,20 +4508,15 @@ ${title}
                 loadPaginationNavigationOnTop();
             }
             esgst.mainPageHeadingPlaceholder.id = `esgst-es-page-${currentPage}`;
-            if (currentPage == 1) {
-                mainSearchUrlBackup = esgst.originalUrl;
-            } else {
-                mainSearchUrlBackup = `${esgst.searchUrl}${currentPage}`;
-            }
             mainPaginationNavigationBackup = esgst.paginationNavigation.innerHTML;
             if (!reversePages) {
                 document.addEventListener(`scroll`, restoreMainPaginationNavigation);
             }
             html = `
-<div class="page_heading_btn esgst-es-refresh-button" title="Refresh the current page.">
+<div class="page_heading_btn esgst-es-refresh-button" title="Refresh the current page">
 <i class="fa fa-refresh"></i>
 </div>
-<div class="page_heading_btn esgst-es-pause-button" title="Pause the endless scrolling.">
+<div class="page_heading_btn esgst-es-pause-button" title="Pause the endless scrolling">
 <i class="fa fa-pause"></i>
 </div>
 `;
@@ -4577,14 +4561,13 @@ ${title}
 
         function setNextPage(response) {
             var responseHtml, previousPaginationBackup, paginationNavigation, paginationNavigationBackup,
-                searchUrlBackup, paginationBackup, parent;
+                paginationBackup, parent;
             responseHtml = DOM.parse(response.responseText);
             previousPaginationBackup = pagination;
             pagination = responseHtml.getElementsByClassName(`pagination`)[0];
             context = pagination.previousElementSibling;
             paginationNavigation = pagination.getElementsByClassName(esgst.paginationNavigationClass)[0];
             paginationNavigationBackup = paginationNavigation.innerHTML;
-            searchUrlBackup = `${esgst.searchUrl}${nextPage}`;
             paginationBackup = pagination;
             if (reversePages) {
                 esPageHeading.remove();
@@ -4660,7 +4643,7 @@ ${title}
             makeRequest(null, window.location.href, null, setRefreshedPage);
 
             function setRefreshedPage(response) {
-                var responseHtml, new_context, element, parent;
+                var responseHtml, newContext, element, parent;
                 responseHtml = DOM.parse(response.responseText);
                 newContext = responseHtml.getElementsByClassName(`pagination`)[0].previousElementSibling;
                 loadEndlessFeatures(newContext);
@@ -4931,7 +4914,7 @@ ${title}
     }
 
     function loadPinnedGiveawaysButton() {
-        var PGBButton, PGBContainer, HTML, PGBIcon;
+        var PGBContainer, HTML, PGBIcon;
         PGBContainer = esgst.pinnedGiveawaysButton.previousElementSibling;
         PGBContainer.classList.add("PGBContainer");
         esgst.pinnedGiveawaysButton.remove();
@@ -5029,7 +5012,7 @@ ${title}
                 popup.open();
                 savedGroups = GM_getValue(`Groups`);
                 loadGglGroups([giveaway], 0, 1, JSON.parse(GM_getValue(`giveaways`, `{}`)), savedGroups, function(groups) {
-                    var className, groupCount, i, key, link;
+                    var className, groupCount, i, n, key, link;
                     if (groups) {
                         groupCount = 0;
                         for (key in groups) {
@@ -5196,7 +5179,7 @@ ${title}
         Context.insertAdjacentHTML(
             "afterBegin",
             "<div>" +
-            "    <a class=\"GTSView\" title=\"View saved templates.\">" +
+            "    <a class=\"GTSView\" title=\"View saved templates\">" +
             "        <i class=\"fa fa-file\"></i>" +
             "    </a>" +
             "</div>"
@@ -5217,7 +5200,7 @@ ${title}
                     "    <span class=\"popup__actions GTSApply\">" +
                     "        <a>" + Templates[I].Name + "</a>" +
                     "    </span>" +
-                    "    <i class=\"fa fa-trash GTSDelete\" title=\"Delete template.\"></i>" +
+                    "    <i class=\"fa fa-trash GTSDelete\" title=\"Delete template\"></i>" +
                     "</div>");
                 setGTSTemplate(Popout.Popout.lastElementChild, Templates[I], GTS);
             }
@@ -5408,7 +5391,7 @@ ${title}
     function setSGGButton(Context, Sticky, ID, SGG) {
         Context.insertAdjacentHTML(
             "afterBegin",
-            "<a class=\"" + (Sticky ? "SGGSticky" : "SGGUnsticky") + "\" title=\"" + (Sticky ? "Sticky" : "Unsticky") + " group.\">" +
+            "<a class=\"" + (Sticky ? "SGGSticky" : "SGGUnsticky") + "\" title=\"" + (Sticky ? "Sticky" : "Unsticky") + " group\">" +
             "    <i class=\"fa fa-thumb-tack\"></i>" +
             "</a>"
         );
@@ -5601,7 +5584,7 @@ ${title}
         }]);
         Context.insertAdjacentHTML(
             "afterBegin",
-            "<a class=\"UGSButton\" title=\"Send unsent gifts.\">" +
+            "<a class=\"UGSButton\" title=\"Send unsent gifts\">" +
             "    <i class=\"fa fa-gift\"></i>" +
             "    <i class=\"fa fa-send\"></i>" +
             "</a>"
@@ -5914,7 +5897,7 @@ ${title}
 
     function sendUGSGift(UGS, Winners, Keys, I, J, N, Callback) {
         if (!UGS.Canceled) {
-            queueRequest(UGS, "xsrf_token=" + esgst.xsrfToken + "&do=sent_feedback&action=1&winner_id=" + Winners[Keys[I]], "/ajax.php", function (Response) {
+            queueRequest(UGS, "xsrf_token=" + esgst.xsrfToken + "&do=sent_feedback&action=1&winner_id=" + Winners[Keys[I]], "/ajax.php", function () {
                 var Key;
                 UGS.Checked.push(Keys[I] + UGS.Giveaways[J].Name);
                 UGS.Sent.classList.remove("rhHidden");
@@ -5949,7 +5932,7 @@ ${title}
         var HTML, Button, Popup, URL, CurrentPage, NextPage, RemovedEntries, ownedGames;
         if (Context) {
             HTML = `
-<div class="ERButton" title="Remove entries for owned games.">
+<div class="ERButton" title="Remove entries for owned games">
 <i class="fa fa-tag"></i>
 <i class="fa fa-times-circle"></i>
 </div>
@@ -6119,7 +6102,7 @@ ${Results.join(``)}
         }
     }
 
-    
+
 
     function loadGiveawayErrorSearchLinks() {
         var Context, Term;
@@ -6172,7 +6155,7 @@ ${Results.join(``)}
         }]);
         Context.insertAdjacentHTML(
             "afterBegin",
-            "<a class=\"ASButton\" title=\"Search archive.\">" +
+            "<a class=\"ASButton\" title=\"Search archive\">" +
             "    <i class=\"fa fa-folder\"></i>" +
             "    <i class=\"fa fa-search\"></i>" +
             "</a>"
@@ -6280,7 +6263,7 @@ ${Results.join(``)}
         var Context = esgst.mainPageHeading;
         Context.insertAdjacentHTML(
             "afterBegin",
-            "<a class=\"MPPButton\" title=\"Open the main post.\">" +
+            "<a class=\"MPPButton\" title=\"Open the main post\">" +
             "    <i class=\"fa fa-home\"></i>" +
             "</a>"
         );
@@ -13957,7 +13940,7 @@ ${Results.join(``)}
         if (N > 2) {
             Delete.innerHTML =
                 "<a>" +
-                "    <i class=\"fa fa-times-circle\" title=\"Delete row.\"></i>" +
+                "    <i class=\"fa fa-times-circle\" title=\"Delete row\"></i>" +
                 "</a>";
             Delete.firstElementChild.addEventListener("click", function () {
                 if (Table.rows.length > 4) {
@@ -13992,7 +13975,7 @@ ${Results.join(``)}
         Delete = Rows[0].insertCell(N);
         Delete.innerHTML =
             "<a>" +
-            "    <i class=\"fa fa-times-circle\" title=\"Delete column.\"></i>" +
+            "    <i class=\"fa fa-times-circle\" title=\"Delete column\"></i>" +
             "</a>";
         Column = Rows[1].insertCell(N);
         Column.innerHTML = "<input placeholder=\"Header\" type=\"text\"/>";
@@ -14135,7 +14118,7 @@ ${Results.join(``)}
     }
 
     function loadReplyBoxPopup() {
-        var CommentBox, Popup, ESCommentBox;
+        var Popup;
         var Context = esgst.mainPageHeading;
         Popup = createPopup();
         Popup.Popup.classList.add("rhPopupLarge");
@@ -14152,7 +14135,7 @@ ${Results.join(``)}
         });
         Context.insertAdjacentHTML(
             "afterBegin",
-            "<a class=\"page_heading_btn MCBPButton\" title=\"Add a comment.\">" +
+            "<a class=\"page_heading_btn MCBPButton\" title=\"Add a comment\">" +
             "    <i class=\"fa fa-comment\"></i>" +
             "</a>"
         );
@@ -14481,7 +14464,7 @@ ${Results.join(``)}
 <div class="featured__outer-wrap esgst-uh-box esgst-hidden">
 <div class="featured__table__row__left esgst-uh-title">
 <span>Username History</span>
-<a href="https://goo.gl/C2wjUh" title="Expand the database.">
+<a href="https://goo.gl/C2wjUh" title="Expand the database">
 <i class="fa fa-expand"></i>
 </a>
 </div>
@@ -14551,7 +14534,7 @@ ${Results.join(``)}
                 userId = `SteamID64`;
             }
             var html = `
-<a class="page_heading_btn esgst-un-button">
+<a class="page_heading_btn esgst-un-button" title="Add user notes">
 <i class="fa"></i>
 </a>
 `;
@@ -14657,7 +14640,7 @@ ${Results.join(``)}
     }
 
     function addPUTButton(Context, steamId, username, key) {
-        var Container, User;
+        var Container;
         Container = Context.parentElement;
         if (Container.classList.contains("comment__username")) {
             Context = Container;
@@ -14768,14 +14751,14 @@ ${Results.join(``)}
     }
 
     function addRWSCVLLink(Context, Key, User) {
-        var URL, RWSCVL;
+        var URL;
         URL = "http://www.sgtools.info/" + Key.toLowerCase() + "/" + User.Username;
         Context.innerHTML = "<a class=\"RWSCVLLink\" href=\"" + URL + (esgst.rwscvl_ro ? "/newestfirst" : "") +
             "\" target=\"_blank\">Gifts " + Key + "</a>";
     }
 
     function getRwscvlData(WonContext, SentContext, User) {
-        RWSCVL = {
+        var RWSCVL = {
             WonProgress: insertHtml(WonContext.nextElementSibling, `beforeEnd`, `
                 <span>
                     <i class="fa fa-circle-o-notch fa-spin"></i>
@@ -14853,7 +14836,7 @@ ${Results.join(``)}
         };
         Context.insertAdjacentHTML(
             "beforeEnd",
-            " <span class=\"UGDButton\" title=\"Get " + UGD.Key + " giveaways data.\">" +
+            " <span class=\"UGDButton\" title=\"Get " + UGD.Key + " giveaways data\">" +
             "    <i class=\"fa fa-bar-chart\"></i>" +
             "</span>"
         );
@@ -14956,7 +14939,7 @@ ${Results.join(``)}
                                 Frequencies = {};
                             countUgdGiveaways(Frequencies, Giveaways.apps, LevelsTotal, Total, UGD.Key === `won` ? `creators` : `apps`, Types, TypesTotal, UGD, function(LevelsTotal, Total) {
                                 countUgdGiveaways(Frequencies, Giveaways.subs, LevelsTotal, Total, UGD.Key === `won` ? `creators` : `subs`, Types, TypesTotal, UGD, function(LevelsTotal, Total) {
-                                    var HTML, Type, I, Value, Ordered;
+                                    var HTML, Type, I, N, Value, Ordered;
                                     HTML =
                                     "<table class=\"UGDData\">" +
                                     "    <tr>" +
@@ -15049,7 +15032,7 @@ ${Results.join(``)}
     }
 
     function countUgdGiveaways(Frequencies, Giveaways, LevelsTotal, Total, type, Types, TypesTotal, UGD, Callback) {
-        var Key, I, N, Giveaway, Private, Group, Whitelist, Region, Level, Copies, Value, HTML, Type, Ordered;
+        var Key, I, N, Giveaway, Private, Group, Whitelist, Region, Level, Copies;
                                 for (Key in Giveaways) {
                                     for (I = 0, N = Giveaways[Key].length; I < N; ++I) {
                                         Giveaway = Giveaways[Key][I];
@@ -15131,7 +15114,7 @@ ${Results.join(``)}
     }
 
     function getUGDGiveaways(UGD, ugd, NextPage, CurrentPage, CurrentContext, URL, Callback, Context) {
-        var Giveaways, I, NumGiveaways, Giveaway, Timestamp, Received, Data, Heading, SteamButton, Match, Matches, Links, J, NumLinks, Text, Found, Pagination;
+        var Giveaways, I, NumGiveaways, Giveaway, Found, Pagination;
         if (Context) {
             Giveaways = Context.getElementsByClassName("giveaway__row-outer-wrap");
             for (I = 0, NumGiveaways = Giveaways.length; I < NumGiveaways; ++I) {
@@ -15196,7 +15179,7 @@ ${Results.join(``)}
         Context.insertAdjacentHTML(
             "beforeEnd",
             " <span class=\"NAMWCButton\">" +
-            "    <i class=\"fa fa-question-circle\" title=\"Check for not activated / multiple wins.\"></i>" +
+            "    <i class=\"fa fa-question-circle\" title=\"Check for not activated / multiple wins\"></i>" +
             "</span>"
         );
         setNAMWCPopup(Context, User);
@@ -15206,7 +15189,7 @@ ${Results.join(``)}
         if (Context) {
             Context.insertAdjacentHTML(
                 "afterBegin",
-                "<a class=\"NAMWCButton\" title=\"Check for not activated / multiple wins.\">" +
+                "<a class=\"NAMWCButton\" title=\"Check for not activated / multiple wins\">" +
                 "    <i class=\"fa fa-trophy\"></i>" +
                 "    <i class=\"fa fa-question-circle\"></i>" +
                 "</a>"
@@ -15498,7 +15481,7 @@ ${Results.join(``)}
                 highlight = `negative`;
                 icon = `fa-thumbs-down`;
             }
-            var i, n, context, title = `${user.username} has ${(user.namwc.results.unknown ? `?` : user.namwc.results.notActivated)} not activated wins and ${user.namwc.results.multiple} multiple wins (last checked ${getTimestamp(user.namwc.lastCheck / 1e3)}).`;
+            var i, n, context, title = `${user.username} has ${(user.namwc.results.unknown ? `?` : user.namwc.results.notActivated)} not activated wins and ${user.namwc.results.multiple} multiple wins (last checked ${getTimestamp(user.namwc.lastCheck / 1e3)})`;
             if (esgst.namwc_h_i || esgst.wbh_cw || esgst.wbh_cb) {
                 var html = `
 <span class="esgst-namwc-icon ${highlight}" title="${title}">
@@ -15549,7 +15532,7 @@ ${Results.join(``)}
             Context.insertAdjacentHTML(
                 "beforeEnd",
                 " <span class=\"NRFButton\">" +
-                "    <i class=\"fa fa-times-circle\" title=\"Find not received giveaways.\"></i>" +
+                "    <i class=\"fa fa-times-circle\" title=\"Find not received giveaways\"></i>" +
                 "</span>"
             );
             setNRFPopup(NRF, Context.lastElementChild, User);
@@ -15603,7 +15586,6 @@ ${Results.join(``)}
         createLock(`userLock`, 300, function(deleteLock) {
             var users = JSON.parse(GM_getValue(`users`));
             getSteamId(User.SteamID64, User.ID, User.Username, users, function(steamId) {
-                var Match;
                 GM_setValue(`users`, JSON.stringify(users));
                 deleteLock();
                 var nrf = users.users[steamId].nrf;
@@ -15617,7 +15599,6 @@ ${Results.join(``)}
                     };
                 }
                 if ((Date.now() - nrf.lastCheck) > 604800000) {
-                    Match = window.location.href.match(new RegExp("\/user\/" + username + "(\/search\?page=(\d+))?"));
                     searchNRFUser(NRF, username, 1, 0, "/user/" + username + "/search?page=", function () {
                         createLock(`userLock`, 300, function(deleteLock) {
                             users = JSON.parse(GM_getValue(`users`));
@@ -15760,7 +15741,7 @@ ${Results.join(``)}
             "afterEnd",
             "<div class=\"featured__table__row SWRRatio\">" +
             "    <div class=\"featured__table__row__left\">Ratio</div>" +
-            "    <div class=\"featured__table__row__right\" title=\"" + User.Username + " has sent " + Ratio + " gifts for every gift won.\">" + Ratio + "</div>" +
+            "    <div class=\"featured__table__row__right\" title=\"" + User.Username + " has sent " + Ratio + " gifts for every gift won\">" + Ratio + "</div>" +
             "</div>"
         );
     }
@@ -15788,7 +15769,7 @@ ${Results.join(``)}
             Lower = Values[Base];
             Upper = Values[Base + 1];
             Value = Math.round((Upper - (Lower + ((Upper - Lower) * (Level - Base)))) * 100) / 100;
-            Context.insertAdjacentHTML("beforeEnd", " <span>(~ $" + Value + " real CV to level " + (Base + 1) + ".)");
+            Context.insertAdjacentHTML("beforeEnd", " <span>(~ $" + Value + " real CV to level " + (Base + 1) + ")");
         }
 
     }
@@ -16037,7 +16018,7 @@ ${Results.join(``)}
         if (Context) {
             Context.insertAdjacentHTML(
                 "afterBegin",
-                "<a class=\"WBCButton\" title=\"Check for whitelists" + (WBC.B ? " / blacklists" : "") + ".\">" +
+                "<a class=\"WBCButton\" title=\"Check for whitelists" + (WBC.B ? " / blacklists" : "") + "\">" +
                 "    <i class=\"fa fa-heart\"></i> " + (WBC.B ? (
                     "<i class=\"fa fa-ban\"></i>") : "") +
                 "    <i class=\"fa fa-question-circle\"></i>" +
@@ -16103,7 +16084,7 @@ ${Results.join(``)}
     }
 
     function setWBCCheck(WBC, Callback) {
-        var SavedUsers, I, N, Username, Match;
+        var SavedUsers, I, N, Username;
         WBC.Progress.innerHTML = WBC.OverallProgress.innerHTML = "";
         WBC.whitelisted.classList.add("rhHidden");
         WBC.blacklisted.classList.add("rhHidden");
@@ -16152,7 +16133,7 @@ ${Results.join(``)}
     }
 
     function checkWBCUsers(WBC, I, N, Callback) {
-        var User, SavedUser, Result;
+        var User, Result;
         if (!WBC.Canceled) {
             WBC.Progress.innerHTML = "";
             WBC.OverallProgress.textContent = I + " of " + N + " users checked...";
@@ -16291,7 +16272,6 @@ ${Results.join(``)}
     }
 
     function checkWBCGiveaway(WBC, wbc, Callback) {
-        var ResponseText;
         if (!WBC.Canceled) {
             queueRequest(WBC, null, wbc.whitelistGiveaway || wbc.giveaway, function (Response) {
                 var responseHtml = DOM.parse(Response.responseText);
@@ -16529,7 +16509,7 @@ ${Results.join(``)}
             Result = user.wbc.result;
             if ((Result == "whitelisted") || ((Result == "blacklisted") && esgst.wbc_b)) {
                 HTML =
-                    "<span class=\"sidebar__shortcut-inner-wrap WBCIcon rhWBIcon\" title=\"" + user.username + " has " + Result.toLowerCase() + " you (last checked " + getTimestamp(user.wbc.lastCheck / 1e3) + ").\">" +
+                    "<span class=\"sidebar__shortcut-inner-wrap WBCIcon rhWBIcon\" title=\"" + user.username + " has " + Result.toLowerCase() + " you (last checked " + getTimestamp(user.wbc.lastCheck / 1e3) + ")\">" +
                     "    <i class=\"fa sidebar__shortcut__" + ((Result == "whitelisted") ? "whitelist fa-check" : "blacklist fa-times") + " is-disabled is-selected\"" +
                     "    style=\"background: none !important;\"></i>" +
                     "</span>";
@@ -16570,7 +16550,7 @@ ${Results.join(``)}
                 status = `blacklisted`;
                 icon = `fa-ban sidebar__shortcut__blacklist`;
             }
-            var title = `You ${status} ${user.username} on ${getTimestamp(user[`${status}Date`] / 1e3)}.`, i, n, context;
+            var title = `You ${status} ${user.username} on ${getTimestamp(user[`${status}Date`] / 1e3)}`, i, n, context;
             if ((user.whitelisted && esgst.wbh_cw) || (user.blacklisted && esgst.wbh_cb)) {
                 for (i = 0, n = matches.length; i < n; ++i) {
                     context = matches[i];
@@ -16642,7 +16622,7 @@ ${Results.join(``)}
                     Context = Matches[I].getElementsByClassName("comment__username")[0];
                     Username = Context.textContent;
                     if (Winners[Key].indexOf(Username) >= 0) {
-                        Context.insertAdjacentHTML("afterEnd", "<i class=\"fa fa-trophy IWHIcon\" title=\"This is the winner or one of the winners of this giveaway.\"></i>");
+                        Context.insertAdjacentHTML("afterEnd", "<i class=\"fa fa-trophy IWHIcon\" title=\"This is the winner or one of the winners of this giveaway\"></i>");
                     }
                 }
             }
@@ -16728,7 +16708,7 @@ ${Results.join(``)}
     }
 
     function getGames(context) {
-        var games, gcContext, container, heading, headingName, name, i, id, info, markdown, match, matches, n, type;
+        var games, heading, headingName, name, i, id, info, match, matches, n, type;
         games = {
             apps: {},
             subs: {}
@@ -16795,7 +16775,7 @@ ${Results.join(``)}
     }
 
     function setEghObserver(context) {
-        var button, id, info, type;
+        var button, info;
         button = context.querySelector(`.sidebar__entry-insert`);
         if (button) {
             info = getGameInfo(context);
@@ -16843,7 +16823,7 @@ ${Results.join(``)}
         var icon;
         icon = insertHtml(headingName, `beforeBegin`, `
             <a class="esgst-egh-button">
-                <i class="fa fa-star esgst-egh-icon" title="You have entered giveaways for this game before. Click to unhighlight it."></i>
+                <i class="fa fa-star esgst-egh-icon" title="You have entered giveaways for this game before. Click to unhighlight it"></i>
             </a>
         `);
         icon.addEventListener(`click`, unhighlightGame);
@@ -16893,7 +16873,7 @@ ${Results.join(``)}
         var games, input, popup, set;
         if (!context.container.getElementsByClassName(`esgst-gt-panel`)[0]) {
             insertHtml(context.heading.lastElementChild || context.heading, `afterEnd`, `
-            <a class="esgst-gt-panel" title="Add game tags.">
+            <a class="esgst-gt-panel" title="Add game tags">
                 <i class="fa fa-tag"></i>
                 <span class="esgst-gt-tags"></span>
             </a>
@@ -16922,7 +16902,7 @@ ${Results.join(``)}
         }
     }
 
-    function saveGtTags(id, input, popup, type, callback) {
+    function saveGtTags(id, input, popup, type) {
         var games, tags;
         tags = input.value.replace(/(,\s*)+/g, function (match, p1, offset, string) {
             return (((offset === 0) || (offset == (string.length - match.length))) ? `` : `, `);
@@ -16975,7 +16955,7 @@ ${Results.join(``)}
                                     var id = info.id;
                                     var type = info.type;
                                     if (games[type][id] && ((esgst.gc_b_r && !games[type][id].bundled) || (!esgst.gc_b_r && games[type][id].bundled))) {
-                                        var key, text;
+                                        var text;
                                         if (games[type][id].bundled) {
                                             text = `Bundled`;
                                         } else {
@@ -17017,7 +16997,7 @@ ${Results.join(``)}
     }
 
     function addGcCategories(games, i, ids, n, type) {
-        var categories, category, html, id, j, numCategories, numApps, numSubs, appId, numGenres, responseJson, savedGames, text, url, value;
+        var id, savedGames, url;
         if (i < n) {
             savedGames = JSON.parse(GM_getValue(`games`));
             id = ids[i];
@@ -17045,7 +17025,7 @@ ${Results.join(``)}
 
     function getGcCategories(games, id, response, response2, type, callback) {
         createLock(`gameLock`, 300, function (deleteLock) {
-            var appId, count, i, match, n, responseHtml, responseJson, savedGames, summary, summaries, tag, tags;
+            var appId, i, match, n, responseHtml, responseJson, savedGames, summary, summaries, tag, tags;
             responseJson = JSON.parse(response.responseText)[id];
             savedGames = JSON.parse(GM_getValue(`games`));
             if (!savedGames[type][id]) {
@@ -17301,7 +17281,7 @@ ${Results.join(``)}
         Context.insertAdjacentHTML(
             "afterBegin",
             "<div class=\"MTContainer" + (SM ? " rhHidden" : "") + "\">" +
-            "    <a class=\"MTButton page_heading_btn\" title=\"Tag multiple users / games at the same times.\">" +
+            "    <a class=\"MTButton page_heading_btn\" title=\"Tag multiple users / games at the same times\">" +
             "        <i class=\"fa fa-tags\"></i>" +
             "    </a>" +
             "</div>"
@@ -17462,7 +17442,6 @@ ${Results.join(``)}
 
     function setMTCheckboxes(Element, Checkbox, Selection, Type, InsertionPosition, Position, MT) {
         Element.addEventListener("click", function () {
-            var Key, Matches, I, N, Context, MTCheckbox;
             if (Checkbox.checked) {
                 addMTCheckboxes(Selection, Type, InsertionPosition, Position, MT);
             } else {
@@ -17949,7 +17928,7 @@ ${avatar.outerHTML}
 
     function loadSMMenu(Sidebar, SMButton) {
         var Selected, Item, SMSyncFrequency, I, Container, SMGeneral, SMGiveaways, SMDiscussions, SMCommenting, SMUsers, SMOthers, SMManageData, SMRecentUsernameChanges,
-            SMCommentHistory, SMManageTags, SMGeneralFeatures, SMGiveawayFeatures, SMDiscussionFeatures, SMCommentingFeatures, SMUserGroupGamesFeatures, SMOtherFeatures, ID,
+            SMCommentHistory, SMManageTags, SMGeneralFeatures, SMGiveawayFeatures, SMDiscussionFeatures, SMCommentingFeatures, SMUserGroupGamesFeatures, SMOtherFeatures,
             SMLastSync, LastSync, SMAPIKey, SMLastBundleSync, LastBundleSync;
         Selected = Sidebar.getElementsByClassName("is-selected")[0];
         Selected.classList.remove("is-selected");
@@ -18523,7 +18502,7 @@ ${avatar.outerHTML}
     }
 
     function getSMFeature(Feature) {
-        var Menu, Checkbox, CheckboxInput, SMFeatures, Key;
+        var Menu, Checkbox, CheckboxInput, SMFeatures;
         Menu = document.createElement("div");
         var ID = Feature.id;
         Menu.insertAdjacentHTML(
@@ -18650,7 +18629,7 @@ Background: <input type="color" value="${bgColor}">
                                         }
                                     }
                                 } else if (SM.M.checked) {
-                                    var i, j, n, tags, k, numTags, saved, value;
+                                    var i, j, n, numT, saved, value;
                                     if (Key.match(/^(users|Users)$/)) {
                                         importUsersAndMerge(File, Key, SM);
                                     } else if (Key.match(/^(games|Games)$/)) {
@@ -18718,7 +18697,7 @@ Background: <input type="color" value="${bgColor}">
         });
     }
 
-    function importGiveawaysAndMerge(File, Key, SM) {
+    function importGiveawaysAndMerge(File) {
         createLock(`giveawayLock`, 300, function(deleteLock) {
             var saved = JSON.parse(GM_getValue(`giveaways`, `{}`));
             var giveaways = File.Data.giveaways;
@@ -18735,7 +18714,7 @@ Background: <input type="color" value="${bgColor}">
         });
     }
 
-    function importGiveaways(File, Key, SM) {
+    function importGiveaways(File) {
         createLock(`giveawayLock`, 300, function(deleteLock) {
             GM_setValue(`giveaways`, JSON.stringify(File.Data.giveaways));
             deleteLock();
@@ -18947,7 +18926,7 @@ Background: <input type="color" value="${bgColor}">
         }
     }
 
-    function importCommentsAndMerge(File, Key, SM) {
+    function importCommentsAndMerge(File, Key) {
         createLock(`commentLock`, 300, function(deleteLock) {
             var comments, id, key, savedComments, sgComments, stComments, subKey, type;
             savedComments = JSON.parse(GM_getValue(`comments`));
@@ -18986,7 +18965,7 @@ Background: <input type="color" value="${bgColor}">
         });
     }
 
-    function importComments(File, Key, SM) {
+    function importComments(File) {
         createLock(`commentLock`, 300, function(deleteLock) {
             GM_setValue(`comments`, JSON.stringify(File.Data.comments));
             deleteLock();
@@ -19327,20 +19306,7 @@ Background: <input type="color" value="${bgColor}">
                     GM_deleteValue(Key);
                 }
             }
-            if (SM.S.checked) {
-                for (Key in Features) {
-                    deleteSMSettings(Key, Features[Key]);
-                }
-            }
             window.alert("Deleted!");
-        }
-    }
-
-    function deleteSMSettings(Key, Feature) {
-        for (Key in Feature) {
-            if (Key != "Name") {
-                deleteSMSettings(Key, Feature[Key]);
-            }
         }
     }
 
@@ -19456,6 +19422,9 @@ Background: <input type="color" value="${bgColor}">
             if (games && games[giveaway.type][giveaway.id] && games[giveaway.type][giveaway.id].wishlisted) {
                 giveaway.wishlisted = true;
             }
+        }
+        if (giveaway.outerWrap.classList.contains(`table__row-outer-wrap`) && esgst.giveawayPath) {
+            return;
         }
         giveaway.innerWrap = giveaway.outerWrap.querySelector(`.giveaway__row-inner-wrap, .featured__inner-wrap, .table__row-inner-wrap`);
         giveaway.summary = giveaway.innerWrap.querySelector(`.giveaway__summary, .featured__summary`);
@@ -19606,7 +19575,7 @@ Background: <input type="color" value="${bgColor}">
         var button, context, html;
         context = document.getElementsByClassName(`nav__left-container`)[0];
         html = `
-            <div class="nav__button-container esgst-hidden" title="View your bookmarked giveaways.">
+            <div class="nav__button-container esgst-hidden" title="View your bookmarked giveaways">
                 <div class="nav__button">
                     <i class="fa fa-bookmark"></i>
                 </div>
@@ -19618,7 +19587,7 @@ Background: <input type="color" value="${bgColor}">
             var giveaways = JSON.parse(GM_getValue(`giveaways`, `{}`));
             for (var key in giveaways) {
                 if (giveaways[key].bookmarked) {
-                    if (Date.now() >= giveaways[key].endTime) {
+                    if (Date.now() >= giveaways[key].endTime || !giveaways[key].endTime) {
                         delete giveaways[key].bookmarked;
                     } else {
                         bookmarked.push(giveaways[key]);
@@ -19674,7 +19643,6 @@ Background: <input type="color" value="${bgColor}">
                             var heading = responseHtml.getElementsByClassName(`featured__heading`)[0];
                             var columns = heading.nextElementSibling;
                             var remaining = columns.firstElementChild;
-                            var timestamp = parseInt(remaining.lastElementChild.getAttribute(`data-timestamp`)) * 1000;
                                 var url = response.finalUrl;
                                 var gameId = container.getAttribute(`data-game-id`);
                                 var anchors = heading.getElementsByTagName(`a`);
@@ -19771,48 +19739,64 @@ ${avatar.outerHTML}
     function addGbBookmarkButton(giveaway) {
         var button;
         button = insertHtml(giveaway.headingName, `beforeBegin`, `
-            <div class="esgst-gb-button" title="Bookmark giveaway.">
+            <div class="esgst-gb-button" title="Bookmark giveaway">
                 <i class="fa fa-bookmark-o"></i>
             </div>
         `);
         button.firstElementChild.addEventListener(`click`, function() {
             button.innerHTML = `<i class="fa fa-circle-o-notch fa-spin"></i>`;
-            createLock(`giveawayLock`, 300, function(deleteLock) {
-                var giveaways;
-                giveaways = JSON.parse(GM_getValue(`giveaways`, `{}`));
-                if (!giveaways[giveaway.code]) {
-                    giveaways[giveaway.code] = {};
-                }
-                giveaways[giveaway.code].code = giveaway.code;
-                giveaways[giveaway.code].endTime = giveaway.endTime;
-                giveaways[giveaway.code].bookmarked = true;
-                GM_setValue(`giveaways`, JSON.stringify(giveaways));
-                deleteLock();
+            bookmarkGbGiveaway(giveaway, function() {
                 button.remove();
                 addGbUnbookmarkButton(giveaway);
             });
         });
     }
 
+    function bookmarkGbGiveaway(giveaway, callback) {
+        createLock(`giveawayLock`, 300, function(deleteLock) {
+            var giveaways;
+            giveaways = JSON.parse(GM_getValue(`giveaways`, `{}`));
+            if (!giveaways[giveaway.code]) {
+                giveaways[giveaway.code] = {};
+            }
+            giveaways[giveaway.code].code = giveaway.code;
+            giveaways[giveaway.code].endTime = giveaway.endTime;
+            giveaways[giveaway.code].bookmarked = true;
+            GM_setValue(`giveaways`, JSON.stringify(giveaways));
+            deleteLock();
+            if (callback) {
+                callback();
+            }
+        });
+    }
+
     function addGbUnbookmarkButton(giveaway) {
         var button;
         button = insertHtml(giveaway.headingName, `beforeBegin`, `
-            <div class="esgst-gb-button" title="Unbookmark giveaway.">
+            <div class="esgst-gb-button" title="Unbookmark giveaway">
                 <i class="fa fa-bookmark"></i>
             </div>
         `);
         button.firstElementChild.addEventListener(`click`, function() {
             button.innerHTML = `<i class="fa fa-circle-o-notch fa-spin"></i>`;
+            unbookmarkGbGiveaway(giveaway, function() {
+                button.remove();
+                addGbBookmarkButton(giveaway);
+            });
+        });
+    }
+
+    function unbookmarkGbGiveaway(giveaway, callback) {
             createLock(`giveawayLock`, 300, function(deleteLock) {
                 var giveaways;
                 giveaways = JSON.parse(GM_getValue(`giveaways`, `{}`));
                 delete giveaways[giveaway.code].bookmarked;
                 GM_setValue(`giveaways`, JSON.stringify(giveaways));
                 deleteLock();
-                button.remove();
-                addGbBookmarkButton(giveaway);
+                if (callback) {
+                    callback();
+                }
             });
-        });
     }
 
     /* Quick Giveaway Browsing */
@@ -20010,13 +19994,13 @@ ${avatar.outerHTML}
                         <div class="esgst-gf-exception-filters">
                             <div>
                                 <strong>Exception Filters:</strong>
-                                <i class="fa fa-question-circle" title="If enabled, the corresponding giveaways will not be filtered by the basic filters, but they **will** be filtered by the type/category filters."></i>
+                                <i class="fa fa-question-circle" title="If enabled, the corresponding giveaways will not be filtered by the basic filters, but they **will** be filtered by the type/category filters"></i>
                             </div>
                         </div>
                         <div>
                             <div>
                                 <strong>Legend:</strong>
-                                <i class="fa fa-question-circle" title="This legend applies to the type/category filters, except where noted."></i>
+                                <i class="fa fa-question-circle" title="This legend applies to the type/category filters, except where noted"></i>
                             </div>
                             <div class="esgst-gf-legend"><i class="fa fa-circle-o"></i> - Hide all.</div>
                             <div class="esgst-gf-legend"><i class="fa fa-circle"></i> - Show only.</div>
@@ -20103,7 +20087,7 @@ ${avatar.outerHTML}
                     genres = key === `genres`;
                     categoryFilter = insertHtml(categoryFilters, `beforeEnd`, `
                         <div class="esgst-gf-category-filter">
-                            <span>${name} ${genres ? `<i class="fa fa-question-circle" title="If disabled, no games will be filtered by genre. If enabled, only games with the listed genres will appear."></i> <input placeholder="Genre1, Genre2" type="text">` : ``}</span>
+                            <span>${name} ${genres ? `<i class="fa fa-question-circle" title="If disabled, no games will be filtered by genre; if enabled, only games with the listed genres will appear"></i> <input placeholder="Genre1, Genre2" type="text">` : ``}</span>
                         </div>
                     `);
                     saveKey = `gf_${key}${esgst.gf.type}`;
@@ -20357,7 +20341,7 @@ ${avatar.outerHTML}
                     enterElgbGiveaway(giveaway, function() {
                         mainCallback();
                         if (box && box.value) {
-                            request(`xsrf_token=${esgst.xsrfToken}&do=comment_new&description=${box.value}`, false, giveaway.url, function(response) {
+                            request(`xsrf_token=${esgst.xsrfToken}&do=comment_new&description=${box.value}`, false, giveaway.url, function() {
                                 callback();
                                 popup.opened.close();
                             });
@@ -20399,6 +20383,15 @@ ${avatar.outerHTML}
                 updateElgbButtons(responseJson.points);
                 if (esgst.egh) {
                     saveEghGame(giveaway.id, giveaway.type);
+                }
+                if (esgst.gb) {
+                    var button = giveaway.outerWrap.getElementsByClassName(`esgst-gb-button`)[0];
+                    if (button) {
+                        unbookmarkGbGiveaway(giveaway, function() {
+                            button.remove();
+                            addGbBookmarkButton(giveaway);
+                        });
+                    }
                 }
                 if (esgst.gf.filteredCount) {
                     filterGfGiveaways();
@@ -20571,7 +20564,7 @@ ${avatar.outerHTML}
     }
 
     function checkCtComments(comments, goToUnread, markRead, markUnread) {
-        var button, code, comment, i, key, n, saved, source, type;
+        var button, code, comment, i, n, saved, source, type;
         saved = JSON.parse(GM_getValue(`comments`));
         n = comments.length;
         if (n > 0) {
@@ -20655,12 +20648,9 @@ ${avatar.outerHTML}
             }
             comments[comment.type][comment.code].comments[comment.id].timestamp = comment.timestamp;
         }
-        if (esgst.ct_b) {
-            comment.comment.classList.add(`esgst-ct-comment-read`);
-        } else {
-            comment.comment.style.opacity = `0.5`;
-            setHoverOpacity(comment.comment, `1`, `0.5`);
-        }
+        comment.comment.classList.add(`esgst-ct-comment-read`);
+        comment.comment.style.opacity = `0.5`;
+        setHoverOpacity(comment.comment, `1`, `0.5`);
     }
 
     function markCtCommentUnread(comment, comments, save) {
@@ -20690,7 +20680,7 @@ ${avatar.outerHTML}
         if (!button) {
             button = insertHtml(comment.actions, `beforeEnd`, `<div class="esgst-ct-comment-button"></div>`);
         }
-        button.innerHTML = `<i class="fa fa-eye" title="Mark comment as read.">`;
+        button.innerHTML = `<i class="fa fa-eye" title="Mark comment as read">`;
         button.firstElementChild.addEventListener(`click`, function() {
             markCtCommentRead(comment, null, true);
             button.innerHTML = ``;
@@ -20702,7 +20692,7 @@ ${avatar.outerHTML}
         if (!button) {
             button = insertHtml(comment.actions, `beforeEnd`, `<div class="esgst-ct-comment-button"></div>`);
         }
-        button.innerHTML = `<i class="fa fa-eye-slash" title="Mark comment as unread.">`;
+        button.innerHTML = `<i class="fa fa-eye-slash" title="Mark comment as unread">`;
         button.firstElementChild.addEventListener(`click`, function() {
             markCtCommentUnread(comment, null, true);
             button.innerHTML = ``;
@@ -20716,10 +20706,10 @@ ${avatar.outerHTML}
             <div class="page_heading_btn esgst-heading-button" title="Go to the first unread comment of this page">
                 <i class="fa fa-comments-o"></i>
             </div>
-            <div class="page_heading_btn esgst-heading-button" title="Mark all comments in this page as read.">
+            <div class="page_heading_btn esgst-heading-button" title="Mark all comments in this page as read">
                 <i class="fa fa-eye"></i>
             </div>
-            <div class="page_heading_btn esgst-heading-button" title="Mark all comments in this page as unread.">
+            <div class="page_heading_btn esgst-heading-button" title="Mark all comments in this page as unread">
                 <i class="fa fa-eye-slash"></i>
             </div>
         `);
@@ -20776,16 +20766,16 @@ ${avatar.outerHTML}
                 <div class="esgst-heading-button esgst-hidden" title="Go to first unread comment of this discussion">
                     <i class="fa fa-comments-o"></i>
                 </div>
-                <div class="esgst-heading-button esgst-hidden" title="Mark all comments in this discussion as read.">
+                <div class="esgst-heading-button esgst-hidden" title="Mark all comments in this discussion as read">
                     <i class="fa fa-eye"></i>
                 </div>
-                <div class="esgst-heading-button esgst-hidden" title="Mark all comments in this discussion as unread.">
+                <div class="esgst-heading-button esgst-hidden" title="Mark all comments in this discussion as unread">
                     <i class="fa fa-eye-slash"></i>
                 </div>
-                <div class="esgst-heading-button esgst-hidden" title="Mark this discussion as visited.">
+                <div class="esgst-heading-button esgst-hidden" title="Mark this discussion as visited">
                     <i class="fa fa-check"></i>
                 </div>
-                <div class="esgst-heading-button esgst-hidden" title="Mark this discussion as unvisited.">
+                <div class="esgst-heading-button esgst-hidden" title="Mark this discussion as unvisited">
                     <i class="fa fa-times"></i>
                 </div>
                 <i class="fa fa-circle-o-notch fa-spin esgst-hidden"></i>
@@ -20879,12 +20869,9 @@ ${avatar.outerHTML}
                 markRead.classList.remove(`esgst-hidden`);
                 markUnread.classList.remove(`esgst-hidden`);
                 markUnvisited.classList.remove(`esgst-hidden`);
-                if (esgst.ct_b) {
-                    container.classList.add(`esgst-ct-visited`);
-                } else {
-                    container.style.opacity = `0.5`;
-                    setHoverOpacity(container, `1`, `0.5`);
-                }
+                container.classList.add(`esgst-ct-visited`);
+                container.style.opacity = `0.5`;
+                setHoverOpacity(container, `1`, `0.5`);
             });
         });
         markUnvisited.addEventListener(`click`, function() {
@@ -20912,7 +20899,7 @@ ${avatar.outerHTML}
 
     function markCtCommentsReadUnread(firstRun, goToUnread, markRead, markUnread, nextPage, url, callback) {
         request(null, true, `${url}${nextPage}`, function(response) {
-            var context, found, pagination;
+            var context, pagination;
             context = DOM.parse(response.responseText);
             loadCommentFeatures(context, goToUnread, markRead, markUnread, context);
             if ((goToUnread && !esgst.ctUnreadFound) || !goToUnread) {
@@ -20957,12 +20944,9 @@ ${avatar.outerHTML}
                     container = match.closest(`.table__row-outer-wrap, .giveaway__row-outer-wrap, .row_outer_wrap`);
                     if (esgst.ct && comments[type][code] && comments[type][code].visited && container) {
                         if ((type === `giveaways` && esgst.ct_g) || type !== `giveaways`) {
-                            if (esgst.ct_b) {
-                                container.classList.add(`esgst-ct-visited`);
-                            } else {
-                                container.style.opacity = `0.5`;
-                                setHoverOpacity(container, `1`, `0.5`);
-                            }
+                            container.classList.add(`esgst-ct-visited`);
+                            container.style.opacity = `0.5`;
+                            setHoverOpacity(container, `1`, `0.5`);
                         }
                     }
                     if (esgst.dh && type === `discussions`) {
@@ -20982,7 +20966,7 @@ ${avatar.outerHTML}
     /* Discussions Highlighter */
 
     function loadDh() {
-        var button, code, comments, container, heading, source, type;
+        var button, code, comments, container, heading, source;
         if (esgst.sg) {
             button = insertHtml(document.getElementsByClassName(`nav__absolute-dropdown`)[1], `beforeEnd`, `
                 <div class="nav__row esgst-dh-view-button">
@@ -21076,7 +21060,7 @@ ${avatar.outerHTML}
     function addDhHighlightButton(code, container, context) {
         var button;
         button = insertHtml(context, `afterBegin`, `
-            <div class="esgst-dh-button" title="Click to highlight this discussion.">
+            <div class="esgst-dh-button" title="Click to highlight this discussion">
                 <i class="fa fa-star-o"></i>
             <div>
         `);
@@ -21090,7 +21074,7 @@ ${avatar.outerHTML}
     function addDhUnhighlightButton(code, container, context) {
         var button;
         button = insertHtml(context, `afterBegin`, `
-            <div class="esgst-dh-button" title="Click to unhighlight this discussion.">
+            <div class="esgst-dh-button" title="Click to unhighlight this discussion">
                 <i class="fa fa-star"></i>
             </div>
         `);
