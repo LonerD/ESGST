@@ -1,5 +1,11 @@
 /*
- * June 14, 2017 - v6.Beta.7.1
+ * June 15, 2017 - v6.Beta.7.2
+ */
+
+* Fixed a bug in Unsent Gifts Sender that was happening while sending gifts with the option to only send gifts to users with 0 not activated/multiple wins enabled.
+
+/*
+ * June 15, 2017 - v6.Beta.7.1
  */
 
 * Fixed a bug that wasn't applying the popup class for some popups.

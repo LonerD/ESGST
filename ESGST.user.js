@@ -3,7 +3,7 @@
 // @namespace ESGST
 // @description Enhances SteamGifts and SteamTrades by adding some cool features to them.
 // @icon https://github.com/revilheart/ESGST/raw/master/Resources/esgstIcon.ico
-// @version 6.Beta.7.1
+// @version 6.Beta.7.2
 // @author revilheart
 // @contributor Royalgamer06
 // @downloadURL https://github.com/revilheart/ESGST/raw/master/ESGST.user.js
@@ -5868,7 +5868,7 @@ ${title}
                                                     createLock(`userLock`, 300, function(deleteLock) {
                                                         users = JSON.parse(GM_getValue(`users`));
                                                         users.users[steamId].namwc = namwc;
-                                                        GM_setValue(`users`, users);
+                                                        GM_setValue(`users`, JSON.stringify(users));
                                                         deleteLock();
                                                             if (namwc.results.activated && namwc.results.notMultiple) {
                                                                 sendUGSGift(UGS, Winners, Keys, I, J, N, Callback);
