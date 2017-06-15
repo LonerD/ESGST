@@ -1,4 +1,12 @@
 /*
+ * June 14, 2017 - v6.Beta.7.1
+ */
+
+* Fixed a bug that wasn't applying the popup class for some popups.
+* Fixed a bug in Enter/Leave Giveaway Button.
+* Made some optimizations to Enter/Leave Giveaway Button that should reduce memory usage when entering multiple giveaways in a row.
+
+/*
  * June 14, 2017 - v6.Beta.7.0
  */
 

@@ -3,7 +3,7 @@
 // @namespace ESGST
 // @description Enhances SteamGifts and SteamTrades by adding some cool features to them.
 // @icon https://github.com/revilheart/ESGST/raw/master/Resources/esgstIcon.ico
-// @version 6.Beta.7.0
+// @version 6.Beta.7.1
 // @author revilheart
 // @contributor Royalgamer06
 // @downloadURL https://github.com/revilheart/ESGST/raw/master/ESGST.user.js
@@ -1511,8 +1511,7 @@
                 check: esgst.giveawaysPath || esgst.userPath || esgst.giveawayPath || esgst.enteredPath,
                 hidden: true,
                 name: `Giveaway Features`,
-                load: loadGiveawayFeatures,
-                endless: true
+                load: startGiveawayFeatures
             },
             {
                 id: `mt`,
@@ -1575,6 +1574,7 @@
         esgst.endlessFeatures = [];
         esgst.gameFeatures = [];
         esgst.giveawayFeatures = [];
+        esgst.giveaways = [];
         esgst.commentFeatures = [];
         esgst.profileFeatures = [];
         for (var key in esgst.defaultValues) {
@@ -3033,7 +3033,7 @@ cursor: pointer;
 position: absolute;
 left: 0;
 top: 0;
-};
+}
 
 .esgst-popup {
 display: none;
@@ -15949,12 +15949,12 @@ ${Results.join(``)}
         }
     }
 
-    function filterUserGiveaways(context) {
-        var giveaways = getGiveaways(context);
+    function filterUserGiveaways() {
         var users = JSON.parse(GM_getValue(`users`));
-        for (var i = 0, n = giveaways.length; i < n; ++i) {
-            if (giveaways[i].creator && users.steamIds[giveaways[i].creator] && users.users[users.steamIds[giveaways[i].creator]] && ((users.users[users.steamIds[giveaways[i].creator]].uf && users.users[users.steamIds[giveaways[i].creator]].uf.giveaways) || (!users.users[users.steamIds[giveaways[i].creator]].uf && users.users[users.steamIds[giveaways[i].creator]].blacklisted && esgst.uf_g))) {
-                giveaways[i].outerWrap.remove();
+        for (var i = 0, n = esgst.giveaways.length; i < n; ++i) {
+            var giveaway = esgst.giveaways[i];
+            if (giveaway.creator && users.steamIds[giveaway.creator] && users.users[users.steamIds[giveaway.creator]] && ((users.users[users.steamIds[giveaway.creator]].uf && users.users[users.steamIds[giveaway.creator]].uf.giveaways) || (!users.users[users.steamIds[giveaway.creator]].uf && users.users[users.steamIds[giveaway.creator]].blacklisted && esgst.uf_g))) {
+                giveaway.outerWrap.remove();
             }
         }
     }
@@ -16971,7 +16971,6 @@ ${Results.join(``)}
                     games[type][id].entered = true;
                     GM_setValue(`games`, JSON.stringify(games));
                     deleteLock();
-                    loadGameFeatures(document);
                 });
             }
         }
@@ -19627,9 +19626,19 @@ Background: <input type="color" value="${bgColor}">
      * Features - Giveaways
      */
 
+    function startGiveawayFeatures() {
+        if (esgst.ochgb || esgst.ggl || esgst.gb || esgst.gwc || esgst.gwr || esgst.elgb || esgst.gwl || esgst.gf || esgst.uf) {
+            esgst.endlessFeatures.push(loadGiveawayFeatures);
+            loadGiveawayFeatures(document);
+        }
+    }
+
     function loadGiveawayFeatures(context) {
         var giveaways, i, n;
         giveaways = getGiveaways(context);
+        for (i = 0, n = giveaways.length; i < n; ++i) {
+            esgst.giveaways.push(giveaways[i]);
+        }
         for (i = 0, n = esgst.giveawayFeatures.length; i < n; ++i) {
             esgst.giveawayFeatures[i](giveaways);
         }
@@ -20029,7 +20038,9 @@ ${avatar.outerHTML}
             createLock(`giveawayLock`, 300, function(deleteLock) {
                 var giveaways;
                 giveaways = JSON.parse(GM_getValue(`giveaways`, `{}`));
-                delete giveaways[giveaway.code].bookmarked;
+                if (giveaways[giveaway.code]) {
+                    delete giveaways[giveaway.code].bookmarked;
+                }
                 GM_setValue(`giveaways`, JSON.stringify(giveaways));
                 deleteLock();
                 if (callback) {
@@ -20392,11 +20403,10 @@ ${avatar.outerHTML}
     }
 
     function filterGfGiveaways() {
-        var count, filtered, genres, giveaway, giveaways, i, j, k, key, maxKey, minKey, n, n2, n3, name;
-        giveaways = getGiveaways(document);
-        for (i = 0, n = giveaways.length; i < n; ++i) {
+        var count, filtered, genres, giveaway, i, j, k, key, maxKey, minKey, n, n2, n3, name;
+        for (i = 0, n = esgst.giveaways.length; i < n; ++i) {
             filtered = false;
-            giveaway = giveaways[i];
+            giveaway = esgst.giveaways[i];
             if (!esgst.gf.advancedSearch && ((giveaway.pinned && !esgst.gf.exceptionPinned) || (giveaway.regionRestricted && ((esgst.gf.exceptionRegionRestricted && esgst.gf.advancedSearch) || !esgst.gf.exceptionRegionRestricted)) || (giveaway.group && !esgst.gf.exceptionGroup) || (giveaway.whitelist && !esgst.gf.exceptionWhitelist) || (giveaway.wishlisted && !esgst.gf.exceptionWishlist) || ((giveaway.copies > esgst.gf.exceptionMultipleCopies) && !esgst.gf.exceptionMultiple) || (!giveaway.pinned && !giveaway.regionRestricted && !giveaway.group && !giveaway.whitelist && !giveaway.wishlisted && (giveaway.copies <= esgst.gf.exceptionMultipleCopies)))) {
                 for (j = 0, n2 = esgst.gf.basicFilters.length; !filtered && j < n2; ++j) {
                     name = esgst.gf.basicFilters[j].name;
@@ -20525,6 +20535,7 @@ ${avatar.outerHTML}
     function loadElgb() {
         if (!esgst.giveawayPath && !esgst.enteredPath) {
             esgst.giveawayFeatures.push(addElgbButtons);
+            esgst.elgbCallback = esgst.elgb_d ? checkElgbDescription : enterElgbGiveaway;
         }
     }
 
@@ -20534,30 +20545,34 @@ ${avatar.outerHTML}
         for (i = 0, n = giveaways.length; i < n; ++i) {
             giveaway = giveaways[i];
             if (!giveaway.innerWrap.getElementsByClassName(`esgst-button-set`)[0]) {
-                addElgbButton(games, giveaway);
+                if (!giveaway.ended && !giveaway.created && giveaway.level <= esgst.headerData.level && ((giveaway.id && ((games[giveaway.type][giveaway.id] && !games[giveaway.type][giveaway.id].owned) || !games[giveaway.type][giveaway.id])) || !giveaway.id)) {
+                addElgbButton(giveaway);
+                }
             }
         }
     }
 
-    function addElgbButton(games, giveaway) {
-        var callback;
-        if (!giveaway.ended && !giveaway.created && giveaway.level <= esgst.headerData.level && ((giveaway.id && ((games[giveaway.type][giveaway.id] && !games[giveaway.type][giveaway.id].owned) || !games[giveaway.type][giveaway.id])) || !giveaway.id)) {
-            if (giveaway.entered) {
-                giveaway.elgbButton = createButtonSet(`yellow`, `grey`, `fa-minus-circle`, `fa-circle-o-notch fa-spin`, `Leave`, `Leaving...`, leaveElgbGiveaway.bind(null, giveaway)).set;
+    function addElgbButton(giveaway, error) {
+        if (giveaway.elgbButton) {
+            giveaway.elgbButton.remove();
+        }
+        if (giveaway.entered) {
+            giveaway.elgbButton = createButtonSet(`yellow`, `grey`, `fa-minus-circle`, `fa-circle-o-notch fa-spin`, `Leave`, `Leaving...`, leaveElgbGiveaway.bind(null, giveaway)).set;
+            giveaway.elgbButton.removeAttribute(`title`);
+            giveaway.panel.appendChild(giveaway.elgbButton);
+        } else if (giveaway.error) {
+            giveaway.elgbButton = createButtonSet(`red`, `grey`, `fa-plus-circle`, `fa-circle-o-notch fa-spin`, `Enter`, `Entering...`, esgst.elgbCallback.bind(null, giveaway)).set;
+            giveaway.elgbButton.setAttribute(`title`, error);
+            giveaway.panel.appendChild(giveaway.elgbButton);
+        } else {
+            if (giveaway.points <= esgst.headerData.points) {
+                giveaway.elgbButton = createButtonSet(`green`, `grey`, `fa-plus-circle`, `fa-circle-o-notch fa-spin`, `Enter`, `Entering...`, esgst.elgbCallback.bind(null, giveaway)).set;
+                giveaway.elgbButton.removeAttribute(`title`);
                 giveaway.panel.appendChild(giveaway.elgbButton);
             } else {
-                callback = esgst.elgb_d ? checkElgbDescription : enterElgbGiveaway;
-                if (giveaway.points <= esgst.headerData.points) {
-                    giveaway.elgbButton = createButtonSet(`green`, `grey`, `fa-plus-circle`, `fa-circle-o-notch fa-spin`, `Enter`, `Entering...`, callback.bind(null, giveaway)).set;
-                    giveaway.panel.appendChild(giveaway.elgbButton);
-                } else {
-                    giveaway.elgbButton = createButtonSet(`red`, `grey`, `fa-plus-circle`, `fa-circle-o-notch fa-spin`, `Enter`, `Entering...`, callback.bind(null, giveaway)).set;
-                    giveaway.panel.appendChild(giveaway.elgbButton);
-                    giveaway.elgbButton.setAttribute(`data-error`, true);
-                    giveaway.elgbButton.title = `Not Enough Points`;
-                }
-                giveaway.elgbButton.setAttribute(`data-not-entered`, true);
-                giveaway.elgbButton.setAttribute(`data-points`, giveaway.points);
+                giveaway.elgbButton = createButtonSet(`red`, `grey`, `fa-plus-circle`, `fa-circle-o-notch fa-spin`, `Enter`, `Entering...`, esgst.elgbCallback.bind(null, giveaway)).set;
+                giveaway.elgbButton.setAttribute(`title`, `Not Enough Points`);
+                giveaway.panel.appendChild(giveaway.elgbButton);
             }
         }
     }
@@ -20611,15 +20626,15 @@ ${avatar.outerHTML}
             responseJson = JSON.parse(response.responseText);
             if (responseJson.type === `success`) {
                 giveaway.innerWrap.classList.add(`is-faded`);
-                giveaway.elgbButton.remove();
-                giveaway.elgbButton = createButtonSet(`yellow`, `grey`, `fa-minus-circle`, `fa-circle-o-notch fa-spin`, `Leave`, `Leaving...`, leaveElgbGiveaway.bind(null, giveaway)).set;
-                giveaway.panel.appendChild(giveaway.elgbButton);
+                giveaway.entered = true;
+                giveaway.error = false;
+                addElgbButton(giveaway);
                 esgst.headerElements.pointsContainer.textContent = responseJson.points;
                 refreshHeaderElements(document);
                 if (esgst.hr) {
                     GM_setValue(`sgRefreshedHeaderElements`, JSON.stringify(getHeaderElements()));
                 }
-                updateElgbButtons(responseJson.points);
+                updateElgbButtons();
                 if (esgst.egh) {
                     saveEghGame(giveaway.id, giveaway.type);
                 }
@@ -20637,13 +20652,9 @@ ${avatar.outerHTML}
                 }
                 callback();
             } else {
-                giveaway.elgbButton.remove();
-                giveaway.elgbButton = createButtonSet(`red`, `grey`, `fa-plus-circle`, `fa-circle-o-notch fa-spin`, `Enter`, `Entering...`, checkElgbDescription.bind(null, giveaway)).set;
-                giveaway.panel.appendChild(giveaway.elgbButton);
-                giveaway.elgbButton.setAttribute(`data-error`, true);
-                giveaway.elgbButton.setAttribute(`data-not-entered`, true);
-                giveaway.elgbButton.setAttribute(`data-points`, giveaway.points);
-                giveaway.elgbButton.title = responseJson.msg;
+                giveaway.entered = false;
+                giveaway.error = true;
+                addElgbButton(giveaway);
                 callback();
             }
         });
@@ -20651,22 +20662,19 @@ ${avatar.outerHTML}
 
     function leaveElgbGiveaway(giveaway, callback) {
         request(`xsrf_token=${esgst.xsrfToken}&do=entry_delete&code=${giveaway.code}`, false, `/ajax.php`, function(response) {
-            var enterCallback, responseJson;
+            var responseJson;
             responseJson = JSON.parse(response.responseText);
             if (responseJson.type === `success`) {
                 giveaway.innerWrap.classList.remove(`is-faded`);
-                giveaway.elgbButton.remove();
-                enterCallback = esgst.elgb_d ? checkElgbDescription : enterElgbGiveaway;
-                giveaway.elgbButton = createButtonSet(`green`, `grey`, `fa-plus-circle`, `fa-circle-o-notch fa-spin`, `Enter`, `Entering...`, enterCallback.bind(null, giveaway)).set;
-                giveaway.panel.appendChild(giveaway.elgbButton);
-                giveaway.elgbButton.setAttribute(`data-not-entered`, true);
-                giveaway.elgbButton.setAttribute(`data-points`, giveaway.points);
+                giveaway.entered = false;
+                giveaway.error = false;
+                addElgbButton(giveaway);
                 esgst.headerElements.pointsContainer.textContent = responseJson.points;
                 refreshHeaderElements(document);
                 if (esgst.hr) {
                     GM_setValue(`sgRefreshedHeaderElements`, JSON.stringify(getHeaderElements()));
                 }
-                updateElgbButtons(responseJson.points);
+                updateElgbButtons();
                 callback();
             } else {
                 callback();
@@ -20674,23 +20682,14 @@ ${avatar.outerHTML}
         });
     }
 
-    function updateElgbButtons(points) {
-        var button, buttons, i, n;
-        esgst.headerElements.points = points;
-        buttons = document.querySelectorAll(`[data-not-entered]`);
-        for (i = 0, n = buttons.length; i < n; ++i) {
-            button = buttons[i];
-            if (parseInt(button.getAttribute(`data-points`)) <= points) {
-                if (button.getAttribute(`data-error`)) {
-                    button.remove();
-                }
-            } else {
-                if (!button.getAttribute(`data-error`)) {
-                    button.remove();
-                }
+    function updateElgbButtons() {
+        var giveaway, i, n;
+        for (i = 0, n = esgst.giveaways.length; i < n; ++i) {
+            giveaway = esgst.giveaways[i];
+            if (giveaway.elgbButton && !giveaway.entered) {
+                addElgbButton(giveaway);
             }
         }
-        loadGiveawayFeatures(document);
     }
 
     /* Giveaway Winners Link */
