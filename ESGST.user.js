@@ -3,7 +3,7 @@
 // @namespace ESGST
 // @description Enhances SteamGifts and SteamTrades by adding some cool features to them.
 // @icon https://github.com/revilheart/ESGST/raw/master/Resources/esgstIcon.ico
-// @version 6.Beta.7.2
+// @version 6.Beta.8.0
 // @author revilheart
 // @contributor Royalgamer06
 // @downloadURL https://github.com/revilheart/ESGST/raw/master/ESGST.user.js
@@ -355,6 +355,7 @@
         esgst.newGiveawayPath = window.location.pathname.match(/^\/giveaways\/new/);
         esgst.newTicketPath = window.location.pathname.match(/^\/support\/tickets\/new/);
         esgst.createdPath = window.location.pathname.match(/^\/giveaways\/created/);
+        esgst.wonPath = window.location.pathname.match(/^\/giveaways\/won/);
         esgst.enteredPath = window.location.pathname.match(/^\/giveaways\/entered/);
         esgst.commentsPath = window.location.pathname.match(/^\/(giveaway\/(?!.*\/(entries|winners|groups))|discussion\/|support\/ticket\/|trade\/)/);
         esgst.accountPath = window.location.pathname.match(/^\/account/);
@@ -454,6 +455,7 @@
             elgb_d: `elgb_d`,
             elgb_rb: `elgb_rb`,
             qgb: `qgb`,
+            sal: `sal`,
             gb: `gb`,
             ggl: `ggp`,
             ochgb: `ochgb`,
@@ -823,6 +825,12 @@
                 name: `Delivered Gifts Notifier`,
                 check: getValue(`dgn`),
                 load: loadDeliveredGiftsNotifier
+            },
+            {
+                id: `sal`,
+                name: `Steam Activation Link`,
+                check: getValue(`sal`),
+                load: loadSal
             },
             {
                 id: `hfc`,
@@ -1401,7 +1409,7 @@
                     },
                     {
                         id: `gc_r`,
-                        name: `Rating`,
+                        name: `Rating (slower)`,
                         check: getValue(`gc_r`)
                     },
                     {
@@ -1484,7 +1492,7 @@
                         options: [
                             {
                                 id: `gc_g_udt`,
-                                name: `Include user-defined tags.`,
+                                name: `Include user-defined tags (slower).`,
                                 check: getValue(`gc_g_udt`)
                             }
                         ],
@@ -1811,6 +1819,7 @@
     function checkUsernameChange(users, steamId, username) {
         if (users.users[steamId].username && users.users[steamId].username !== username) {
             delete users.steamIds[users.users[steamId].username];
+            users.users[steamId].username = username;
             users.steamIds[username] = steamId;
             return true;
         }
@@ -17154,7 +17163,7 @@ ${Results.join(``)}
     }
 
     function getGcGames(games, type) {
-        var i, id, ids, n;
+        var i, id, ids, n, savedGames;
         ids = Object.keys(games);
         for (id in games) {
             for (i = 0, n = games[id].length; i < n; ++i) {
@@ -17163,41 +17172,65 @@ ${Results.join(``)}
                 }
             }
         }
-        addGcCategories(games, 0, ids, ids.length, type);
+        savedGames = JSON.parse(GM_getValue(`games`));
+        addGcCategories(games, 0, ids, ids.length, savedGames, type);
     }
 
-    function addGcCategories(games, i, ids, n, type) {
-        var id, savedGames, url;
+    function addGcCategories(games, i, ids, n, savedGames, type) {
+        var category, categories, giveaway, id, j, numCategories, url;
         if (i < n) {
-            savedGames = JSON.parse(GM_getValue(`games`));
             id = ids[i];
             if (!savedGames[type][id] || (typeof savedGames[type][id].lastCheck === `undefined`) || ((Date.now() - savedGames[type][id].lastCheck) > 604800000)) {
                 url = (type === `apps`) ? `appdetails?appids` : `packagedetails?packageids`;
                 request(null, false, `http://store.steampowered.com/api/${url}=${id}&cc=us`, function (response) {
                     if (esgst.gc_g_udt || esgst.gc_r) {
                         request(null, false, `http://store.steampowered.com/${type.slice(0, -1)}/${id}`, function (response2) {
-                            getGcCategories(games, id, response, response2, type, function () {
-                                window.setTimeout(addGcCategories, 0, games, ++i, ids, n, type);
+                            getGcCategories(games, id, response, response2, savedGames, type, function () {
+                                window.setTimeout(addGcCategories, 0, games, ++i, ids, n, savedGames, type);
                             });
                         });
                     } else {
-                        getGcCategories(games, id, response, null, type, function () {
-                            window.setTimeout(addGcCategories, 0, games, ++i, ids, n, type);
+                        getGcCategories(games, id, response, null, savedGames, type, function () {
+                            window.setTimeout(addGcCategories, 0, games, ++i, ids, n, savedGames, type);
                         });
                     }
                 });
             } else {
                 addGcCategory(games[id], savedGames[type][id]);
-                window.setTimeout(addGcCategories, 0, games, ++i, ids, n, type);
+                window.setTimeout(addGcCategories, 0, games, ++i, ids, n, savedGames, type);
             }
+        } else {
+            categories = [`bundled`, `tradingCards`, `achievements`, `multiplayer`, `steamCloud`, `linux`, `mac`, `dlc`, `genres`];
+            for (i = 0, n = esgst.giveaways.length; i < n; ++i) {
+                giveaway = esgst.giveaways[i];
+                if (!giveaway.gcReady) {
+                    for (j = 0, numCategories = categories.length; j < numCategories; ++j) {
+                        id = categories[j];
+                        category = giveaway.outerWrap.getElementsByClassName(`esgst-gc ${id}`)[0];
+                        if (category) {
+                            if (id == `genres`) {
+                                giveaway[id] = category.textContent.toLowerCase().split(/,\s/);
+                            } else {
+                                giveaway[id] = true;
+                            }
+                            giveaway.gcReady = true;
+                        }
+                    }
+                }
+            }
+            if (esgst.gf) {
+                filterGfGiveaways();
+            }
+            createLock(`gameLock`, 300, function(deleteLock) {
+                updateGames(savedGames);
+                deleteLock();
+            });
         }
     }
 
-    function getGcCategories(games, id, response, response2, type, callback) {
-        createLock(`gameLock`, 300, function (deleteLock) {
-            var appId, i, match, n, responseHtml, responseJson, savedGames, summary, summaries, tag, tags;
+    function getGcCategories(games, id, response, response2, savedGames, type, callback) {
+            var appId, i, match, n, responseHtml, responseJson, summary, summaries, tag, tags;
             responseJson = JSON.parse(response.responseText)[id];
-            savedGames = JSON.parse(GM_getValue(`games`));
             if (!savedGames[type][id]) {
                 savedGames[type][id] = {};
             }
@@ -17283,11 +17316,8 @@ ${Results.join(``)}
                 }
             }
             savedGames[type][id].lastCheck = Date.now();
-            GM_setValue(`games`, JSON.stringify(savedGames));
             addGcCategory(games[id], savedGames[type][id]);
-            deleteLock();
             callback();
-        });
     }
 
     function addGcCategory(games, savedGames) {
@@ -17424,9 +17454,6 @@ ${Results.join(``)}
             panel = games[j].container.getElementsByClassName(`esgst-gc-panel`)[0];
             if (panel && !panel.innerHTML) {
                 panel.innerHTML = html;
-                if (esgst.gf.filteredCount) {
-                    filterGfGiveaways();
-                }
             }
         }
     }
@@ -18227,7 +18254,7 @@ ${avatar.outerHTML}
         SMLastBundleSync = Container.getElementsByClassName("SMLastBundleSync")[0];
         SMAPIKey = Container.getElementsByClassName("SMAPIKey")[0];
         SMGeneralFeatures = ["fh", "fs", "fmph", "ff", "hr", "lpv", "vai", "ev", "hbs", "at", "pnot", "es"];
-        SMGiveawayFeatures = ["dgn", "hfc", "ags", "pgb", "gf", "gv", "egf", "gp", "gwc", "gwr", "elgb", "qgb", "gb", "ggl", "ochgb", "gt", "sgg", "rcvc", "ugs", "er", "gwl", "gesl", "as"];
+        SMGiveawayFeatures = ["dgn", "sal", "hfc", "ags", "pgb", "gf", "gv", "egf", "gp", "gwc", "gwr", "elgb", "qgb", "gb", "ggl", "ochgb", "gt", "sgg", "rcvc", "ugs", "er", "gwl", "gesl", "as"];
         SMDiscussionFeatures = ["adot", "dh", "mpp", "ded"];
         SMCommentingFeatures = ["ch", "ct", "cfh", "rbot", "rbp", "mr", "rfi", "rml"];
         SMUserGroupGamesFeatures = ["ap", "uh", "un", "rwscvl", "ugd", "namwc", "nrf", "swr", "luc", "sgpb", "stpb", "sgc", "uf", "wbc", "wbh", "ut", "iwh", "gh", "gs", "egh", "ggt", "gc"];
@@ -19769,21 +19796,6 @@ Background: <input type="color" value="${bgColor}">
         giveaway.pinned = giveaway.outerWrap.closest(`.pinned-giveaways__outer-wrap`);
         chance = context.getElementsByClassName(`esgst-gwc`)[0];
         giveaway.chance = chance ? parseFloat(chance.getAttribute(`data-chance`)) : 0;
-        if (esgst.gc) {
-            categories = [`bundled`, `tradingCards`, `achievements`, `multiplayer`, `steamCloud`, `linux`, `mac`, `dlc`, `genres`];
-            for (i = 0, n = categories.length; i < n; ++i) {
-                id = categories[i];
-                category = giveaway.outerWrap.getElementsByClassName(`esgst-gc ${id}`)[0];
-                if (category) {
-                    if (id == `genres`) {
-                        giveaway[id] = category.textContent.toLowerCase().split(/,\s/);
-                    } else {
-                        giveaway[id] = true;
-                    }
-                    giveaway.gcReady = true;
-                }
-            }
-        }
         return {
             giveaway: giveaway,
             data: {
@@ -19807,6 +19819,44 @@ Background: <input type="color" value="${bgColor}">
                 whitelist: giveaway.whitelist ? true : false
             }
         };
+    }
+
+    /* [SAL] Steam Activation Link */
+
+    function loadSal() {
+        if (esgst.sg && esgst.wonPath) {
+            addSalLinks(document);
+        }
+    }
+
+    function addSalLinks(context) {
+        var i, element, elements, match, n;
+        elements = context.querySelectorAll(`[data-clipboard-text]`);
+        for (i = 0, n = elements.length; i < n; ++i) {
+            element = elements[i];
+            match = element.getAttribute(`data-clipboard-text`).match(/^[\d\w]{5}(-[\d\w]{5}){2,}$/);
+            if (match) {
+                addSalLink(element, match[0]);
+            }
+        }
+    }
+
+    function addSalLink(element, match) {
+        var link, textArea;
+        link = insertHtml(element, `afterEnd`, `
+            <a href="steam://open/activateproduct" title="Activate on Steam">
+                <i class="fa fa-steam"></i>
+            </a>
+        `);
+        link.addEventListener(`click`, function () {
+            textArea = insertHtml(document.body, `beforeEnd`, `
+                <textarea></textarea>
+            `);
+            textArea.value = match;
+            textArea.select();
+            document.execCommand(`copy`);
+            textArea.remove();
+        });
     }
 
     /* Giveaway Bookmarks */
@@ -20297,7 +20347,7 @@ ${avatar.outerHTML}
                 minSaveKey = `gf_${minKey}${esgst.gf.type}`;
                 maxSaveKey = `gf_${maxKey}${esgst.gf.type}`;
                 minSavedValue = GM_getValue(minSaveKey, minValue);
-                maxSavedValue = GM_getValue(maxSavedValue, maxValue);
+                maxSavedValue = GM_getValue(maxSaveKey, maxValue);
                 esgst.gf[minKey] = minSavedValue;
                 esgst.gf[maxKey] = maxSavedValue;
                 basicFilter = insertHtml(basicFilters, `beforeEnd`, `

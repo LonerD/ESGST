@@ -1,4 +1,16 @@
 /*
+ * June 15, 2017 - v6.Beta.8.0
+ */
+
+* Fixed a bug that was not properly handling username changes (closes #176).
+* Fixed a bug in Giveaway Filters that was not applying category filters (closes #173).
+* Game Categories should now load a lot faster, unless "Rating" or "User-Defined Tags" are enabled.
+
+Added the following features:
+
+* Steam Activation Link (closes #177)
+
+/*
  * June 15, 2017 - v6.Beta.7.2
  */
 

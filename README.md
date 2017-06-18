@@ -103,6 +103,14 @@ Tested on Microsoft Edge and most of it seems to work fine, but for some reason 
 
 * [Other Info](#other-info)
 
+### Steam Activation Link
+
+`steamgifts.com/giveaways/won*`
+
+* Allows you to easily activate a won game.
+
+![](http://i.imgur.com/0hnY0yD.png)
+
 ### User Filters
 
 `steamgifts.com/*`
