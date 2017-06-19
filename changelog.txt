@@ -1,5 +1,12 @@
 /*
- * June 15, 2017 - v6.Beta.8.0
+ * June 19, 2017 - v6.Beta.8.1
+ */
+
+* Fixed a bug in Giveaway Filters that was not filtering giveaways on page load unless Game Categories was enabled.
+* Fixed a bug in Game Categories that was trying to filter giveaways on user pages.
+
+/*
+ * June 18, 2017 - v6.Beta.8.0
  */
 
 * Fixed a bug that was not properly handling username changes (closes #176).

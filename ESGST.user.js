@@ -3,7 +3,7 @@
 // @namespace ESGST
 // @description Enhances SteamGifts and SteamTrades by adding some cool features to them.
 // @icon https://github.com/revilheart/ESGST/raw/master/Resources/esgstIcon.ico
-// @version 6.Beta.8.0
+// @version 6.Beta.8.1
 // @author revilheart
 // @contributor Royalgamer06
 // @downloadURL https://github.com/revilheart/ESGST/raw/master/ESGST.user.js
@@ -416,7 +416,6 @@
         esgst.apPopouts = {};
         esgst.users = {};
         esgst.games = {};
-        esgst.giveaways = [];
         esgst.oldValues = {
             sm_ebd: `SM_D`,
             fh: `FE_H`,
@@ -17218,7 +17217,7 @@ ${Results.join(``)}
                     }
                 }
             }
-            if (esgst.gf) {
+            if (esgst.gf.filteredCount) {
                 filterGfGiveaways();
             }
             createLock(`gameLock`, 300, function(deleteLock) {
@@ -19864,7 +19863,6 @@ Background: <input type="color" value="${bgColor}">
     function loadGb() {
         if (esgst.sg) {
             esgst.giveawayFeatures.push(getGbGiveaways);
-            getGbGiveaways(document);
             addGbButton();
         }
     }
@@ -20435,8 +20433,7 @@ ${avatar.outerHTML}
             }
         }
         button.addEventListener(`click`, toggleGfContainer.bind(null, collapse, expand, filters));
-        esgst.endlessFeatures.push(filterGfGiveaways);
-        filterGfGiveaways();
+        esgst.giveawayFeatures.push(filterGfGiveaways);
     }
 
     function saveGfValue(key, saveKey, checkbox, event) {
