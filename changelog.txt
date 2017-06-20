@@ -1,4 +1,13 @@
 /*
+ * June 20, 2017 - v6.Beta.8.2
+ */
+
+* Fixed some issues with where some giveaway features were being enabled.
+* Fixed a bug in Giveaway Filters that was not filtering giveaways by chance.
+* Added a loading icon while marking comments as read/unread in Comment Tracker.
+* All game features are now supported for discussion tables (works well with RaCharts).
+
+/*
  * June 19, 2017 - v6.Beta.8.1
  */
 
