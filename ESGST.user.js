@@ -3,7 +3,7 @@
 // @namespace ESGST
 // @description Enhances SteamGifts and SteamTrades by adding some cool features to them.
 // @icon https://github.com/revilheart/ESGST/raw/master/Resources/esgstIcon.ico
-// @version 6.Beta.10.0
+// @version 6.Beta.10.1
 // @author revilheart
 // @contributor Royalgamer06
 // @downloadURL https://github.com/revilheart/ESGST/raw/master/ESGST.user.js
@@ -3836,8 +3836,16 @@ margin: 0;
             "    background-color: " + Positive.replace(/rgb/, "rgba").replace(/\)/, ", 0.2)") + " !important;" +
             "    padding: 5px !important;" +
             "}" +
-            ".esgst-gb-highlighted {" +
-            "    background-color: " + Negative.replace(/rgb/, "rgba").replace(/\)/, ", 0.8)") + " !important;" +
+            ".esgst-gb-highlighted.ending {" +
+            "    background-color: rgba(236, 133, 131, 0.8) !important;" +
+            "    background-image: none !important;" +
+            "}" +
+            ".esgst-gb-highlighted.started {" +
+            "    background-color: rgba(150, 196, 104, 0.8) !important;" +
+            "    background-image: none !important;" +
+            "}" +
+            ".esgst-gb-highlighted.ending.started {" +
+            "    background-color: rgba(193, 165, 118, 0.8) !important;" +
             "    background-image: none !important;" +
             "}" +
             ".esgst-ct-comment-read:hover, .esgst-ct-visited:hover {" +
@@ -18954,7 +18962,7 @@ Background: <input type="color" value="${bgColor}">
                 </div>
             `);
             input.firstElementChild.addEventListener(`change`, function() {
-                GM_setValue(`gbHours`, input.value);
+                GM_setValue(`gbHours`, input.firstElementChild.value);
             });
         }
         if (CheckboxInput.checked && SMFeatures.children.length) {
@@ -19940,7 +19948,7 @@ Background: <input type="color" value="${bgColor}">
                 giveaway.creator = giveaway.startTimeColumn.lastElementChild.textContent;
             }
             giveaway.winners = giveaway.columns.textContent.match(/No winners/) ? 0 : giveaway.copies;
-        } else if ((!esgst.archivePath && !main) || !esgst.archivePath) {
+        } else {
             giveaway.started = true;
         }
         if (esgst.userPath && !ugd) {
@@ -20010,6 +20018,7 @@ Background: <input type="color" value="${bgColor}">
                 points: giveaway.points,
                 endTime: giveaway.endTime,
                 startTime: giveaway.startTime,
+                started: giveaway.started,
                 creator: giveaway.creator,
                 winners: giveaway.winners,
                 entries: giveaway.entries,
@@ -20081,19 +20090,50 @@ Background: <input type="color" value="${bgColor}">
             </div>
         `;
         button = insertHtml(context, `beforeEnd`, html);
-        var bookmarked = [], endingSoon = 0;
+        var bookmarked = [], endingSoon = 1, started = 0, ending = 0;
         createLock(`giveawayLock`, 300, function(deleteLock) {
             var giveaways = JSON.parse(GM_getValue(`giveaways`, `{}`));
+            if (esgst.gb_h) {
+                button.classList.add(`esgst-gb-highlighted`);
+            }
             for (var key in giveaways) {
                 if (giveaways[key].bookmarked) {
                     if (Date.now() >= giveaways[key].endTime || !giveaways[key].endTime) {
-                        delete giveaways[key].bookmarked;
+                        if (giveaways[key].started) {
+                            delete giveaways[key].bookmarked;
+                        } else {
+                            bookmarked.push(giveaways[key]);
+                            ++started;
+                            if (esgst.gb_h) {
+                                button.classList.add(`started`);
+                            }
+                        }
                     } else {
-                        bookmarked.push(giveaways[key]);
-                        endingSoon = giveaways[key].endTime - Date.now() - (GM_getValue(`gbHours`, 1) * 3600000);
+                        if (giveaways[key].started) {
+                            bookmarked.push(giveaways[key]);
+                            endingSoon = giveaways[key].endTime - Date.now() - (GM_getValue(`gbHours`, 1) * 3600000);
+                            if (endingSoon <= 0) {
+                                ++ending;
+                            }
+                        }
                     }
                 }
             }
+            var title;
+            if (started || ending) {
+                if (started) {
+                    if (ending) {
+                        title = `(${started} started - click to update them, ${ending} ending)`;
+                    } else {
+                        title = `(${started} started - click to update them)`;
+                    }
+                } else {
+                    title = `(${ending} ending)`;
+                }
+            } else {
+                title = ``;
+            }
+            button.title = `${button.title} ${title}`;
             if (bookmarked.length) {
                 bookmarked.sort(function(a, b) {
                     if (a.endTime > b.endTime) {
@@ -20105,8 +20145,8 @@ Background: <input type="color" value="${bgColor}">
                     }
                 });
                 button.classList.remove(`esgst-hidden`);
-                if (esgst.gb_h && endingSoon <= 0) {
-                    button.classList.add(`esgst-gb-highlighted`);
+                if (esgst.gb_h && ending > 0) {
+                    button.classList.add(`ending`);
                 }
             }
             GM_setValue(`giveaways`, JSON.stringify(giveaways));
@@ -20136,12 +20176,17 @@ Background: <input type="color" value="${bgColor}">
         if (i < n) {
             if (bookmarked[i]) {
                     request(null, true, `/giveaway/${bookmarked[i].code}/`, function (response) {
+                        var endTime;
                         var responseHtml = DOM.parse(response.responseText);
                         var container = responseHtml.getElementsByClassName(`featured__outer-wrap--giveaway`)[0];
                         if (container) {
                             var heading = responseHtml.getElementsByClassName(`featured__heading`)[0];
                             var columns = heading.nextElementSibling;
                             var remaining = columns.firstElementChild;
+                            endTime = 0;
+                            if (!bookmarked[i].started && !remaining.textContent.match(/Begins/)) {
+                                endTime = parseInt(remaining.lastElementChild.getAttribute(`data-timestamp`)) * 1e3;
+                            }
                                 var url = response.finalUrl;
                                 var gameId = container.getAttribute(`data-game-id`);
                                 var anchors = heading.getElementsByTagName(`a`);
@@ -20173,7 +20218,6 @@ Background: <input type="color" value="${bgColor}">
                                     element = element.nextElementSibling;
                                 }
                                 var counts = responseHtml.getElementsByClassName(`sidebar__navigation__item__count`);
-                            if (counts.length > 1) {
                                 var image = responseHtml.getElementsByClassName(`global__image-outer-wrap--game-large`)[0].firstElementChild.getAttribute(`src`);
                                 var popupHtml = `
 <div><div class="giveaway__row-outer-wrap" data-game-id="${gameId}">
@@ -20188,7 +20232,7 @@ ${columns.innerHTML}
 <div class="giveaway__links">
 <a href="${url}/entries">
 <i class="fa fa-tag"></i>
-<span>${counts[1].textContent} entries</span>
+<span>${(counts[1] && counts[1].textContent) || 0} entries</span>
 </a>
 <a href="${url}/comments">
 <i class="fa fa-comment"></i>
@@ -20205,9 +20249,19 @@ ${avatar.outerHTML}
 `;
                                 gbGiveaways.insertAdjacentHTML(`beforeEnd`, popupHtml);
                                 loadEndlessFeatures(gbGiveaways.lastElementChild);
-                                popup.reposition();
-                            }
-                                window.setTimeout(loadGbGiveaways, 0, ++i, n, bookmarked, gbGiveaways, popup, callback);
+                                popup.reposition();console.log(endTime);
+                                if (endTime > 0) {
+                                    createLock(`giveawayLock`, 300, function (deleteLock) {
+                                        var giveaways = JSON.parse(GM_getValue(`giveaways`));
+                                        giveaways[bookmarked[i].code].started = true;
+                                        giveaways[bookmarked[i].code].endTime = endTime;
+                                        GM_setValue(`giveaways`, JSON.stringify(giveaways));
+                                        deleteLock();
+                                        window.setTimeout(loadGbGiveaways, 0, ++i, n, bookmarked, gbGiveaways, popup, callback);
+                                    });
+                                } else {
+                                    window.setTimeout(loadGbGiveaways, 0, ++i, n, bookmarked, gbGiveaways, popup, callback);
+                                }
                             } else {
                                 window.setTimeout(loadGbGiveaways, 0, ++i, n, bookmarked, gbGiveaways, popup, callback);
                             }
@@ -20225,7 +20279,7 @@ ${avatar.outerHTML}
         var savedGiveaways = JSON.parse(GM_getValue(`giveaways`, `{}`));
         for (var i = 0, n = giveaways.length; i < n; ++i) {
             var giveaway = giveaways[i];
-            if (giveaway.started && giveaway.creator !== GM_getValue(`Username`) && !giveaway.ended && !giveaway.entered && giveaway.url && !giveaway.innerWrap.getElementsByClassName(`esgst-gb-button`)[0]) {
+            if (((esgst.archivePath && !main) || !esgst.archivePath) && giveaway.creator !== GM_getValue(`Username`) && !giveaway.ended && !giveaway.entered && giveaway.url && !giveaway.innerWrap.getElementsByClassName(`esgst-gb-button`)[0]) {
                 if (savedGiveaways[giveaway.code] && savedGiveaways[giveaway.code].bookmarked) {
                     addGbUnbookmarkButton(giveaway);
                 } else {
@@ -20261,6 +20315,7 @@ ${avatar.outerHTML}
             }
             giveaways[giveaway.code].code = giveaway.code;
             giveaways[giveaway.code].endTime = giveaway.endTime;
+            giveaways[giveaway.code].started = giveaway.started;
             giveaways[giveaway.code].bookmarked = true;
             GM_setValue(`giveaways`, JSON.stringify(giveaways));
             deleteLock();

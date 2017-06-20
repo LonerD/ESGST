@@ -1,4 +1,11 @@
 /*
+ * June 20, 2017 - v6.Beta.10.1
+ */
+
+* Fixed a bug that was not saving the hours for Giveaway Bookmarks correctly from the settings menu.
+* Giveaway Bookmarks now works with giveaways that have not started yet. Here's more info about it: giveaways that have not started yet will not appear in the list of bookmarked giveaways; instead, they will stay in a sort of hidden state until they start; when they start, the header bookmark button will turn green, indicating that you must open the list of bookmarked giveaways so that the started giveaways can be updated with their end times; when giveaways are about to end, the button will continue to turn red as before, but if there are both started and ending giveaways, the button will be colored with a brown-ish color; hovering over the button also gives you more details about how many giveaways have started and/or are ending.
+
+/*
  * June 20, 2017 - v6.Beta.10.0
  */
 

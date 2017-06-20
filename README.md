@@ -143,6 +143,7 @@ Tested on Microsoft Edge and most of it seems to work fine, but for some reason 
 
 * Allows you to bookmark giveaways to enter later.
 * You can enable an option to highlight the button if a giveaway is about to end, given a certain amount of hours specified in the settings menu.
+* Giveaways that have not started yet will not appear in the list of bookmarked giveaways. Instead, they will stay in a sort of hidden state until they start. When they start, the header bookmark button will turn green, indicating that you must open the list of bookmarked giveaways so that the started giveaways can be updated with their end times. When giveaways are about to end, the button will red. If there are both started and ending giveaways, the button will be colored with a brown-ish color. Hovering over the button also gives you more details about how many giveaways have started and/or are ending.
 
 ![](http://i.imgur.com/6e8UyL3.png)
 ![](http://i.imgur.com/kNxEDZV.png)
