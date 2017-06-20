@@ -1,4 +1,14 @@
 /*
+ * June 20, 2017 - v6.Beta.9.0
+ */
+
+* Fixed a bug in Comment Tracker that was not correctly going to the first unread comment of a page (closes #185).
+
+Added the following features:
+
+* Whitelist/Blacklist Sorter - Must sync through the settings menu for it to work properly (closes #46).
+
+/*
  * June 20, 2017 - v6.Beta.8.3
  */
 

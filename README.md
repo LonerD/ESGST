@@ -103,6 +103,14 @@ Tested on Microsoft Edge and most of it seems to work fine, but for some reason 
 
 * [Other Info](#other-info)
 
+### Whitelist/Blacklist Sorter
+
+`steamgifts.com/account/manage/whitelist|blacklist/*`
+
+* Allows you to view your whitelist/blacklist sorted by added date, both from oldest to newest and from newest to oldest.
+
+![](http://i.imgur.com/Vyr1LWi.png)
+
 ### Steam Activation Link
 
 `steamgifts.com/giveaways/won*`

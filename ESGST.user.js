@@ -3,7 +3,7 @@
 // @namespace ESGST
 // @description Enhances SteamGifts and SteamTrades by adding some cool features to them.
 // @icon https://github.com/revilheart/ESGST/raw/master/Resources/esgstIcon.ico
-// @version 6.Beta.8.3
+// @version 6.Beta.9.0
 // @author revilheart
 // @contributor Royalgamer06
 // @downloadURL https://github.com/revilheart/ESGST/raw/master/ESGST.user.js
@@ -364,6 +364,8 @@
         esgst.enteredPath = window.location.pathname.match(/^\/giveaways\/entered/);
         esgst.commentsPath = window.location.pathname.match(/^\/(giveaway\/(?!.*\/(entries|winners|groups))|discussion\/|support\/ticket\/|trade\/)/);
         esgst.accountPath = window.location.pathname.match(/^\/account/);
+        esgst.whitelistPath = window.location.pathname.match(/^\/account\/manage\/whitelist/);
+        esgst.blacklistPath = window.location.pathname.match(/^\/account\/manage\/blacklist/);
         esgst.inboxPath = window.location.pathname.match(/^\/messages/);
         esgst.groupsPath = window.location.pathname.match(/^\/account\/steam\/groups/);
         esgst.menuPath = window.location.hash.match(/#ESGST/);
@@ -470,6 +472,7 @@
             er: `ER`,
             er_s: `ER_S`,
             adot: `ADOT`,
+            wbs: `wbs`,
             dh: `DH`,
             mpp: `MPP`,
             mpp_fv: `MPP_FV`,
@@ -1341,6 +1344,12 @@
                 load: loadWhitelistBlacklistChecker
             },
             {
+                id: `wbs`,
+                name: `Whitelist/Blacklist Sorter`,
+                check: getValue(`wbs`),
+                load: loadWbs
+            },
+            {
                 id: `wbh`,
                 name: `Whitelist/Blacklist Highlighter`,
                 options: [
@@ -2088,7 +2097,7 @@
                     delete SavedUsers.users[key].whitelisted;
                     delete SavedUsers.users[key].whitelistedDate;
                     delete SavedUsers.users[key].blacklisted;
-                    delete SavedUsers.users[key].blacklistedData;
+                    delete SavedUsers.users[key].blacklistedDate;
                 }
                 GM_setValue(`users`, JSON.stringify(SavedUsers));
                 deleteLock();
@@ -2129,9 +2138,11 @@
             if (I < N) {
                 var username = Matches[I].getElementsByClassName(`table__column__heading`)[0].textContent;
                 var date = parseInt(Matches[I].querySelector(`[data-timestamp]`).getAttribute(`data-timestamp`)) * 1e3;
+                var id = Matches[I].querySelector(`[name="child_user_id"]`).value;
                 createLock(`userLock`, 300, function(deleteLock) {
                     var users = JSON.parse(GM_getValue(`users`));
                     getSteamId(null, null, username, users, function(steamId) {
+                        users.users[steamId].id = id;
                         users.users[steamId][Key] = true;
                         users.users[steamId][Key + "Date"] = date;
                         GM_setValue(`users`, JSON.stringify(users));
@@ -3102,6 +3113,9 @@ text-align: left;
 .esgst-hidden {
 display: none !important;
 }
+.esgst-clickable {
+cursor: pointer;
+}
 
 .fa img {
 height: 14px;
@@ -3901,8 +3915,10 @@ margin: 0;
             hash = window.location.hash;
         }
         ID = hash.replace(/#/, "");
-        if (ID && !window.location.pathname.match(/^\/account/)) {
-            if (!Element) Element = document.getElementById(ID);
+        if ((ID || Element) && !window.location.pathname.match(/^\/account/)) {
+            if (!Element && ID) {
+                Element = document.getElementById(ID);
+            }
             if (Element) {
                 Top = Element.offsetTop;
                 window.scrollTo(0, Top);
@@ -16115,6 +16131,128 @@ ${Results.join(``)}
         }
     }
 
+    /* [WBS] Whitelist/Blacklist Sorter */
+
+    function loadWbs() {
+        if (esgst.whitelistPath) {
+            addWbsButton(`whitelistedDate`, `whitelist`, `whitelisted`);
+        } else if (esgst.blacklistPath) {
+            addWbsButton(`blacklistedDate`, `blacklist`, `blacklisted`);
+        }
+    }
+
+    function addWbsButton(dateKey, key, saveKey) {
+        var sortAscButton, sortDescButton;
+        sortAscButton = insertHtml(esgst.mainPageHeading, `afterBegin`, `
+            <div class="esgst-heading-button" title="Sort by added date from oldest to newest">
+                <i class="fa fa-sort-amount-asc"></i>
+            </div>
+            <div class="esgst-heading-button" title="Sort by added date from newest to oldest">
+                <i class="fa fa-sort-amount-desc"></i>
+            </div>
+        `);
+        sortDescButton = sortAscButton.nextElementSibling;
+        sortAscButton.addEventListener(`click`, function () {
+             sortWbsList(true, dateKey, `fa-sort-amount-asc`, key, saveKey, `Oldest to newest ${saveKey} users:`);
+        });
+        sortDescButton.addEventListener(`click`, function () {
+             sortWbsList(false, dateKey, `fa-sort-amount-desc`, key, saveKey, `Newest to oldest ${saveKey} users:`);
+        });
+    }
+
+    function sortWbsList(asc, dateKey, icon, key, saveKey, title) {
+        var i, n, popup, row, rows, savedUsers, steamId, table, user, users;
+        users = [];
+        savedUsers = JSON.parse(GM_getValue(`users`)).users;
+        for (steamId in savedUsers) {
+            if (savedUsers[steamId][saveKey]) {
+                users.push({
+                    steamId: steamId,
+                    user: savedUsers[steamId]
+                });
+            }
+        }
+        users.sort(function (a, b) {
+            if (a.user[dateKey] < b.user[dateKey]) {
+                if (asc) {
+                    return -1;
+                } else {
+                    return 1;
+                }
+            } else if (a.user[dateKey] > b.user[dateKey]) {
+                if (asc) {
+                    return 1;
+                } else {
+                    return -1;
+                }
+            } else {
+                return 0;
+            }
+        });
+        popup = createPopup_v6(icon, title, true);
+        table = insertHtml(popup.description, `beforeEnd`, `
+            <div class="esgst-text-left table">
+                <div class="table__heading">
+		        <div class="table__column--width-fill">User</div>
+		        <div class="table__column--width-small text-center">Added</div>
+					<div class="table__column--width-small text-center">Remove</div>
+				</div>
+                <div class="table__rows"></div>
+            </div>
+        `);
+        rows = table.lastElementChild;
+        for (i = 0, n = users.length; i < n; ++i) {
+            user = users[i].user;
+            steamId = users[i].steamId;
+            row = insertHtml(rows, `beforeEnd`, `
+                <div class="table__row-outer-wrap">
+                    <div class="table__row-inner-wrap">
+                        <div class="table__column--width-fill">
+                            <a class="table__column__heading" href="/user/${user.username}">${user.username}</a>
+                        </div>
+                        <div class="table__column--width-small text-center">${getTimestamp(user[dateKey] / 1e3)}</div>
+                        <div class="table__column--width-small text-center">
+                            <div class="table__remove-default esgst-clickable">
+                                <i class="icon-red fa fa-times-circle"></i>
+                                <span class="table__column__secondary-link">Remove</span>
+                            </div>
+		            		<div class="table__remove-loading esgst-hidden">
+                                <i class="fa fa-refresh fa-spin"></i> Removing...
+                            </div>
+						    <div class="table__remove-complete esgst-hidden">
+                                <i class="fa fa-times-circle"></i> Removed
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `);
+            setWbsRemove(dateKey, key, row, saveKey, steamId, user);
+        }
+        loadEndlessFeatures(table);
+        popup.open();
+    }
+
+    function setWbsRemove(dateKey, key, row, saveKey, steamId, user) {
+        var removeButton, removedButton, removingButton, savedUsers;
+        removeButton = row.firstElementChild.lastElementChild.firstElementChild;
+        removingButton = removeButton.nextElementSibling;
+        removedButton = removingButton.nextElementSibling;
+        removeButton.addEventListener(`click`, function () {
+            removeButton.classList.add(`esgst-hidden`);
+            removingButton.classList.remove(`esgst-hidden`);
+            request(`xsrf_token=${esgst.xsrfToken}&do=${key}&action=delete&child_user_id=${user.id}`, false, `/ajax.php`, function () {
+                createLock(`userLock`, 300, function (deleteLock) {
+                    savedUsers = JSON.parse(GM_getValue(`users`));
+                    delete savedUsers.users[steamId][saveKey];
+                    delete savedUsers.users[steamId][dateKey];
+                    GM_setValue(`users`, JSON.stringify(savedUsers));
+                    removingButton.classList.add(`esgst-hidden`);
+                    removedButton.classList.remove(`esgst-hidden`);
+                });
+            });
+        });
+    }
+
     /* Whitelist/Blacklist Checker */
 
     function loadWhitelistBlacklistChecker() {
@@ -18294,7 +18432,7 @@ ${avatar.outerHTML}
         SMGiveawayFeatures = ["dgn", "sal", "hfc", "ags", "pgb", "gf", "gv", "egf", "gp", "gwc", "gwr", "elgb", "qgb", "gb", "ggl", "ochgb", "gt", "sgg", "rcvc", "ugs", "er", "gwl", "gesl", "as"];
         SMDiscussionFeatures = ["adot", "dh", "mpp", "ded"];
         SMCommentingFeatures = ["ch", "ct", "cfh", "rbot", "rbp", "mr", "rfi", "rml"];
-        SMUserGroupGamesFeatures = ["ap", "uh", "un", "rwscvl", "ugd", "namwc", "nrf", "swr", "luc", "sgpb", "stpb", "sgc", "uf", "wbc", "wbh", "ut", "iwh", "gh", "gs", "egh", "ggt", "gc"];
+        SMUserGroupGamesFeatures = ["ap", "uh", "un", "rwscvl", "ugd", "namwc", "nrf", "swr", "luc", "sgpb", "stpb", "sgc", "uf", "wbs", "wbc", "wbh", "ut", "iwh", "gh", "gs", "egh", "ggt", "gc"];
         SMOtherFeatures = ["sm_ebd", "sm_hb", "ged"];
         for (var i = 0, n = esgst.features.length; i < n; ++i) {
             var id = esgst.features[i].id;
@@ -21585,6 +21723,14 @@ ${avatar.outerHTML}
                 Context.insertAdjacentHTML("beforeEnd", "<a class=\"comment__actions__button RMLLink\" href=\"#" + ID + "\">@" + Username + "</a>");
             }
         }
+    }
+
+    /*
+     * Discussion Features
+     */
+
+    function getDiscussions(context) {
+        
     }
 
 })();
