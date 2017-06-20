@@ -3,7 +3,7 @@
 // @namespace ESGST
 // @description Enhances SteamGifts and SteamTrades by adding some cool features to them.
 // @icon https://github.com/revilheart/ESGST/raw/master/Resources/esgstIcon.ico
-// @version 6.Beta.8.2
+// @version 6.Beta.8.3
 // @author revilheart
 // @contributor Royalgamer06
 // @downloadURL https://github.com/revilheart/ESGST/raw/master/ESGST.user.js
@@ -284,6 +284,11 @@
         updateCommentHistoryStorageToV6();
         updateCommentStorageToV6();
         addStyles();
+        if (window.location.pathname.match(/^\/discussion\/TDyzv\//)) {
+            if (document.querySelector(`[href*="ESGST-currentVersion"]`).getAttribute(`href`).match(/currentVersion-(.+)/)[1] !== GM_info.script.version) {
+                window.alert(`You are not using the latest ESGST version. Please update before reporting any bugs and make sure the bugs still exist in the latest version.`);
+            }
+        }
         checkNewVersion();
         esgst.sg = window.location.hostname.match(/www.steamgifts.com/);
         esgst.st = window.location.hostname.match(/www.steamtrades.com/);
@@ -19695,8 +19700,10 @@ Background: <input type="color" value="${bgColor}">
     function loadGiveawayFeatures(context, main) {
         var giveaways, i, n;
         giveaways = getGiveaways(context);
-        for (i = 0, n = giveaways.length; i < n; ++i) {
-            esgst.giveaways.push(giveaways[i]);
+        if (main) {
+            for (i = 0, n = giveaways.length; i < n; ++i) {
+                esgst.giveaways.push(giveaways[i]);
+            }
         }
         for (i = 0, n = esgst.giveawayFeatures.length; i < n; ++i) {
             esgst.giveawayFeatures[i](giveaways, main);
@@ -19820,7 +19827,10 @@ Background: <input type="color" value="${bgColor}">
             }
         }
         if (!giveaway.entriesLink) {
-            giveaway.entries = parseInt((giveaway.panel || giveaway.innerWrap.firstElementChild.nextElementSibling).nextElementSibling.textContent.replace(/,/g, ``));
+            var ct = giveaway.panel || giveaway.innerWrap.firstElementChild.nextElementSibling;
+            if (ct.nextElementSibling) {
+                giveaway.entries = parseInt(ct.nextElementSibling.textContent.replace(/,/g, ``));
+            }
         }
         giveaway.levelColumn = giveaway.outerWrap.querySelector(`.giveaway__column--contributor-level, .featured__column--contributor-level`);
         giveaway.level = giveaway.levelColumn ? parseInt(giveaway.levelColumn.textContent.match(/\d+/)[0]) : 0;
@@ -20553,7 +20563,7 @@ ${avatar.outerHTML}
 
     function addGwcChances(giveaways, main) {
         var giveaway, i, n;
-        if (((esgst.createdPath || esgst.wonPath) && !main) || (!esgst.createdPath && !esgst.wonPath && main)) {
+        if (((esgst.createdPath || esgst.wonPath || esgst.newGiveawayPath) && !main) || (!esgst.createdPath && !esgst.wonPath && !esgst.newGiveawayPath && main)) {
         for (i = 0, n = giveaways.length; i < n; ++i) {
             giveaway = giveaways[i];
             if (!giveaway.innerWrap.getElementsByClassName(`esgst-gwc`)[0]) {
@@ -20589,7 +20599,7 @@ ${avatar.outerHTML}
 
     function addGwrRatios(giveaways, main) {
         var giveaway, i, n;
-        if (((esgst.createdPath || esgst.wonPath) && !main) || (!esgst.createdPath && !esgst.wonPath && main)) {
+        if (((esgst.createdPath || esgst.wonPath || esgst.newGiveawayPath) && !main) || (!esgst.createdPath && !esgst.wonPath && !esgst.newGiveawayPath && main)) {
         for (i = 0, n = giveaways.length; i < n; ++i) {
             giveaway = giveaways[i];
             if (!giveaway.innerWrap.getElementsByClassName(`esgst-gwr`)[0]) {
@@ -20823,12 +20833,15 @@ ${avatar.outerHTML}
     }
 
     function getComments(context, mainContext) {
-        var comments, i, matches, n, sourceLink;
+        var comment, comments, i, matches, n, sourceLink;
         comments = [];
         matches = context.querySelectorAll(`:not(.comment--submit) > .comment__parent, .comment__child, .comment_inner`);
         sourceLink = mainContext.querySelector(`.page__heading__breadcrumbs a[href*="/giveaway/"], .page__heading__breadcrumbs a[href*="/discussion/"], .page__heading__breadcrumbs a[href*="/ticket/"], .page_heading_breadcrumbs a[href*="/trade/"]`);
         for (i = 0, n = matches.length; i < n; ++i) {
-            comments.push(getCommentInfo(matches[i], sourceLink));
+            comment = getCommentInfo(matches[i], sourceLink);
+            if (comment) {
+                comments.push(comment);
+            }
         }
         return comments;
     }
@@ -20852,13 +20865,17 @@ ${avatar.outerHTML}
             } else {
                 source = comment.actions.querySelector(`[href*="/trade/"]`).getAttribute(`href`);
             }
-        } else {
+        } else if (sourceLink) {
             source = sourceLink.getAttribute(`href`);
         }
-        source = source.match(/(giveaway|discussion|ticket|trade)\/(.+?)(\/.*)?$/);
-        comment.type = `${source[1]}s`;
-        comment.code = source[2];
-        return comment;
+        if (source) {
+            source = source.match(/(giveaway|discussion|ticket|trade)\/(.+?)(\/.*)?$/);
+            comment.type = `${source[1]}s`;
+            comment.code = source[2];
+            return comment;
+        } else {
+            return null;
+        }
     }
 
     /* Comment Tracker */

@@ -1,4 +1,13 @@
 /*
+ * June 20, 2017 - v6.Beta.8.3
+ */
+
+* Fixed a bug that was happening in the new giveaway page (closes #183).
+* Every time you visit the ESGST discussion, the script will now check if you are on the latest version by checking for a hidden element in the OP (no requests required) and will give you an alert if you aren't (closes #147).
+* Fixed a bug in Giveaway Filters that was filtering giveaways from Giveaway Bookmarks (closes #169).
+* Fixed a bug in Comment History that was happening when loading the history (closes #182).
+
+/*
  * June 20, 2017 - v6.Beta.8.2
  */
 
