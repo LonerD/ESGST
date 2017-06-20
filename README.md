@@ -103,6 +103,14 @@ Tested on Microsoft Edge and most of it seems to work fine, but for some reason 
 
 * [Other Info](#other-info)
 
+### Discussions Sorter
+
+`steamgifts.com/discussions/*`
+
+* Allows you to sort discussions by creation date (from newest to oldest).
+
+![](http://i.imgur.com/pMAoVq9.png)
+
 ### Whitelist/Blacklist Sorter
 
 `steamgifts.com/account/manage/whitelist|blacklist/*`

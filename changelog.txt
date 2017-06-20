@@ -1,4 +1,16 @@
 /*
+ * June 20, 2017 - v6.Beta.10.0
+ */
+
+* Fixed more bugs for giveaway features being enabled in places where they shouldn't (closes #186).
+* Added a sorting feature to Giveaway Winning Chance (closes #44).
+* Disabled Giveaway Bookmarks for giveaways that have not started yet because the feature is not configured to work well with them and will always alert that they are ending (I'll figure out a way to make it work later).
+
+Added the following features:
+
+* Discussions Sorter
+
+/*
  * June 20, 2017 - v6.Beta.9.0
  */
 

@@ -3,7 +3,7 @@
 // @namespace ESGST
 // @description Enhances SteamGifts and SteamTrades by adding some cool features to them.
 // @icon https://github.com/revilheart/ESGST/raw/master/Resources/esgstIcon.ico
-// @version 6.Beta.9.0
+// @version 6.Beta.10.0
 // @author revilheart
 // @contributor Royalgamer06
 // @downloadURL https://github.com/revilheart/ESGST/raw/master/ESGST.user.js
@@ -359,6 +359,7 @@
         esgst.discussionsPath = window.location.pathname.match(/^\/discussions/);
         esgst.newGiveawayPath = window.location.pathname.match(/^\/giveaways\/new/);
         esgst.newTicketPath = window.location.pathname.match(/^\/support\/tickets\/new/);
+        esgst.wishlistPath = window.location.pathname.match(/^\/giveaways\/wishlist/);
         esgst.createdPath = window.location.pathname.match(/^\/giveaways\/created/);
         esgst.wonPath = window.location.pathname.match(/^\/giveaways\/won/);
         esgst.enteredPath = window.location.pathname.match(/^\/giveaways\/entered/);
@@ -474,6 +475,7 @@
             adot: `ADOT`,
             wbs: `wbs`,
             dh: `DH`,
+            ds: `DS`,
             mpp: `MPP`,
             mpp_fv: `MPP_FV`,
             ded: `DED`,
@@ -984,6 +986,16 @@
                 name: `Active Discussions On Top`,
                 check: getValue(`adot`) && esgst.activeDiscussions,
                 load: loadActiveDiscussionsOnTop
+            },
+            {
+                check: true,
+                load: startDiscussionFeatures
+            },
+            {
+                id: `ds`,
+                name: `Discussions Sorter`,
+                check: getValue(`ds`),
+                load: loadDs
             },
             {
                 id: `dh`,
@@ -1615,6 +1627,8 @@
         esgst.gameFeatures = [];
         esgst.giveawayFeatures = [];
         esgst.giveaways = [];
+        esgst.discussions = [];
+        esgst.discussionFeatures = [];
         esgst.commentFeatures = [];
         esgst.profileFeatures = [];
         for (var key in esgst.defaultValues) {
@@ -18430,7 +18444,7 @@ ${avatar.outerHTML}
         SMAPIKey = Container.getElementsByClassName("SMAPIKey")[0];
         SMGeneralFeatures = ["fh", "fs", "fmph", "ff", "hr", "lpv", "vai", "ev", "hbs", "at", "pnot", "es"];
         SMGiveawayFeatures = ["dgn", "sal", "hfc", "ags", "pgb", "gf", "gv", "egf", "gp", "gwc", "gwr", "elgb", "qgb", "gb", "ggl", "ochgb", "gt", "sgg", "rcvc", "ugs", "er", "gwl", "gesl", "as"];
-        SMDiscussionFeatures = ["adot", "dh", "mpp", "ded"];
+        SMDiscussionFeatures = ["adot", "ds", "dh", "mpp", "ded"];
         SMCommentingFeatures = ["ch", "ct", "cfh", "rbot", "rbp", "mr", "rfi", "rml"];
         SMUserGroupGamesFeatures = ["ap", "uh", "un", "rwscvl", "ugd", "namwc", "nrf", "swr", "luc", "sgpb", "stpb", "sgc", "uf", "wbs", "wbc", "wbh", "ut", "iwh", "gh", "gs", "egh", "ggt", "gc"];
         SMOtherFeatures = ["sm_ebd", "sm_hb", "ged"];
@@ -19837,7 +19851,7 @@ Background: <input type="color" value="${bgColor}">
 
     function loadGiveawayFeatures(context, main) {
         var giveaways, i, n;
-        giveaways = getGiveaways(context);
+        giveaways = getGiveaways(context, main);
         if (main) {
             for (i = 0, n = giveaways.length; i < n; ++i) {
                 esgst.giveaways.push(giveaways[i]);
@@ -19848,13 +19862,13 @@ Background: <input type="color" value="${bgColor}">
         }
     }
 
-    function getGiveaways(context) {
+    function getGiveaways(context, main) {
         var games, giveaway, giveaways, i, matches, n;
         games = JSON.parse(GM_getValue(`games`));
         giveaways = [];
         matches = context.querySelectorAll(`.giveaway__row-outer-wrap, .featured__outer-wrap--giveaway, .table:not(.table--summary) .table__row-outer-wrap`);
         for (i = 0, n = matches.length; i < n; ++i) {
-            giveaway = getGiveawayInfo(matches[i], games);
+            giveaway = getGiveawayInfo(matches[i], games, null, main);
             if (giveaway) {
                 giveaways.push(giveaway.giveaway);
             }
@@ -19862,7 +19876,7 @@ Background: <input type="color" value="${bgColor}">
         return giveaways;
     }
 
-    function getGiveawayInfo(context, games, ugd) {
+    function getGiveawayInfo(context, games, ugd, main) {
         var category, categories, chance, element, giveaway, i, id, info, match, n, thinHeadings;
         giveaway = {};
         giveaway.outerWrap = context;
@@ -19911,8 +19925,9 @@ Background: <input type="color" value="${bgColor}">
             }
         }
         giveaway.columns = giveaway.innerWrap.querySelector(`.giveaway__columns, .featured__columns`);
-        if (giveaway.columns) {
+        if (giveaway.columns && ((esgst.archivePath && !main) || !esgst.archivePath)) {
             giveaway.endTimeColumn = giveaway.columns.firstElementChild;
+            giveaway.started = !giveaway.endTimeColumn.textContent.match(/Begins/);
             giveaway.endTime = parseInt(giveaway.endTimeColumn.lastElementChild.getAttribute(`data-timestamp`)) * 1e3;
             giveaway.ended = giveaway.endTime < Date.now();
             if (giveaway.ended && (esgst.userPath || ugd)) {
@@ -19925,6 +19940,8 @@ Background: <input type="color" value="${bgColor}">
                 giveaway.creator = giveaway.startTimeColumn.lastElementChild.textContent;
             }
             giveaway.winners = giveaway.columns.textContent.match(/No winners/) ? 0 : giveaway.copies;
+        } else if ((!esgst.archivePath && !main) || !esgst.archivePath) {
+            giveaway.started = true;
         }
         if (esgst.userPath && !ugd) {
             giveaway.creator = window.location.pathname.match(/^\/user\/(.+)/)[1];
@@ -19947,16 +19964,18 @@ Background: <input type="color" value="${bgColor}">
             giveaway.comments = parseInt(giveaway.commentsLink.textContent.replace(/,/g, ``).match(/\d+/)[0]);
         }
         giveaway.panel = giveaway.innerWrap.getElementsByClassName(`esgst-giveaway-panel`)[0];
-        if (!giveaway.panel && (esgst.gwc || esgst.gwr || esgst.elgb)) {
+        if (!giveaway.panel && (esgst.gwc || esgst.gwr || esgst.elgb) && (((esgst.wishlistPath || esgst.createdPath || esgst.wonPath || esgst.archivePath) && !main) || (!esgst.wishlistPath && !esgst.createdPath && !esgst.wonPath && !esgst.archivePath))) {
             if (giveaway.links) {
                 giveaway.panel = insertHtml(giveaway.links, `afterEnd`, `
                     <div class="giveaway__columns esgst-giveaway-panel"></div>
                     <div style="clear: both;"></div>
                 `);
-                element = giveaway.startTimeColumn.nextElementSibling;
-                while (element) {
-                    giveaway.panel.appendChild(element);
+                if (giveaway.startTimeColumn) {
                     element = giveaway.startTimeColumn.nextElementSibling;
+                    while (element) {
+                        giveaway.panel.appendChild(element);
+                        element = giveaway.startTimeColumn.nextElementSibling;
+                    }
                 }
             } else if (giveaway.columns) {
                 giveaway.panel = insertHtml(giveaway.columns, `afterEnd`, `<div class="featured__columns esgst-giveaway-panel"></div>`);
@@ -20154,6 +20173,7 @@ Background: <input type="color" value="${bgColor}">
                                     element = element.nextElementSibling;
                                 }
                                 var counts = responseHtml.getElementsByClassName(`sidebar__navigation__item__count`);
+                            if (counts.length > 1) {
                                 var image = responseHtml.getElementsByClassName(`global__image-outer-wrap--game-large`)[0].firstElementChild.getAttribute(`src`);
                                 var popupHtml = `
 <div><div class="giveaway__row-outer-wrap" data-game-id="${gameId}">
@@ -20186,6 +20206,7 @@ ${avatar.outerHTML}
                                 gbGiveaways.insertAdjacentHTML(`beforeEnd`, popupHtml);
                                 loadEndlessFeatures(gbGiveaways.lastElementChild);
                                 popup.reposition();
+                            }
                                 window.setTimeout(loadGbGiveaways, 0, ++i, n, bookmarked, gbGiveaways, popup, callback);
                             } else {
                                 window.setTimeout(loadGbGiveaways, 0, ++i, n, bookmarked, gbGiveaways, popup, callback);
@@ -20204,7 +20225,7 @@ ${avatar.outerHTML}
         var savedGiveaways = JSON.parse(GM_getValue(`giveaways`, `{}`));
         for (var i = 0, n = giveaways.length; i < n; ++i) {
             var giveaway = giveaways[i];
-            if (giveaway.creator !== GM_getValue(`Username`) && !giveaway.ended && !giveaway.entered && giveaway.url && !giveaway.innerWrap.getElementsByClassName(`esgst-gb-button`)[0]) {
+            if (giveaway.started && giveaway.creator !== GM_getValue(`Username`) && !giveaway.ended && !giveaway.entered && giveaway.url && !giveaway.innerWrap.getElementsByClassName(`esgst-gb-button`)[0]) {
                 if (savedGiveaways[giveaway.code] && savedGiveaways[giveaway.code].bookmarked) {
                     addGbUnbookmarkButton(giveaway);
                 } else {
@@ -20697,15 +20718,46 @@ ${avatar.outerHTML}
             addGwcrHeading(document, true);
         }
         esgst.giveawayFeatures.push(addGwcChances);
+        if (esgst.giveawaysPath || esgst.enteredPath) {
+            addGwcSortButton();
+        }
+    }
+
+    function addGwcSortButton() {
+        var button, i, n;
+        button = insertHtml(esgst.mainPageHeading, `afterBegin`, `
+            <div class="esgst-heading-button" title="Sort giveaways by winning chance (highest to lowest)">
+                <i class="fa fa-area-chart"></i>
+                <i class="fa fa-sort-numeric-desc"></i>
+            </div>
+        `);
+        button.addEventListener(`click`, function () {
+            esgst.giveaways.sort(function (a, b) {
+                if (a.chance > b.chance) {
+                    return -1;
+                } else if (a.chance < b.chance) {
+                    return 1;
+                } else {
+                    return 0;
+                }
+            });
+            for (i = 0, n = esgst.giveaways.length; i < n; ++i) {
+                esgst.giveaways[i].outerWrap.parentElement.appendChild(esgst.giveaways[i].outerWrap);
+            }
+        });
     }
 
     function addGwcChances(giveaways, main) {
         var giveaway, i, n;
-        if (((esgst.createdPath || esgst.wonPath || esgst.newGiveawayPath) && !main) || (!esgst.createdPath && !esgst.wonPath && !esgst.newGiveawayPath && main)) {
+        if (((esgst.wishlistPath || esgst.createdPath || esgst.wonPath || esgst.newGiveawayPath || esgst.archivePath) && !main) || (!esgst.wishlistPath && !esgst.createdPath && !esgst.wonPath && !esgst.newGiveawayPath && !esgst.archivePath)) {
         for (i = 0, n = giveaways.length; i < n; ++i) {
             giveaway = giveaways[i];
             if (!giveaway.innerWrap.getElementsByClassName(`esgst-gwc`)[0]) {
-                addGwcChance(insertHtml(giveaway.panel, `beforeEnd`, `<div class="${esgst.giveawayPath ? `featured__column` : ``} esgst-gwc" title="Giveaway Winning Chance">`), giveaway);
+                if (giveaway.started) {
+                    addGwcChance(insertHtml(giveaway.panel, `beforeEnd`, `<div class="${esgst.giveawayPath ? `featured__column` : ``} esgst-gwc" title="Giveaway Winning Chance">`), giveaway);
+                } else {
+                    giveaway.chance = 100;
+                }
             }
         }
         }
@@ -20737,10 +20789,10 @@ ${avatar.outerHTML}
 
     function addGwrRatios(giveaways, main) {
         var giveaway, i, n;
-        if (((esgst.createdPath || esgst.wonPath || esgst.newGiveawayPath) && !main) || (!esgst.createdPath && !esgst.wonPath && !esgst.newGiveawayPath && main)) {
+        if (((esgst.wishlistPath || esgst.createdPath || esgst.wonPath || esgst.newGiveawayPath || esgst.archivePath) && !main) || (!esgst.wishlistPath && !esgst.createdPath && !esgst.wonPath && !esgst.newGiveawayPath && !esgst.archivePath)) {
         for (i = 0, n = giveaways.length; i < n; ++i) {
             giveaway = giveaways[i];
-            if (!giveaway.innerWrap.getElementsByClassName(`esgst-gwr`)[0]) {
+            if (giveaway.started && !giveaway.innerWrap.getElementsByClassName(`esgst-gwr`)[0]) {
                 addGwcRatio(insertHtml(giveaway.panel, `beforeEnd`, `<div class="${esgst.giveawayPath ? `featured__column` : ``} esgst-gwr" title="Giveaway Winning Ratio">`), giveaway);
             }
         }
@@ -20759,7 +20811,7 @@ ${avatar.outerHTML}
 
     function addGwcrHeading(context, main) {
         var table;
-        if (((esgst.createdPath || esgst.wonPath) && !main) || (!esgst.createdPath && !esgst.wonPath && main)) {
+        if (((esgst.wishlistPath || esgst.createdPath || esgst.wonPath || esgst.archivePath) && !main) || (!esgst.wishlistPath && !esgst.createdPath && !esgst.wonPath && !esgst.archivePath && main)) {
         table = context.getElementsByClassName(`table__heading`)[0];
         if (table && !table.getElementsByClassName(`esgst-gwcr-heading`)[0]) {
             table.firstElementChild.insertAdjacentHTML(`afterEnd`, `<div class="table__column--width-small text-center esgst-gwcr-heading">Chance / Ratio</div>`);
@@ -20776,12 +20828,12 @@ ${avatar.outerHTML}
 
     function addElgbButtons(giveaways, main) {
         var games, giveaway, i, n;
-        if (((esgst.createdPath || esgst.enteredPath || esgst.wonPath || esgst.giveawayPath) && !main) || (!esgst.createdPath && !esgst.enteredPath && !esgst.wonPath && !esgst.giveawayPath)) {
+        if (((esgst.wishlistPath || esgst.createdPath || esgst.enteredPath || esgst.wonPath || esgst.giveawayPath || esgst.archivePath) && !main) || (!esgst.wishlistPath && !esgst.createdPath && !esgst.enteredPath && !esgst.wonPath && !esgst.giveawayPath && !esgst.archivePath)) {
             games = JSON.parse(GM_getValue(`games`));
             for (i = 0, n = giveaways.length; i < n; ++i) {
                 giveaway = giveaways[i];
                 if (!giveaway.innerWrap.getElementsByClassName(`esgst-button-set`)[0]) {
-                    if (!giveaway.ended && !giveaway.created && giveaway.level <= esgst.headerData.level && ((giveaway.id && ((games[giveaway.type][giveaway.id] && !games[giveaway.type][giveaway.id].owned) || !games[giveaway.type][giveaway.id])) || !giveaway.id)) {
+                    if (giveaway.started && !giveaway.ended && !giveaway.created && giveaway.level <= esgst.headerData.level && ((giveaway.id && ((games[giveaway.type][giveaway.id] && !games[giveaway.type][giveaway.id].owned) || !games[giveaway.type][giveaway.id])) || !giveaway.id)) {
                         addElgbButton(giveaway);
                     }
                 }
@@ -21729,8 +21781,93 @@ ${avatar.outerHTML}
      * Discussion Features
      */
 
+    function startDiscussionFeatures() {
+        if (esgst.discussionsPath) {
+            esgst.endlessFeatures.push(loadDiscussionFeatures);
+            loadDiscussionFeatures(document);
+        }
+    }
+
+    function loadDiscussionFeatures(context) {
+        var i, n, discussions;
+        discussions = getDiscussions(document);
+        for (i = 0, n = discussions.length; i < n; ++i) {
+            esgst.discussions.push(discussions[i]);
+        }
+        for (i = 0, n = esgst.discussionFeatures.length; i < n; ++i) {
+            esgst.discussionFeatures[i](discussions);
+        }
+    }
+
     function getDiscussions(context) {
-        
+        var discussion, discussions, elements, i, n;
+        discussions = [];
+        elements = context.getElementsByClassName(`table__row-outer-wrap`);
+        for (i = 0, n = elements.length; i < n; ++i) {
+            discussion = getDiscussionInfo(elements[i]);
+            if (discussion) {
+                discussions.push(discussion);
+            }
+        }
+        return discussions;
+    }
+
+    function getDiscussionInfo(context) {
+        var match, discussion;
+        discussion = {};
+        discussion.outerWrap = context;
+        discussion.innerWrap = discussion.outerWrap.firstElementChild;
+        discussion.firstColumn = discussion.innerWrap.firstElementChild.nextElementSibling;
+        discussion.headingContainer = discussion.firstColumn.firstElementChild;
+        discussion.info = discussion.headingContainer.nextElementSibling;
+        discussion.heading = discussion.headingContainer.lastElementChild;
+        discussion.title = discussion.heading.textContent;
+        discussion.url = discussion.heading.getAttribute(`href`);
+        if (discussion.url) {
+            match = discussion.url.match(/discussion\/(.+?)\//);
+            if (match) {
+                discussion.code = match[1];
+                discussion.created = discussion.info.firstElementChild.nextElementSibling;
+                discussion.createdTime = parseInt(discussion.created.getAttribute(`data-timestamp`)) * 1e3;
+                discussion.author = discussion.created.nextElementSibling.textContent;
+                return discussion;
+            } else {
+                return null;
+            }
+        } else {
+            return null;
+        }
+    }
+
+     /* [DS] Discussions Sorter */
+
+    function loadDs() {
+        if (esgst.discussionsPath) {
+            addDsButton();
+        }
+    }
+
+    function addDsButton() {
+        var button, i, n;
+        button = insertHtml(esgst.mainPageHeading, `afterBegin`, `
+            <div class="esgst-heading-button" title="Sort discussions by creation date (newest to oldest)">
+                <i class="fa fa-sort-amount-asc"></i>
+            </div>
+        `);
+        button.addEventListener(`click`, function () {
+            esgst.discussions.sort(function (a, b) {
+                if (a.createdTime > b.createdTime) {
+                    return -1;
+                } else if (a.createdTime < b.createdTime) {
+                    return 1;
+                } else {
+                    return 0;
+                }
+            });
+            for (i = 0, n = esgst.discussions.length; i < n; ++i) {
+                esgst.discussions[i].outerWrap.parentElement.appendChild(esgst.discussions[i].outerWrap);
+            }
+        });
     }
 
 })();
