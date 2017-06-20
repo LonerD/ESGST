@@ -3,7 +3,7 @@
 // @namespace ESGST
 // @description Enhances SteamGifts and SteamTrades by adding some cool features to them.
 // @icon https://github.com/revilheart/ESGST/raw/master/Resources/esgstIcon.ico
-// @version 6.Beta.10.1
+// @version 6.Beta.10.2
 // @author revilheart
 // @contributor Royalgamer06
 // @downloadURL https://github.com/revilheart/ESGST/raw/master/ESGST.user.js
@@ -20098,6 +20098,9 @@ Background: <input type="color" value="${bgColor}">
             }
             for (var key in giveaways) {
                 if (giveaways[key].bookmarked) {
+                    if (typeof giveaways[key].started === `undefined`) {
+                        giveaways[key].started = true;
+                    }
                     if (Date.now() >= giveaways[key].endTime || !giveaways[key].endTime) {
                         if (giveaways[key].started) {
                             delete giveaways[key].bookmarked;
