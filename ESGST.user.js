@@ -3,7 +3,7 @@
 // @namespace ESGST
 // @description Enhances SteamGifts and SteamTrades by adding some cool features to them.
 // @icon https://github.com/revilheart/ESGST/raw/master/Resources/esgstIcon.ico
-// @version 6.Beta.11.1
+// @version 6.Beta.11.2
 // @author revilheart
 // @contributor Royalgamer06
 // @downloadURL https://github.com/revilheart/ESGST/raw/master/ESGST.user.js
@@ -898,9 +898,8 @@
             {
                 id: `gv`,
                 name: `Grid View`,
-                check: getValue(`gv`) && esgst.giveawaysPath,
-                load: loadGridView,
-                endless: true
+                check: getValue(`gv`),
+                load: loadGv
             },
             {
                 id: `gf`,
@@ -3298,6 +3297,10 @@ display: inline-block;
 margin-top: 25px;
 }
 
+.esgst-gc-panel {
+text-align: left;
+}
+
 .esgst-gc {
 display: inline-block;
 margin: 0;
@@ -3476,14 +3479,6 @@ margin: 0 0 0 5px;
 margin-bottom: 0;
 min-width: 0;
 }
-
-.GVContainer .giveaway__columns:not(.esgst-giveaway-panel) {
-display: block;
-}
-
-.GVContainer .giveaway__columns:not(.esgst-giveaway-panel) >:first-child {
-margin: 0;
-}
 `;
         GM_addStyle(style);
         GM_addStyle(
@@ -3633,64 +3628,6 @@ margin: 0;
             ".ESStatus {" +
             "    margin: 5px 0;" +
             "    text-align: center;" +
-            "}" +
-            ".GVView {" +
-            "    text-align: center;" +
-            "}" +
-            ".pinned-giveaways__inner-wrap--minimized.GVView .giveaway__row-outer-wrap:nth-child(-n+8) {" +
-            "    display: inline-block;" +
-            "}" +
-            ".GVContainer {" +
-            "    border: 0 !important;" +
-            "    box-shadow: none !important;" +
-            "    display: inline-block;" +
-            "    margin: 5px;" +
-            "    padding: 0;" +
-            "    vertical-align: top;" +
-            "}" +
-            ".GVIcons {" +
-            "    position: absolute;" +
-            "    width: 25px;" +
-            "}" +
-            ".GVIcons >:not(.GGPContainer) {" +
-            "    text-align: center;" +
-            "}" +
-            ".GVIcons >* {" +
-            "    border-radius: 2px;" +
-            "    display: block;" +
-            "    line-height: normal;" +
-            "    padding: 2px;" +
-            "    margin: 0 !important;" +
-            "}" +
-            ".GVBox {" +
-            "    display: block;" +
-            "    margin: 0 0 0 25px;" +
-            "}" +
-            ".GVBox >:first-child {" +
-            "    margin: 0 !important;" +
-            "}" +
-            ".is-faded.GVBox {" +
-            "    opacity: 1;" +
-            "}" +
-            ".is-faded.GVBox .global__image-outer-wrap--game-medium {" +
-            "    opacity: 0.5;" +
-            "}" +
-            ".GVInfo {" +
-            "    align-items: center;" +
-            "    display: flex;" +
-            "    max-width: 600px;" +
-            "    position: absolute;" +
-            "    text-align: left;" +
-            "    z-index: 1;" +
-            "}" +
-            ".GVInfo >:last-child {" +
-            "    margin: -35px 0 0 5px;" +
-            "}" +
-            ".GVInfo .text-right {" +
-            "    text-align: left;" +
-            "}" +
-            ".GVInfo .GPLinks, .GVInfo .GPPanel {" +
-            "    float: none;" +
             "}" +
             ".SMManageData, .SMManageFilteredUsers, .SMRecentUsernameChanges, .SMCommentHistory, .SMManageTags, .ESPanel .pagination__navigation >*, .ESPanel .pagination_navigation >*, .ESRefresh, .ESPause," +
             ".esgst-un-button, .MTButton, .MTAll, .MTNone, .MTInverse, .WBCButton, .NAMWCButton, .NRFButton, .UGDButton, .GTSView, .UGSButton, .GDCBPButton, .CTGoToUnread, .CTMarkRead," +
@@ -5024,47 +4961,124 @@ ${title}
         }
     }
 
-    function loadGridView(context) {
-        var matches = context.getElementsByClassName(`giveaway__row-outer-wrap`);
-        for (var i = 0, n = matches.length; i < n; ++i) {
-            setGVContainer(matches[i]);
+    /* [GV] Grid View */
+
+    function loadGv() {
+        if (esgst.giveawaysPath) {
+            esgst.giveawayFeatures.push(setGvContainers);
+            GM_addStyle(`
+                .esgst-gv-view {
+                    font-size: 0;
+                    padding: 5px 0;
+                    text-align: center;
+                }
+                .esgst-gv-view.pinned-giveaways__inner-wrap--minimized .giveaway__row-outer-wrap:nth-child(-n + 10) {
+                    display: inline-block;" +
+                }
+                .esgst-gv-container {
+                    border: 0 !important;
+                    box-shadow: none !important;
+                    display: inline-block;
+                    font-size: 12px;
+                    padding: 0;
+                    position: relative;
+                    vertical-align: top;
+                }
+                .esgst-gv-box {
+                    display: block;
+                }
+                .esgst-gv-box >*:not(.giveaway__summary) {
+                    margin: 0 !important;
+                }
+                .esgst-gv-box.is-faded:hover {
+                    opacity: 1;
+                }
+                .esgst-gv-icons {
+                    bottom: 0;
+                    position: absolute;
+                    right: 0;
+                }
+                .esgst-gv-icons >* {
+                    line-height: normal;
+                    margin: 0 !important;
+                    padding: 2px;
+                }
+                .esgst-gv-icons .giveaway__column--contributor-level {
+                    padding: 2px 5px;
+                }
+                .esgst-gv-popout {
+                    max-width: 600px;
+                    min-width: 400px;
+                    position: absolute;
+                    z-index: 1;
+                }
+                .esgst-gv-popout .giveaway__columns:not(.esgst-giveaway-panel):not(.esgst-gv-icons) {
+                    display: block;
+                    float: left;
+                    width: calc(100% - 55px);
+                }
+                .esgst-gv-popout .giveaway__columns:not(.esgst-giveaway-panel):not(.esgst-gv-icons) >* {
+                    margin: 0;
+                    text-align: left;
+                }
+                .esgst-gv-popout .global__image-outer-wrap--avatar-small {
+                    float: right;
+                    margin: 5px;
+                }
+                .esgst-gv-popout .esgst-giveaway-links, .esgst-gv-popout .esgst-giveaway-panel {
+                    float: none;
+                }
+            `);
         }
     }
 
-    function setGVContainer(Context) {
-        var GVBox, GVInfo, Columns, GVIcons, Element;
-        Context.parentElement.classList.add("GVView");
-        Context.classList.add("GVContainer");
-        GVBox = Context.getElementsByClassName("giveaway__row-inner-wrap")[0];
-        GVBox.classList.add("GVBox");
-        GVBox.insertAdjacentHTML("afterBegin", "<div class=\"global__image-outer-wrap GVInfo rhHidden\"></div>");
-        GVInfo = GVBox.firstElementChild;
-        do {
-            Element = GVInfo.nextElementSibling;
-            if (Element) {
-                GVInfo.appendChild(Element);
+    function setGvContainers(giveaways, main) {
+        var elements, i, n;
+        if (main) {
+            for (i = 0, n = giveaways.length; i < n; ++i) {
+                setGvContainer(giveaways[i]);
             }
-        } while (Element);
-        GVBox.insertBefore(Context.getElementsByClassName("global__image-outer-wrap--game-medium")[0], GVInfo);
-        Columns = Context.getElementsByClassName("giveaway__columns")[0];
-        Context.insertAdjacentHTML("afterBegin", "<div class=\"GVIcons giveaway__columns\"></div>");
-        GVIcons = Context.firstElementChild;
-        while (!Columns.lastElementChild.classList.contains("giveaway__column--width-fill")) {
-            Element = Columns.lastElementChild;
-            if (Element.textContent.match(/Level/)) {
-                Element.textContent = Element.textContent.replace(/Level\s/, "");
-            }
-            GVIcons.appendChild(Element);
         }
-        GVBox.addEventListener("mouseenter", function () {
-            GVInfo.classList.remove("rhHidden");
-            GVInfo.removeAttribute("style");
-            repositionPopout(GVInfo, GVBox);
+    }
+
+    function setGvContainer(giveaway) {
+        var icons;
+        giveaway.outerWrap.parentElement.classList.add(`esgst-gv-view`);
+        giveaway.outerWrap.classList.add(`esgst-gv-container`);
+        giveaway.innerWrap.classList.add(`esgst-gv-box`);
+        icons = insertHtml(giveaway.innerWrap, `afterBegin`, `
+            <div class="esgst-gv-icons giveaway__columns"></div>
+        `);
+        if (giveaway.regionRestricted) {
+            icons.appendChild(giveaway.regionRestricted);
+        }
+        if (giveaway.group) {
+            icons.appendChild(giveaway.group);
+        }
+        if (giveaway.whitelist) {
+            icons.appendChild(giveaway.whitelist);
+        }
+        if (giveaway.levelColumn) {
+            giveaway.levelColumn.textContent = giveaway.levelColumn.textContent.replace(/Level\s/, ``);
+            icons.appendChild(giveaway.levelColumn);
+        }
+        giveaway.innerWrap.insertBefore(giveaway.image, giveaway.summary);
+        giveaway.summary.classList.add(`esgst-gv-popout`, `esgst-hidden`, `global__image-outer-wrap`);
+        giveaway.summary.insertBefore(giveaway.avatar, giveaway.links);
+        giveaway.avatar.insertAdjacentHTML(`afterEnd`, `
+            <div style="clear: both;"></div>
+        `);
+        giveaway.innerWrap.addEventListener(`mouseenter`, function () {
+            giveaway.summary.classList.remove(`esgst-hidden`);
+            giveaway.summary.style = ``;
+            repositionPopout(giveaway.summary, giveaway.outerWrap);
         });
-        GVBox.addEventListener("mouseleave", function () {
-            GVInfo.classList.add("rhHidden");
+        giveaway.innerWrap.addEventListener(`mouseleave`, function () {
+            giveaway.summary.classList.add(`esgst-hidden`);
         });
     }
+
+    /* [PGB] Pinned Giveaways Button */
 
     function loadPinnedGiveawaysButton() {
         var PGBContainer, HTML, PGBIcon;
@@ -15290,7 +15304,7 @@ ${Results.join(``)}
         Matches = esgst.users[UserID];
         Prefix = "<span class=\"global__image-outer-wrap author_avatar is_icon\">";
         Suffix = "</span>";
-        if (Tags.length) {
+        if (Tags.length && Tags[0]) {
             HTML = Prefix;
             HTML += Tags.join(Suffix + Prefix);
             HTML += Suffix;
@@ -20410,6 +20424,8 @@ Background: <input type="color" value="${bgColor}">
             return;
         }
         giveaway.innerWrap = giveaway.outerWrap.querySelector(`.giveaway__row-inner-wrap, .featured__inner-wrap, .table__row-inner-wrap`);
+        giveaway.avatar = giveaway.outerWrap.getElementsByClassName(`global__image-outer-wrap--avatar-small`)[0];
+        giveaway.image = giveaway.outerWrap.getElementsByClassName(`global__image-outer-wrap--game-medium`)[0];
         giveaway.summary = giveaway.innerWrap.querySelector(`.giveaway__summary, .featured__summary`);
         giveaway.entered = giveaway.innerWrap.classList.contains(`is-faded`);
         giveaway.headingName = giveaway.innerWrap.querySelector(`.giveaway__heading__name, .featured__heading__medium, .table__column__heading`);
@@ -21329,7 +21345,7 @@ ${avatar.outerHTML}
             giveaway = giveaways[i];
             if (!giveaway.innerWrap.getElementsByClassName(`esgst-gwc`)[0]) {
                 if (giveaway.started) {
-                    addGwcChance(insertHtml(giveaway.panel, `beforeEnd`, `<div class="${esgst.giveawayPath ? `featured__column` : ``} esgst-gwc" title="Giveaway Winning Chance">`), giveaway);
+                    addGwcChance(insertHtml(giveaway.panel, esgst.gv && esgst.giveawaysPath ? `afterBegin` : `beforeEnd`, `<div class="${esgst.giveawayPath ? `featured__column` : ``} esgst-gwc" title="Giveaway Winning Chance">`), giveaway);
                 } else {
                     giveaway.chance = 100;
                 }
@@ -21382,7 +21398,7 @@ ${avatar.outerHTML}
         for (i = 0, n = giveaways.length; i < n; ++i) {
             giveaway = giveaways[i];
             if (giveaway.started && !giveaway.innerWrap.getElementsByClassName(`esgst-gwr`)[0]) {
-                addGwcRatio(insertHtml(giveaway.panel, `beforeEnd`, `<div class="${esgst.giveawayPath ? `featured__column` : ``} esgst-gwr" title="Giveaway Winning Ratio">`), giveaway);
+                addGwcRatio(insertHtml(giveaway.panel, esgst.gv && esgst.giveawaysPath ? `afterBegin` : `beforeEnd`, `<div class="${esgst.giveawayPath ? `featured__column` : ``} esgst-gwr" title="Giveaway Winning Ratio">`), giveaway);
             }
         }
         }
@@ -21445,21 +21461,22 @@ ${avatar.outerHTML}
         if (giveaway.entered) {
             giveaway.elgbButton = createButtonSet(`yellow`, `grey`, `fa-minus-circle`, `fa-circle-o-notch fa-spin`, `Leave`, `Leaving...`, leaveElgbGiveaway.bind(null, giveaway)).set;
             giveaway.elgbButton.removeAttribute(`title`);
-            giveaway.panel.appendChild(giveaway.elgbButton);
         } else if (giveaway.error) {
             giveaway.elgbButton = createButtonSet(`red`, `grey`, `fa-plus-circle`, `fa-circle-o-notch fa-spin`, `Enter`, `Entering...`, esgst.elgbCallback.bind(null, giveaway)).set;
             giveaway.elgbButton.setAttribute(`title`, error);
-            giveaway.panel.appendChild(giveaway.elgbButton);
         } else {
             if (giveaway.points <= esgst.headerData.points) {
                 giveaway.elgbButton = createButtonSet(`green`, `grey`, `fa-plus-circle`, `fa-circle-o-notch fa-spin`, `Enter`, `Entering...`, esgst.elgbCallback.bind(null, giveaway)).set;
                 giveaway.elgbButton.removeAttribute(`title`);
-                giveaway.panel.appendChild(giveaway.elgbButton);
             } else {
                 giveaway.elgbButton = createButtonSet(`red`, `grey`, `fa-plus-circle`, `fa-circle-o-notch fa-spin`, `Enter`, `Entering...`, esgst.elgbCallback.bind(null, giveaway)).set;
                 giveaway.elgbButton.setAttribute(`title`, `Not Enough Points`);
-                giveaway.panel.appendChild(giveaway.elgbButton);
             }
+        }
+        if (esgst.gv && esgst.giveawaysPath) {
+            giveaway.panel.insertBefore(giveaway.elgbButton, giveaway.panel.firstElementChild);
+        } else {
+            giveaway.panel.appendChild(giveaway.elgbButton);
         }
     }
 
@@ -21553,7 +21570,7 @@ ${avatar.outerHTML}
             } else {
                 giveaway.entered = false;
                 giveaway.error = true;
-                addElgbButton(giveaway);
+                addElgbButton(giveaway, responseJson.msg);
                 callback();
             }
         });

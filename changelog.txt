@@ -1,4 +1,15 @@
 /*
+ * June 20, 2017 - v6.Beta.11.2
+ */
+
+* Fixed a bug that was applying Grid View to the list of bookmarked giveaways.
+* Fixed a bug in Enter/Leave Giveaway Button that was not showing the error message on hover when failing to enter a giveaway.
+
+Upgraded the following features to v6:
+
+* Grid View - The icons are now displayed inside the image instead of outside, leaving room for more giveaways per row (on 1440x900 resolutions there should now be 5 giveaways per row instead of 4). Changed the position of the avatar to reduce white space. Moved the giveaway panel (Giveaway Winning Chance, Giveaway Winning Ratio and Enter/Leave Giveaway Button) to the left side. Added a minimum width of 400px.
+
+/*
  * June 20, 2017 - v6.Beta.11.1
  */
 
