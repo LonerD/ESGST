@@ -1,4 +1,14 @@
 /*
+ * June 20, 2017 - v6.Beta.10.3
+ */
+
+* Fixed a bug in Giveaway Bookmarks that was not bookmarking giveaways from the entered page.
+
+Upgraded the following features to v6:
+
+* Giveaway Templates - Changed how the data is stored (just like with previous storage upgrades, your data should be transferred without any losses, but let me know about any missing data). Revamped the feature (closes #52). Added options to use precise start/end time. The "Review Giveaway" button now appears both at the top and at the bottom of the page. Added a new "Create Giveaway" button that creates the giveaway directly without passing through the review step.
+
+/*
  * June 20, 2017 - v6.Beta.10.2
  */
 

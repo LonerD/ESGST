@@ -3,7 +3,7 @@
 // @namespace ESGST
 // @description Enhances SteamGifts and SteamTrades by adding some cool features to them.
 // @icon https://github.com/revilheart/ESGST/raw/master/Resources/esgstIcon.ico
-// @version 6.Beta.10.2
+// @version 6.Beta.10.3
 // @author revilheart
 // @contributor Royalgamer06
 // @downloadURL https://github.com/revilheart/ESGST/raw/master/ESGST.user.js
@@ -66,6 +66,32 @@
     } catch (error) {
         console.log(error);
         window.alert(`ESGST has failed to load. Check the console (F12) for errors and report them in the script's discussion/GitHub page.`);
+    }
+
+    function updateTemplateStorageToV6() {
+        if (!GM_getValue(`templateStorageV6_3`, false)) {
+            GM_setValue(`templates`, JSON.stringify(getTemplateStorageV6(GM_getValue(`Templates`, []))));
+            GM_setValue(`templateStorageV6_3`, true);
+        }
+    }
+
+    function getTemplateStorageV6(saved) {
+        var i, n, templates;
+        templates = [];
+        for (i = 0, n = saved.length; i < n; ++i) {
+            templates.push({
+                delay: saved[i].Delay,
+                description: saved[i].Description,
+                duration: saved[i].Duration,
+                groups: saved[i].Groups,
+                level: saved[i].Level,
+                name: saved[i].Name,
+                region: saved[i].Region,
+                type: saved[i].Type,
+                whitelist: saved[i].Whitelist
+            });
+        }
+        return templates;
     }
 
     function updateUserStorageToV6() {
@@ -279,6 +305,7 @@
     }
 
     function loadEsgst() {
+        updateTemplateStorageToV6();
         updateUserStorageToV6();
         updateGameStorageToV6();
         updateCommentHistoryStorageToV6();
@@ -929,8 +956,8 @@
             {
                 id: `gt`,
                 name: `Giveaway Templates`,
-                check: getValue(`gt`) && esgst.sg && esgst.newGiveawayPath && !document.getElementsByClassName("table--summary")[0],
-                load: loadGiveawayTemplates
+                check: getValue(`gt`),
+                load: loadGts
             },
             {
                 id: `sgg`,
@@ -2416,11 +2443,11 @@
                     } else {
                         popup.popup.classList.remove(`popup`);
                     }
-                    if (popup.close) {
-                        popup.close();
-                    }
                 }
             }, callback);
+        };
+        popup.close = function () {
+            popup.opened.close();
         };
         popup.reposition = function () {
             if (popup.opened) {
@@ -3061,6 +3088,10 @@ background-color: ${backgroundColor} !important;
         Unknown = window.getComputedStyle(Unknown).color;
         Temp.remove();
         style = `
+.esgst-gts-section >* {
+margin: 5px 0;
+}
+
 .esgst-ggl-panel {
 padding: 5px;
 }
@@ -3099,16 +3130,16 @@ max-height: 75%;
 overflow: auto;
 }
 
+.esgst-popup .popup__keys__list {
+max-height: none;
+}
+
 .esgst-heading-button {
 display: inline-block;
 cursor: pointer;
 }
 
 .esgst-popup .popup__actions {
-margin-top: 25px;
-}
-
-.esgst-button-set {
 margin-top: 25px;
 }
 
@@ -5261,172 +5292,351 @@ ${title}
 
     /* */
 
-    function loadGiveawayTemplates() {
-        var GTS;
-        GTS = {
-            Name: ""
-        };
-        addGTSView(GTS);
-        addGTSSave(GTS);
-    }
-
-    function addGTSView(GTS) {
-        var Context, GTSContainer, GTSView, Popout, Templates, N, I;
-        Context = document.getElementsByClassName("page__heading")[0];
-        Context.insertAdjacentHTML(
-            "afterBegin",
-            "<div>" +
-            "    <a class=\"GTSView\" title=\"View saved templates\">" +
-            "        <i class=\"fa fa-file\"></i>" +
-            "    </a>" +
-            "</div>"
-        );
-        GTSContainer = Context.firstElementChild;
-        GTSView = GTSContainer.firstElementChild;
-        Popout = createPopout(GTSContainer);
-        Popout.customRule = function (Target) {
-            return !GTSContainer.contains(Target);
-        };
-        Templates = GM_getValue("Templates");
-        N = Templates.length;
-        if (N) {
-            for (I = 0; I < N; ++I) {
-                Popout.Popout.insertAdjacentHTML(
-                    "beforeEnd",
-                    "<div class=\"GTSTemplate\">" +
-                    "    <span class=\"popup__actions GTSApply\">" +
-                    "        <a>" + Templates[I].Name + "</a>" +
-                    "    </span>" +
-                    "    <i class=\"fa fa-trash GTSDelete\" title=\"Delete template\"></i>" +
-                    "</div>");
-                setGTSTemplate(Popout.Popout.lastElementChild, Templates[I], GTS);
-            }
-        } else {
-            Popout.Popout.textContent = "No templates saved.";
+    function loadGts() {
+        if (esgst.newGiveawayPath) {
+            addGtsButtonSection();
         }
-        GTSView.addEventListener("click", function () {
-            if (Popout.Popout.classList.contains("rhHidden")) {
-                Popout.popOut(GTSContainer);
-            } else {
-                Popout.Popout.classList.add("rhHidden");
-            }
-        });
     }
 
-    function setGTSTemplate(GTSTemplate, Template, GTS) {
-        GTSTemplate.firstElementChild.addEventListener("click", function () {
-            var CurrentDate, Context, Groups, Matches, I, N, ID, Selected, J;
-            CurrentDate = Date.now();
-            document.querySelector("[name='start_time']").value = formatDate(new Date(CurrentDate + Template.Delay));
-            document.querySelector("[name='end_time']").value = formatDate(new Date(CurrentDate + Template.Delay + Template.Duration));
-            document.querySelector("[data-checkbox-value='" + Template.Region + "']").click();
-            document.querySelector("[data-checkbox-value='" + Template.Type + "']").click();
-            if (Template.Type == "groups") {
-                if (Template.Whitelist == 1) {
-                    Context = document.getElementsByClassName("form__group--whitelist")[0];
-                    if (!Context.classList.contains("is-selected")) {
-                        Context.click();
-                    }
-                }
-                if (Template.Groups) {
-                    Groups = Template.Groups.trim().split(/\s/);
-                    Matches = document.getElementsByClassName("form__group--steam");
-                    for (I = 0, N = Matches.length; I < N; ++I) {
-                        Context = Matches[I];
-                        ID = Context.getAttribute("data-group-id");
-                        Selected = Context.classList.contains("is-selected");
-                        J = Groups.indexOf(ID);
-                        if ((Selected && (J < 0)) || (!Selected && (J >= 0))) {
-                            Context.click();
-                        }
-                    }
-                }
-            }
-            if (Template.Level > 0) {
-                document.getElementsByClassName("ui-slider-range")[0].style.width = "100%";
-                document.getElementsByClassName("form__level")[0].textContent = "level " + Template.Level;
-                document.getElementsByClassName("form__input-description--no-level")[0].classList.add("is-hidden");
-                document.getElementsByClassName("form__input-description--level")[0].classList.remove("is-hidden");
-            } else {
-                document.getElementsByClassName("ui-slider-range")[0].style.width = "0%";
-                document.getElementsByClassName("form__input-description--level")[0].classList.add("is-hidden");
-                document.getElementsByClassName("form__input-description--no-level")[0].classList.remove("is-hidden");
-            }
-            document.getElementsByClassName("ui-slider-handle")[0].style.left = (Template.Level * 10) + "%";
-            document.querySelector("[name='contributor_level']").value = Template.Level;
-            document.querySelector("[name='description']").value = Template.Description;
-            GTS.Name = Template.Name;
-        });
-        GTSTemplate.lastElementChild.addEventListener("click", function () {
-            var Templates, I, N;
-            if (window.confirm("Are you sure you want to delete this template?")) {
-                Templates = GM_getValue("Templates");
-                for (I = 0, N = Templates.length; (I < N) && (Templates[I].Name != Template.Name); ++I);
-                Templates.splice(I, 1);
-                GM_setValue("Templates", Templates);
-                if (GTS.Name == Template.Name) {
-                    GTS.Name = "";
-                }
-                GTSTemplate.remove();
-            }
-        });
-    }
-
-    function addGTSSave(GTS) {
-        var Context;
-        Context = document.getElementsByClassName("form__submit-button")[0];
-        Context.insertAdjacentHTML("afterEnd", "<div class=\"GTSSave\"></div>");
-        createButton(Context.nextElementSibling, "fa-file", "Save Template", "", "", function (Callback) {
-            var Popup;
-            Callback();
-            Popup = createPopup(true);
-            Popup.Icon.classList.add("fa-file");
-            Popup.Title.textContent = "Save template:";
-            Popup.TextInput.classList.remove("rhHidden");
-            Popup.TextInput.insertAdjacentHTML("afterEnd", createDescription("Enter a name for this template."));
-            Popup.TextInput.value = GTS.Name;
-            createButton(Popup.Button, "fa-check", "Save", "fa-circle-o-notch fa-spin", "Saving...", function (Callback) {
-                var StartTime, Delay, Template, Templates, I, N;
-                if (Popup.TextInput.value) {
-                    StartTime = new Date(document.querySelector("[name='start_time']").value).getTime();
-                    Delay = StartTime - (new Date().getTime());
-                    Template = {
-                        Name: Popup.TextInput.value,
-                        Delay: (Delay > 0) ? Delay : 0,
-                        Duration: (new Date(document.querySelector("[name='end_time']").value).getTime()) - StartTime,
-                        Region: document.querySelector("[name='region']").value,
-                        Type: document.querySelector("[name='who_can_enter']").value,
-                        Whitelist: document.querySelector("[name='whitelist']").value,
-                        Groups: document.querySelector("[name='group_string']").value,
-                        Level: document.querySelector("[name='contributor_level']").value,
-                        Description: document.querySelector("[name='description']").value
-                    };
-                    Templates = GM_getValue("Templates");
-                    if (GTS.Name == Popup.TextInput.value) {
-                        for (I = 0, N = Templates.length; (I < N) && (Templates[I].Name != GTS.Name); ++I);
-                        if (I < N) {
-                            Templates[I] = Template;
-                        } else {
-                            Templates.push(Template);
-                        }
+    function addGtsButtonSection() {
+        var button, delay, edit, endTime, input, message, preciseEndCheckbox, preciseEndOption, preciseStartCheckbox, preciseStartOption, reviewButton, rows, section, set, startTime, warning;
+        rows = document.getElementsByClassName(`form__rows`)[0];
+        if (rows) {
+            reviewButton = rows.lastElementChild;
+            createButton = createButtonSet(`green`, `grey`, `fa-plus-circle`, `fa-circle-o-notch fa-spin`, `Create Giveaway`, `Creating...`, function (callback) {
+                var data;
+                data = `xsrf_token=${esgst.xsrfToken}&next_step=3&`;
+                data += `game_id=${document.querySelector(`[name="game_id"]`).value}&`;
+                data += `type=${document.querySelector(`[name="type"]`).value}&`;
+                data += `copies=${document.querySelector(`[name="copies"]`).value}&`;
+                data += `key_string=${document.querySelector(`[name="key_string"]`).value}&`;
+                data += `start_time=${document.querySelector(`[name="start_time"]`).value}&`;
+                data += `end_time=${document.querySelector(`[name="end_time"]`).value}&`;
+                data += `region=${document.querySelector(`[name="region"]`).value}&`;
+                data += `group_string=${document.querySelector(`[name="group_string"]`).value}&`;
+                data += `who_can_enter=${document.querySelector(`[name="who_can_enter"]`).value}&`;
+                data += `whitelist=${document.querySelector(`[name="whitelist"]`).value}&`;
+                data += `contributor_level=${document.querySelector(`[name="contributor_level"]`).value}&`;
+                data += `description=${encodeURIComponent(document.querySelector(`[name="description"]`).value)}`;
+                request(data, false, `/giveaways/new`, function (response) {
+                    callback();
+                    window.location.href = response.finalUrl;
+                });
+            });
+            rows.appendChild(createButton.set);
+            button = insertHtml(esgst.mainPageHeading, `afterBegin`, `
+                <div class="esgst-heading-button" title="View/apply templates">
+                    <i class="fa fa-file"></i>
+                </div>
+            `);
+            button.addEventListener(`click`, function () {
+                var days, details, hours, i, n, popup, savedTemplate, savedTemplates, template, templates, time, weeks;
+                popup = createPopup_v6(`fa-file`, `View/apply templates:`, true);
+                templates = insertHtml(popup.description, `beforeEnd`, `
+                    <div class="esgst-text-left popup__keys__list"></div>
+                `);
+                savedTemplates = JSON.parse(GM_getValue(`templates`));
+                for (i = 0, n = savedTemplates.length; i < n; ++i) {
+                    savedTemplate = savedTemplates[i];
+                    details = ``;
+                    if (savedTemplate.startTime) {
+                        time = new Date(savedTemplate.startTime);
+                        details += `${`0${time.getHours()}`.slice(-2)}:${`0${time.getMinutes()}`.slice(-2)}`;
                     } else {
-                        Templates.push(Template);
+                        details += `?`;
                     }
-                    GM_setValue("Templates", Templates);
-                    Callback();
-                    Popup.Close.click();
+                    if (savedTemplate.endTime) {
+                        time = new Date(savedTemplate.endTime);
+                        details += `-${`0${time.getHours()}`.slice(-2)}:${`0${time.getMinutes()}`.slice(-2)}`;
+                    } else {
+                        details += `-?`;
+                    }
+                    hours = Math.floor(savedTemplate.duration / 3600000);
+                    if (hours > 23) {
+                        days = Math.floor(hours / 24);
+                        if (days > 6) {
+                            weeks = Math.floor(days / 7);
+                            if (weeks === 1) {
+                                details += `, 1 week`;
+                            } else {
+                                details += `, ${weeks} weeks`;
+                            }
+                        } else if (days === 1) {
+                            details += `, 1 day`;
+                        } else {
+                            details += `, ${days} days`;
+                        }
+                    } else if (hours === 1) {
+                        details += `, 1 hour`;
+                    } else {
+                        details += `, ${hours} hours`;
+                    }
+                    if (savedTemplate.region !== `0`) {
+                        details += `, region restricted`;
+                    }
+                    if (savedTemplate.type === `everyone`) {
+                        details += `, rveryone`;
+                    } else if (savedTemplate.type === `invite_only`) {
+                        details += `, invite only`;
+                    } else {
+                        if (savedTemplate.whitelist === `1`) {
+                            details += `, whitelist`;
+                        }
+                        if (savedTemplate.groups.trim()) {
+                            details += `, groups`;
+                        }
+                    }
+                    details += `, level ${savedTemplate.level}+`;
+                    template = insertHtml(templates, `beforeEnd`, `
+                        <div>
+                            <div class="esgst-clickable" style="float: left;">
+                                <strong>${savedTemplate.name}</strong>
+                            </div>
+                            <div class="esgst-clickable" style="float: right;">
+                                <i class="fa fa-trash" title="Delete template"></i>
+                            </div>
+                            <div style="clear: both;"></div>
+                            <div class="form__input-description">${details}</div>
+                        </div>
+                    `);
+                    setGtsTemplate(popup, template, savedTemplates[i]);
+                }
+                popup.open();
+            });
+            section = insertHtml(reviewButton, `beforeBegin`, `
+                <div class="form__row">
+				    <div class="form__heading">
+                        <div class="form__heading__number">9.</div>
+                        <div class="form__heading__text">Template</div>
+                    </div>
+                    <div class="esgst-gts-section form__row__indent">
+                        <div>
+                            <span>Use precise start time.</span>
+                        </div>
+                        <div>
+                            <span>Use precise end time.</span>
+                        </div>
+                        <input class="form__input-small" type="text"/>
+                        <span class="esgst-hidden form__input-description">
+                            <strong>Saved!</strong>
+                        </span>
+                        <div class="esgst-hidden form__row__error">
+                            <i class="fa fa-exclamation-circle"></i> Please enter a name for the template.
+                        </div>
+                        <div class="form__input-description">The name of the template.</div>
+					</div>
+				</div>
+            `).lastElementChild;
+            preciseStartOption = section.firstElementChild;
+            preciseEndOption = preciseStartOption.nextElementSibling;
+            input = preciseEndOption.nextElementSibling;
+            message = input.nextElementSibling;
+            warning = message.nextElementSibling;
+            preciseStartCheckbox = createCheckbox_v6(preciseStartOption, GM_getValue(`gts_ps`, false));
+            preciseEndCheckbox = createCheckbox_v6(preciseEndOption, GM_getValue(`gts_pe`, false));
+            preciseStartOption.addEventListener(`click`, function () {
+                GM_setValue(`gts_ps`, preciseStartCheckbox.input.checked);
+            });
+            preciseEndOption.addEventListener(`click`, function () {
+                GM_setValue(`gts_pe`, preciseEndCheckbox.input.checked);
+            });
+            set = createButtonSet(`green`, `grey`, `fa-check`, `fa-circle-o-notch fa-spin`, `Save Template`, `Saving...`, function (callback) {
+                var i, n, template, savedTemplates;
+                if (input.value) {
+                    warning.classList.add(`esgst-hidden`);
+                    startTime = new Date(document.querySelector(`[name="start_time"]`).value).getTime();
+                    endTime = new Date(document.querySelector(`[name="end_time"]`).value).getTime();
+                    delay = startTime - Date.now();
+                    if (delay < 0) {
+                        delay = 0;
+                    }
+                    template = {
+                        delay: delay,
+                        description: document.querySelector(`[name="description"]`).value,
+                        duration: endTime - startTime,
+                        groups: document.querySelector(`[name="group_string"]`).value,
+                        level: document.querySelector(`[name="contributor_level"]`).value,
+                        name: input.value,
+                        region: document.querySelector(`[name="region"]`).value,
+                        type: document.querySelector(`[name="who_can_enter"]`).value,
+                        whitelist: document.querySelector(`[name="whitelist"]`).value
+                    };
+                    if (preciseStartCheckbox.input.checked) {
+                        template.startTime = startTime;
+                    }
+                    if (preciseEndCheckbox.input.checked) {
+                        template.endTime = endTime;
+                    }
+                    createLock(`templateLock`, 300, function(deleteLock) {
+                        savedTemplates = JSON.parse(GM_getValue(`templates`));
+                        for (i = 0, n = savedTemplates.length; i < n && savedTemplates[i].name !== template.name; ++i);
+                        if (i < n) {
+                            if (edit) {
+                                savedTemplates[i] = template;
+                                message.classList.remove(`esgst-hidden`);
+                                window.setTimeout(function () {
+                                    message.classList.add(`esgst-hidden`);
+                                }, 2000);
+                            } else if (window.confirm(`There already exists a template with this name. Do you want to overwrite it?`)) {
+                                savedTemplates[i] = template;
+                                message.classList.remove(`esgst-hidden`);
+                                window.setTimeout(function () {
+                                    message.classList.add(`esgst-hidden`);
+                                }, 2000);
+                            }
+                        } else {
+                            savedTemplates.push(template);
+                            message.classList.remove(`esgst-hidden`);
+                            window.setTimeout(function () {
+                                message.classList.add(`esgst-hidden`);
+                            }, 2000);
+                        }
+                        GM_setValue(`templates`, JSON.stringify(savedTemplates));
+                        deleteLock();
+                        callback();
+                    });
                 } else {
-                    Popup.Progress.innerHTML =
-                        "<i class=\"fa fa-times-circle\"></i> " +
-                        "<span>You must enter a name.</span>";
-                    Callback();
+                    warning.classList.remove(`esgst-hidden`);
+                    callback();
                 }
             });
-            Popup.popUp(function () {
-                Popup.TextInput.focus();
+            section.appendChild(set.set);
+            rows.insertBefore(createButton.set, rows.firstElementChild);
+            rows.insertBefore(reviewButton, rows.firstElementChild);
+            createButton.set.style.display = `inline-block`;
+            createButton.set.style.margin = `20px 5px`;
+            reviewButton.style.margin = `20px 0`;
+            var first, last;
+            first = true;
+            last = false;
+            window.addEventListener(`scroll`, function () {
+                if (window.scrollY < 138) {
+                    if (!first) {
+                        rows.insertBefore(createButton.set, rows.firstElementChild);
+                        rows.insertBefore(reviewButton, rows.firstElementChild);
+                        createButton.set.style.margin = `20px 5px`;
+                        reviewButton.style.margin = `20px 0`;
+                        first = true;
+                        last = false;
+                    }
+                } else if (!last) {
+                    rows.appendChild(reviewButton);
+                    rows.appendChild(createButton.set);
+                    reviewButton.style.margin = ``;
+                    createButton.set.style.margin = `0 5px`;
+                    last = true;
+                    first = false;
+                }
             });
-        });
+        }
+
+        function setGtsTemplate(popup, template, savedTemplate) {
+            var applyButton, context, currentDate, deleteButton, groups, i, id, j, matches, n, newEndTime, newEndTimeBackup, newStartTime, savedTemplates, selected;
+            applyButton = template.firstElementChild;
+            deleteButton = applyButton.nextElementSibling;
+            applyButton.addEventListener(`click`, function () {
+                currentDate = new Date();
+                if (savedTemplate.startTime && savedTemplate.endTime) {
+                    startTime = new Date(savedTemplate.startTime);
+                    newStartTime = new Date(currentDate.getTime());
+                    newStartTime.setHours(startTime.getHours(), startTime.getMinutes(), startTime.getSeconds(), startTime.getMilliseconds());
+                    if (newStartTime.getTime() < currentDate.getTime()) {
+                        newStartTime.setDate(newStartTime.getDate() + 1);
+                    }
+                    endTime = new Date(savedTemplate.endTime);
+                    newEndTime = new Date(newStartTime.getTime());
+                    newEndTime.setDate(newStartTime.getDate() + (endTime.getDate() - startTime.getDate()));
+                    newEndTimeBackup = new Date(newEndTime.getTime());
+                    newEndTime.setHours(endTime.getHours(), endTime.getMinutes(), endTime.getSeconds(), endTime.getMilliseconds());
+                    if (newEndTime.getTime() < newEndTimeBackup.getTime()) {
+                        newEndTime.setDate(newEndTime.getDate() + 1);
+                    }
+                    document.querySelector(`[name="start_time"]`).value = formatDate(newStartTime);
+                    document.querySelector(`[name="end_time"]`).value = formatDate(newEndTime);
+                } else if (savedTemplate.startTime) {
+                    startTime = new Date(savedTemplate.startTime);
+                    newStartTime = new Date(currentDate.getTime());
+                    newStartTime.setHours(startTime.getHours(), startTime.getMinutes(), startTime.getSeconds(), startTime.getMilliseconds());
+                    if (newStartTime.getTime() < currentDate.getTime()) {
+                        newStartTime.setDate(newStartTime.getDate() + 1);
+                    }
+                    newEndTime = new Date(newStartTime.getTime() + savedTemplate.duration);
+                    document.querySelector(`[name="start_time"]`).value = formatDate(newStartTime);
+                    document.querySelector(`[name="end_time"]`).value = formatDate(newEndTime);
+                } else if (savedTemplate.endTime) {
+                    endTime = new Date(savedTemplate.endTime);
+                    newStartTime = new Date(currentDate.getTime() + savedTemplate.delay);
+                    newEndTime = new Date(newStartTime.getTime() + savedTemplate.duration);
+                    newEndTime.setHours(endTime.getHours(), endTime.getMinutes(), endTime.getSeconds(), endTime.getMilliseconds());
+                    if (newEndTime.getTime() < newStartTime.getTime()) {
+                        newEndTime.setDate(newEndTime.getDate() + 1);
+                    }
+                    document.querySelector(`[name="start_time"]`).value = formatDate(newStartTime);
+                    document.querySelector(`[name="end_time"]`).value = formatDate(newEndTime);
+                } else {
+                    document.querySelector(`[name="start_time"]`).value = formatDate(new Date(currentDate.getTime() + savedTemplate.delay));
+                    document.querySelector(`[name="end_time"]`).value = formatDate(new Date(currentDate.getTime() + savedTemplate.delay + savedTemplate.duration));
+                }
+                document.querySelector(`[data-checkbox-value="${savedTemplate.region}"]`).click();
+                document.querySelector(`[data-checkbox-value="${savedTemplate.type}"]`).click();
+                if (savedTemplate.type === `groups`) {
+                    if (savedTemplate.whitelist === `1`) {
+                        context = document.getElementsByClassName(`form__group--whitelist`)[0];
+                        if (!context.classList.contains(`is-selected`)) {
+                            context.click();
+                        }
+                    }
+                    if (savedTemplate.groups) {
+                        groups = savedTemplate.groups.trim().split(/\s/);
+                        matches = document.getElementsByClassName(`form__group--steam`);
+                        for (i = 0, n = matches.length; i < n; ++i) {
+                            context = matches[i];
+                            id = context.getAttribute(`data-group-id`);
+                            selected = context.classList.contains(`is-selected`);
+                            j = groups.indexOf(id);
+                            if ((selected && j < 0) || (!selected && j >= 0)) {
+                                context.click();
+                            }
+                        }
+                    }
+                }
+                if (savedTemplate.level > 0) {
+                    document.getElementsByClassName(`ui-slider-range`)[0].style.width = `${savedTemplate.level * 10}%`;
+                    document.getElementsByClassName(`form__level`)[0].textContent = `level ${savedTemplate.level}`;
+                    document.getElementsByClassName(`form__input-description--no-level`)[0].classList.add(`is-hidden`);
+                    document.getElementsByClassName(`form__input-description--level`)[0].classList.remove(`is-hidden`);
+                } else {
+                    document.getElementsByClassName(`ui-slider-range`)[0].style.width = `0%`;
+                    document.getElementsByClassName(`form__input-description--level`)[0].classList.add(`is-hidden`);
+                    document.getElementsByClassName(`form__input-description--no-level`)[0].classList.remove(`is-hidden`);
+                }
+                document.getElementsByClassName(`ui-slider-handle`)[0].style.left = `${savedTemplate.level * 10}%`;
+                document.querySelector(`[name="contributor_level"]`).value = savedTemplate.level;
+                document.querySelector(`[name="description"]`).value = savedTemplate.description;
+                input.value = savedTemplate.name;
+                edit = true;
+                popup.close();
+            });
+            deleteButton.addEventListener(`click`, function () {
+                if (window.confirm(`Are you sure you want to delete this template?`)) {
+                    deleteButton.innerHTML = `
+                        <i class="fa fa-circle-o-notch fa-spin"></i>
+                    `;
+                    createLock(`templateLock`, 300, function (deleteLock) {
+                        savedTemplates = JSON.parse(GM_getValue(`templates`));
+                        for (i = 0, n = savedTemplates.length; i < n && savedTemplates[i].name !== savedTemplate.name; ++i);
+                        savedTemplates.splice(i, 1);
+                        GM_setValue(`templates`, JSON.stringify(savedTemplates));
+                        deleteLock();
+                        template.remove();
+                        edit = false;
+                    });
+                }
+            });
+        }
     }
+
+    /* */
 
     function loadStickiedGiveawayGroups(context) {
         if (!esgst.newGiveawayPath) {
@@ -18528,7 +18738,7 @@ ${avatar.outerHTML}
                     sgCommentHistory: `CH_SG`,
                     stCommentHistory: `CH_ST`,
                     StickiedGroups: "SG",
-                    Templates: "T",
+                    templates: `T`,
                     decryptedGiveaways: "DG"
                 }
             };
@@ -18698,7 +18908,7 @@ ${avatar.outerHTML}
                 },
                 Description: "Templates data.",
                 Title: "Includes Giveaway Templates data.",
-                Name: "Templates",
+                Name: "templates",
                 Key: "T",
                 ID: "SM_T"
             }, {
@@ -19069,16 +19279,8 @@ Background: <input type="color" value="${bgColor}">
                                             }
                                         }
                                         GM_setValue(Key, saved);
-                                    } else if (Key == `Templates` && SM.T.checked) {
-                                        var savedTemplates = GM_getValue(`Templates`);
-                                        for (i = 0, n = File.Data.Templates.length; i < n; ++i) {
-                                            var template = File.Data.Templates[i];
-                                            for (j = 0, numT = savedTemplates.length; j < numT && savedTemplates[j].Name != template.Name; ++j);
-                                            if (j >= numT) {
-                                                savedTemplates.push(template);
-                                            }
-                                        }
-                                        GM_setValue(`Templates`, savedTemplates);
+                                    } else if (Key.match(/^(Templates|templates)$/)) {
+                                        importTemplatesAndMerge(File, Key, SM);
                                     } else if (SM.Names[Key] && SM[SM.Names[Key]] && SM[SM.Names[Key]].checked) {
                                         GM_setValue(Key, File.Data[Key]);
                                     }
@@ -19092,6 +19294,8 @@ Background: <input type="color" value="${bgColor}">
                                     importCommentHistory(File, Key, SM);
                                 } else if (Key === `comments` && SM.C.checked) {
                                     importComments(File, Key, SM);
+                                } else if (Key.match(/^(Templates|templates)$/)) {
+                                    importTemplates(File, Key, SM);
                                 } else if (SM.Names[Key] && SM[SM.Names[Key]] && SM[SM.Names[Key]].checked) {
                                     GM_setValue(Key, File.Data[Key]);
                                 }
@@ -19128,6 +19332,40 @@ Background: <input type="color" value="${bgColor}">
     function importGiveaways(File) {
         createLock(`giveawayLock`, 300, function(deleteLock) {
             GM_setValue(`giveaways`, JSON.stringify(File.Data.giveaways));
+            deleteLock();
+        });
+    }
+
+    function importTemplatesAndMerge(File, Key, SM) {
+        createLock(`templateLock`, 300, function (deleteLock) {
+            var i, j, n, numT, savedTemplates, template, templates;
+            savedTemplates = JSON.parse(GM_getValue(`templates`));
+            if (Key === `Templates`) {
+                templates = getTemplateStorageV6(File.Data.Templates);
+            } else {
+                templates = File.data.templates;
+            }
+            for (i = 0, n = templates.length; i < n; ++i) {
+                template = templates[i];
+                for (j = 0, numT = savedTemplates.length; j < numT && savedTemplates[j].name !== template.name; ++j);
+                if (j >= numT) {
+                    savedTemplates.push(template);
+                }
+            }
+            GM_setValue(`templates`, JSON.stringify(savedTemplates));
+            deleteLock();
+        });
+    }
+
+    function importTemplates(File, Key, SM) {
+        createLock(`templateLock`, 300, function (deleteLock) {
+            var templates;
+            if (Key === `Templates`) {
+                templates = getTemplateStorageV6(File.Data.Templates);
+            } else {
+                templates = File.data.templates;
+            }
+            GM_setValue(`templates`, JSON.stringify(templates));
             deleteLock();
         });
     }
@@ -19633,9 +19871,7 @@ Background: <input type="color" value="${bgColor}">
                     getSMGames(games, `lastCheck`, Data.games, `apps`);
                     getSMGames(games, `lastCheck`, Data.games, `subs`);
                 }
-            } else if (Key.match(/sgCommentHistory|stCommentHistory/) && SM[SM.Names[Key]].checked) {
-                Data[Key] = JSON.parse(GM_getValue(Key, `{}`));
-            } else if (Key.match(/comments|giveaways|descryptedGiveaways/) && SM[SM.Names[Key]].checked) {
+            } else if (Key.match(/sgCommentHistory|stCommentHistory|comments|giveaways|descryptedGiveaways|templates/) && SM[SM.Names[Key]].checked) {
                 Data[Key] = JSON.parse(GM_getValue(Key, `{}`));
             } else if (SM[SM.Names[Key]].checked) {
                 Data[Key] = GM_getValue(Key);
@@ -19951,6 +20187,14 @@ Background: <input type="color" value="${bgColor}">
         } else {
             giveaway.started = true;
         }
+        if (!giveaway.endTime && esgst.enteredPath) {
+            giveaway.endTime = giveaway.innerWrap.querySelector(`[data-timestamp]`);
+            if (giveaway.endTime) {
+                giveaway.endTime = parseInt(giveaway.endTime.getAttribute(`data-timestamp`)) * 1e3;
+            } else {
+                giveaway.endTime = 0;
+            }
+        }
         if (esgst.userPath && !ugd) {
             giveaway.creator = window.location.pathname.match(/^\/user\/(.+)/)[1];
         }
@@ -20252,7 +20496,7 @@ ${avatar.outerHTML}
 `;
                                 gbGiveaways.insertAdjacentHTML(`beforeEnd`, popupHtml);
                                 loadEndlessFeatures(gbGiveaways.lastElementChild);
-                                popup.reposition();console.log(endTime);
+                                popup.reposition();
                                 if (endTime > 0) {
                                     createLock(`giveawayLock`, 300, function (deleteLock) {
                                         var giveaways = JSON.parse(GM_getValue(`giveaways`));
