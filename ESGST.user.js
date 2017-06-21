@@ -3,7 +3,7 @@
 // @namespace ESGST
 // @description Enhances SteamGifts and SteamTrades by adding some cool features to them.
 // @icon https://github.com/revilheart/ESGST/raw/master/Resources/esgstIcon.ico
-// @version 6.Beta.10.3
+// @version 6.Beta.11.0
 // @author revilheart
 // @contributor Royalgamer06
 // @downloadURL https://github.com/revilheart/ESGST/raw/master/ESGST.user.js
@@ -494,6 +494,7 @@
             ggl: `ggp`,
             ochgb: `ochgb`,
             gt: `GTS`,
+            gtm: `gtm`,
             sgg: `SGG`,
             rcvc: `rcvc`,
             ugs: `UGS`,
@@ -952,6 +953,12 @@
                 name: `One-Click Hide Giveaway Button`,
                 check: getValue(`ochgb`),
                 load: loadOchgb
+            },
+            {
+                id: `gtm`,
+                name: `Giveaway Train Maker`,
+                check: getValue(`gtm`),
+                load: loadGtm
             },
             {
                 id: `gt`,
@@ -3088,8 +3095,35 @@ background-color: ${backgroundColor} !important;
         Unknown = window.getComputedStyle(Unknown).color;
         Temp.remove();
         style = `
-.esgst-gts-section >* {
+.esgst-gtm-wagon {
+    background-color: #fff;
+    border: 1px solid;
+    border-radius: 4px;
+    cursor: pointer;
+    display: inline-block;
+    margin: 5px 2px;
+    padding: 2px 5px;
+}
+
+.esgst-gtm-wagon.error {
+    background-color: rgba(236, 133, 131, 0.5);
+}
+
+.esgst-gtm-wagon.success {
+    background-color: rgba(150, 196, 104, 0.5);
+}
+
+.esgst-gtm-wagon.connected {
+    text-decoration: line-through;
+}
+
+.esgst-gts-section >*, .esgst-gtm-section >* {
 margin: 5px 0;
+}
+
+.esgst-gtm-section .esgst-button-set {
+display: inline-block;
+margin: 5px;
 }
 
 .esgst-ggl-panel {
@@ -5290,7 +5324,7 @@ ${title}
         });
     }
 
-    /* */
+    /* [GTS] Giveaway Templates */
 
     function loadGts() {
         if (esgst.newGiveawayPath) {
@@ -5299,11 +5333,11 @@ ${title}
     }
 
     function addGtsButtonSection() {
-        var button, delay, edit, endTime, input, message, preciseEndCheckbox, preciseEndOption, preciseStartCheckbox, preciseStartOption, reviewButton, rows, section, set, startTime, warning;
+        var button, createGiveawayButton, delay, edit, endTime, input, message, preciseEndCheckbox, preciseEndOption, preciseStartCheckbox, preciseStartOption, reviewButton, rows, section, set, startTime, warning;
         rows = document.getElementsByClassName(`form__rows`)[0];
         if (rows) {
             reviewButton = rows.lastElementChild;
-            createButton = createButtonSet(`green`, `grey`, `fa-plus-circle`, `fa-circle-o-notch fa-spin`, `Create Giveaway`, `Creating...`, function (callback) {
+            createGiveawayButton = createButtonSet(`green`, `grey`, `fa-plus-circle`, `fa-circle-o-notch fa-spin`, `Create Giveaway`, `Creating...`, function (callback) {
                 var data;
                 data = `xsrf_token=${esgst.xsrfToken}&next_step=3&`;
                 data += `game_id=${document.querySelector(`[name="game_id"]`).value}&`;
@@ -5323,7 +5357,7 @@ ${title}
                     window.location.href = response.finalUrl;
                 });
             });
-            rows.appendChild(createButton.set);
+            rows.appendChild(createGiveawayButton.set);
             button = insertHtml(esgst.mainPageHeading, `afterBegin`, `
                 <div class="esgst-heading-button" title="View/apply templates">
                     <i class="fa fa-file"></i>
@@ -5375,7 +5409,7 @@ ${title}
                         details += `, region restricted`;
                     }
                     if (savedTemplate.type === `everyone`) {
-                        details += `, rveryone`;
+                        details += `, everyone`;
                     } else if (savedTemplate.type === `invite_only`) {
                         details += `, invite only`;
                     } else {
@@ -5501,10 +5535,10 @@ ${title}
                 }
             });
             section.appendChild(set.set);
-            rows.insertBefore(createButton.set, rows.firstElementChild);
+            rows.insertBefore(createGiveawayButton.set, rows.firstElementChild);
             rows.insertBefore(reviewButton, rows.firstElementChild);
-            createButton.set.style.display = `inline-block`;
-            createButton.set.style.margin = `20px 5px`;
+            createGiveawayButton.set.style.display = `inline-block`;
+            createGiveawayButton.set.style.margin = `20px 5px`;
             reviewButton.style.margin = `20px 0`;
             var first, last;
             first = true;
@@ -5512,18 +5546,18 @@ ${title}
             window.addEventListener(`scroll`, function () {
                 if (window.scrollY < 138) {
                     if (!first) {
-                        rows.insertBefore(createButton.set, rows.firstElementChild);
+                        rows.insertBefore(createGiveawayButton.set, rows.firstElementChild);
                         rows.insertBefore(reviewButton, rows.firstElementChild);
-                        createButton.set.style.margin = `20px 5px`;
+                        createGiveawayButton.set.style.margin = `20px 5px`;
                         reviewButton.style.margin = `20px 0`;
                         first = true;
                         last = false;
                     }
                 } else if (!last) {
                     rows.appendChild(reviewButton);
-                    rows.appendChild(createButton.set);
+                    rows.appendChild(createGiveawayButton.set);
                     reviewButton.style.margin = ``;
-                    createButton.set.style.margin = `0 5px`;
+                    createGiveawayButton.set.style.margin = `0 5px`;
                     last = true;
                     first = false;
                 }
@@ -5633,6 +5667,254 @@ ${title}
                     });
                 }
             });
+        }
+    }
+
+    /* [GTM] Giveaway Train Maker */
+
+    function loadGtm() {
+        if (esgst.newGiveawayPath) {
+            addGtmSection();
+        }
+    }
+
+    function addGtmSection() {
+        var addWagonButton, connectWagonsCheckbox, connectWagonsDescription, connectWagonsOption, createTrainButton, deleteIcon, emptyTrainButton, rows, section, source, train, viewTrainButton, wagonDatas, wagons, wagonsSection;
+        rows = document.getElementsByClassName(`form__rows`)[0];
+        if (rows) {
+            wagonDatas = [];
+            train = [];
+            section = insertHtml(rows, `afterBegin`, `
+                <div class="form__row">
+				    <div class="form__heading">
+                        <div class="form__heading__number">0.</div>
+                        <div class="form__heading__text">Train Maker</div>
+                    </div>
+                    <div class="esgst-gtm-section form__row__indent">
+                        <div>
+                            <span>Connect wagons.</span>
+                            <div class="esgst-hidden form__input-description">
+                                <div>Add the connection style to the description of the giveaway, wherever you want it to appear, using the format [ESGST-P]...[P]...[P]...[ESGST-P][ESGST-S]...[ESGST-S][ESGST-N]...[N]...[N]...[ESGST-N], where [P]...[P] and [N]...[N] delimit the clickable link, [ESGST-P]...[ESGST-P] and [ESGST-N]...[ESGST-N] delimit the entire text area that includes the clickable link, and [ESGST-S]...[ESGST-S] delimits the separator between the two links.</div>
+                                <br/>
+                                <div>Some examples:</div>
+                                <br/>
+                                <div>[ESGST-P][P]Previous[P][ESGST-P][ESGST-S] [ESGST-S][ESGST-N][N]Next[N][ESGST-N]</div>
+                                <br/>
+                                <div>[ESGST-P]### ← [P]Previous[P][ESGST-P][ESGST-S] | [ESGST-S][ESGST-N]### [N]Next[N] →[ESGST-N]</div>
+                                <br/>
+                                <div>[ESGST-P]Go [P]back[P].[ESGST-P][ESGST-S] [ESGST-S][ESGST-N]Go [N]forward[N].[ESGST-N]</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `).lastElementChild;
+            connectWagonsOption = section.firstElementChild;
+            connectWagonsDescription = connectWagonsOption.lastElementChild;
+            connectWagonsCheckbox = createCheckbox_v6(connectWagonsOption, GM_getValue(`gtm_cw`, true));
+            if (connectWagonsCheckbox.input.checked) {
+                connectWagonsDescription.classList.remove(`esgst-hidden`);
+            }
+            connectWagonsOption.addEventListener(`click`, function () {
+                GM_setValue(`gtm_cw`, connectWagonsCheckbox.input.checked);
+                if (connectWagonsCheckbox.input.checked) {
+                    connectWagonsDescription.classList.remove(`esgst-hidden`);
+                } else {
+                    connectWagonsDescription.classList.add(`esgst-hidden`);
+                }
+            });
+            addWagonButton = createButtonSet(`green`, `grey`, `fa-plus-circle`, `fa-circle-o-notch fa-spin`, `Add Wagon`, `Adding...`, function (callback) {
+                var copies, data, description, details, endTime, gameId, gameName, gameType, groups, input, keys, level, region, startTime, type, wagon, whitelist;
+                input = document.querySelector(`[name="game_id"]`);
+                gameId = input.value;
+                gameName = input.nextElementSibling.value;
+                gameType = document.querySelector(`[name="type"]`).value;
+                copies = document.querySelector(`[name="copies"]`).value;
+                keys = document.querySelector(`[name="key_string"]`).value;
+                if (gameId && ((gameType === `gift` && parseInt(copies) > 0) || (gameType === `key` && keys))) {
+                    startTime = document.querySelector(`[name="start_time"]`).value;
+                    endTime = document.querySelector(`[name="end_time"]`).value;
+                    region = document.querySelector(`[name="region"]`).value;
+                    type = document.querySelector(`[name="who_can_enter"]`).value;
+                    whitelist = document.querySelector(`[name="whitelist"]`).value;
+                    groups = document.querySelector(`[name="group_string"]`).value;
+                    level = document.querySelector(`[name="contributor_level"]`).value;
+                    description = document.querySelector(`[name="description"]`).value;
+                    details = `${gameName}\n`;
+                    if (gameType === `gift`) {
+                        details += `Gift\n${copies} Copies\n`;
+                    } else {
+                        details += `Keys\n${keys}\n`;
+                    }
+                    details += `\n${startTime} - ${endTime}\n`;
+                    if (region !== `0`) {
+                        details += `Region Restricted\n`;
+                    }
+                    if (type === `everyone`) {
+                        details += `Everyone\n`;
+                    } else if (type === `invite_only`) {
+                        details += `Invite Only\n`;
+                    } else {
+                        if (whitelist === `1`) {
+                            details += `Whitelist\n`;
+                        }
+                        if (groups.trim()) {
+                            details += `Groups\n`;
+                        }
+                    }
+                    details += `Level ${level}+\n\n${description}`;
+                    data = `xsrf_token=${esgst.xsrfToken}&next_step=3&game_id=${gameId}&type=${gameType}&copies=${copies}&key_string=${keys}&`;
+                    data += `start_time=${startTime}&end_time=${endTime}&region=${region}&who_can_enter=${type}&whitelist=${whitelist}&group_string=${groups}&`;
+                    data += `contributor_level=${level}&description=${encodeURIComponent(description)}`;
+                    wagonDatas.push(data);
+                    wagon = insertHtml(wagons, `beforeEnd`, `
+                        <div class="esgst-gtm-wagon" draggable="true" title="${details}">${wagonDatas.length}</div>
+                    `);
+                    setGtmWagon(wagon);
+                }
+                callback();
+            });
+            emptyTrainButton = createButtonSet(`green`, `grey`, `fa-trash`, `fa-circle-o-notch fa-spin`, `Empty Train`, `Emptying...`, function (callback) {
+                wagonDatas = [];
+                train = [];
+                wagons.innerHTML = ``;
+                callback();
+            });
+            createTrainButton = createButtonSet(`green`, `grey`, `fa-arrow-circle-right`, `fa-circle-o-notch fa-spin`, `Create Train`, `Creating...`, function (callback) {
+                viewTrainButton.set.classList.add(`esgst-hidden`);
+                window.setTimeout(createGtmTrain, 0, 0, wagons.children.length, function () {
+                    if (train.length) {
+                        viewTrainButton.set.classList.remove(`esgst-hidden`);
+                    }
+                    callback();
+                });
+            });
+            viewTrainButton = createButtonSet(`green`, `grey`, `fa-train`, `fa-circle-o-notch fa-spin`, `View Train`, `Creating...`, function (callback) {
+                var i, n, popup, trainHtml;
+                popup = createPopup_v6(`fa-train`, `Choo choo!`);
+                trainHtml = ``;
+                for (i = 0, n = train.length; i < n; ++i) {
+                    trainHtml += `
+                        <div>
+                            <a href="${train[i].url}">${train[i].url}</a>
+                        </div>
+                    `;
+                }
+                popup.description.insertAdjacentHTML(`beforeEnd`, `
+                    <div class="popup__keys__list">
+                        ${trainHtml}
+                    </div>
+                `);
+                popup.open();
+                callback();
+            });
+            viewTrainButton.set.classList.add(`esgst-hidden`);
+            section.appendChild(addWagonButton.set);
+            section.appendChild(emptyTrainButton.set);
+            section.appendChild(createTrainButton.set);
+            section.appendChild(viewTrainButton.set);
+            wagonsSection = insertHtml(section, `beforeEnd`, `
+                <div class="pinned-giveaways__outer-wrap">
+                    <div class="pinned-giveaways__inner-wrap"></div>
+                    <i class="fa fa-trash" title="Drag a wagon here to delete it"></i>
+                    <div class="form__input-description">
+                        Wagons successfully created will turn green, wagons successfully connected will be strikethrough and wagons that were not successfully created will turn red.
+                    </div>
+                </div>
+            `);
+            wagons = wagonsSection.firstElementChild;
+            deleteIcon = wagons.nextElementSibling;
+            deleteIcon.addEventListener(`dragenter`, function () {
+                if (window.confirm(`Are you sure you want to delete this wagon?`)) {
+                    source.remove();
+                }
+            });
+        }
+
+        function setGtmWagon(wagon) {
+            wagon.addEventListener(`dragstart`, function () {
+                source = wagon;
+            });
+            wagon.addEventListener(`dragenter`, function () {
+                if (isPreviousWagon(source, wagon)) {
+                    wagons.insertBefore(source, wagon);
+                } else {
+                    wagons.insertBefore(source, wagon.nextElementSibling);
+                }
+            });
+        }
+
+        function isPreviousWagon(wagon1, wagon2) {
+            var currentWagon;
+            currentWagon = wagon1;
+            do {
+                currentWagon = currentWagon.previousElementSibling;
+                if (currentWagon && currentWagon === wagon2) {
+                    return true;
+                }
+            } while (currentWagon);
+            return false;
+        }
+
+        function createGtmTrain(i, n, callback) {
+            var j;
+            if (i < n) {
+                j = parseInt(wagons.children[i].textContent) - 1;
+                window.setTimeout(request, 0, wagonDatas[j], true, `/giveaways/new`, function (response) {
+                    if (response.finalUrl.match(/\/giveaways\/new/)) {
+                        wagons.children[i].classList.add(`error`);
+                    } else {
+                        wagons.children[i].classList.add(`success`);
+                        train.push({
+                            wagon: wagons.children[i],
+                            url: response.finalUrl
+                        });
+                    }
+                    window.setTimeout(createGtmTrain, 0, ++i, n, callback);
+                });
+            } else if (connectWagonsCheckbox.input.checked) {
+                window.setTimeout(connectGtmWagons, 0, 0, train.length, callback);
+            } else {
+                window.setTimeout(callback, 0);
+            }
+        }
+
+        function connectGtmWagons(i, n, callback) {
+            var data, description, id, responseHtml;
+            if (i >= n || n - 1 === 0) {
+                window.setTimeout(callback, 0);
+            } else {
+                window.setTimeout(request, 0, null, true, train[i].url, function (response) {
+                    responseHtml = DOM.parse(response.responseText);
+                    id = responseHtml.querySelector(`[name="giveaway_id"]`).value;
+                    description = responseHtml.querySelector(`[name="description"]`).value;
+                    if (i === 0) {
+                        description = description.replace(/\[ESGST-P\](.*?)\[ESGST-P\]\[ESGST-S\](.*?)\[ESGST-S\]/, ``);
+                        description = description.replace(/\[ESGST-N\](.*?)\[N\](.*?)\[N\](.*?)\[ESGST-N\]/, function (m, p1, p2, p3) {
+                            return `${p1}[${p2}](${train[i + 1].url})${p3}`;
+                        });
+                    } else if (i === n - 1) {
+                        description = description.replace(/\[ESGST-S\](.*?)\[ESGST-S\]\[ESGST-N\](.*?)\[N\](.*?)\[N\](.*?)\[ESGST-N\]/, ``);
+                        description = description.replace(/\[ESGST-P\](.*?)\[P\](.*?)\[P\](.*?)\[ESGST-P\]/, function (m, p1, p2, p3) {
+                            return `${p1}[${p2}](${train[i - 1].url})${p3}`;
+                        });
+                    } else {
+                        description = description.replace(/\[ESGST-P\](.*?)\[P\](.*?)\[P\](.*?)\[ESGST-P\]/, function (m, p1, p2, p3) {
+                           return `${p1}[${p2}](${train[i - 1].url})${p3}`;
+                        });
+                        description = description.replace(/\[ESGST-S\](.*?)\[ESGST-S\]/, function (m, p1) {
+                            return p1;
+                        });
+                        description = description.replace(/\[ESGST-N\](.*?)\[N\](.*?)\[N\](.*?)\[ESGST-N\]/, function (m, p1, p2, p3) {
+                            return `${p1}[${p2}](${train[i + 1].url})${p3}`;
+                        });
+                    }
+                    data = `xsrf_token=${esgst.xsrfToken}&do=edit_giveaway_description&giveaway_id=${id}&description=${encodeURIComponent(description)}`;
+                    window.setTimeout(request, 0, data, true, `/ajax.php`, function () {
+                        train[i].wagon.classList.add(`connected`);
+                        window.setTimeout(connectGtmWagons, 0, ++i, n, callback);
+                    });
+                });
+            }
         }
     }
 
@@ -18661,7 +18943,7 @@ ${avatar.outerHTML}
         SMLastBundleSync = Container.getElementsByClassName("SMLastBundleSync")[0];
         SMAPIKey = Container.getElementsByClassName("SMAPIKey")[0];
         SMGeneralFeatures = ["fh", "fs", "fmph", "ff", "hr", "lpv", "vai", "ev", "hbs", "at", "pnot", "es"];
-        SMGiveawayFeatures = ["dgn", "sal", "hfc", "ags", "pgb", "gf", "gv", "egf", "gp", "gwc", "gwr", "elgb", "qgb", "gb", "ggl", "ochgb", "gt", "sgg", "rcvc", "ugs", "er", "gwl", "gesl", "as"];
+        SMGiveawayFeatures = ["dgn", "sal", "hfc", "ags", "pgb", "gf", "gv", "egf", "gp", "gwc", "gwr", "elgb", "qgb", "gb", "ggl", "ochgb", "gt", "gtm", "sgg", "rcvc", "ugs", "er", "gwl", "gesl", "as"];
         SMDiscussionFeatures = ["adot", "ds", "dh", "mpp", "ded"];
         SMCommentingFeatures = ["ch", "ct", "cfh", "rbot", "rbp", "mr", "rfi", "rml"];
         SMUserGroupGamesFeatures = ["ap", "uh", "un", "rwscvl", "ugd", "namwc", "nrf", "swr", "luc", "sgpb", "stpb", "sgc", "uf", "wbs", "wbc", "wbh", "ut", "iwh", "gh", "gs", "egh", "ggt", "gc"];

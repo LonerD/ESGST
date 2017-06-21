@@ -1,4 +1,14 @@
 /*
+ * June 20, 2017 - v6.Beta.11.0
+ */
+
+* Fixed a typo in Giveaway Templates.
+
+Added the following features:
+
+* Giveaway Train Maker
+
+/*
  * June 20, 2017 - v6.Beta.10.3
  */
 
