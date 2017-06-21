@@ -1,4 +1,17 @@
 /*
+ * June 20, 2017 - v6.Beta.11.1
+ */
+
+* Fixed a bug that was not enabling automatic sync.
+* Added an option to display .gifv images to Visible Attached Images.
+* Fixed a bug that was not enabling Giveaway Bookmarks in the bookmarked giveaways list and was not unbookmarking a giveaway when entering it.
+* Changed how Giveaway Winning Chance and Giveaway Winning Ratio are shown in the entered page.
+* Fixed a bug in Enter/Leave Giveaway Button that was not resetting the "Entering..." button when closing the popup without entering.
+* When entering a giveaway that has no description with "Popup reply box when entering / include it in the description popup." enabled, Enter/Leave Giveaway Button will now immediately enter the giveaway and then pop up the reply box if you want to add a comment.
+* Fixed a bug that was not enabling Comment Tracker for page 2+ while using Endless Scrolling.
+* Fixed a bug in Groups Stats while using Endless Scrolling.
+
+/*
  * June 20, 2017 - v6.Beta.11.0
  */
 

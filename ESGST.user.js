@@ -3,7 +3,7 @@
 // @namespace ESGST
 // @description Enhances SteamGifts and SteamTrades by adding some cool features to them.
 // @icon https://github.com/revilheart/ESGST/raw/master/Resources/esgstIcon.ico
-// @version 6.Beta.11.0
+// @version 6.Beta.11.1
 // @author revilheart
 // @contributor Royalgamer06
 // @downloadURL https://github.com/revilheart/ESGST/raw/master/ESGST.user.js
@@ -464,6 +464,7 @@
             lpv: `lpv`,
             hbs: `BSH`,
             vai: `VAI`,
+            vai_gifv: `vai_gifv`,
             ev: `ev`,
             at: `AT`,
             at_g: `AT_G`,
@@ -799,6 +800,13 @@
             {
                 id: `vai`,
                 name: `Visible Attached Images`,
+                options: [
+                    {
+                        id: `vai_gifv`,
+                        name: `Display .gifv images.`,
+                        check: getValue(`vai_gifv`)
+                    }
+                ],
                 check: getValue(`vai`),
                 load: loadVisibleAttachedImages
             },
@@ -1675,7 +1683,6 @@
         loadFeatures();
         if (esgst.sg) {
             checkSync();
-            updateGroups();
         }
         goToComment(esgst.originalHash);
     }
@@ -2065,7 +2072,7 @@
 <span>Synced!</span>
 `;
             }
-            GM_setValue("LastSync", CurrentDate);
+            GM_setValue("LastSync", CurrentDate.getTime());
         });
     }
 
@@ -2450,11 +2457,11 @@
                     } else {
                         popup.popup.classList.remove(`popup`);
                     }
+                    if (popup.close) {
+                        popup.close();
+                    }
                 }
             }, callback);
-        };
-        popup.close = function () {
-            popup.opened.close();
         };
         popup.reposition = function () {
             if (popup.opened) {
@@ -4024,22 +4031,6 @@ margin: 0;
         }
     }
 
-    function updateGroups() {
-        var Popup;
-        if (!GM_getValue("GSync")) {
-            Popup = createPopup(true);
-            Popup.Icon.classList.add("fa-refresh", "fa-spin");
-            Popup.Title.textContent = "ESGST is updating your groups. Please wait...";
-            Popup.Groups = [];
-            syncGroups(Popup, "/account/steam/groups/search?page=", 1, function () {
-                GM_setValue("GSync", true);
-                GM_setValue("Groups", Popup.Groups);
-                Popup.Title.textContent = "Done. You can close this now.";
-            });
-            Popup.popUp();
-        }
-    }
-
     function syncBundleList(callback) {
         var popup = createPopup();
         popup.Icon.classList.add("fa-refresh");
@@ -4521,7 +4512,7 @@ margin-bottom: ${esgst.footer.offsetHeight}px;
         for (i = 0, n = images.length; i < n; ++i) {
             image = images[i];
             url = image.getAttribute(`src`);
-            if (url) {
+            if (url && esgst.vai_gifv) {
                 // rename .gifv images to .gif so that they can be attached properly
                 url = url.replace(/\.gifv/, `.gif`);
                 image.setAttribute(`src`, url);
@@ -5649,7 +5640,7 @@ ${title}
                 document.querySelector(`[name="description"]`).value = savedTemplate.description;
                 input.value = savedTemplate.name;
                 edit = true;
-                popup.close();
+                popup.opened.close();
             });
             deleteButton.addEventListener(`click`, function () {
                 if (window.confirm(`Are you sure you want to delete this template?`)) {
@@ -17509,7 +17500,7 @@ ${Results.join(``)}
         if (context == document) {
             addGSHeading();
         }
-        var matches = document.getElementsByClassName(`table__row-inner-wrap`);
+        var matches = context.getElementsByClassName(`table__row-inner-wrap`);
         for (var i = 0, n = matches.length; i < n; ++i) {
             loadGSStatus(matches[i]);
         }
@@ -20804,7 +20795,7 @@ ${avatar.outerHTML}
     }
 
     function getGbGiveaways(giveaways, main) {
-        if ((esgst.wonPath && !main) || (!esgst.wonPath && main)) {
+        if ((esgst.wonPath && !main) || (!esgst.wonPath)) {
         var savedGiveaways = JSON.parse(GM_getValue(`giveaways`, `{}`));
         for (var i = 0, n = giveaways.length; i < n; ++i) {
             var giveaway = giveaways[i];
@@ -21348,17 +21339,31 @@ ${avatar.outerHTML}
     }
 
     function addGwcChance(context, giveaway) {
-        var chance;
+        var chance, html;
         chance = giveaway.entries > 0 ? Math.round(giveaway.copies / giveaway.entries * 10000) / 100 : 100;
         if (chance > 100) {
             chance = 100;
         }
         giveaway.chance = chance;
         context.setAttribute(`data-chance`, chance);
-        context.innerHTML = `
-            <i class="fa fa-area-chart"></i>
-            <span>${chance}%</span>
-        `;
+        if (esgst.enteredPath) {
+            context.style.display = `inline-block`;
+            if (esgst.gwr) {
+                html = `
+                    <span>${chance}% / </span>
+                `;
+            } else {
+                html = `
+                    <span>${chance}%</span>
+                `
+            }
+        } else {
+            html = `
+                <i class="fa fa-area-chart"></i>
+                <span>${chance}%</span>
+            `;
+        }
+        context.innerHTML = html;
     }
 
     /* Giveaway Winning Ratio */
@@ -21384,13 +21389,21 @@ ${avatar.outerHTML}
     }
 
     function addGwcRatio(context, giveaway) {
-        var ratio;
+        var html, ratio;
         ratio = Math.round(giveaway.entries / giveaway.copies);
         context.setAttribute(`data-ratio`, ratio);
-        context.innerHTML = `
-            <i class="fa fa-pie-chart"></i>
-            <span>${ratio}:1</span>
-        `;
+        if (esgst.enteredPath) {
+            context.style.display = `inline-block`;
+            html = `
+                <span>${ratio}:1</span>
+            `;
+        } else {
+            html = `
+                <i class="fa fa-pie-chart"></i>
+                <span>${ratio}:1</span>
+            `;
+        }
+        context.innerHTML = html;
     }
 
     function addGwcrHeading(context, main) {
@@ -21459,14 +21472,23 @@ ${avatar.outerHTML}
                 if (description) {
                     description.classList.add(`esgst-text-left`);
                     popup.description.insertAdjacentHTML(`beforeEnd`, description.outerHTML);
-                }
-                if (esgst.elgb_rb) {
-                    box = insertHtml(popup.description, `beforeEnd`, `<textarea></textarea>`);
-                    addCFHPanel(box);
-                }
-                set = createButtonSet(`green`, `grey`, `fa-plus-circle`, `fa-circle-o-notch fa-spin`, `Enter Giveaway`, `Entering...`, function (callback) {
-                    enterElgbGiveaway(giveaway, function() {
-                        mainCallback();
+                    set = createButtonSet(`green`, `grey`, `fa-plus-circle`, `fa-circle-o-notch fa-spin`, `Enter Giveaway`, `Entering...`, function (callback) {
+                        enterElgbGiveaway(giveaway, function() {
+                            mainCallback();
+                            if (box && box.value) {
+                                request(`xsrf_token=${esgst.xsrfToken}&do=comment_new&description=${box.value}`, false, giveaway.url, function() {
+                                    callback();
+                                    popup.opened.close();
+                                });
+                            } else {
+                                callback();
+                                popup.opened.close();
+                            }
+                        });
+                    });
+                } else {
+                    enterElgbGiveaway(giveaway, mainCallback);
+                    set = createButtonSet(`green`, `grey`, `fa-plus-circle`, `fa-circle-o-notch fa-spin`, `Add Comment`, `Adding...`, function (callback) {
                         if (box && box.value) {
                             request(`xsrf_token=${esgst.xsrfToken}&do=comment_new&description=${box.value}`, false, giveaway.url, function() {
                                 callback();
@@ -21477,7 +21499,11 @@ ${avatar.outerHTML}
                             popup.opened.close();
                         }
                     });
-                });
+                }
+                if (esgst.elgb_rb) {
+                    box = insertHtml(popup.description, `beforeEnd`, `<textarea></textarea>`);
+                    addCFHPanel(box);
+                }
                 popup.description.appendChild(set.set);
                 popup.open(function() {
                     if (box) {
@@ -21595,7 +21621,7 @@ ${avatar.outerHTML}
      * Features - Comments
      */
 
-    function loadCommentFeatures(context, goToUnread, markRead, markUnread, mainContext) {
+    function loadCommentFeatures(context, main, goToUnread, markRead, markUnread, mainContext) {
         var comments, i, n;
         if (!mainContext) {
             mainContext = document;
@@ -21850,13 +21876,13 @@ ${avatar.outerHTML}
         markRead = goToUnread.nextElementSibling;
         markUnread = markRead.nextElementSibling;
         goToUnread.addEventListener(`click`, function() {
-            loadCommentFeatures(document, true);
+            loadCommentFeatures(document, null, true);
         });
         markRead.addEventListener(`click`, function() {
-            loadCommentFeatures(document, false, true);
+            loadCommentFeatures(document, null, false, true);
         });
         markUnread.addEventListener(`click`, function() {
-            loadCommentFeatures(document, false, false, true);
+            loadCommentFeatures(document, null, false, false, true);
         });
     }
 
@@ -22035,7 +22061,7 @@ ${avatar.outerHTML}
         request(null, true, `${url}${nextPage}`, function(response) {
             var context, pagination;
             context = DOM.parse(response.responseText);
-            loadCommentFeatures(context, goToUnread, markRead, markUnread, context);
+            loadCommentFeatures(context, null, goToUnread, markRead, markUnread, context);
             if ((goToUnread && !esgst.ctUnreadFound) || !goToUnread) {
                 pagination = context.getElementsByClassName(`pagination__navigation`)[0];
                 ++nextPage;
