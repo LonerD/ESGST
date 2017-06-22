@@ -3,7 +3,7 @@
 // @namespace ESGST
 // @description Enhances SteamGifts and SteamTrades by adding some cool features to them.
 // @icon https://github.com/revilheart/ESGST/raw/master/Resources/esgstIcon.ico
-// @version 6.Beta.11.2
+// @version 6.Beta.12.0
 // @author revilheart
 // @contributor Royalgamer06
 // @downloadURL https://github.com/revilheart/ESGST/raw/master/ESGST.user.js
@@ -371,6 +371,9 @@
         url += `page=`;
         esgst.searchUrl = url;
         esgst.userPath = window.location.pathname.match(/^\/user\//);
+        esgst.groupPath = window.location.pathname.match(/^\/group\//);
+        esgst.regionsPath = window.location.pathname.match(/^\/regions\//);
+        esgst.groupWishlistPath = window.location.pathname.match(/^\/group\/(.*?)\/wishlist/);
         refreshHeaderElements(document);
         esgst.winnersPath = window.location.pathname.match(/^\/giveaway\/.+\/winners/);
         esgst.giveawaysPath = esgst.sg && window.location.pathname.match(/^\/($|giveaways(?!.*\/(new|wishlist|created|entered|won)))/);
@@ -471,6 +474,7 @@
             at_c24: `at_c24`,
             at_s: `at_s`,
             pnot: `pnot`,
+            lpl: `lpl`,
             es: `ES`,
             es_gt: `ES_G`,
             es_gtc: `ES_GC`,
@@ -844,6 +848,12 @@
                 name: `Pagination Navigation On Top`,
                 check: getValue(`pnot`),
                 load: loadPaginationNavigationOnTop
+            },
+            {
+                id: `lpl`,
+                name: `Last Page Link`,
+                check: getValue(`lpl`),
+                load: loadLpl
             },
             {
                 id: `qgb`,
@@ -4548,7 +4558,7 @@ ${title}
         }
     }
 
-    /* Pagination Navigation On Top */
+    /* [PNOT] Pagination Navigation On Top */
 
     function loadPaginationNavigationOnTop() {
         if (esgst.paginationNavigation && esgst.mainPageHeading) {
@@ -4557,8 +4567,87 @@ ${title}
         }
     }
 
+    /* [LPL] Last Page Link */
+
+    function loadLpl() {
+        if (esgst.sg && esgst.paginationNavigation) {
+            if (esgst.discussionPath) {
+                addLplDiscussionLink();
+            } else if (esgst.userPath) {
+                addLplUserLink();
+            } else if (esgst.groupPath) {
+                addLplGroupLink();
+            }
+        }
+    }
+
+    function addLplDiscussionLink() {
+        var lastLink, url;
+        esgst.lastPage = 999999999;
+        url = `${window.location.pathname.replace(`/search`, ``)}/search?page=${esgst.lastPage}`;
+        esgst.lastPageLink = `
+            <a data-page-number="${esgst.lastPage}" href="${url}">
+                <span>Last</span>
+                <i class="fa fa-angle-double-right"></i>
+            </a>
+        `;
+        lastLink = esgst.paginationNavigation.lastElementChild;
+        if (!lastLink.classList.contains(`is-selected`) && !lastLink.textContent.match(/Last/)) {
+            esgst.paginationNavigation.insertAdjacentHTML(`beforeEnd`, esgst.lastPageLink);
+        }
+    }
+
+    function addLplUserLink() {
+        var lastLink, lastPage, url, username;
+        username = window.location.pathname.match(/^\/user\/(.+?)(\/.*?)?$/)[1];
+        if (window.location.pathname.match(/\/giveaways\/won/)) {
+            esgst.lastPage = Math.ceil(parseInt(document.querySelector(`.featured__table__row__right a[href*="/giveaways/won"]`).textContent.replace(/,/g, ``)) / 25);
+            url = `/user/${username}/giveaways/won/search?page=${esgst.lastPage}`;
+        } else {
+            esgst.lastPage = Math.ceil(parseInt(document.getElementsByClassName(`sidebar__navigation__item__count`)[0].textContent.replace(/,/g, ``)) / 25);
+            url = `/user/${username}/search?page=${esgst.lastPage}`;
+        }
+        esgst.lastPageLink = `
+            <a data-page-number="${esgst.lastPage}" href="${url}">
+                <span>Last</span>
+                <i class="fa fa-angle-double-right"></i>
+            </a>
+        `;
+        lastLink = esgst.paginationNavigation.lastElementChild;
+        if (esgst.currentPage !== esgst.lastPage && !lastLink.classList.contains(`is-selected`) && !lastLink.textContent.match(/Last/)) {
+            esgst.paginationNavigation.insertAdjacentHTML(`beforeEnd`, esgst.lastPageLink);
+        }
+    }
+
+    function addLplGroupLink() {
+        var group, lastLink, lastPage, url;
+        group = window.location.pathname.match(/^\/group\/(.+?\/.+?)(\/.*?)?$/)[1];
+        if (window.location.pathname.match(/\/users/)) {
+            esgst.lastPage = Math.ceil(parseInt(document.getElementsByClassName(`sidebar__navigation__item__count`)[1].textContent.replace(/,/g, ``)) / 25);
+            url = `/group/${group}/users/search?page=${esgst.lastPage}`;
+        } else if (esgst.groupWishlistPath) {
+            esgst.lastPage = 999999999;
+            url = `/group/${group}/wishlist/search?page=${esgst.lastPage}`;
+        } else {
+            esgst.lastPage = Math.ceil(parseInt(document.getElementsByClassName(`sidebar__navigation__item__count`)[0].textContent.replace(/,/g, ``)) / 25);
+            url = `/group/${group}/search?page=${esgst.lastPage}`;
+        }
+        esgst.lastPageLink = `
+            <a data-page-number="${esgst.lastPage}" href="${url}">
+                <span>Last</span>
+                <i class="fa fa-angle-double-right"></i>
+            </a>
+        `;
+        lastLink = esgst.paginationNavigation.lastElementChild;
+        if (esgst.currentPage !== esgst.lastPage && !lastLink.classList.contains(`is-selected`) && !lastLink.textContent.match(/Last/)) {
+            esgst.paginationNavigation.insertAdjacentHTML(`beforeEnd`, esgst.lastPageLink);
+        }
+    }
+
+    /* [ES] Endless Scrolling */
+
     function loadEndlessScrolling() {
-        var pagination, context, currentPage, nextPage, reversePages,
+        var pagination, context, currentPage, lastLink, lastPageMissing, nextPage, reversePages,
             esPageHeading,
             mainPaginationNavigationBackup,
             esRefreshButton, esPauseButton;
@@ -4566,10 +4655,16 @@ ${title}
         context = pagination.previousElementSibling;
         if (esgst.paginationNavigation) {
             if (esgst.es_rs && esgst.discussionPath) {
-                if (esgst.currentPage == 1) {
+                if (esgst.currentPage == 1 && document.referrer.match(/\/discussions/)) {
                     pagination.classList.add(`esgst-hidden`);
                     context.classList.add(`esgst-hidden`);
-                    currentPage = parseInt(esgst.paginationNavigation.lastElementChild.getAttribute(`data-page-number`));
+                    lastLink = esgst.paginationNavigation.lastElementChild;
+                    if (lastLink.classList.contains(`is-selected`) && lastLink.textContent.match(/Last/) && !esgst.lastPageLink) {
+                        currentPage = parseInt(lastLink.getAttribute(`data-page-number`));
+                    } else {
+                        currentPage = 999999999;
+                        lastPageMissing = true;
+                    }
                     nextPage = currentPage;
                     reversePages = true;
                     activateEndlessScrolling();
@@ -4578,7 +4673,9 @@ ${title}
                     currentPage = esgst.currentPage;
                     nextPage = currentPage - 1;
                     reversePages = false;
-                    activateEndlessScrolling();
+                    if (nextPage > 0) {
+                        activateEndlessScrolling();
+                    }
                 }
             } else if (!esgst.paginationNavigation.lastElementChild.classList.contains(esgst.selectedClass)) {
                 currentPage = esgst.currentPage;
@@ -4650,8 +4747,9 @@ ${title}
         }
 
         function setNextPage(response) {
-            var responseHtml, previousPaginationBackup, paginationNavigation, paginationNavigationBackup,
+            var responseHtml, nextPageBackup, previousPaginationBackup, paginationNavigation, paginationNavigationBackup,
                 paginationBackup, parent;
+            nextPageBackup = nextPage;
             responseHtml = DOM.parse(response.responseText);
             previousPaginationBackup = pagination;
             pagination = responseHtml.getElementsByClassName(`pagination`)[0];
@@ -4679,6 +4777,12 @@ ${title}
             setESRemoveEntry(context);
             if (esgst.es_rs && esgst.discussionPath) {
                 reverseComments(context);
+                if (lastPageMissing) {
+                    lastPageMissing = false;
+                    currentPage = parseInt(paginationNavigation.lastElementChild.getAttribute(`data-page-number`));
+                    nextPage = currentPage;
+                    esgst.mainPageHeadingPlaceholder.id = `esgst-es-page-${currentPage}`;
+                }
                 --nextPage;
                 if (nextPage > 0) {
                     document.addEventListener(`scroll`, loadNextPage);
@@ -4701,6 +4805,10 @@ ${title}
                 if ((window.scrollY >= pageTop) && (window.scrollY <= pageBottom)) {
                     if (esgst.paginationNavigation.innerHTML != paginationNavigationBackup) {
                         esgst.paginationNavigation.innerHTML = paginationNavigationBackup;
+                        lastLink = esgst.paginationNavigation.lastElementChild;
+                        if (esgst.lastPageLink && esgst.lastPage !== nextPageBackup && !lastLink.classList.contains(`is-selected`) && !lastLink.textContent.match(/Last/)) {
+                            esgst.paginationNavigation.insertAdjacentHTML(`beforeEnd`, esgst.lastPageLink);
+                        }
                         setEsPaginationNavigation();
                     }
                 }
@@ -18947,7 +19055,7 @@ ${avatar.outerHTML}
         SMLastSync = Container.getElementsByClassName("SMLastSync")[0];
         SMLastBundleSync = Container.getElementsByClassName("SMLastBundleSync")[0];
         SMAPIKey = Container.getElementsByClassName("SMAPIKey")[0];
-        SMGeneralFeatures = ["fh", "fs", "fmph", "ff", "hr", "lpv", "vai", "ev", "hbs", "at", "pnot", "es"];
+        SMGeneralFeatures = ["fh", "fs", "fmph", "ff", "hr", "lpv", "vai", "ev", "hbs", "at", "pnot", "lpl", "es"];
         SMGiveawayFeatures = ["dgn", "sal", "hfc", "ags", "pgb", "gf", "gv", "egf", "gp", "gwc", "gwr", "elgb", "qgb", "gb", "ggl", "ochgb", "gt", "gtm", "sgg", "rcvc", "ugs", "er", "gwl", "gesl", "as"];
         SMDiscussionFeatures = ["adot", "ds", "dh", "mpp", "ded"];
         SMCommentingFeatures = ["ch", "ct", "cfh", "rbot", "rbp", "mr", "rfi", "rml"];
@@ -20463,7 +20571,7 @@ Background: <input type="color" value="${bgColor}">
             giveaway.started = !giveaway.endTimeColumn.textContent.match(/Begins/);
             giveaway.endTime = parseInt(giveaway.endTimeColumn.lastElementChild.getAttribute(`data-timestamp`)) * 1e3;
             giveaway.ended = giveaway.endTime < Date.now();
-            if (giveaway.ended && (esgst.userPath || ugd)) {
+            if (giveaway.ended && (esgst.userPath || esgst.groupPath || ugd)) {
                 giveaway.startTimeColumn = giveaway.endTimeColumn.nextElementSibling.nextElementSibling;
             } else {
                 giveaway.startTimeColumn = giveaway.endTimeColumn.nextElementSibling;
@@ -20924,7 +21032,7 @@ ${avatar.outerHTML}
     /* Giveaway Filters */
 
     function loadGf() {
-        if (esgst.giveawaysPath) {
+        if (esgst.giveawaysPath || esgst.groupPath) {
             addGfContainer();
         }
     }
@@ -20935,7 +21043,7 @@ ${avatar.outerHTML}
         esgst.gf = {
             type: type ? type[1].replace(/^(.)/, function (m, p1) {
                 return p1.toUpperCase();
-            }) : ``,
+            }) : (esgst.groupPath ? `Group` : ``),
             advancedSearch: window.location.search.match(/(level_min|level_max|entry_min|entry_max|copy_min|copy_max|region_restricted|dlc)/),
             basicFilters: [
                 {
@@ -21340,7 +21448,7 @@ ${avatar.outerHTML}
 
     function addGwcChances(giveaways, main) {
         var giveaway, i, n;
-        if (((esgst.wishlistPath || esgst.createdPath || esgst.wonPath || esgst.newGiveawayPath || esgst.archivePath) && !main) || (!esgst.wishlistPath && !esgst.createdPath && !esgst.wonPath && !esgst.newGiveawayPath && !esgst.archivePath)) {
+        if (((esgst.regionsPath || esgst.groupWishlistPath || esgst.wishlistPath || esgst.createdPath || esgst.wonPath || esgst.newGiveawayPath || esgst.archivePath) && !main) || (!esgst.regionsPath && !esgst.groupWishlistPath && !esgst.wishlistPath && !esgst.createdPath && !esgst.wonPath && !esgst.newGiveawayPath && !esgst.archivePath)) {
         for (i = 0, n = giveaways.length; i < n; ++i) {
             giveaway = giveaways[i];
             if (!giveaway.innerWrap.getElementsByClassName(`esgst-gwc`)[0]) {
@@ -21371,7 +21479,7 @@ ${avatar.outerHTML}
             } else {
                 html = `
                     <span>${chance}%</span>
-                `
+                `;
             }
         } else {
             html = `
@@ -21394,7 +21502,7 @@ ${avatar.outerHTML}
 
     function addGwrRatios(giveaways, main) {
         var giveaway, i, n;
-        if (((esgst.wishlistPath || esgst.createdPath || esgst.wonPath || esgst.newGiveawayPath || esgst.archivePath) && !main) || (!esgst.wishlistPath && !esgst.createdPath && !esgst.wonPath && !esgst.newGiveawayPath && !esgst.archivePath)) {
+        if (((esgst.regionsPath || esgst.groupWishlistPath || esgst.wishlistPath || esgst.createdPath || esgst.wonPath || esgst.newGiveawayPath || esgst.archivePath) && !main) || (!esgst.regionsPath && !esgst.groupWishlistPath && !esgst.wishlistPath && !esgst.createdPath && !esgst.wonPath && !esgst.newGiveawayPath && !esgst.archivePath)) {
         for (i = 0, n = giveaways.length; i < n; ++i) {
             giveaway = giveaways[i];
             if (giveaway.started && !giveaway.innerWrap.getElementsByClassName(`esgst-gwr`)[0]) {
@@ -21424,7 +21532,7 @@ ${avatar.outerHTML}
 
     function addGwcrHeading(context, main) {
         var table;
-        if (((esgst.wishlistPath || esgst.createdPath || esgst.wonPath || esgst.archivePath) && !main) || (!esgst.wishlistPath && !esgst.createdPath && !esgst.wonPath && !esgst.archivePath && main)) {
+        if (((esgst.regionsPath || esgst.groupWishlistPath || esgst.wishlistPath || esgst.createdPath || esgst.wonPath || esgst.archivePath) && !main) || (!esgst.regionsPath && !esgst.groupWishlistPath && !esgst.wishlistPath && !esgst.createdPath && !esgst.wonPath && !esgst.archivePath && main)) {
         table = context.getElementsByClassName(`table__heading`)[0];
         if (table && !table.getElementsByClassName(`esgst-gwcr-heading`)[0]) {
             table.firstElementChild.insertAdjacentHTML(`afterEnd`, `<div class="table__column--width-small text-center esgst-gwcr-heading">Chance / Ratio</div>`);
@@ -21441,7 +21549,7 @@ ${avatar.outerHTML}
 
     function addElgbButtons(giveaways, main) {
         var games, giveaway, i, n;
-        if (((esgst.wishlistPath || esgst.createdPath || esgst.enteredPath || esgst.wonPath || esgst.giveawayPath || esgst.archivePath) && !main) || (!esgst.wishlistPath && !esgst.createdPath && !esgst.enteredPath && !esgst.wonPath && !esgst.giveawayPath && !esgst.archivePath)) {
+        if (((esgst.regionsPath || esgst.groupWishlistPath || esgst.wishlistPath || esgst.createdPath || esgst.enteredPath || esgst.wonPath || esgst.giveawayPath || esgst.archivePath) && !main) || (!esgst.regionsPath && !esgst.groupWishlistPath && !esgst.wishlistPath && !esgst.createdPath && !esgst.enteredPath && !esgst.wonPath && !esgst.giveawayPath && !esgst.archivePath)) {
             games = JSON.parse(GM_getValue(`games`));
             for (i = 0, n = giveaways.length; i < n; ++i) {
                 giveaway = giveaways[i];
@@ -21986,7 +22094,7 @@ ${avatar.outerHTML}
             markUnread.classList.add(`esgst-hidden`);
             loadingIcon.classList.remove(`esgst-hidden`);
             esgst.ctUnreadFound = false;
-            markCtCommentsReadUnread(true, true, false, false, 1, `${url}/search?page=`, function() {
+            markCtCommentsReadUnread(true, true, false, false, false, 1, `${url}/search?page=`, function() {
                 loadingIcon.classList.add(`esgst-hidden`);
                 diffContainer.classList.add(`esgst-hidden`);
                 goToUnread.classList.remove(`esgst-hidden`);
@@ -21999,7 +22107,7 @@ ${avatar.outerHTML}
             markRead.classList.add(`esgst-hidden`);
             markUnread.classList.add(`esgst-hidden`);
             loadingIcon.classList.remove(`esgst-hidden`);
-            markCtCommentsReadUnread(true, false, true, false, 1, `${url}/search?page=`, function() {
+            markCtCommentsReadUnread(true, false, false, true, false, 1, `${url}/search?page=`, function() {
                 loadingIcon.classList.add(`esgst-hidden`);
                 diffContainer.classList.add(`esgst-hidden`);
                 markUnread.classList.remove(`esgst-hidden`);
@@ -22074,9 +22182,9 @@ ${avatar.outerHTML}
         });
     }
 
-    function markCtCommentsReadUnread(firstRun, goToUnread, markRead, markUnread, nextPage, url, callback) {
+    function markCtCommentsReadUnread(firstRun, goToUnread, lastPageMissing, markRead, markUnread, nextPage, url, callback) {
         request(null, true, `${url}${nextPage}`, function(response) {
-            var context, pagination;
+            var context, lastLink, pagination;
             context = DOM.parse(response.responseText);
             loadCommentFeatures(context, null, goToUnread, markRead, markUnread, context);
             if ((goToUnread && !esgst.ctUnreadFound) || !goToUnread) {
@@ -22085,17 +22193,27 @@ ${avatar.outerHTML}
                 if (pagination && ((goToUnread && ((esgst.ct_r && nextPage > 1) || (!esgst.ct_r && !pagination.lastElementChild.classList.contains(`is-selected`)))) || (!goToUnread && !pagination.lastElementChild.classList.contains(`is-selected`)))) {
                     if (goToUnread && esgst.ct_r) {
                         if (firstRun) {
-                            nextPage = parseInt(pagination.lastElementChild.getAttribute(`data-page-number`));
+                            lastLink = pagination.lastElementChild;
+                            if (lastLink.textContent.match(/Last/)) {
+                                nextPage = parseInt(lastLink.getAttribute(`data-page-number`));
+                            } else {
+                                nextPage = 999999999;
+                                lastPageMissing = true;
+                            }
                         } else {
-                            nextPage -= 2;
+                            if (lastPageMissing) {
+                                nextPage = parseInt(pagination.lastElementChild.getAttribute(`data-page-number`)) - 1;
+                            } else {
+                                nextPage -= 2;
+                            }
                         }
                         if (nextPage > 1) {
-                            window.setTimeout(markCtCommentsReadUnread, 0, false, goToUnread, markRead, markUnread, nextPage, url, callback);
+                            window.setTimeout(markCtCommentsReadUnread, 0, false, goToUnread, lastPageMissing, markRead, markUnread, nextPage, url, callback);
                         } else {
                             callback();
                         }
                     } else {
-                        window.setTimeout(markCtCommentsReadUnread, 0, false, goToUnread, markRead, markUnread, nextPage, url, callback);
+                        window.setTimeout(markCtCommentsReadUnread, 0, false, goToUnread, lastPageMissing, markRead, markUnread, nextPage, url, callback);
                     }
                 } else {
                     callback();

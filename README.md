@@ -103,6 +103,12 @@ Tested on Microsoft Edge and most of it seems to work fine, but for some reason 
 
 * [Other Info](#other-info)
 
+### Last Page Link
+
+`steamgifts.com/*`
+
+* Adds a "Last Page" link to some places that are missing it, for example: discussion pages with 100+ pages, user pages, group pages with 100+ pages.
+
 ### Giveaway Train Maker
 
 `steamgifts.com/giveaways/new/*`

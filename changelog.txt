@@ -1,4 +1,18 @@
 /*
+ * June 20, 2017 - v6.Beta.12.0
+ */
+
+* Fixed more bugs with giveaway features being enabled where they shouldn't.
+* Fixed a bug in Endless Scrolling that was not properly reversing discussions with 100+ pages.
+* Fixed a bug in Endless Scrolling that was always reversing discussions, making it impossible to go to page 1 without scrolling down from page 2. Now the reverse scrolling will only kick in if you came to page 1 from the discussions page ("/discussions"). If you came to page 1 from anywhere else, it will not reverse the discussion.
+* Extended Giveaway Filters to work in group pages.
+* Fixed a bug in Comment Tracker that was not properly going to the first unread comment of discussions with 100+ pages (closes #134).
+
+Added the following features:
+
+* Last Page Link (closes #138)
+
+/*
  * June 20, 2017 - v6.Beta.11.2
  */
 
