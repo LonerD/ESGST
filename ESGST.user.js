@@ -3,7 +3,7 @@
 // @namespace ESGST
 // @description Enhances SteamGifts and SteamTrades by adding some cool features to them.
 // @icon https://github.com/revilheart/ESGST/raw/master/Resources/esgstIcon.ico
-// @version 6.Beta.12.0
+// @version 6.Beta.12.1
 // @author revilheart
 // @contributor Royalgamer06
 // @downloadURL https://github.com/revilheart/ESGST/raw/master/ESGST.user.js
@@ -20482,7 +20482,7 @@ Background: <input type="color" value="${bgColor}">
      */
 
     function startGiveawayFeatures() {
-        if (esgst.ochgb || esgst.ggl || esgst.gb || esgst.gwc || esgst.gwr || esgst.elgb || esgst.gwl || esgst.gf || esgst.uf) {
+        if (esgst.gv || esgst.ochgb || esgst.ggl || esgst.gb || esgst.gwc || esgst.gwr || esgst.elgb || esgst.gwl || esgst.gf || esgst.uf) {
             esgst.endlessFeatures.push(loadGiveawayFeatures);
             loadGiveawayFeatures(document, true);
         }

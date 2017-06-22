@@ -1,4 +1,10 @@
 /*
+ * June 20, 2017 - v6.Beta.12.1
+ */
+
+* Fixed a bug that was not enabling Grid View if none of the other giveaway features were enabled.
+
+/*
  * June 20, 2017 - v6.Beta.12.0
  */
 
