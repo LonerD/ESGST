@@ -1,4 +1,13 @@
 /*
+ * June 23, 2017 - v6.Beta.12.2
+ */
+
+* The script no longer runs when you aren't logged in.
+* Game Categories should now retrieve correct categories if you're a non-English user (closes #24).
+* Header Refresher is back to altering the icon of the tab (must be enabled through the settings menu). You can also choose to show the number of delivered wins in the icon if Delivered Gifts Notifier is enabled (it will be shown as yellow to the left of the unread message count, which remains red).
+* Fixed a bug in Not Activated/Multiple Wins Checker that was linking the wrong page for multiple wins.
+
+/*
  * June 20, 2017 - v6.Beta.12.1
  */
 

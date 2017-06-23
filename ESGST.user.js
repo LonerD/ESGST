@@ -3,7 +3,7 @@
 // @namespace ESGST
 // @description Enhances SteamGifts and SteamTrades by adding some cool features to them.
 // @icon https://github.com/revilheart/ESGST/raw/master/Resources/esgstIcon.ico
-// @version 6.Beta.12.1
+// @version 6.Beta.12.2
 // @author revilheart
 // @contributor Royalgamer06
 // @downloadURL https://github.com/revilheart/ESGST/raw/master/ESGST.user.js
@@ -40,32 +40,29 @@
 // ==/UserScript==
 
 (function () {
-    try {
-        // DOM Parser
-        var DOM = {
-            parser: new DOMParser(),
-            parse: function (string) {
-                return this.parser.parseFromString(string, `text/html`);
-            }
-        };
-
-        // Script Execution
-        var esgst = {};
-        loadEsgst();
-
-        // Page Events
-        window.addEventListener("beforeunload", function (event) {
-            if (document.getElementsByClassName("rhBusy")[0]) {
-                event.returnValue = true;
-                return true;
-            }
-        });
-        window.addEventListener("hashchange", function () {
-            goToComment();
-        });
-    } catch (error) {
-        console.log(error);
-        window.alert(`ESGST has failed to load. Check the console (F12) for errors and report them in the script's discussion/GitHub page.`);
+    if (!document.querySelector(`[href="/?login"]`)) {
+        try {
+            var DOM = {
+                parser: new DOMParser(),
+                parse: function (string) {
+                    return this.parser.parseFromString(string, `text/html`);
+                }
+            };
+            var esgst = {};
+            loadEsgst();
+            window.addEventListener("beforeunload", function (event) {
+                if (document.getElementsByClassName("rhBusy")[0]) {
+                    event.returnValue = true;
+                    return true;
+                }
+            });
+            window.addEventListener("hashchange", function () {
+                goToComment();
+            });
+        } catch (error) {
+            console.log(error);
+            window.alert(`ESGST has failed to load. Check the console (F12) for errors and report them in the script's discussion/GitHub page.`);
+        }
     }
 
     function updateTemplateStorageToV6() {
@@ -350,6 +347,7 @@
         }
         var url = window.location.href.replace(window.location.search, ``).replace(window.location.hash, ``).replace(`/search`, ``);
         esgst.originalUrl = url;
+        esgst.favicon = document.querySelector(`[rel="shortcut icon"]`);
         esgst.originalTitle = document.title;
         esgst.mainPath = window.location.pathname.match(/^\/$/);
         if (esgst.mainPath) {
@@ -462,7 +460,8 @@
             ff: `FE_F`,
             hr: `hir`,
             hr_b: `hir_b`,
-            hr_i: `hr_i`,
+            hr_mc: `hr_i`,
+            hr_dw: `hr_dw`,
             hr_p: `pr`,
             lpv: `lpv`,
             hbs: `BSH`,
@@ -771,13 +770,18 @@
                 name: `Header Refresher`,
                 options: [
                     {
-                        id: `hr_i`,
-                        name: `Show an icon in the title to highlight new messages.`,
-                        check: getValue(`hr_i`)
+                        id: `hr_dw`,
+                        name: `Show number of delivered wins in the icon of the tab (requires Delivered Gifts Notifier to be enabled).`,
+                        check: getValue(`hr_dw`)
+                    },
+                    {
+                        id: `hr_mc`,
+                        name: `Show number of unread messages in the icon of the tab.`,
+                        check: getValue(`hr_mc`)
                     },
                     {
                         id: `hr_p`,
-                        name: `Show points in the title.`,
+                        name: `Show points in the title of the tab.`,
                         check: getValue(`hr_p`)
                     },
                     {
@@ -4362,29 +4366,66 @@ margin-bottom: ${esgst.footer.offsetHeight}px;
 
     function setHrTitle(points) {
         var title;
-        title = ``;
-        if (esgst.sg) {
-            if (esgst.headerData.deliveredWins > 0) {
-                title += `(${esgst.headerData.deliveredWins}W) `;
-            }
-        }
-        if (esgst.headerData.messageCount) {
-            if (esgst.hr_i) {
-                title += `🔥 `;
-            }
-            title += `(${esgst.headerData.messageCount}M) `;
-        }
+        drawHrIcons();
         if (esgst.sg) {
             if (esgst.headerData.points !== points) {
                 updateElgbButtons(esgst.headerData.points);
             }
             if (esgst.hr_p) {
-                title += `(${esgst.headerData.points}P) `;
+                title = `(${esgst.headerData.points}P) ${esgst.originalTitle}`;
+                if (document.title !== title) {
+                    document.title = title;
+                }
             }
         }
-        title += esgst.originalTitle;
-        if (document.title !== title) {
-            document.title = title;
+    }
+
+    function drawHrIcons() {
+        var canvas, context, deliveredWins, image, messageCount, x;
+        if (esgst.sg) {
+            deliveredWins = esgst.headerData.deliveredWins;
+        } else {
+            deliveredWins = 0;
+        }
+        messageCount = esgst.headerData.messageCount;
+        if ((deliveredWins > 0 && esgst.hr_dw) || (messageCount > 0 && esgst.hr_mc)) {
+            canvas = document.createElement(`canvas`);
+            image = document.createElement(`img`);
+            canvas.width = 16;
+            canvas.height = 16;
+            context = canvas.getContext(`2d`);
+            image.onload = function () {
+                context.drawImage(image, 0, 0);
+                if (messageCount > 0 && esgst.hr_mc) {
+                    context.fillStyle = `#e9202a`;
+                    context.fillRect(8, 6, 8, 10);
+                    context.fillStyle = `#fff`;
+                    context.font = `bold 10px Arial`;
+                    context.textAlign = `left`;
+                    if (messageCount > 9) {
+                        messageCount = `+`;
+                    }
+                    context.fillText(messageCount, 9, 14);
+                    x = 0;
+                } else {
+                    x = 8;
+                }
+                if (deliveredWins > 0 && esgst.hr_dw) {
+                    context.fillStyle = `#fecc66`;
+                    context.fillRect(x, 6, 8, 10);
+                    context.fillStyle = `#000`;
+                    context.font = `bold 10px Arial`;
+                    context.textAlign = `left`;
+                    if (deliveredWins > 9) {
+                        deliveredWins = `+`;
+                    }
+                    context.fillText(deliveredWins, x + 1, 14);
+                }
+                esgst.favicon.href = canvas.toDataURL(`image/png`);
+            };
+            image.src = GM_getResourceURL(`${esgst.name}Icon`);
+        } else {
+            esgst.favicon.href = GM_getResourceURL(`${esgst.name}Icon`);
         }
     }
 
@@ -16075,7 +16116,7 @@ ${Results.join(``)}
                     NAMWC[Key + "Count"].textContent = parseInt(NAMWC[Key + "Count"].textContent) + 1;
                     NAMWC[Key + "Users"].insertAdjacentHTML(
                         "beforeEnd",
-                        "<a " + (New ? "class=\"rhBold rhItalic\" " : "") + "href=\"http://www.sgtools.info/" + (Key.match(/multiple/) ? "multiple" : "nonactivated") + "/" + username +
+                        "<a " + (New ? "class=\"rhBold rhItalic\" " : "") + "href=\"http://www.sgtools.info/" + (Key.match(/multiple|notMultiple/) ? "multiple" : "nonactivated") + "/" + username +
                         "\" target=\"_blank\">" + username + (Key.match(/^(notActivated|multiple)$/) ? (" (" + namwc.results[Key] + ")") : "") + "</a>"
                     );
                 }
@@ -17987,7 +18028,7 @@ ${Results.join(``)}
             id = ids[i];
             if (!savedGames[type][id] || (typeof savedGames[type][id].lastCheck === `undefined`) || ((Date.now() - savedGames[type][id].lastCheck) > 604800000)) {
                 url = (type === `apps`) ? `appdetails?appids` : `packagedetails?packageids`;
-                request(null, false, `http://store.steampowered.com/api/${url}=${id}&cc=us`, function (response) {
+                request(null, false, `http://store.steampowered.com/api/${url}=${id}&cc=us&l=en`, function (response) {
                     if (esgst.gc_g_udt || esgst.gc_r) {
                         request(null, false, `http://store.steampowered.com/${type.slice(0, -1)}/${id}`, function (response2) {
                             getGcCategories(games, id, response, response2, savedGames, type, function () {
