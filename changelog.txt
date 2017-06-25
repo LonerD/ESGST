@@ -1,4 +1,10 @@
 /*
+ * June 23, 2017 - v6.Beta.12.4
+ */
+
+* Avatar Popout now works on hover, with a delay of 0.5 seconds. This should prevent accidental hovers and unnecessary requests, which were my main concerns about this functionality.
+
+/*
  * June 23, 2017 - v6.Beta.12.3
  */
 

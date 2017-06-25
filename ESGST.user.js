@@ -3,7 +3,7 @@
 // @namespace ESGST
 // @description Enhances SteamGifts and SteamTrades by adding some cool features to them.
 // @icon https://github.com/revilheart/ESGST/raw/master/Resources/esgstIcon.ico
-// @version 6.Beta.12.3
+// @version 6.Beta.12.4
 // @author revilheart
 // @contributor Royalgamer06
 // @downloadURL https://github.com/revilheart/ESGST/raw/master/ESGST.user.js
@@ -2595,8 +2595,8 @@
                 popout.popout.style.top = `${contextTop + contextWidth + window.scrollY}px`;
             }
         };
-        document.addEventListener(`click`, function(event) {
-            if (!popout.popout.contains(event.target) && !currentContext.contains(event.target)) {
+        popout.popout.addEventListener(`mouseleave`, function(event) {
+            if (!currentContext.contains(event.relatedTarget)) {
                 popout.close();
             }
         });
@@ -15091,17 +15091,16 @@ ${Results.join(``)}
     }
 
     function setApAvatar(apAvatar) {
-        var id, match, type, url;
+        var id, match, timeout, type, url;
         url = apAvatar.getAttribute(`href`);
         if (url) {
             match = url.match(/\/(user|group)\/(.+)/);
             if (match) {
                 id = match[2];
                 type = match[1];
-                apAvatar.classList.add(`esgst-ap-avatar`);
-                apAvatar.removeAttribute(`href`);
-                apAvatar.addEventListener(`click`, function() {
+                apAvatar.addEventListener(`mouseenter`, function() {
                     var popout;
+                    timeout = window.setTimeout(function() {
                     popout = esgst.apPopouts[id];
                     if (popout) {
                         popout.open(apAvatar);
@@ -15140,6 +15139,16 @@ ${Results.join(``)}
                             popout.reposition();
                         });
                     }
+                    }, 500);
+                    apAvatar.addEventListener(`mouseleave`, function(event) {
+                        if (timeout) {
+                            window.clearTimeout(timeout);
+                            timeout = null;
+                        }
+                        if (!popout.popout.contains(event.relatedTarget)) {
+                            popout.close();
+                        }
+                    });
                 });
             }
         }
