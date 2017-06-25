@@ -1,9 +1,17 @@
 /*
+ * June 23, 2017 - v6.Beta.12.3
+ */
+
+* The script no longer prompts alerts when errors happen, and should now only run if the page has properly loaded (no error pages) and you're logged in.
+* Fixed more bugs with giveaway features being enabled where they shouldn't.
+* Added a filtered count to each page in Giveaway Filters (closes #80).
+
+/*
  * June 23, 2017 - v6.Beta.12.2
  */
 
 * The script no longer runs when you aren't logged in.
-* Game Categories should now retrieve correct categories if you're a non-English user (closes #24).
+* Game Categories should now retrieve correct categories if you're a non-English user (closes #189).
 * Header Refresher is back to altering the icon of the tab (must be enabled through the settings menu). You can also choose to show the number of delivered wins in the icon if Delivered Gifts Notifier is enabled (it will be shown as yellow to the left of the unread message count, which remains red).
 * Fixed a bug in Not Activated/Multiple Wins Checker that was linking the wrong page for multiple wins.
 
