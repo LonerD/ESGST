@@ -3,7 +3,7 @@
 // @namespace ESGST
 // @description Enhances SteamGifts and SteamTrades by adding some cool features to them.
 // @icon https://github.com/revilheart/ESGST/raw/master/Resources/esgstIcon.ico
-// @version 6.Beta.13.0
+// @version 6.Beta.14.0
 // @author revilheart
 // @contributor Royalgamer06
 // @downloadURL https://github.com/revilheart/ESGST/raw/master/ESGST.user.js
@@ -498,7 +498,7 @@
             ugs: `UGS`,
             er: `ER`,
             er_s: `ER_S`,
-            adot: `ADOT`,
+            adots: `adot`,
             wbs: `wbs`,
             dh: `DH`,
             ds: `DS`,
@@ -866,7 +866,7 @@
                     {
                         id: `gb_h`,
                         name: `Highlight the header button if there is a giveaway about to end.`,
-                        select: true,
+                        input: true,
                         check: getValue(`gb_h`)
                     }
                 ],
@@ -891,6 +891,12 @@
                 name: `Created/Entered/Won Giveaway Details`,
                 check: getValue(`cewgd`),
                 load: loadCewgd
+            },
+            {
+                id: `ueg`,
+                name: `Unfaded Entered Giveaways`,
+                check: getValue(`ueg`),
+                load: loadUeg
             },
             {
                 id: `sal`,
@@ -1044,10 +1050,11 @@
                 load: loadArchiveSearcher
             },
             {
-                id: `adot`,
-                name: `Active Discussions On Top`,
-                check: getValue(`adot`) && esgst.activeDiscussions,
-                load: loadActiveDiscussionsOnTop
+                id: `adots`,
+                name: `Active Discussions On Top/Sidebar`,
+                select: true,
+                check: getValue(`adots`),
+                load: loadAdots
             },
             {
                 check: true,
@@ -2580,13 +2587,14 @@
             popout.popout.classList.add(`esgst-hidden`);
         };
         popout.reposition = function() {
-            var contextLeft, contextRect, contextTop, contextWidth, popoutHeight, popoutWidth;
+            var contextLeft, contextRect, contextTop, contextWidth, contextHeight, popoutHeight, popoutWidth;
             popout.popout.style.left = `0`;
             popout.popout.style.top = `0`;
             contextRect = currentContext.getBoundingClientRect();
             contextLeft = contextRect.left;
             contextTop = contextRect.top;
             contextWidth = contextRect.width;
+            contextHeight = contextRect.height;
             popoutHeight = popout.popout.offsetHeight;
             popoutWidth = popout.popout.offsetWidth;
             if (contextLeft + popoutWidth > document.documentElement.clientWidth) {
@@ -2597,7 +2605,7 @@
             if (contextTop + popoutHeight > document.documentElement.clientHeight) {
                 popout.popout.style.top = `${contextTop - popoutHeight + window.scrollY}px`;
             } else {
-                popout.popout.style.top = `${contextTop + contextWidth + window.scrollY}px`;
+                popout.popout.style.top = `${contextTop + contextHeight + window.scrollY}px`;
             }
         };
         popout.popout.addEventListener(`mouseleave`, function(event) {
@@ -3227,8 +3235,75 @@ vertical-align: baseline;
 cursor: pointer;
 }
 
-.esgst-adot, .esgst-rbot {
+.esgst-adots, .esgst-rbot {
 margin-bottom: 25px;
+}
+
+.esgst-float-right {
+float: right;
+}
+
+.sidebar .esgst-adots {
+max-height: 300px;
+overflow: auto;
+}
+
+.sidebar .esgst-adots {
+margin: 0;
+}
+
+.sidebar .esgst-adots .PUTTags {
+display: none;
+}
+
+.sidebar .esgst-adots .esgst-dh-highlighted {
+padding: 0 !important;
+padding-bottom: 5px !important;
+}
+
+.sidebar .esgst-adots .table__column__heading {
+display: inline-block;
+max-width: 245px;
+overflow: hidden;
+text-overflow: ellipsis;
+vertical-align: middle;
+white-space: nowrap;
+}
+
+.sidebar .esgst-adots .table__row-outer-wrap {
+padding: 0;
+padding-bottom: 5px;
+border: 0;
+box-shadow: none;
+}
+
+.sidebar .esgst-adots .table__row-inner-wrap {
+display: block;
+}
+
+.sidebar .esgst-adots .table__row-inner-wrap >:first-child {
+width: 30px;
+height: 30px;
+}
+
+.sidebar .esgst-adots .table__row-inner-wrap >:first-child >* {
+width: 18px;
+height: 18px;
+}
+
+.sidebar .esgst-adots .table__row-inner-wrap >:last-child {
+margin-left: 33px;
+text-align: left;
+width: auto;
+}
+
+.sidebar .esgst-adots .table__row-inner-wrap >*:not(:last-child) {
+display: inline-block;
+}
+
+.sidebar .esgst-adots .table__column--width-fill {
+vertical-align: top;
+width: calc(100% - 33px);
 }
 
 .esgst-rbot .reply_form .btn_cancel {
@@ -3394,6 +3469,12 @@ padding: 0 2px;
 display: inline-block;
 padding: 0;
 width: 30px;
+}
+
+.esgst-sm-colors select {
+display: inline-block;
+padding: 0;
+width: 100px;
 }
 
 .esgst-sm-colors-default {
@@ -4119,7 +4200,7 @@ margin-top: ${height}px;
 
     function fixSidebar() {
         esgst.sidebarTop = esgst.sidebar.offsetTop - esgst.pageTop;
-        if (window.scrollY > esgst.sidebarTop) {
+        if (window.scrollY > esgst.sidebarTop && document.documentElement.offsetHeight > window.innerHeight * 2) {
             document.removeEventListener(`scroll`, fixSidebar);
             toggleFixedSidebar();
             document.addEventListener(`scroll`, unfixSidebar);
@@ -4548,7 +4629,7 @@ ${title}
         timestamps = context.querySelectorAll(`[data-timestamp]`);
         for (i = 0, n = timestamps.length; i < n; ++i) {
             timestamp = timestamps[i];
-            if (!timestamp.classList.contains(`esgst-at`)) {
+            if (((esgst.activeDiscussions && ((esgst.activeDiscussions.contains(timestamp) && GM_getValue(`adotsIndex`) === 0) || !esgst.activeDiscussions.contains(timestamp))) || !esgst.activeDiscussions) && !timestamp.classList.contains(`esgst-at`)) {
                 text = timestamp.textContent;
                 edited = text.match(/\*/);
                 seconds = parseInt(timestamp.getAttribute(`data-timestamp`));
@@ -4995,7 +5076,7 @@ ${title}
     }
 
     function loadAdvancedGiveawaySearch() {
-        var Context, Input, Match, AGSPanel, AGS, Level, I, RegionRestricted;
+        var Context, Input, Match, AGSPanel, AGSPanelPopout, AGS, Level, I, RegionRestricted;
         Context = document.getElementsByClassName("sidebar__search-container")[0];
         Context.firstElementChild.remove();
         Context.insertAdjacentHTML("afterBegin", "<input class=\"sidebar__search-input\" placeholder=\"Search...\" type=\"text\"/>");
@@ -5004,8 +5085,20 @@ ${title}
         if (Match) {
             Input.value = Match[1];
         }
-        Context.insertAdjacentHTML("afterEnd", "<div class=\"AGSPanel\"></div>");
-        AGSPanel = Context.nextElementSibling;
+        if (esgst.adots && GM_getValue(`adotsIndex`) === 0) {
+            AGSPanel = insertHtml(Context, `afterEnd`, `<div class="AGSPanel"></div>`);
+        } else {
+            AGSPanelPopout = createPopout_v6(`AGSPanel page__outer-wrap global__image-outer-wrap`, true);
+            AGSPanel = AGSPanelPopout.popout;
+            Context.addEventListener(`mouseenter`, function() {
+                AGSPanelPopout.open(Context);
+            });
+            Context.addEventListener(`mouseleave`, function(event) {
+                if (!AGSPanel.contains(event.relatedTarget)) {
+                    AGSPanelPopout.close();
+                }
+            });
+        }
         AGS = {};
         Level = "<select>";
         for (I = 0; I <= 10; ++I) {
@@ -6959,11 +7052,35 @@ ${Results.join(``)}
         }
     }
 
-    function loadActiveDiscussionsOnTop() {
-        esgst.activeDiscussions.classList.remove(`widget-container--margin-top`);
-        esgst.activeDiscussions.classList.add(`esgst-adot`);
-        var parent = esgst.activeDiscussions.parentElement;
-        parent.insertBefore(esgst.activeDiscussions, parent.firstElementChild);
+    function loadAdots() {
+        var elements, i, icon, n, parent;
+        if (esgst.activeDiscussions) {
+            esgst.activeDiscussions.classList.remove(`widget-container--margin-top`);
+            esgst.activeDiscussions.classList.add(`esgst-adots`);
+            if (GM_getValue(`adotsIndex`, 0) === 0) {
+                parent = esgst.activeDiscussions.parentElement;
+                parent.insertBefore(esgst.activeDiscussions, parent.firstElementChild);
+            } else {
+                esgst.activeDiscussions.style.width = `${esgst.sidebar.offsetWidth}px`;
+                esgst.sidebar.insertAdjacentHTML(`beforeEnd`, `
+                    <h3 class="sidebar__heading">
+                        Active Discussions <a class="esgst-float-right sidebar__navigation__item__name" href="/discussions/">More</a>
+                    </h3>
+                `);
+                esgst.activeDiscussions.firstElementChild.firstElementChild.remove();
+                esgst.activeDiscussions.firstElementChild.firstElementChild.firstElementChild.remove();
+                elements = esgst.activeDiscussions.getElementsByClassName(`table__column--last-comment`);
+                for (i = 0, n = elements.length; i < n; ++i) {
+                    icon = elements[0].getElementsByClassName(`table__last-comment-icon`)[0];
+                    if (icon) {
+                        icon.classList.add(`esgst-float-right`);
+                        elements[0].previousElementSibling.appendChild(icon);
+                    }
+                    elements[0].remove();
+                }
+                esgst.sidebar.appendChild(esgst.activeDiscussions);
+            }
+        }
     }
 
     function loadMainPostPopup() {
@@ -15117,7 +15234,7 @@ ${Results.join(``)}
                             window.clearTimeout(timeout);
                             timeout = null;
                         }
-                        if (!popout.popout.contains(event.relatedTarget)) {
+                        if (popout && !popout.popout.contains(event.relatedTarget)) {
                             popout.close();
                         }
                     });
@@ -19071,8 +19188,8 @@ ${avatar.outerHTML}
         SMLastBundleSync = Container.getElementsByClassName("SMLastBundleSync")[0];
         SMAPIKey = Container.getElementsByClassName("SMAPIKey")[0];
         SMGeneralFeatures = ["fh", "fs", "fmph", "ff", "hr", "lpv", "vai", "ev", "hbs", "at", "pnot", "lpl", "es"];
-        SMGiveawayFeatures = ["itadi", "cewgd", "sal", "hfc", "ags", "pgb", "gf", "gv", "egf", "gp", "gwc", "gwr", "elgb", "qgb", "gb", "ggl", "ochgb", "gt", "gtm", "sgg", "rcvc", "ugs", "er", "gwl", "gesl", "as"];
-        SMDiscussionFeatures = ["adot", "ds", "dh", "mpp", "ded"];
+        SMGiveawayFeatures = ["itadi", "cewgd", "ueg", "sal", "hfc", "ags", "pgb", "gf", "gv", "egf", "gp", "gwc", "gwr", "elgb", "qgb", "gb", "ggl", "ochgb", "gt", "gtm", "sgg", "rcvc", "ugs", "er", "gwl", "gesl", "as"];
+        SMDiscussionFeatures = ["adots", "ds", "dh", "mpp", "ded"];
         SMCommentingFeatures = ["ch", "ct", "cfh", "rbot", "rbp", "mr", "rfi", "rml"];
         SMUserGroupGamesFeatures = ["ap", "uh", "un", "rwscvl", "ugd", "namwc", "nrf", "swr", "luc", "sgpb", "stpb", "sgc", "uf", "wbs", "wbc", "wbh", "ut", "iwh", "gh", "gs", "egh", "ggt", "gc"];
         SMOtherFeatures = ["sm_ebd", "sm_hb", "ged"];
@@ -19582,7 +19699,7 @@ Background: <input type="color" value="${bgColor}">
                 bgColorContext.value = esgst.defaultValues[`${Feature.id}_bgColor`];
                 GM_setValue(`${Feature.id}_bgColor`, bgColorContext.value);
             });
-        } else if (Feature.select) {
+        } else if (Feature.input) {
             var hours = GM_getValue(`gbHours`, 1);
             var input = insertHtml(SMFeatures, `beforeEnd`, `
                 <div class="esgst-sm-colors">
@@ -19591,6 +19708,21 @@ Background: <input type="color" value="${bgColor}">
             `);
             input.firstElementChild.addEventListener(`change`, function() {
                 GM_setValue(`gbHours`, input.firstElementChild.value);
+            });
+        } else if (Feature.select) {
+            var index = GM_getValue(`adotsIndex`, 0);
+            var select = insertHtml(SMFeatures, `beforeEnd`, `
+                <div class="esgst-sm-colors">
+                    Move to:
+                    <select>
+                        <option>Top</option>
+                        <option>Sidebar</option>
+                    </select>
+                </div>
+            `);
+            select.firstElementChild.selectedIndex = index;
+            select.firstElementChild.addEventListener(`change`, function() {
+                GM_setValue(`adotsIndex`, select.firstElementChild.selectedIndex);
             });
         }
         if (CheckboxInput.checked && SMFeatures.children.length) {
@@ -21083,6 +21215,26 @@ Background: <input type="color" value="${bgColor}">
             getGglGiveaways([giveaway]);
         }
         loadEndlessFeatures(giveaway.outerWrap);
+    }
+
+    /* [UEG] Unfaded Entered Giveaways */
+
+    function loadUeg() {
+        esgst.endlessFeatures.push(removeUegFade);
+        removeUegFade(document);
+        GM_addStyle(`
+            .esgst-ueg {
+                opacity: 1 !important;
+            }
+        `);
+    }
+
+    function removeUegFade(context) {
+        var elements, i, n;
+        elements = context.getElementsByClassName(`giveaway__row-inner-wrap is-faded`);
+        for (i = 0, n = elements.length; i < n; ++i) {
+            elements[i].classList.add(`esgst-ueg`);
+        }
     }
 
     /* [SAL] Steam Activation Link */

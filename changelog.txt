@@ -1,4 +1,18 @@
 /*
+ * June 26, 2017 - v6.Beta.14.0
+ */
+
+* Fixed a bug in Avatar Popout that was happening when quickly hovering hover an avatar.
+
+Renamed the following features:
+
+* Active Discussions On Top -> Active Discussions On Top/Sidebar - You can now choose where the active discussions appear. More info about the sidebar choice: if you have Advanced Giveaway Search enabled, it will be hidden and triggered when hovering hover the search field; the username and avatar of the user who last posted will be removed (the button to go to the last comment will remain intact); Accurate Timestamps will not run for any timestamps inside the active discussions; and any user tags you might have saved for users will be hidden inside the active discussions (they will still be visible if you click the tag button to edit them).
+
+Added the following features:
+
+* Unfaded Entered Giveaways
+
+/*
  * June 26, 2017 - v6.Beta.13.0
  */
 

@@ -103,6 +103,11 @@ Tested on Microsoft Edge and most of it seems to work fine, but for some reason 
 
 * [Other Info](#other-info)
 
+### Unfaded Entered Giveaways
+
+`steamgifts.com/*`
+
+* Removes SG's default fade for entered giveaways.
 
 ### Created/Entered/Won Giveaway Details
 
@@ -289,11 +294,14 @@ Tested on Microsoft Edge and most of it seems to work fine, but for some reason 
 * You can pause / resume the endless scrolling.
 * You can enable reverse scrolling for discussions.
 
-### Active Discussions On Top
+### Active Discussions On Top/Sidebar
 
 `steamgifts.com/*`
 
-* Moves the active discussions to the top of the page.
+* Moves the active discussions to the top/sidebar of the page.
+* More info about the sidebar choice: if you have Advanced Giveaway Search enabled, it will be hidden and triggered when hovering hover the search field; the username and avatar of the user who last posted will be removed (the button to go to the last comment will remain intact); Accurate Timestamps will not run for any timestamps inside the active discussions; and any user tags you might have saved for users will be hidden inside the active discussions (they will still be visible if you click the tag button to edit them).
+
+![](http://i.imgur.com/XEeroVn.png)
 
 ### Grid View
 
