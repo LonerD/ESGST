@@ -103,6 +103,21 @@ Tested on Microsoft Edge and most of it seems to work fine, but for some reason 
 
 * [Other Info](#other-info)
 
+
+### Created/Entered/Won Giveaway Details
+
+`steamgifts.com/giveaways/(created|entered|won)/*`
+
+* Adds more details to the created/entered/won pages, such as the number of points, the link to the Steam store page of the game, the name of the creator, the type of the giveaway and the level. It also loads the giveaway groups below the giveaway if Giveaway Groups Loader is enabled.
+
+### Is There Any Deal? Info
+
+`steamgifts.com/giveaway/*`
+
+* Adds Is There Any Deal? info to giveaway pages, including the best current deal, the historical lowest price (optional) and the list of bundles that the game has been in, with a cache that can be updated after 24 hours since the last check.
+
+![](http://i.imgur.com/epF2am3.png)
+
 ### Last Page Link
 
 `steamgifts.com/*`

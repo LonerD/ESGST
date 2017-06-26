@@ -1,11 +1,27 @@
 /*
- * June 23, 2017 - v6.Beta.12.4
+ * June 26, 2017 - v6.Beta.13.0
+ */
+
+* The script no longer prompts alerts when features fail to load.
+* Header Refresher now changes the SG icon to red when there are unviewed keys for wins based on cg's implementation.
+
+Added the following features:
+
+* Created/Entered/Won Giveaway Details (closes #193)
+* Is There Any Deal? Info (closes #194)
+
+Removed the following features:
+
+* Delivered Gifts Notifier - This feature has been implemented by cg.
+
+/*
+ * June 25, 2017 - v6.Beta.12.4
  */
 
 * Avatar Popout now works on hover, with a delay of 0.5 seconds. This should prevent accidental hovers and unnecessary requests, which were my main concerns about this functionality.
 
 /*
- * June 23, 2017 - v6.Beta.12.3
+ * June 25, 2017 - v6.Beta.12.3
  */
 
 * The script no longer prompts alerts when errors happen, and should now only run if the page has properly loaded (no error pages) and you're logged in.

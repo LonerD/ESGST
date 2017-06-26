@@ -3,7 +3,7 @@
 // @namespace ESGST
 // @description Enhances SteamGifts and SteamTrades by adding some cool features to them.
 // @icon https://github.com/revilheart/ESGST/raw/master/Resources/esgstIcon.ico
-// @version 6.Beta.12.4
+// @version 6.Beta.13.0
 // @author revilheart
 // @contributor Royalgamer06
 // @downloadURL https://github.com/revilheart/ESGST/raw/master/ESGST.user.js
@@ -19,6 +19,7 @@
 // @connect steamcommunity.com
 // @connect steamgifts.com
 // @connect steamtrades.com
+// @connect isthereanydeal.com
 // @grant GM_addStyle
 // @grant GM_setValue
 // @grant GM_getValue
@@ -473,7 +474,6 @@
             es_dtc: `ES_DC`,
             es_r: `ES_R`,
             es_rs: `ES_RS`,
-            dgn: `dgn`,
             hfc: `FCH`,
             ags: `AGS`,
             pgb: `PGB`,
@@ -485,6 +485,8 @@
             elgb_d: `elgb_d`,
             elgb_rb: `elgb_rb`,
             qgb: `qgb`,
+            itadi: `itadi`,
+            cewgd: `cewgd`,
             sal: `sal`,
             gb: `gb`,
             ggl: `ggp`,
@@ -763,7 +765,7 @@
                 options: [
                     {
                         id: `hr_dw`,
-                        name: `Show number of delivered wins in the icon of the tab (requires Delivered Gifts Notifier to be enabled).`,
+                        name: `Change the SG icon to red when there are unviewed keys for wins.`,
                         check: getValue(`hr_dw`)
                     },
                     {
@@ -872,10 +874,23 @@
                 load: loadGb
             },
             {
-                id: `dgn`,
-                name: `Delivered Gifts Notifier`,
-                check: getValue(`dgn`),
-                load: loadDeliveredGiftsNotifier
+                id: `itadi`,
+                name: `Is There Any Deal? Info`,
+                options: [
+                    {
+                        id: `itadi_h`,
+                        name: `Also get historical lowest price (adds one more request - slower).`,
+                        check: getValue(`itadi_h`)
+                    }
+                ],
+                check: getValue(`itadi`),
+                load: loadItadi
+            },
+            {
+                id: `cewgd`,
+                name: `Created/Entered/Won Giveaway Details`,
+                check: getValue(`cewgd`),
+                load: loadCewgd
             },
             {
                 id: `sal`,
@@ -1669,7 +1684,6 @@
                 load: loadEndlessScrolling
             }
         ];
-        esgst.failedToLoad = [];
         esgst.endlessFeatures = [];
         esgst.gameFeatures = [];
         esgst.giveawayFeatures = [];
@@ -1721,24 +1735,15 @@
             var feature = features[i];
             if (feature.check) {
                 if (feature.load) {
-                    try {
-                        feature.load(document);
-                        if (feature.endless) {
-                            esgst.endlessFeatures.push(feature.load);
-                        }
-                        if (feature.profile) {
-                            esgst.profileFeatures.push(feature.load);
-                        }
-                    } catch (error) {
-                        console.log(error);
-                        esgst.failedToLoad.push(feature.name);
+                    feature.load(document);
+                    if (feature.endless) {
+                        esgst.endlessFeatures.push(feature.load);
+                    }
+                    if (feature.profile) {
+                        esgst.profileFeatures.push(feature.load);
                     }
                 }
             }
-        }
-        var numFailed = esgst.failedToLoad.length;
-        if (numFailed > 0) {
-            window.alert(`${numFailed} ESGST features failed to load: ${esgst.failedToLoad.join(`, `)}. Check the console (F12) for errors and report them in the script's discussion/GitHub page.`);
         }
     }
 
@@ -3222,10 +3227,6 @@ vertical-align: baseline;
 cursor: pointer;
 }
 
-.esgst-hr-delivered i {
-color: #FECC66;
-}
-
 .esgst-adot, .esgst-rbot {
 margin-bottom: 25px;
 }
@@ -4250,11 +4251,6 @@ margin-bottom: ${esgst.footer.offsetHeight}px;
             refreshedElementsName: `${esgst.name}RefreshedHeaderElements`,
             refreshLockName: `${esgst.name}HeaderRefreshLock`
         };
-        if (esgst.sg) {
-            hr.url = `/giveaways/won`;
-        } else {
-            hr.url = `/`;
-        }
         setHrTitle(esgst.headerData.points);
         GM_setValue(hr.refreshedElementsName, JSON.stringify(getHeaderElements()));
         startHeaderRefresher(hr);
@@ -4268,7 +4264,7 @@ margin-bottom: ${esgst.footer.offsetHeight}px;
     }
 
     function refreshHeaderElements(context) {
-        var deliveredWins, i, match, matches, n, navigation, notReceived, received;
+        var navigation;
         esgst.headerElements = {};
         esgst.headerData = {};
         navigation = context.querySelector(`.nav__right-container, .header_inner_wrap nav`);
@@ -4280,24 +4276,6 @@ margin-bottom: ${esgst.footer.offsetHeight}px;
             esgst.headerData.level = parseInt(esgst.headerElements.levelContainer.textContent.match(/\d+/)[0]);
             esgst.headerElements.createdButton = navigation.getElementsByClassName(`fa-gift`)[0].closest(`.nav__button-container`);
             esgst.headerElements.wonButton = navigation.getElementsByClassName(`fa-trophy`)[0].closest(`.nav__button-container`);
-            if (esgst.dgn) {
-                deliveredWins = 0;
-                matches = context.getElementsByClassName(`table__row-inner-wrap`);
-                for (i = 0, n = matches.length; i < n; ++i) {
-                    match = matches[i];
-                    received = match.getElementsByClassName(`table__gift-feedback-received`)[0];
-                    notReceived = match.getElementsByClassName(`table__gift-feedback-not-received`)[0];
-                    if (((received && received.classList.contains(`is-hidden`)) && ((notReceived && notReceived.classList.contains(`is-hidden`)) || !notReceived)) && match.querySelector(`[data-clipboard-text]`)) {
-                        ++deliveredWins;
-                    }
-                }
-                if (deliveredWins > 0) {
-                    esgst.headerElements.wonButton.classList.add(`esgst-hr-delivered`);
-                    esgst.headerElements.wonButton.firstElementChild.title = `Giveaways Won (${deliveredWins} Delivered)`;
-                }
-                deliveredWins = esgst.headerElements.wonButton.firstElementChild.title.match(/\d+/);
-                esgst.headerData.deliveredWins = deliveredWins ? parseInt(deliveredWins[0]) : 0;
-            }
         }
         esgst.headerElements.inboxButton = navigation.getElementsByClassName(`fa-envelope`)[0].closest(`.nav__button-container, .nav_btn_container`);
         esgst.headerElements.messageCountContainer = esgst.headerElements.inboxButton.querySelector(`.nav__notification, .message_count`);
@@ -4318,23 +4296,26 @@ margin-bottom: ${esgst.footer.offsetHeight}px;
     }
 
     function startHeaderRefresher(hr) {
-        request(null, false, hr.url, function(response) {
+        request(null, false, `/`, function(response) {
             refreshHeaderElements(DOM.parse(response.responseText));
             GM_setValue(hr.refreshedElementsName, JSON.stringify(getHeaderElements()));
             refreshHeader(hr);
             createLock(hr.refreshLockName, 60000, function () {
-                hr.refresher = window.setInterval(function () {
-                    request(null, false, hr.url, function(response) {
-                        refreshHeaderElements(DOM.parse(response.responseText));
-                        GM_setValue(hr.refreshedElementsName, JSON.stringify(getHeaderElements()));
-                    });
-                }, 60000);
+                hr.refresher = window.setTimeout(continueHeaderRefresher, 60000, hr);
             });
         });
     }
 
+    function continueHeaderRefresher(hr) {
+        request(null, false, `/`, function(response) {
+            refreshHeaderElements(DOM.parse(response.responseText));
+            GM_setValue(hr.refreshedElementsName, JSON.stringify(getHeaderElements()));
+            hr.refresher = window.setTimeout(continueHeaderRefresher, 60000, hr);
+        });
+    }
+
     function stopHeaderRefresher(hr) {
-        clearInterval(hr.refresher);
+        window.clearTimeout(hr.refresher);
     }
 
     function refreshHeader(hr) {
@@ -4374,14 +4355,14 @@ margin-bottom: ${esgst.footer.offsetHeight}px;
     }
 
     function drawHrIcons() {
-        var canvas, context, deliveredWins, image, messageCount, x;
+        var canvas, context, delivered, i, image, imageData, index, length, messageCount, pixelArray, x, r, g, b, a;
         if (esgst.sg) {
-            deliveredWins = esgst.headerData.deliveredWins;
+            delivered = esgst.headerElements.wonButton.getElementsByClassName(`fade_infinite`)[0];
         } else {
-            deliveredWins = 0;
+            delivered = null;
         }
         messageCount = esgst.headerData.messageCount;
-        if ((deliveredWins > 0 && esgst.hr_dw) || (messageCount > 0 && esgst.hr_mc)) {
+        if ((delivered && esgst.hr_dw) || (messageCount > 0 && esgst.hr_mc)) {
             canvas = document.createElement(`canvas`);
             image = document.createElement(`img`);
             canvas.width = 16;
@@ -4389,6 +4370,24 @@ margin-bottom: ${esgst.footer.offsetHeight}px;
             context = canvas.getContext(`2d`);
             image.onload = function () {
                 context.drawImage(image, 0, 0);
+                if (delivered && esgst.hr_dw) {
+                    imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+                    pixelArray = imageData.data;
+                    length = pixelArray.length / 4;
+                    for (i = 0; i < length; i++) {
+                        index = 4 * i;
+                        r = pixelArray[index];
+                        g = pixelArray[++index];
+                        b = pixelArray[++index];
+                        a = pixelArray[++index];
+                        if (r === 0 && g === 0 && b === 0) {
+                            pixelArray[--index] = 42;
+                            pixelArray[--index] = 32;
+                            pixelArray[--index] = 233;
+                        }
+                    }
+                    context.putImageData(imageData, 0, 0);
+                }
                 if (messageCount > 0 && esgst.hr_mc) {
                     context.fillStyle = `#e9202a`;
                     context.fillRect(8, 6, 8, 10);
@@ -4399,20 +4398,6 @@ margin-bottom: ${esgst.footer.offsetHeight}px;
                         messageCount = `+`;
                     }
                     context.fillText(messageCount, 9, 14);
-                    x = 0;
-                } else {
-                    x = 8;
-                }
-                if (deliveredWins > 0 && esgst.hr_dw) {
-                    context.fillStyle = `#fecc66`;
-                    context.fillRect(x, 6, 8, 10);
-                    context.fillStyle = `#000`;
-                    context.font = `bold 10px Arial`;
-                    context.textAlign = `left`;
-                    if (deliveredWins > 9) {
-                        deliveredWins = `+`;
-                    }
-                    context.fillText(deliveredWins, x + 1, 14);
                 }
                 esgst.favicon.href = canvas.toDataURL(`image/png`);
             };
@@ -4461,22 +4446,6 @@ margin-bottom: ${esgst.footer.offsetHeight}px;
                 }]
             };
             $(Context).highcharts(Highcharts.merge(chart_options.default, chart_options.areaspline, chart_options.datetime, chart_options.graph));
-        });
-    }
-
-    /* [DGN] Delivered Gifts Notifier */
-
-    function loadDeliveredGiftsNotifier() {
-        if (esgst.sg && !esgst.hr) {
-            request(null, false, `/giveaways/won`, getDeliveredGifts);
-        }
-    }
-
-    function getDeliveredGifts(response) {
-        refreshHeaderElements(DOM.parse(response.responseText));
-        GM_setValue(`sgRefreshedHeaderElements`, JSON.stringify(getHeaderElements()));
-        refreshHeader({
-            refreshedElementsName: `sgRefreshedHeaderElements`
         });
     }
 
@@ -4579,16 +4548,19 @@ ${title}
         timestamps = context.querySelectorAll(`[data-timestamp]`);
         for (i = 0, n = timestamps.length; i < n; ++i) {
             timestamp = timestamps[i];
-            text = timestamp.textContent;
-            edited = text.match(/\*/);
-            seconds = parseInt(timestamp.getAttribute(`data-timestamp`));
-            accurateTimestamp = getTimestamp(seconds, esgst.at_c24, esgst.at_s);
-            if (edited) {
-                text = ` (Edited ${accurateTimestamp})`;
-            } else {
-                text = `${accurateTimestamp} - ${text}`;
+            if (!timestamp.classList.contains(`esgst-at`)) {
+                text = timestamp.textContent;
+                edited = text.match(/\*/);
+                seconds = parseInt(timestamp.getAttribute(`data-timestamp`));
+                accurateTimestamp = getTimestamp(seconds, esgst.at_c24, esgst.at_s);
+                if (edited) {
+                    text = ` (Edited ${accurateTimestamp})`;
+                } else {
+                    text = `${accurateTimestamp} - ${text}`;
+                }
+                timestamp.classList.add(`esgst-at`);
+                timestamp.textContent = text;
             }
-            timestamp.textContent = text;
         }
     }
 
@@ -15863,7 +15835,7 @@ ${Results.join(``)}
         if (Context) {
             Giveaways = Context.getElementsByClassName("giveaway__row-outer-wrap");
             for (I = 0, NumGiveaways = Giveaways.length; I < NumGiveaways; ++I) {
-                Giveaway = getGiveawayInfo(Giveaways[I], null, true).data;
+                Giveaway = getGiveawayInfo(Giveaways[I], document, null, true).data;
                 if (Giveaway.endTime < (new Date().getTime())) {
                     if (!UGD.Timestamp) {
                         UGD.Timestamp = Giveaway.endTime;
@@ -19099,7 +19071,7 @@ ${avatar.outerHTML}
         SMLastBundleSync = Container.getElementsByClassName("SMLastBundleSync")[0];
         SMAPIKey = Container.getElementsByClassName("SMAPIKey")[0];
         SMGeneralFeatures = ["fh", "fs", "fmph", "ff", "hr", "lpv", "vai", "ev", "hbs", "at", "pnot", "lpl", "es"];
-        SMGiveawayFeatures = ["dgn", "sal", "hfc", "ags", "pgb", "gf", "gv", "egf", "gp", "gwc", "gwr", "elgb", "qgb", "gb", "ggl", "ochgb", "gt", "gtm", "sgg", "rcvc", "ugs", "er", "gwl", "gesl", "as"];
+        SMGiveawayFeatures = ["itadi", "cewgd", "sal", "hfc", "ags", "pgb", "gf", "gv", "egf", "gp", "gwc", "gwr", "elgb", "qgb", "gb", "ggl", "ochgb", "gt", "gtm", "sgg", "rcvc", "ugs", "er", "gwl", "gesl", "as"];
         SMDiscussionFeatures = ["adot", "ds", "dh", "mpp", "ded"];
         SMCommentingFeatures = ["ch", "ct", "cfh", "rbot", "rbp", "mr", "rfi", "rml"];
         SMUserGroupGamesFeatures = ["ap", "uh", "un", "rwscvl", "ugd", "namwc", "nrf", "swr", "luc", "sgpb", "stpb", "sgc", "uf", "wbs", "wbc", "wbh", "ut", "iwh", "gh", "gs", "egh", "ggt", "gc"];
@@ -19268,6 +19240,14 @@ ${avatar.outerHTML}
                 Name: "gc",
                 Key: "GC",
                 ID: "SM_GC"
+            }, {
+                Check: function () {
+                    return true;
+                },
+                Description: "Is There Any Deal? Info data.",
+                Name: "itadi",
+                Key: "ITADI",
+                ID: "SM_ITADI"
             }, {
                 Check: function () {
                     return true;
@@ -20104,6 +20084,15 @@ Background: <input type="color" value="${bgColor}">
                                     }
                                 }
                             }
+                            if (games[type][id].itadi && SM.ITADI.checked) {
+                                if (savedGames[type][id].itadi) {
+                                    if (savedGames[type][id].itadi.lastCheck < games[type][id].itadi.lastCheck) {
+                                        savedGames[type][id].itadi = games[type][id].itadi;
+                                    }
+                                } else {
+                                    savedGames[type][id].itadi = games[type][id].itadi;
+                                }
+                            }
                         } else if (SM.GT.checked || SM.EGH.checked || SM.GC.checked) {
                             if (!savedGames[type][id]) {
                                 savedGames[type][id] = {};
@@ -20119,6 +20108,9 @@ Background: <input type="color" value="${bgColor}">
                                 for (i = 0, n = categories.length; i < n; ++i) {
                                     savedGames[type][id][categories[i]] = games[type][id][categories[i]];
                                 }
+                            }
+                            if (games[type][id].itadi && SM.ITADI.checked) {
+                                savedGames[type][id].itadi = games[type][id].itadi;
                             }
                         }
                     }
@@ -20160,6 +20152,15 @@ Background: <input type="color" value="${bgColor}">
                                     }
                                 }
                             }
+                            if (games[type][id].itadi && SM.ITADI.checked) {
+                                if (savedGames[type][id].itadi) {
+                                    if (savedGames[type][id].itadi.lastCheck < games[type][id].itadi) {
+                                        savedGames[type][id].itadi = games[type][id].itadi;
+                                    }
+                                } else {
+                                    savedGames[type][id].itadi = games[type][id].itadi;
+                                }
+                            }
                         } else if (SM.GT.checked || SM.EGH.checked || SM.GC.checked) {
                             if (!savedGames[type][id]) {
                                 savedGames[type][id] = {};
@@ -20175,6 +20176,9 @@ Background: <input type="color" value="${bgColor}">
                                 for (i = 0, n = categories.length; i < n; ++i) {
                                     savedGames[type][id][categories[i]] = games[type][id][categories[i]];
                                 }
+                            }
+                            if (games[type][id].itadi && SM.ITADI.checked) {
+                                savedGames[type][id].itadi = games[type][id].itadi;
                             }
                         }
                     }
@@ -20193,7 +20197,7 @@ Background: <input type="color" value="${bgColor}">
             } else {
                 games = File.Data.games;
             }
-            if (SM.GT.checked && SM.EGH.checked && SM.GC.checked) {
+            if (SM.GT.checked && SM.EGH.checked && SM.GC.checked && SM.ITADI.checked) {
                 GM_setValue(`games`, JSON.stringify(games));
             } else {
                 savedGames = JSON.parse(GM_getValue(`games`));
@@ -20208,6 +20212,10 @@ Background: <input type="color" value="${bgColor}">
                 if (SM.GC.checked) {
                     getSMGames(games, `lastCheck`, savedGames, `apps`);
                     getSMGames(games, `lastCheck`, savedGames, `subs`);
+                }
+                if (SM.ITADI.checked) {
+                    getSMGames(games, `itadi`, savedGames, `apps`);
+                    getSMGames(games, `itadi`, savedGames, `subs`);
                 }
                 GM_setValue(`games`, JSON.stringify(savedGames));
             }
@@ -20309,6 +20317,10 @@ Background: <input type="color" value="${bgColor}">
                     getSMGames(games, `lastCheck`, Data.games, `apps`);
                     getSMGames(games, `lastCheck`, Data.games, `subs`);
                 }
+                if (SM.ITADI.checked) {
+                    getSMGames(games, `itadi`, Data.games, `apps`);
+                    getSMGames(games, `itadi`, Data.games, `subs`);
+                }
             } else if (Key.match(/sgCommentHistory|stCommentHistory|comments|giveaways|descryptedGiveaways|templates/) && SM[SM.Names[Key]].checked) {
                 Data[Key] = JSON.parse(GM_getValue(Key, `{}`));
             } else if (SM[SM.Names[Key]].checked) {
@@ -20386,6 +20398,10 @@ Background: <input type="color" value="${bgColor}">
                             if (SM.GC.checked) {
                                 getSMGames(games, `lastCheck`, null, `apps`, true);
                                 getSMGames(games, `lastCheck`, null, `subs`, true);
+                            }
+                            if (SM.ITADI.checked) {
+                                getSMGames(games, `itadi`, null, `apps`, true);
+                                getSMGames(games, `itadi`, null, `subs`, true);
                             }
                             GM_setValue(`games`, JSON.stringify(games));
                         }
@@ -20532,7 +20548,7 @@ Background: <input type="color" value="${bgColor}">
     }
 
     function loadGiveawayFeatures(context, main) {
-        var giveaways, i, n;
+        var giveaways, i, n, savedGiveaways;
         giveaways = getGiveaways(context, main);
         if (main) {
             for (i = 0, n = giveaways.length; i < n; ++i) {
@@ -20544,26 +20560,33 @@ Background: <input type="color" value="${bgColor}">
         }
     }
 
-    function getGiveaways(context, main) {
-        var games, giveaway, giveaways, i, matches, n, query;
+    function getGiveaways(context, main, mainUrl) {
+        var games, giveaway, giveaways, i, key, mainContext, matches, n, query;
         games = JSON.parse(GM_getValue(`games`));
         giveaways = [];
-        if (esgst.enteredPath) {
+        if (esgst.createdPath || esgst.enteredPath || esgst.wonPath) {
             query = `.giveaway__row-outer-wrap, .featured__outer-wrap--giveaway, .table:not(.table--summary) .table__row-outer-wrap`;
         } else {
             query = `.giveaway__row-outer-wrap, .featured__outer-wrap--giveaway`;
         }
+        if (mainUrl) {
+            mainContext = context;
+            key = `data`;
+        } else {
+            mainContext = document;
+            key = `giveaway`;
+        }
         matches = context.querySelectorAll(query);
         for (i = 0, n = matches.length; i < n; ++i) {
-            giveaway = getGiveawayInfo(matches[i], games, null, main);
+            giveaway = getGiveawayInfo(matches[i], mainContext, games, null, main, mainUrl);
             if (giveaway) {
-                giveaways.push(giveaway.giveaway);
+                giveaways.push(giveaway[key]);
             }
         }
         return giveaways;
     }
 
-    function getGiveawayInfo(context, games, ugd, main) {
+    function getGiveawayInfo(context, mainContext, games, ugd, main, mainUrl) {
         var category, categories, chance, element, giveaway, i, id, info, match, n, thinHeadings;
         giveaway = {};
         giveaway.outerWrap = context;
@@ -20582,7 +20605,7 @@ Background: <input type="color" value="${bgColor}">
         giveaway.innerWrap = giveaway.outerWrap.querySelector(`.giveaway__row-inner-wrap, .featured__inner-wrap, .table__row-inner-wrap`);
         giveaway.avatar = giveaway.outerWrap.getElementsByClassName(`global__image-outer-wrap--avatar-small`)[0];
         giveaway.image = giveaway.outerWrap.getElementsByClassName(`global__image-outer-wrap--game-medium`)[0];
-        giveaway.summary = giveaway.innerWrap.querySelector(`.giveaway__summary, .featured__summary`);
+        giveaway.summary = giveaway.innerWrap.querySelector(`.giveaway__summary, .featured__summary, .table__column--width-fill`);
         giveaway.entered = giveaway.innerWrap.classList.contains(`is-faded`);
         giveaway.headingName = giveaway.innerWrap.querySelector(`.giveaway__heading__name, .featured__heading__medium, .table__column__heading`);
         giveaway.name = giveaway.headingName.textContent;
@@ -20593,7 +20616,7 @@ Background: <input type="color" value="${bgColor}">
         } else {
             giveaway.copies = 1;
         }
-        giveaway.url = esgst.giveawayPath && !ugd ? window.location.pathname : giveaway.headingName.getAttribute(`href`);
+        giveaway.url = esgst.giveawayPath && !ugd ? window.location.pathname : (mainUrl || giveaway.headingName.getAttribute(`href`));
         if (giveaway.url) {
             match = giveaway.url.match(/\/giveaway\/(.+?)(\/.+?)$/);
             if (match) {
@@ -20632,9 +20655,10 @@ Background: <input type="color" value="${bgColor}">
         } else {
             giveaway.started = true;
         }
-        if (!giveaway.endTime && esgst.enteredPath) {
+        if (!giveaway.endTime && (esgst.enteredPath || esgst.wonPath)) {
             giveaway.endTime = giveaway.innerWrap.querySelector(`[data-timestamp]`);
             if (giveaway.endTime) {
+                giveaway.endTimeColumn = giveaway.endTime.parentElement;
                 giveaway.endTime = parseInt(giveaway.endTime.getAttribute(`data-timestamp`)) * 1e3;
             } else {
                 giveaway.endTime = 0;
@@ -20653,15 +20677,15 @@ Background: <input type="color" value="${bgColor}">
             giveaway.entriesLink = giveaway.links.firstElementChild;
             giveaway.commentsLink = giveaway.entriesLink.nextElementSibling;
         } else {
-            giveaway.entriesLink = document.getElementsByClassName(`sidebar__navigation__item__count`)[1];
-            giveaway.commentsLink = document.getElementsByClassName(`sidebar__navigation__item__count`)[0];
+            giveaway.entriesLink = mainContext.getElementsByClassName(`sidebar__navigation__item__count`)[1];
+            giveaway.commentsLink = mainContext.getElementsByClassName(`sidebar__navigation__item__count`)[0];
         }
         if (giveaway.entriesLink && giveaway.commentsLink) {
             giveaway.entries = parseInt(giveaway.entriesLink.textContent.replace(/,/g, ``).match(/\d+/)[0]);
             giveaway.comments = parseInt(giveaway.commentsLink.textContent.replace(/,/g, ``).match(/\d+/)[0]);
         }
         giveaway.panel = giveaway.innerWrap.getElementsByClassName(`esgst-giveaway-panel`)[0];
-        if (!giveaway.panel && (esgst.gwc || esgst.gwr || esgst.elgb)) {
+        if (!giveaway.panel && (esgst.gwc || esgst.gwr || esgst.elgb || esgst.cewgd)) {
             if (giveaway.links) {
                 giveaway.panel = insertHtml(giveaway.links, `afterEnd`, `
                     <div class="giveaway__columns esgst-giveaway-panel"></div>
@@ -20719,6 +20743,346 @@ Background: <input type="color" value="${bgColor}">
                 whitelist: giveaway.whitelist ? true : false
             }
         };
+    }
+
+    /* [ITADI] Is There Any Deal? Info */
+
+    function loadItadi() {
+        if (esgst.giveawayPath) {
+            esgst.giveawayFeatures.push(getItadiInfo);
+        }
+    }
+
+    function getItadiInfo(giveaways, main) {
+        var game, games, giveaway, loading, plain;
+        if (main) {
+            giveaway = giveaways[0];
+            games = JSON.parse(GM_getValue(`games`));
+            game = games[giveaway.type][giveaway.id];
+            plain = getItadiPlain(giveaway.name);
+            if (game && game.itadi && ((esgst.itadi_h && typeof game.itadi.historical !== `undefined`) || !esgst.itadi_h) && (Date.now() - game.itadi.lastCheck < 86400000)) {
+                addItadiInfo(game.itadi, plain);
+            } else {
+                loading = insertHtml(esgst.sidebar, `beforeEnd`, `
+                    <h3 class="sidebar__heading">
+                        <i class="fa fa-circle-o-notch fa-spin"></i> Loading Is There Any Deal? info...
+                    </h3>
+                `);
+                request(null, true, `https://isthereanydeal.com/ajax/game/info?plain=${plain}`, function (infoResponse) {
+                    if (esgst.itadi_h) {
+                        request(null, true, `https://isthereanydeal.com/ajax/game/price?plain=${plain}`, function (priceResponse) {
+                            loadItadiInfo(giveaway, infoResponse, loading, plain, priceResponse);
+                        });
+                    } else {
+                        loadItadiInfo(giveaway, infoResponse, loading, plain);
+                    }
+                });
+            }
+        }
+    }
+
+    function loadItadiInfo(giveaway, infoResponse, loading, plain, priceResponse) {
+        var bundles, current, currentBundle, currentBundles, currentDeal, currentDeals, date, deals, found, games, heading, headings, historical, i, infoHtml, itadi, n, name, parent, priceHtml, tag;
+        infoHtml = DOM.parse(infoResponse.responseText);
+        deals = [];
+        currentDeals = infoHtml.getElementsByClassName(`new`);
+        n = currentDeals.length;
+        if (n > 0) {
+            for (i = 0; i < n; ++i) {
+                currentDeal = currentDeals[i];
+                deals.push({
+                    price: currentDeal.textContent,
+                    source: currentDeal.closest(`.row`).firstElementChild.firstElementChild.textContent
+                });
+            }
+            deals.sort(function (a, b) {
+                a = parseFloat(a.price.replace(/(\$|\£|\€)/, ``));
+                b = parseFloat(b.price.replace(/(\$|\£|\€)/, ``));
+                if (a < b) {
+                    return -1;
+                } else if (a > b) {
+                    return 1;
+                } else {
+                    return 0;
+                }
+            });
+            current = deals[0];
+        } else {
+            current = null;
+        }
+        if (esgst.itadi_h && priceResponse) {
+            priceHtml = DOM.parse(priceResponse.responseText);
+            headings = priceHtml.getElementsByTagName(`th`);
+            n = headings.length;
+            if (n > 0) {
+                found = false;
+                for (i = 0; i < n && !found; ++i) {
+                    heading = headings[i];
+                    if (heading.textContent === `Lowest price`) {
+                        found = true;
+                        parent = heading.parentElement;
+                        historical = {
+                            date: parent.getElementsByClassName(`date`)[0].textContent,
+                            price: parent.getElementsByClassName(`primary`)[0].textContent,
+                            source: parent.getElementsByClassName(`shopTitle`)[0].textContent
+                        };
+                    }
+                }
+                if (!found) {
+                    historical = null;
+                }
+            } else {
+                historical = null;
+            }
+        } else {
+            historical = null;
+        }
+        bundles = [];
+        currentBundles = infoHtml.getElementsByClassName(`bundle-head`);
+        n = currentBundles.length;
+        if (n > 0) {
+            for (i = 0; i < n; ++i) {
+                currentBundle = currentBundles[i];
+                tag = currentBundle.firstElementChild;
+                if (tag.textContent === `bundle`) {
+                    date = tag.nextElementSibling;
+                    name = date.nextElementSibling.firstElementChild;
+                    bundles.push({
+                        date: date.textContent.replace(/expired\s/, ``),
+                        id: name.getAttribute(`href`).match(/\d+/)[0],
+                        name: name.textContent
+                    });
+                }
+            }
+            if (!bundles.length) {
+                bundles = null;
+            }
+        } else {
+            bundles = null;
+        }
+        itadi = {
+            bundles: bundles,
+            current: current,
+            historical: historical,
+            lastCheck: Date.now()
+        };
+        createLock(`gameLock`, 300, function (deleteLock) {
+            games = JSON.parse(GM_getValue(`games`));
+            if (!games[giveaway.type][giveaway.id]) {
+                games[giveaway.type][giveaway.id] = {};
+            }
+            games[giveaway.type][giveaway.id].itadi = itadi;
+            GM_setValue(`games`, JSON.stringify(games));
+            deleteLock();
+            loading.remove();
+            addItadiInfo(itadi, plain);
+        });
+    }
+
+    function addItadiInfo(itadi, plain) {
+        var bundle, bundlesHtml, bundlesItem, currentHtml, currentItem, historicalHtml, historicalItem, i, n;
+        if (itadi.current) {
+            currentItem = `
+                <li class="sidebar__navigation__item">
+				    <a class="sidebar__navigation__item__link" href="https://isthereanydeal.com/#/page:game/info?plain=${plain}">
+					    <div class="sidebar__navigation__item__name">${itadi.current.source}</div>
+					    <div class="sidebar__navigation__item__underline"></div>
+                        <div class="sidebar__navigation__item__count">${itadi.current.price}</div>
+				    </a>
+				</li>
+            `;
+        } else {
+            currentItem = `There are no current deals for this game.`;
+        }
+        currentHtml = `
+            <h3 class="sidebar__heading">Best Current Deal</h3>
+            <ul class="sidebar__navigation">
+                ${currentItem}
+            </ul>
+        `;
+        if (esgst.itadi_h) {
+            if (itadi.historical) {
+                historicalItem = `
+                    <li class="sidebar__navigation__item">
+					    <a class="sidebar__navigation__item__link" href="https://isthereanydeal.com/#/page:game/price?plain=${plain}">
+						    <div class="sidebar__navigation__item__name">${itadi.historical.source}</div>
+						    <div class="sidebar__navigation__item__underline"></div>
+                            <div class="sidebar__navigation__item__count">${itadi.historical.price} (${itadi.historical.date})</div>
+						</a>
+					</li>
+                `;
+            } else {
+                historicalItem = `There is no price history for this game.`;
+            }
+            historicalHtml = `
+                <h3 class="sidebar__heading">Historical Lowest Price</h3>
+                <ul class="sidebar__navigation">
+                    ${historicalItem}
+                </ul>
+            `;
+        } else {
+            historicalHtml = ``;
+        }
+        if (itadi.bundles) {
+            bundlesItem = ``;
+            for (i = 0, n = itadi.bundles.length; i < n; ++i) {
+                bundle = itadi.bundles[i];
+                bundlesItem += `
+				    <li class="sidebar__navigation__item">
+					    <a class="sidebar__navigation__item__link" href="https://isthereanydeal.com/specials/#/filter:id/${bundle.id}">
+						    <div class="sidebar__navigation__item__name">${bundle.name}</div>
+							<div class="sidebar__navigation__item__underline"></div>
+                            <div class="sidebar__navigation__item__count">${bundle.date}</div>
+						</a>
+					</li>
+               `;
+            }
+        } else {
+            bundlesItem = `This game has never been in a bundle.`;
+        }
+        bundlesHtml = `
+            <h3 class="sidebar__heading">Bundles</h3>
+            <ul class="sidebar__navigation">
+                ${bundlesItem}
+            </ul>
+        `;
+        esgst.sidebar.insertAdjacentHTML(`beforeEnd`, `
+            ${currentHtml}${historicalHtml}${bundlesHtml}
+        `);
+    }
+
+    function getItadiPlain(name) {
+        var numbers;
+        numbers = [`0`, `i`, `ii`, `iii`, `iv`, `v`, `vi`, `vii`, `viii`, `ix`];
+        return name.toLowerCase().replace(/\sthe|the\s/g, ``).replace(/\s/g, ``).replace(/\d/g, function (m) {
+            return numbers[m];
+        }).replace(/\&/g, `and`).replace(/\+/g, `plus`).replace(/[^\d\w]/g, ``);
+    }
+
+    /* [CEWGD] Created/Entered/Won Giveaway Details */
+
+    function loadCewgd() {
+        if (esgst.createdPath || esgst.enteredPath || esgst.wonPath) {
+            esgst.giveawayFeatures.push(getCewgdDetails);
+            esgst.endlessFeatures.push(addCewgdHeading);
+            addCewgdHeading(document);
+            GM_addStyle(`
+                .table__column--width-small {
+                    width: 8%;
+                }
+            `);
+        }
+    }
+
+    function addCewgdHeading(context) {
+        var table;
+        table = context.getElementsByClassName(`table__heading`)[0];
+        if (table && !table.getElementsByClassName(`esgst-cewgd-heading`)[0]) {
+            table.firstElementChild.insertAdjacentHTML(`afterEnd`, `
+                <div class="table__column--width-small text-center esgst-cewgd-heading">Type</div>
+                <div class="table__column--width-small text-center esgst-cewgd-heading">Level</div>
+            `);
+        }
+    }
+
+    function getCewgdDetails(giveaways, main) {
+        if (main) {
+            window.setTimeout(getCewgdDetail, 0, giveaways, 0, giveaways.length);
+        }
+    }
+
+    function getCewgdDetail(giveaways, i, n) {
+        var code, currentCode, currentGiveaway, currentGiveaways, giveaway, key, responseHtml, savedGiveaways;
+        if (i < n) {
+            giveaway = giveaways[i];
+            code = giveaway.code;
+            savedGiveaways = JSON.parse(GM_getValue(`giveaways`));
+            if (savedGiveaways[code] && savedGiveaways[code].gameSteamId) {
+                addCewgdDetails(giveaway, savedGiveaways[code]);
+                window.setTimeout(getCewgdDetail, 0, giveaways, ++i, n);
+            } else {
+                request(null, true, giveaway.url, function (response) {
+                    responseHtml = DOM.parse(response.responseText);
+                    currentGiveaways = getGiveaways(responseHtml, false, response.finalUrl);
+                    if (currentGiveaways.length) {
+                        currentGiveaway = currentGiveaways[0];
+                        createLock(`giveawayLock`, 300, function (deleteLock) {
+                            savedGiveaways = JSON.parse(GM_getValue(`giveaways`));
+                            if (savedGiveaways[code]) {
+                                for (key in currentGiveaway) {
+                                    savedGiveaways[code][key] = currentGiveaway[key];
+                                }
+                            } else {
+                                savedGiveaways[code] = currentGiveaway;
+                            }
+                            GM_setValue(`giveaways`, JSON.stringify(savedGiveaways));
+                            deleteLock();
+                            addCewgdDetails(giveaway, currentGiveaway);
+                            window.setTimeout(getCewgdDetail, 0, giveaways, ++i, n);
+                        });
+                    } else {
+                        giveaways[i].panel.insertAdjacentHTML(`afterEnd`, `
+                            <div class="table__column--width-small text-center">-</div>
+                            <div class="table__column--width-small text-center">-</div>
+                        `);
+                        window.setTimeout(getCewgdDetail, 0, giveaways, ++i, n);
+                    }
+               });
+            }
+        }
+    }
+
+    function addCewgdDetails(giveaway, details) {
+        var type;
+        giveaway.headingName.insertAdjacentHTML(`beforeEnd`, `
+            <span>(${details.points}P)</span>
+            <a class="giveaway__icon" href="http://store.steampowered.com/${details.gameType.slice(0, -1)}/${details.gameSteamId}">
+                <i class="fa fa-steam"></i>
+            </a>
+        `);
+        if (details.inviteOnly) {
+            if (details.regionRestricted) {
+                type = `Invite + Region`;
+            } else {
+                type = `Invite`;
+            }
+        } else if (details.group) {
+            if (details.whitelist) {
+                if (details.regionRestricted) {
+                    type = `Group + Whitelist + Region`;
+                } else {
+                    type = `Group + Whitelist`;
+                }
+            } else if (details.regionRestricted) {
+                type = `Group + Region`;
+            } else {
+                type = `Group`;
+            }
+        } else if (details.whitelist) {
+            if (details.regionRestricted) {
+                type = `Whitelist + Region`;
+            } else {
+                type = `Whitelist`;
+            }
+        } else if (details.regionRestricted) {
+            type = `Region`;
+        } else {
+            type = `Everyone`;
+        }
+        giveaway.panel.insertAdjacentHTML(`afterEnd`, `
+            <div class="table__column--width-small text-center">${type}</div>
+            <div class="table__column--width-small text-center">${details.level}+</div>
+        `);
+        if (esgst.enteredPath || esgst.wonPath) {
+            giveaway.endTimeColumn.insertAdjacentHTML(`beforeEnd`, `
+                by <a class="table__column__secondary-link" href="/user/${details.creator}">${details.creator}</a>
+            `);
+        }
+        if (type.match(/Group/) && esgst.ggl) {
+            giveaway.group = true;
+            getGglGiveaways([giveaway]);
+        }
+        loadEndlessFeatures(giveaway.outerWrap);
     }
 
     /* [SAL] Steam Activation Link */
@@ -21518,7 +21882,7 @@ ${avatar.outerHTML}
         var giveaway, i, n;
         for (i = 0, n = giveaways.length; i < n; ++i) {
             giveaway = giveaways[i];
-            if (!giveaway.innerWrap.getElementsByClassName(`esgst-gwc`)[0]) {
+            if ((((esgst.createdPath || esgst.wonPath) && !main) || (!esgst.createdPath && !esgst.wonPath)) && !giveaway.innerWrap.getElementsByClassName(`esgst-gwc`)[0]) {
                 if (giveaway.started) {
                     addGwcChance(insertHtml(giveaway.panel, esgst.gv && esgst.giveawaysPath ? `afterBegin` : `beforeEnd`, `<div class="${esgst.giveawayPath ? `featured__column` : ``} esgst-gwc" title="Giveaway Winning Chance">`), giveaway);
                 } else {
@@ -21570,7 +21934,7 @@ ${avatar.outerHTML}
         var giveaway, i, n;
         for (i = 0, n = giveaways.length; i < n; ++i) {
             giveaway = giveaways[i];
-            if (giveaway.started && !giveaway.innerWrap.getElementsByClassName(`esgst-gwr`)[0]) {
+            if ((((esgst.createdPath || esgst.wonPath) && !main) || (!esgst.createdPath && !esgst.wonPath)) && giveaway.started && !giveaway.innerWrap.getElementsByClassName(`esgst-gwr`)[0]) {
                 addGwcRatio(insertHtml(giveaway.panel, esgst.gv && esgst.giveawaysPath ? `afterBegin` : `beforeEnd`, `<div class="${esgst.giveawayPath ? `featured__column` : ``} esgst-gwr" title="Giveaway Winning Ratio">`), giveaway);
             }
         }
@@ -21596,11 +21960,11 @@ ${avatar.outerHTML}
 
     function addGwcrHeading(context, main) {
         var table;
-        if ( main) {
+        if ((!esgst.createdPath && !esgst.wonPath) && main) {
         table = context.getElementsByClassName(`table__heading`)[0];
-        if (table && !table.getElementsByClassName(`esgst-gwcr-heading`)[0]) {
-            table.firstElementChild.insertAdjacentHTML(`afterEnd`, `<div class="table__column--width-small text-center esgst-gwcr-heading">Chance / Ratio</div>`);
-        }
+            if (table && !table.getElementsByClassName(`esgst-gwcr-heading`)[0]) {
+                table.firstElementChild.insertAdjacentHTML(`afterEnd`, `<div class="table__column--width-small text-center esgst-gwcr-heading">Chance / Ratio</div>`);
+            }
         }
     }
 
@@ -21614,7 +21978,7 @@ ${avatar.outerHTML}
     function addElgbButtons(giveaways, main) {
         var games, giveaway, i, n;
             games = JSON.parse(GM_getValue(`games`));
-        if (((esgst.enteredPath || esgst.giveawayPath) && !main) || (!esgst.enteredPath && !esgst.giveawayPath)) {
+        if (((esgst.createdPath || esgst.enteredPath || esgst.wonPath || esgst.giveawayPath) && !main) || (!esgst.createdPath && !esgst.enteredPath && !esgst.wonPath && !esgst.giveawayPath)) {
             for (i = 0, n = giveaways.length; i < n; ++i) {
                 giveaway = giveaways[i];
                 if (!giveaway.innerWrap.getElementsByClassName(`esgst-button-set`)[0]) {
