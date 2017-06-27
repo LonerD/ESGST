@@ -3,7 +3,7 @@
 // @namespace ESGST
 // @description Enhances SteamGifts and SteamTrades by adding some cool features to them.
 // @icon https://github.com/revilheart/ESGST/raw/master/Resources/esgstIcon.ico
-// @version 6.Beta.14.4
+// @version 6.Beta.14.5
 // @author revilheart
 // @contributor Royalgamer06
 // @downloadURL https://github.com/revilheart/ESGST/raw/master/ESGST.user.js
@@ -4175,13 +4175,11 @@ min-width: 0;
             ad = esgst.sidebar.getElementsByClassName(`sidebar__mpu`)[0];
             sibling = esgst.sidebar.nextElementSibling;
             document.addEventListener(`scroll`, fixSidebar);
-            document.addEventListener(`scroll`, function() {
-                esgst.sidebar.style.top = `${window.scrollY + esgst.pageTop}px`;
-            });
             fixSidebar();
             GM_addStyle(`
                 .esgst-fs {
-                    position: absolute;
+                    position: fixed;
+                    top: ${esgst.pageTop}px;
                 }
             `);
         }
@@ -4225,15 +4223,12 @@ min-width: 0;
             esgst.mainPageHeadingPlaceholder = esgst.mainPageHeading.nextElementSibling;
             esgst.mainPageHeadingBackground = esgst.mainPageHeadingPlaceholder.nextElementSibling;
             document.addEventListener(`scroll`, fixMainPageHeading);
-            document.addEventListener(`scroll`, function() {
-                esgst.mainPageHeading.style.top = `${window.scrollY + esgst.pageTop}px`;
-                esgst.mainPageHeadingBackground.style.top = `${window.scrollY}px`;
-            });
             fixMainPageHeading();
             height = esgst.mainPageHeading.offsetHeight;
             GM_addStyle(`
                 .esgst-fmph {
-                    position: absolute;
+                    position: fixed;
+                    top: ${esgst.pageTop}px;
                     z-index: 998;
                 }
                 .esgst-fmph-placeholder {
@@ -4242,7 +4237,7 @@ min-width: 0;
                 .esgst-fmph-background {
                     height: ${esgst.pageTop + height + 5}px;
                     padding: 0;
-                    position: absolute;
+                    position: fixed;
                     top: 0;
                     z-index: 997;
                 }
@@ -21277,8 +21272,36 @@ Background: <input type="color" value="${bgColor}">
 
     function loadSal() {
         if (esgst.sg && esgst.wonPath) {
+            esgst.endlessFeatures.push(addSalLinks);
             addSalLinks(document);
+            esgst.endlessFeatures.push(addSalObservers);
+            addSalObservers(document);
         }
+    }
+
+    function addSalObservers(context) {
+        var elements, i, n;
+        elements = context.getElementsByClassName(`view_key_btn`);
+        for (i = 0, n = elements.length; i < n; ++i) {
+            addSalObserver(elements[i]);
+        }
+    }
+
+    function addSalObserver(button) {
+        var context, element, interval, match;
+        context = button.closest(`.table__row-outer-wrap`);
+        button.addEventListener(`click`, function() {
+            interval = window.setInterval(function() {
+                if (!context.contains(button)) {
+                    window.clearInterval(interval);
+                    element = context.querySelector(`[data-clipboard-text]`);
+                    match = element.getAttribute(`data-clipboard-text`).match(/^[\d\w]{5}(-[\d\w]{5}){2,}$/);
+                    if (match) {
+                        addSalLink(element, match[0]);
+                    }
+                }
+            }, 100);
+        });
     }
 
     function addSalLinks(context) {
@@ -21295,20 +21318,22 @@ Background: <input type="color" value="${bgColor}">
 
     function addSalLink(element, match) {
         var link, textArea;
-        link = insertHtml(element, `afterEnd`, `
-            <a href="steam://open/activateproduct" title="Activate on Steam">
-                <i class="fa fa-steam"></i>
-            </a>
-        `);
-        link.addEventListener(`click`, function () {
-            textArea = insertHtml(document.body, `beforeEnd`, `
-                <textarea></textarea>
+        if ((element.nextElementSibling && !element.nextElementSibling.classList.contains(`esgst-sal`)) || !element.nextElementSibling) {
+            link = insertHtml(element, `afterEnd`, `
+                <a class="esgst-sal" href="steam://open/activateproduct" title="Activate on Steam">
+                    <i class="fa fa-steam"></i>
+                </a>
             `);
-            textArea.value = match;
-            textArea.select();
-            document.execCommand(`copy`);
-            textArea.remove();
-        });
+            link.addEventListener(`click`, function () {
+                textArea = insertHtml(document.body, `beforeEnd`, `
+                    <textarea></textarea>
+                `);
+                textArea.value = match;
+                textArea.select();
+                document.execCommand(`copy`);
+                textArea.remove();
+            });
+        }
     }
 
     /* Giveaway Bookmarks */

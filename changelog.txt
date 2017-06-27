@@ -1,4 +1,11 @@
 /*
+ * June 27, 2017 - v6.Beta.14.5
+ */
+
+* Reverted the previous sidebar/page heading change.
+* Steam Activation Link now works after clicking the "View Key" button.
+
+/*
  * June 27, 2017 - v6.Beta.14.4
  */
 
