@@ -1,4 +1,17 @@
 /*
+ * June 27, 2017 - v6.Beta.14.1
+ */
+
+* Fixed some bugs.
+* Changed "Everyone" to "Public" in all features that use this notation.
+* Fixed a style issue in Fixed Sidebar/Fixed Main Page Heading for changing-width sidebars/descriptions (closes #117).
+* Avatar Popout now works also when hovering hover an user's username.
+
+Renamed the following features:
+
+* Giveaway Train Maker -> Giveaway Maker - Made the interface less confusing and added a tooltip describing how to use the feature in more details (closes #200).
+
+/*
  * June 26, 2017 - v6.Beta.14.0
  */
 

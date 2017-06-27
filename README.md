@@ -129,18 +129,16 @@ Tested on Microsoft Edge and most of it seems to work fine, but for some reason 
 
 * Adds a "Last Page" link to some places that are missing it, for example: discussion pages with 100+ pages, user pages, group pages with 100+ pages.
 
-### Giveaway Train Maker
+### Giveaway Maker
 
 `steamgifts.com/giveaways/new/*`
 
-* Allows you to create a train of giveaways (multiple giveaways that are linked to one another).
-* You can also use it to create multiple giveaways that are not linked to one another (useful to use the same template for multiple giveaways) by not enabling the "Connect wagons." option.
-* You can edit each giveaway individually before adding it as a wagon.
-* You can view detailed information about a wagon by hovering over it.
-* You can re-order/delete the wagons by dragging and dropping them in the correspondent areas.
-* All giveaways will be created without reviewing or validating, so make sure all fields are filled, or the giveaway creation will fail and the wagon will be disconnected from the train.
+* Allows you to create multiple giveaways or a train of giveaways (multiple giveaways that are linked to one another).
+* You can view detailed information about a giveaway by hovering over it.
+* You can re-order/remove the giveaways by dragging and dropping them in the correspondent areas.
+* All giveaways will be created without reviewing or validating, so make sure all fields are filled correctly, or the giveaway creation will fail (if a train is being created, the failed giveaway will be disconnected and the previous giveaway will be connected to the next instead).
 
-![](http://i.imgur.com/0FkOMhe.png)
+![](http://i.imgur.com/Pf9j7gN.png)
 
 ### Discussions Sorter
 

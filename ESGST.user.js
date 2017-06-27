@@ -3,7 +3,7 @@
 // @namespace ESGST
 // @description Enhances SteamGifts and SteamTrades by adding some cool features to them.
 // @icon https://github.com/revilheart/ESGST/raw/master/Resources/esgstIcon.ico
-// @version 6.Beta.14.0
+// @version 6.Beta.14.1
 // @author revilheart
 // @contributor Royalgamer06
 // @downloadURL https://github.com/revilheart/ESGST/raw/master/ESGST.user.js
@@ -492,7 +492,7 @@
             ggl: `ggp`,
             ochgb: `ochgb`,
             gt: `GTS`,
-            gtm: `gtm`,
+            gm: `gtm`,
             sgg: `SGG`,
             rcvc: `rcvc`,
             ugs: `UGS`,
@@ -739,25 +739,25 @@
                 id: `fh`,
                 name: `Fixed Header`,
                 check: getValue(`fh`),
-                load: loadFixedHeader
+                load: loadFh
             },
             {
                 id: `fs`,
                 name: `Fixed Sidebar`,
-                check: getValue(`fs`) && esgst.sg && esgst.sidebar,
-                load: loadFixedSidebar
+                check: getValue(`fs`),
+                load: loadFs
             },
             {
                 id: `fmph`,
                 name: `Fixed Main Page Heading`,
-                check: getValue(`fmph`) && esgst.mainPageHeading,
-                load: loadFixedMainPageHeading
+                check: getValue(`fmph`),
+                load: loadFmph
             },
             {
                 id: `ff`,
                 name: `Fixed Footer`,
                 check: getValue(`ff`),
-                load: loadFixedFooter
+                load: loadFf
             },
             {
                 id: `hr`,
@@ -989,10 +989,10 @@
                 load: loadOchgb
             },
             {
-                id: `gtm`,
-                name: `Giveaway Train Maker`,
-                check: getValue(`gtm`),
-                load: loadGtm
+                id: `gm`,
+                name: `Giveaway Maker`,
+                check: getValue(`gm`),
+                load: loadGm
             },
             {
                 id: `gt`,
@@ -3121,7 +3121,7 @@ background-color: ${backgroundColor} !important;
         Unknown = window.getComputedStyle(Unknown).color;
         Temp.remove();
         style = `
-.esgst-gtm-wagon {
+.esgst-gm-giveaway {
     background-color: #fff;
     border: 1px solid;
     border-radius: 4px;
@@ -3131,23 +3131,23 @@ background-color: ${backgroundColor} !important;
     padding: 2px 5px;
 }
 
-.esgst-gtm-wagon.error {
+.esgst-gm-giveaway.error {
     background-color: rgba(236, 133, 131, 0.5);
 }
 
-.esgst-gtm-wagon.success {
+.esgst-gm-giveaway.success {
     background-color: rgba(150, 196, 104, 0.5);
 }
 
-.esgst-gtm-wagon.connected {
+.esgst-gm-giveaway.connected {
     text-decoration: line-through;
 }
 
-.esgst-gts-section >*, .esgst-gtm-section >* {
+.esgst-gts-section >*, .esgst-gm-section >* {
 margin: 5px 0;
 }
 
-.esgst-gtm-section .esgst-button-set {
+.esgst-gm-section .esgst-button-set {
 display: inline-block;
 margin: 5px;
 }
@@ -3308,43 +3308,6 @@ width: calc(100% - 33px);
 
 .esgst-rbot .reply_form .btn_cancel {
 display: none;
-}
-
-.esgst-fh {
-height: auto !important;
-position: fixed;
-top: 0;
-width: 100%;
-z-index: 999 !important;
-}
-
-.esgst-fs {
-position: fixed;
-}
-
-.esgst-fmph {
-position: fixed;
-z-index: 998;
-}
-
-.esgst-fmph-background {
-padding: 0;
-position: fixed;
-top: 0;
-z-index: 997;
-}
-
-.esgst-ff {
-background-color: inherit;
-bottom: 0;
-padding: 0;
-position: fixed;
-width: 100%;
-z-index: 999;
-}
-
-.esgst-ff >* {
-padding: 15px 25px;
 }
 
 .esgst-lpv-container >* {
@@ -4030,7 +3993,7 @@ min-width: 0;
     }
 
     function goToComment(hash, Element) {
-        var ID, Top, Permalink;
+        var element, ID, Top, Permalink;
         if (!hash) {
             hash = window.location.hash;
         }
@@ -4047,12 +4010,15 @@ min-width: 0;
                 if (Permalink) {
                     Permalink.remove();
                 }
-                Element.getElementsByClassName(esgst.sg ? "comment__username" : "author_avatar")[0].insertAdjacentHTML(
-                    esgst.sg ? "beforeBegin" : "afterEnd",
-                    "<div class=\"comment__permalink\">" +
-                    "    <i class=\"fa fa-share author_permalink\"></i>" +
-                    "</div>"
-                );
+                element = Element.getElementsByClassName(esgst.sg ? "comment__username" : "author_avatar")[0];
+                if (element) {
+                    element.insertAdjacentHTML(
+                        esgst.sg ? "beforeBegin" : "afterEnd",
+                        "<div class=\"comment__permalink\">" +
+                        "    <i class=\"fa fa-share author_permalink\"></i>" +
+                        "</div>"
+                    );
+                }
             }
         }
     }
@@ -4165,146 +4131,164 @@ min-width: 0;
 
     // Features
 
-    function loadFixedHeader() {
-        esgst.header.classList.add(`esgst-fh`);
-        var headerSibling;
-        if (esgst.featuredContainer && ((esgst.hfc && !esgst.giveawaysPath) || !esgst.hfc)) {
-            headerSibling = esgst.featuredContainer;
-        } else {
-            headerSibling = esgst.pageOuterWrap;
-        }
-        headerSibling.classList.add(`esgst-fh-sibling`);
-        addHeaderStyle();
-    }
+    /* [FH] Fixed Header */
 
-    function addHeaderStyle() {
-        var height = esgst.header.offsetHeight;
-        var style = `
-.esgst-fh-sibling {
-margin-top: ${height}px;
-}
-`;
-        GM_addStyle(style);
+    function loadFh() {
+        var height, sibling;
+        esgst.header.classList.add(`esgst-fh`);
+        if (esgst.featuredContainer && ((esgst.hfc && !esgst.giveawaysPath) || !esgst.hfc)) {
+            sibling = esgst.featuredContainer;
+        } else {
+            sibling = esgst.pageOuterWrap;
+        }
+        sibling.classList.add(`esgst-fh-sibling`);
+        height = esgst.header.offsetHeight;
         esgst.pageTop += height;
         esgst.commentsTop += height;
+        GM_addStyle(`
+            .esgst-fh {
+                height: auto !important;
+                position: fixed;
+                top: 0;
+                width: 100%;
+                z-index: 999 !important;
+            }
+            .esgst-fh-sibling {
+                margin-top: ${height}px;
+            }
+        `);
     }
 
-    function loadFixedSidebar() {
-        esgst.fs = {};
-        esgst.fs.sidebarAd = esgst.sidebar.getElementsByClassName(`sidebar__mpu`)[0];
-        esgst.fs.sidebarSibling = esgst.sidebar.nextElementSibling;
-        document.addEventListener(`scroll`, fixSidebar);
-        addSidebarStyle();
-        fixSidebar();
-    }
+    /* [FS] Fixed Sidebar */
 
-    function fixSidebar() {
-        esgst.sidebarTop = esgst.sidebar.offsetTop - esgst.pageTop;
-        if (window.scrollY > esgst.sidebarTop && document.documentElement.offsetHeight > window.innerHeight * 2) {
-            document.removeEventListener(`scroll`, fixSidebar);
-            toggleFixedSidebar();
-            document.addEventListener(`scroll`, unfixSidebar);
-        }
-    }
-
-    function unfixSidebar() {
-        if (window.scrollY <= esgst.sidebarTop) {
-            document.removeEventListener(`scroll`, unfixSidebar);
-            toggleFixedSidebar();
+    function loadFs() {
+        var ad, sibling, top;
+        if (esgst.sg && esgst.sidebar) {
+            ad = esgst.sidebar.getElementsByClassName(`sidebar__mpu`)[0];
+            sibling = esgst.sidebar.nextElementSibling;
             document.addEventListener(`scroll`, fixSidebar);
+            fixSidebar();
+            GM_addStyle(`
+                .esgst-fs {
+                    position: fixed;
+                    top: ${esgst.pageTop}px;
+                }
+            `);
+        }
+
+        function fixSidebar() {
+            top = esgst.sidebar.offsetTop - esgst.pageTop;
+            if (window.scrollY > top && document.documentElement.offsetHeight > window.innerHeight * 2) {
+                document.removeEventListener(`scroll`, fixSidebar);
+                esgst.sidebar.classList.add(`esgst-fs`);
+                if (ad) {
+                    ad.classList.add(`esgst-hidden`);
+                }
+                sibling.style.marginLeft = `${esgst.sidebar.offsetWidth + 25}px`;
+                document.addEventListener(`scroll`, unfixSidebar);
+            }
+        }
+
+        function unfixSidebar() {
+            if (window.scrollY <= top) {
+                document.removeEventListener(`scroll`, unfixSidebar);
+                esgst.sidebar.classList.remove(`esgst-fs`);
+                if (ad) {
+                    ad.classList.remove(`esgst-hidden`);
+                }
+                sibling.style.marginLeft = `25px`;
+                document.addEventListener(`scroll`, fixSidebar);
+            }
         }
     }
 
-    function toggleFixedSidebar() {
-        esgst.sidebar.classList.toggle(`esgst-fs`);
-        if (esgst.fs.sidebarAd) {
-            esgst.fs.sidebarAd.classList.toggle(`esgst-hidden`);
-        }
-        esgst.fs.sidebarSibling.classList.toggle(`esgst-fs-sibling`);
-    }
+    /* [FMPH] Fixed Main Page Heading */
 
-    function addSidebarStyle() {
-        var style = `
-.esgst-fs {
-top: ${esgst.pageTop}px;
-}
-.esgst-fs-sibling {
-margin-left: ${esgst.sidebar.offsetWidth + 25}px !important;
-}
-`;
-        GM_addStyle(style);
-    }
-
-    function loadFixedMainPageHeading() {
-        var html = `
-<div class="esgst-fmph-placeholder esgst-hidden"></div>
-<div class="${esgst.pageOuterWrapClass} esgst-fmph-background esgst-hidden"></div>
-`;
-        esgst.mainPageHeading.insertAdjacentHTML(`afterEnd`, html);
-        esgst.mainPageHeadingPlaceholder = esgst.mainPageHeading.nextElementSibling;
-        esgst.mainPageHeadingBackground = esgst.mainPageHeadingPlaceholder.nextElementSibling;
-        document.addEventListener(`scroll`, fixMainPageHeading);
-        addMainPageHeadingStyle();
-        fixMainPageHeading();
-    }
-
-    function fixMainPageHeading() {
-        if (window.scrollY > (esgst.mainPageHeading.offsetTop - esgst.pageTop)) {
-            document.removeEventListener(`scroll`, fixMainPageHeading);
-            toggleFixedMainPageHeading();
-            document.addEventListener(`scroll`, unfixMainPageHeading);
-        }
-    }
-
-    function unfixMainPageHeading() {
-        if (window.scrollY <= (esgst.mainPageHeadingPlaceholder.offsetTop - esgst.pageTop)) {
-            document.removeEventListener(`scroll`, unfixMainPageHeading);
-            toggleFixedMainPageHeading();
+    function loadFmph() {
+        var height, html, width;
+        if (esgst.mainPageHeading) {
+            html = `
+                <div class="esgst-fmph-placeholder esgst-hidden"></div>
+                <div class="esgst-fmph-background ${esgst.pageOuterWrapClass} esgst-hidden"></div>
+            `;
+            esgst.mainPageHeading.insertAdjacentHTML(`afterEnd`, html);
+            esgst.mainPageHeadingPlaceholder = esgst.mainPageHeading.nextElementSibling;
+            esgst.mainPageHeadingBackground = esgst.mainPageHeadingPlaceholder.nextElementSibling;
             document.addEventListener(`scroll`, fixMainPageHeading);
+            fixMainPageHeading();
+            height = esgst.mainPageHeading.offsetHeight;
+            GM_addStyle(`
+                .esgst-fmph {
+                    position: fixed;
+                    top: ${esgst.pageTop}px;
+                    z-index: 998;
+                }
+                .esgst-fmph-placeholder {
+                    height: ${height}px;
+                }
+                .esgst-fmph-background {
+                    height: ${esgst.pageTop + height + 5}px;
+                    padding: 0;
+                    position: fixed;
+                    top: 0;
+                    z-index: 997;
+                }
+            `);
+            esgst.commentsTop += height + 30;
+        }
+
+        function fixMainPageHeading() {
+            if (window.scrollY > (esgst.mainPageHeading.offsetTop - esgst.pageTop)) {
+                document.removeEventListener(`scroll`, fixMainPageHeading);
+                esgst.mainPageHeading.classList.add(`esgst-fmph`);
+                esgst.mainPageHeadingPlaceholder.classList.remove(`esgst-hidden`);
+                esgst.mainPageHeadingBackground.classList.remove(`esgst-hidden`);
+                if (esgst.sidebar) {
+                    width = `${document.documentElement.clientWidth - esgst.sidebar.offsetWidth - 100}px`;
+                } else {
+                    width = `${esgst.pageOuterWrap.firstElementChild.offsetWidth}px`;
+                }
+                esgst.mainPageHeading.style.width = width;
+                esgst.mainPageHeadingBackground.style.width = width;
+                document.addEventListener(`scroll`, unfixMainPageHeading);
+            }
+        }
+
+        function unfixMainPageHeading() {
+            if (window.scrollY <= (esgst.mainPageHeadingPlaceholder.offsetTop - esgst.pageTop)) {
+                document.removeEventListener(`scroll`, unfixMainPageHeading);
+                esgst.mainPageHeading.classList.remove(`esgst-fmph`);
+                esgst.mainPageHeadingPlaceholder.classList.add(`esgst-hidden`);
+                esgst.mainPageHeadingBackground.classList.add(`esgst-hidden`);
+                width = ``;
+                esgst.mainPageHeading.style.width = width;
+                esgst.mainPageHeadingBackground.style.width = width;
+                document.addEventListener(`scroll`, fixMainPageHeading);
+            }
         }
     }
 
-    function toggleFixedMainPageHeading() {
-        esgst.mainPageHeading.classList.toggle(`esgst-fmph`);
-        esgst.mainPageHeadingPlaceholder.classList.toggle(`esgst-hidden`);
-        esgst.mainPageHeadingBackground.classList.toggle(`esgst-hidden`);
-    }
+    /* [FF] Fixed Footer */
 
-    function addMainPageHeadingStyle() {
-        var width = esgst.mainPageHeading.offsetWidth;
-        var height = esgst.mainPageHeading.offsetHeight;
-        var style = `
-.esgst-fmph {
-top: ${esgst.pageTop}px;
-width: ${width}px;
-}
-
-.esgst-fmph-placeholder {
-height: ${height}px;
-}
-
-.esgst-fmph-background {
-height: ${esgst.pageTop + height + 5}px;
-width: ${width}px;
-}
-`;
-        GM_addStyle(style);
-        esgst.commentsTop += height + 30;
-    }
-
-    function loadFixedFooter() {
+    function loadFf() {
         esgst.footer.classList.add(`esgst-ff`);
         esgst.pageOuterWrap.classList.add(`esgst-ff-sibling`);
-        addFooterStyle();
-    }
-
-    function addFooterStyle() {
-        var style = `
-.esgst-ff-sibling {
-margin-bottom: ${esgst.footer.offsetHeight}px;
-}
-`;
-        GM_addStyle(style);
+        GM_addStyle(`
+            .esgst-ff {
+                background-color: inherit;
+                bottom: 0;
+                padding: 0;
+                position: fixed;
+                width: 100%;
+                z-index: 999;
+            }
+            .esgst-ff >* {
+                padding: 15px 25px;
+            }
+            .esgst-ff-sibling {
+                margin-bottom: ${esgst.footer.offsetHeight}px;
+            }
+        `);
     }
 
     /* Level Progress Visualizer */
@@ -4776,7 +4760,7 @@ ${title}
         function activateEndlessScrolling() {
             var html;
             if (!esgst.fmph) {
-                loadFixedMainPageHeading();
+                loadFmph();
             }
             if (!esgst.pnot) {
                 loadPaginationNavigationOnTop();
@@ -5621,7 +5605,7 @@ ${title}
                         details += `, region restricted`;
                     }
                     if (savedTemplate.type === `everyone`) {
-                        details += `, everyone`;
+                        details += `, public`;
                     } else if (savedTemplate.type === `invite_only`) {
                         details += `, invite only`;
                     } else {
@@ -5882,15 +5866,15 @@ ${title}
         }
     }
 
-    /* [GTM] Giveaway Train Maker */
+    /* [GM] Giveaway Maker */
 
-    function loadGtm() {
+    function loadGm() {
         if (esgst.newGiveawayPath) {
-            addGtmSection();
+            addGmSection();
         }
     }
 
-    function addGtmSection() {
+    function addGmSection() {
         var addWagonButton, connectWagonsCheckbox, connectWagonsDescription, connectWagonsOption, createTrainButton, deleteIcon, emptyTrainButton, rows, section, source, train, viewTrainButton, wagonDatas, wagons, wagonsSection;
         rows = document.getElementsByClassName(`form__rows`)[0];
         if (rows) {
@@ -5900,11 +5884,24 @@ ${title}
                 <div class="form__row">
 				    <div class="form__heading">
                         <div class="form__heading__number">0.</div>
-                        <div class="form__heading__text">Train Maker</div>
+                        <div class="form__heading__text">
+                            Giveaway Maker <i class="fa fa-question-circle" title="How To Use\n
+                            For multiple giveaway creations:
+                            1. Fill the details of the giveaway (you can use templates for it).
+                            2. Click 'Add Giveaway'.
+                            3. Repeat steps 1-2 until all giveaways have been added.
+                            4. Click 'Create Giveaways' and wait.\n
+                            For train creations:
+                            1. Enable 'Create train.'.
+                            2. Fill the details of the giveaway and add the connection style to the description (you can use templates for it).
+                            3. Click 'Add Giveaway'.
+                            4. Repeat steps 2-3 until all giveaways have been added.
+                            5. Click 'Create Giveaways' and wait."></i>
+                        </div>
                     </div>
-                    <div class="esgst-gtm-section form__row__indent">
+                    <div class="esgst-gm-section form__row__indent">
                         <div>
-                            <span>Connect wagons.</span>
+                            <span>Create train.</span>
                             <div class="esgst-hidden form__input-description">
                                 <div>Add the connection style to the description of the giveaway, wherever you want it to appear, using the format [ESGST-P]...[P]...[P]...[ESGST-P][ESGST-S]...[ESGST-S][ESGST-N]...[N]...[N]...[ESGST-N], where [P]...[P] and [N]...[N] delimit the clickable link, [ESGST-P]...[ESGST-P] and [ESGST-N]...[ESGST-N] delimit the entire text area that includes the clickable link, and [ESGST-S]...[ESGST-S] delimits the separator between the two links.</div>
                                 <br/>
@@ -5922,19 +5919,19 @@ ${title}
             `).lastElementChild;
             connectWagonsOption = section.firstElementChild;
             connectWagonsDescription = connectWagonsOption.lastElementChild;
-            connectWagonsCheckbox = createCheckbox_v6(connectWagonsOption, GM_getValue(`gtm_cw`, true));
+            connectWagonsCheckbox = createCheckbox_v6(connectWagonsOption, GM_getValue(`gm_ct`, true));
             if (connectWagonsCheckbox.input.checked) {
                 connectWagonsDescription.classList.remove(`esgst-hidden`);
             }
             connectWagonsOption.addEventListener(`click`, function () {
-                GM_setValue(`gtm_cw`, connectWagonsCheckbox.input.checked);
+                GM_setValue(`gm_ct`, connectWagonsCheckbox.input.checked);
                 if (connectWagonsCheckbox.input.checked) {
                     connectWagonsDescription.classList.remove(`esgst-hidden`);
                 } else {
                     connectWagonsDescription.classList.add(`esgst-hidden`);
                 }
             });
-            addWagonButton = createButtonSet(`green`, `grey`, `fa-plus-circle`, `fa-circle-o-notch fa-spin`, `Add Wagon`, `Adding...`, function (callback) {
+            addWagonButton = createButtonSet(`green`, `grey`, `fa-plus-circle`, `fa-circle-o-notch fa-spin`, `Add Giveaway`, `Adding...`, function (callback) {
                 var copies, data, description, details, endTime, gameId, gameName, gameType, groups, input, keys, level, region, startTime, type, wagon, whitelist;
                 input = document.querySelector(`[name="game_id"]`);
                 gameId = input.value;
@@ -5962,7 +5959,7 @@ ${title}
                         details += `Region Restricted\n`;
                     }
                     if (type === `everyone`) {
-                        details += `Everyone\n`;
+                        details += `Public\n`;
                     } else if (type === `invite_only`) {
                         details += `Invite Only\n`;
                     } else {
@@ -5979,19 +5976,29 @@ ${title}
                     data += `contributor_level=${level}&description=${encodeURIComponent(description)}`;
                     wagonDatas.push(data);
                     wagon = insertHtml(wagons, `beforeEnd`, `
-                        <div class="esgst-gtm-wagon" draggable="true" title="${details}">${wagonDatas.length}</div>
+                        <div class="esgst-gm-giveaway" draggable="true" title="${details}">${wagonDatas.length}</div>
                     `);
                     setGtmWagon(wagon);
+                } else {
+                    window.alert(`You must first fill the details of the giveaway.`);
+                }
+                document.querySelector(`[name="copies"]`).value = `1`;
+                document.querySelector(`[name="key_string"]`).value = ``;
+                callback();
+            });
+            emptyTrainButton = createButtonSet(`green`, `grey`, `fa-trash`, `fa-circle-o-notch fa-spin`, `Remove Giveaways`, `Removing...`, function (callback) {
+                if (window.confirm(`Are you sure you want to remove all giveaways?`)) {
+                    wagonDatas = [];
+                    train = [];
+                    wagons.innerHTML = ``;
+                    document.querySelector(`[name="copies"]`).value = `1`;
+                    document.querySelector(`[name="key_string"]`).value = ``;
                 }
                 callback();
             });
-            emptyTrainButton = createButtonSet(`green`, `grey`, `fa-trash`, `fa-circle-o-notch fa-spin`, `Empty Train`, `Emptying...`, function (callback) {
-                wagonDatas = [];
-                train = [];
-                wagons.innerHTML = ``;
-                callback();
-            });
-            createTrainButton = createButtonSet(`green`, `grey`, `fa-arrow-circle-right`, `fa-circle-o-notch fa-spin`, `Create Train`, `Creating...`, function (callback) {
+            createTrainButton = createButtonSet(`green`, `grey`, `fa-arrow-circle-right`, `fa-circle-o-notch fa-spin`, `Create Giveaways`, `Creating...`, function (callback) {
+                document.querySelector(`[name="copies"]`).value = `1`;
+                document.querySelector(`[name="key_string"]`).value = ``;
                 viewTrainButton.set.classList.add(`esgst-hidden`);
                 window.setTimeout(createGtmTrain, 0, 0, wagons.children.length, function () {
                     if (train.length) {
@@ -6000,9 +6007,9 @@ ${title}
                     callback();
                 });
             });
-            viewTrainButton = createButtonSet(`green`, `grey`, `fa-train`, `fa-circle-o-notch fa-spin`, `View Train`, `Creating...`, function (callback) {
+            viewTrainButton = createButtonSet(`green`, `grey`, `fa-eye`, `fa-circle-o-notch fa-spin`, `View Giveaways`, `Opening...`, function (callback) {
                 var i, n, popup, trainHtml;
-                popup = createPopup_v6(`fa-train`, `Choo choo!`);
+                popup = createPopup_v6(`fa-eye`, `Created Giveaways`);
                 trainHtml = ``;
                 for (i = 0, n = train.length; i < n; ++i) {
                     trainHtml += `
@@ -6027,16 +6034,16 @@ ${title}
             wagonsSection = insertHtml(section, `beforeEnd`, `
                 <div class="pinned-giveaways__outer-wrap">
                     <div class="pinned-giveaways__inner-wrap"></div>
-                    <i class="fa fa-trash" title="Drag a wagon here to delete it"></i>
+                    <i class="fa fa-trash" title="Drag a giveaway here to remove it"></i>
                     <div class="form__input-description">
-                        Wagons successfully created will turn green, wagons successfully connected will be strikethrough and wagons that were not successfully created will turn red.
+                        Giveaways successfully created will turn green, giveaways successfully connected will be strikethrough (for train creations) and giveaways that were not successfully created will turn red.
                     </div>
                 </div>
             `);
             wagons = wagonsSection.firstElementChild;
             deleteIcon = wagons.nextElementSibling;
             deleteIcon.addEventListener(`dragenter`, function () {
-                if (window.confirm(`Are you sure you want to delete this wagon?`)) {
+                if (window.confirm(`Are you sure you want to remove this giveaway?`)) {
                     source.remove();
                 }
             });
@@ -15172,10 +15179,15 @@ ${Results.join(``)}
     }
 
     function getApAvatars(context) {
-        var i, matches, n;
+        var i, key, matches, n;
         matches = context.getElementsByClassName(`global__image-outer-wrap--avatar-small`);
         for (i = 0, n = matches.length; i < n; ++i) {
             setApAvatar(matches[i]);
+        }
+        for (key in esgst.currentUsers) {
+            for (i = 0, n = esgst.currentUsers[key].length; i < n; ++i) {
+                setApAvatar(esgst.currentUsers[key][i]);
+            }
         }
     }
 
@@ -19188,7 +19200,7 @@ ${avatar.outerHTML}
         SMLastBundleSync = Container.getElementsByClassName("SMLastBundleSync")[0];
         SMAPIKey = Container.getElementsByClassName("SMAPIKey")[0];
         SMGeneralFeatures = ["fh", "fs", "fmph", "ff", "hr", "lpv", "vai", "ev", "hbs", "at", "pnot", "lpl", "es"];
-        SMGiveawayFeatures = ["itadi", "cewgd", "ueg", "sal", "hfc", "ags", "pgb", "gf", "gv", "egf", "gp", "gwc", "gwr", "elgb", "qgb", "gb", "ggl", "ochgb", "gt", "gtm", "sgg", "rcvc", "ugs", "er", "gwl", "gesl", "as"];
+        SMGiveawayFeatures = ["itadi", "cewgd", "ueg", "sal", "hfc", "ags", "pgb", "gf", "gv", "egf", "gp", "gwc", "gwr", "elgb", "qgb", "gb", "ggl", "ochgb", "gt", "gm", "sgg", "rcvc", "ugs", "er", "gwl", "gesl", "as"];
         SMDiscussionFeatures = ["adots", "ds", "dh", "mpp", "ded"];
         SMCommentingFeatures = ["ch", "ct", "cfh", "rbot", "rbp", "mr", "rfi", "rml"];
         SMUserGroupGamesFeatures = ["ap", "uh", "un", "rwscvl", "ugd", "namwc", "nrf", "swr", "luc", "sgpb", "stpb", "sgc", "uf", "wbs", "wbc", "wbh", "ut", "iwh", "gh", "gs", "egh", "ggt", "gc"];
@@ -20889,26 +20901,28 @@ Background: <input type="color" value="${bgColor}">
         var game, games, giveaway, loading, plain;
         if (main) {
             giveaway = giveaways[0];
-            games = JSON.parse(GM_getValue(`games`));
-            game = games[giveaway.type][giveaway.id];
-            plain = getItadiPlain(giveaway.name);
-            if (game && game.itadi && ((esgst.itadi_h && typeof game.itadi.historical !== `undefined`) || !esgst.itadi_h) && (Date.now() - game.itadi.lastCheck < 86400000)) {
-                addItadiInfo(game.itadi, plain);
-            } else {
-                loading = insertHtml(esgst.sidebar, `beforeEnd`, `
-                    <h3 class="sidebar__heading">
-                        <i class="fa fa-circle-o-notch fa-spin"></i> Loading Is There Any Deal? info...
-                    </h3>
-                `);
-                request(null, true, `https://isthereanydeal.com/ajax/game/info?plain=${plain}`, function (infoResponse) {
-                    if (esgst.itadi_h) {
-                        request(null, true, `https://isthereanydeal.com/ajax/game/price?plain=${plain}`, function (priceResponse) {
-                            loadItadiInfo(giveaway, infoResponse, loading, plain, priceResponse);
-                        });
-                    } else {
-                        loadItadiInfo(giveaway, infoResponse, loading, plain);
-                    }
-                });
+            if (giveaway) {
+                games = JSON.parse(GM_getValue(`games`));
+                game = games[giveaway.type][giveaway.id];
+                plain = getItadiPlain(giveaway.name);
+                if (game && game.itadi && ((esgst.itadi_h && typeof game.itadi.historical !== `undefined`) || !esgst.itadi_h) && (Date.now() - game.itadi.lastCheck < 86400000)) {
+                    addItadiInfo(game.itadi, plain);
+                } else {
+                    loading = insertHtml(esgst.sidebar, `beforeEnd`, `
+                        <h3 class="sidebar__heading">
+                            <i class="fa fa-circle-o-notch fa-spin"></i> Loading Is There Any Deal? info...
+                        </h3>
+                    `);
+                    request(null, true, `https://isthereanydeal.com/ajax/game/info?plain=${plain}`, function (infoResponse) {
+                        if (esgst.itadi_h) {
+                            request(null, true, `https://isthereanydeal.com/ajax/game/price?plain=${plain}`, function (priceResponse) {
+                                loadItadiInfo(giveaway, infoResponse, loading, plain, priceResponse);
+                            });
+                        } else {
+                            loadItadiInfo(giveaway, infoResponse, loading, plain);
+                        }
+                    });
+                }
             }
         }
     }
@@ -21128,7 +21142,7 @@ Background: <input type="color" value="${bgColor}">
         if (i < n) {
             giveaway = giveaways[i];
             code = giveaway.code;
-            savedGiveaways = JSON.parse(GM_getValue(`giveaways`));
+            savedGiveaways = JSON.parse(GM_getValue(`giveaways`, `{}`));
             if (savedGiveaways[code] && savedGiveaways[code].gameSteamId) {
                 addCewgdDetails(giveaway, savedGiveaways[code]);
                 window.setTimeout(getCewgdDetail, 0, giveaways, ++i, n);
@@ -21139,7 +21153,7 @@ Background: <input type="color" value="${bgColor}">
                     if (currentGiveaways.length) {
                         currentGiveaway = currentGiveaways[0];
                         createLock(`giveawayLock`, 300, function (deleteLock) {
-                            savedGiveaways = JSON.parse(GM_getValue(`giveaways`));
+                            savedGiveaways = JSON.parse(GM_getValue(`giveaways`, `{}`));
                             if (savedGiveaways[code]) {
                                 for (key in currentGiveaway) {
                                     savedGiveaways[code][key] = currentGiveaway[key];
@@ -21199,7 +21213,7 @@ Background: <input type="color" value="${bgColor}">
         } else if (details.regionRestricted) {
             type = `Region`;
         } else {
-            type = `Everyone`;
+            type = `Public`;
         }
         giveaway.panel.insertAdjacentHTML(`afterEnd`, `
             <div class="table__column--width-small text-center">${type}</div>
