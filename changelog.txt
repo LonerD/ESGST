@@ -1,4 +1,12 @@
 /*
+ * June 27, 2017 - v6.Beta.14.2
+ */
+
+* Fixed some bugs.
+* Giveaway Winning Chance and Giveaway Winning Ratio now add 1 entry to the chance/ratio calculation if you haven't entered the giveaway yet, to demonstrate what your exact chance will be when entered (closes #202).
+* Increased the delay from 0.5 to 1 second in Avatar Popout, added a delay for closing the popout, and prevented the popout from opening if a click was made.
+
+/*
  * June 27, 2017 - v6.Beta.14.1
  */
 

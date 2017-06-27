@@ -3,7 +3,7 @@
 // @namespace ESGST
 // @description Enhances SteamGifts and SteamTrades by adding some cool features to them.
 // @icon https://github.com/revilheart/ESGST/raw/master/Resources/esgstIcon.ico
-// @version 6.Beta.14.1
+// @version 6.Beta.14.2
 // @author revilheart
 // @contributor Royalgamer06
 // @downloadURL https://github.com/revilheart/ESGST/raw/master/ESGST.user.js
@@ -2575,7 +2575,7 @@
     /* Popout */
 
     function createPopout_v6(className) {
-        var currentContext, popout;
+        var currentContext, popout, timeout;
         popout = {};
         popout.popout = insertHtml(document.body, `beforeEnd`, `<div class="${className} esgst-popout esgst-hidden"></div>`);
         popout.open = function(context) {
@@ -2608,10 +2608,18 @@
                 popout.popout.style.top = `${contextTop + contextHeight + window.scrollY}px`;
             }
         };
-        popout.popout.addEventListener(`mouseleave`, function(event) {
-            if (!currentContext.contains(event.relatedTarget)) {
-                popout.close();
+        popout.popout.addEventListener(`mouseenter`, function(event) {
+            if (timeout) {
+                window.clearTimeout(timeout);
+                timeout = null;
             }
+        });
+        popout.popout.addEventListener(`mouseleave`, function(event) {
+            timeout = window.setTimeout(function() {
+                if (!currentContext.contains(event.relatedTarget)) {
+                    popout.close();
+                }
+            }, 1000);
         });
         return popout;
     }
@@ -15192,7 +15200,7 @@ ${Results.join(``)}
     }
 
     function setApAvatar(apAvatar) {
-        var id, match, timeout, type, url;
+        var exitTimeout, id, match, popout, timeout, type, url;
         url = apAvatar.getAttribute(`href`);
         if (url) {
             match = url.match(/\/(user|group)\/(.+)/);
@@ -15200,56 +15208,69 @@ ${Results.join(``)}
                 id = match[2];
                 type = match[1];
                 apAvatar.addEventListener(`mouseenter`, function() {
-                    var popout;
                     timeout = window.setTimeout(function() {
-                    popout = esgst.apPopouts[id];
-                    if (popout) {
-                        popout.open(apAvatar);
-                    } else {
-                        esgst.apPopouts[id] = popout = createPopout_v6(`page__outer-wrap esgst-ap-popout`);
-                        popout.popout.innerHTML = `
-                            <i class="fa fa-circle-o-notch fa-spin"></i>
-                            <span>Loading ${type}...</span>
-                        `;
-                        popout.open(apAvatar);
-                        request(null, false, url, function (response) {
-                            var avatar, columns, i, link, n, reportButton, responseHtml, table;
-                            responseHtml = DOM.parse(response.responseText);
-                            popout.popout.innerHTML = ``;
-                            popout.popout.appendChild(responseHtml.getElementsByClassName(`featured__outer-wrap`)[0]);
-                            avatar = popout.popout.getElementsByClassName(`global__image-outer-wrap--avatar-large`)[0];
-                            link = insertHtml(avatar, `afterEnd`, `<a class="esgst-ap-link"></a>`);
-                            link.appendChild(avatar);
-                            link.setAttribute(`href`, url);
-                            table = popout.popout.getElementsByClassName(`featured__table`)[0];
-                            table.parentElement.insertBefore(responseHtml.getElementsByClassName(`sidebar__shortcut-inner-wrap`)[0], table);
-                            reportButton = popout.popout.getElementsByClassName(`js__submit-form-inner`)[0];
-                            if (reportButton) {
-                                reportButton.addEventListener(`click`, function() {
-                                    return reportButton.getElementsByTagName(`form`)[0].submit();
-                                });
-                            }
-                            columns = table.children;
-                            for (i = 0, n = columns[1].children.length; i < n; ++i) {
-                                columns[0].appendChild(columns[1].firstElementChild);
-                            }
-                            columns[1].remove();
-                            if (type === `user`) {
-                                loadProfileFeatures(popout.popout);
-                            }
-                            popout.reposition();
-                        });
-                    }
-                    }, 500);
-                    apAvatar.addEventListener(`mouseleave`, function(event) {
-                        if (timeout) {
-                            window.clearTimeout(timeout);
-                            timeout = null;
+                        popout = esgst.apPopouts[id];
+                        if (popout) {
+                            popout.open(apAvatar);
+                        } else {
+                            esgst.apPopouts[id] = popout = createPopout_v6(`page__outer-wrap esgst-ap-popout`);
+                            popout.popout.innerHTML = `
+                                <i class="fa fa-circle-o-notch fa-spin"></i>
+                                <span>Loading ${type}...</span>
+                            `;
+                            popout.open(apAvatar);
+                            request(null, false, url, function (response) {
+                                var avatar, columns, i, link, n, reportButton, responseHtml, table;
+                                responseHtml = DOM.parse(response.responseText);
+                                popout.popout.innerHTML = ``;
+                                popout.popout.appendChild(responseHtml.getElementsByClassName(`featured__outer-wrap`)[0]);
+                                avatar = popout.popout.getElementsByClassName(`global__image-outer-wrap--avatar-large`)[0];
+                                link = insertHtml(avatar, `afterEnd`, `<a class="esgst-ap-link"></a>`);
+                                link.appendChild(avatar);
+                                link.setAttribute(`href`, url);
+                                table = popout.popout.getElementsByClassName(`featured__table`)[0];
+                                table.parentElement.insertBefore(responseHtml.getElementsByClassName(`sidebar__shortcut-inner-wrap`)[0], table);
+                                reportButton = popout.popout.getElementsByClassName(`js__submit-form-inner`)[0];
+                                if (reportButton) {
+                                    reportButton.addEventListener(`click`, function() {
+                                        return reportButton.getElementsByTagName(`form`)[0].submit();
+                                    });
+                                }
+                                columns = table.children;
+                                for (i = 0, n = columns[1].children.length; i < n; ++i) {
+                                    columns[0].appendChild(columns[1].firstElementChild);
+                                }
+                                columns[1].remove();
+                                if (type === `user`) {
+                                    loadProfileFeatures(popout.popout);
+                                }
+                                popout.reposition();
+                            });
                         }
+                        popout.popout.onmouseenter = function() {
+                            if (exitTimeout) {
+                                window.clearTimeout(exitTimeout);
+                                exitTimeout = null;
+                            }
+                        };
+                    }, 1000);
+                });
+                apAvatar.addEventListener(`mouseleave`, function(event) {
+                    if (timeout) {
+                        window.clearTimeout(timeout);
+                        timeout = null;
+                    }
+                    exitTimeout = window.setTimeout(function() {console.log(exitTimeout);
                         if (popout && !popout.popout.contains(event.relatedTarget)) {
                             popout.close();
                         }
-                    });
+                    }, 1000);
+                });
+                apAvatar.addEventListener(`click`, function() {
+                    if (timeout) {
+                        window.clearTimeout(timeout);
+                        timeout = null;
+                    }
                 });
             }
         }
@@ -22048,7 +22069,7 @@ ${avatar.outerHTML}
         var giveaway, i, n;
         for (i = 0, n = giveaways.length; i < n; ++i) {
             giveaway = giveaways[i];
-            if ((((esgst.createdPath || esgst.wonPath) && !main) || (!esgst.createdPath && !esgst.wonPath)) && !giveaway.innerWrap.getElementsByClassName(`esgst-gwc`)[0]) {
+            if ((((esgst.createdPath || esgst.wonPath) && !main) || (!esgst.createdPath && !esgst.wonPath)) && ((giveaway.inviteOnly && giveaway.ended) || !giveaway.inviteOnly) && !giveaway.innerWrap.getElementsByClassName(`esgst-gwc`)[0]) {
                 if (giveaway.started) {
                     addGwcChance(insertHtml(giveaway.panel, esgst.gv && esgst.giveawaysPath ? `afterBegin` : `beforeEnd`, `<div class="${esgst.giveawayPath ? `featured__column` : ``} esgst-gwc" title="Giveaway Winning Chance">`), giveaway);
                 } else {
@@ -22059,8 +22080,13 @@ ${avatar.outerHTML}
     }
 
     function addGwcChance(context, giveaway) {
-        var chance, html;
-        chance = giveaway.entries > 0 ? Math.round(giveaway.copies / giveaway.entries * 10000) / 100 : 100;
+        var chance, entries, html;
+        if (giveaway.entered) {
+            entries = giveaway.entries;
+        } else {
+            entries = giveaway.entries + 1;
+        }
+        chance = entries > 0 ? Math.round(giveaway.copies / entries * 10000) / 100 : 100;
         if (chance > 100) {
             chance = 100;
         }
@@ -22100,15 +22126,20 @@ ${avatar.outerHTML}
         var giveaway, i, n;
         for (i = 0, n = giveaways.length; i < n; ++i) {
             giveaway = giveaways[i];
-            if ((((esgst.createdPath || esgst.wonPath) && !main) || (!esgst.createdPath && !esgst.wonPath)) && giveaway.started && !giveaway.innerWrap.getElementsByClassName(`esgst-gwr`)[0]) {
+            if ((((esgst.createdPath || esgst.wonPath) && !main) || (!esgst.createdPath && !esgst.wonPath)) && giveaway.started && ((giveaway.inviteOnly && giveaway.ended) || !giveaway.inviteOnly) && !giveaway.innerWrap.getElementsByClassName(`esgst-gwr`)[0]) {
                 addGwcRatio(insertHtml(giveaway.panel, esgst.gv && esgst.giveawaysPath ? `afterBegin` : `beforeEnd`, `<div class="${esgst.giveawayPath ? `featured__column` : ``} esgst-gwr" title="Giveaway Winning Ratio">`), giveaway);
             }
         }
     }
 
     function addGwcRatio(context, giveaway) {
-        var html, ratio;
-        ratio = Math.round(giveaway.entries / giveaway.copies);
+        var entries, html, ratio;
+        if (giveaway.entered) {
+            entries = giveaway.entries;
+        } else {
+            entries = giveaway.entries + 1;
+        }
+        ratio = Math.round(entries / giveaway.copies);
         context.setAttribute(`data-ratio`, ratio);
         if (esgst.enteredPath) {
             context.style.display = `inline-block`;
@@ -22148,7 +22179,7 @@ ${avatar.outerHTML}
             for (i = 0, n = giveaways.length; i < n; ++i) {
                 giveaway = giveaways[i];
                 if (!giveaway.innerWrap.getElementsByClassName(`esgst-button-set`)[0]) {
-                    if (giveaway.started && !giveaway.ended && !giveaway.created && giveaway.level <= esgst.headerData.level && ((giveaway.id && ((games[giveaway.type][giveaway.id] && !games[giveaway.type][giveaway.id].owned) || !games[giveaway.type][giveaway.id])) || !giveaway.id)) {
+                    if (((giveaway.inviteOnly && giveaway.ended) || !giveaway.inviteOnly) && giveaway.started && !giveaway.ended && !giveaway.created && giveaway.level <= esgst.headerData.level && ((giveaway.id && ((games[giveaway.type][giveaway.id] && !games[giveaway.type][giveaway.id].owned) || !games[giveaway.type][giveaway.id])) || !giveaway.id)) {
                         addElgbButton(giveaway);
                     }
                 }
