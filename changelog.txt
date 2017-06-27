@@ -1,4 +1,11 @@
 /*
+ * June 27, 2017 - v6.Beta.14.4
+ */
+
+* Changed the sidebar and main page heading positions from fixed to absolute so that they scroll vertically with the page in Fixed Sidebar/Main Page Heading.
+* Fixed a bug that was causing giveaway features not to appear for invite only giveaways (closes #204).
+
+/*
  * June 27, 2017 - v6.Beta.14.3
  */
 

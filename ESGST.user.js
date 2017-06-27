@@ -3,7 +3,7 @@
 // @namespace ESGST
 // @description Enhances SteamGifts and SteamTrades by adding some cool features to them.
 // @icon https://github.com/revilheart/ESGST/raw/master/Resources/esgstIcon.ico
-// @version 6.Beta.14.3
+// @version 6.Beta.14.4
 // @author revilheart
 // @contributor Royalgamer06
 // @downloadURL https://github.com/revilheart/ESGST/raw/master/ESGST.user.js
@@ -4175,11 +4175,13 @@ min-width: 0;
             ad = esgst.sidebar.getElementsByClassName(`sidebar__mpu`)[0];
             sibling = esgst.sidebar.nextElementSibling;
             document.addEventListener(`scroll`, fixSidebar);
+            document.addEventListener(`scroll`, function() {
+                esgst.sidebar.style.top = `${window.scrollY + esgst.pageTop}px`;
+            });
             fixSidebar();
             GM_addStyle(`
                 .esgst-fs {
-                    position: fixed;
-                    top: ${esgst.pageTop}px;
+                    position: absolute;
                 }
             `);
         }
@@ -4223,12 +4225,15 @@ min-width: 0;
             esgst.mainPageHeadingPlaceholder = esgst.mainPageHeading.nextElementSibling;
             esgst.mainPageHeadingBackground = esgst.mainPageHeadingPlaceholder.nextElementSibling;
             document.addEventListener(`scroll`, fixMainPageHeading);
+            document.addEventListener(`scroll`, function() {
+                esgst.mainPageHeading.style.top = `${window.scrollY + esgst.pageTop}px`;
+                esgst.mainPageHeadingBackground.style.top = `${window.scrollY}px`;
+            });
             fixMainPageHeading();
             height = esgst.mainPageHeading.offsetHeight;
             GM_addStyle(`
                 .esgst-fmph {
-                    position: fixed;
-                    top: ${esgst.pageTop}px;
+                    position: absolute;
                     z-index: 998;
                 }
                 .esgst-fmph-placeholder {
@@ -4237,7 +4242,7 @@ min-width: 0;
                 .esgst-fmph-background {
                     height: ${esgst.pageTop + height + 5}px;
                     padding: 0;
-                    position: fixed;
+                    position: absolute;
                     top: 0;
                     z-index: 997;
                 }
@@ -15256,7 +15261,7 @@ ${Results.join(``)}
                         window.clearTimeout(timeout);
                         timeout = null;
                     }
-                    exitTimeout = window.setTimeout(function() {console.log(exitTimeout);
+                    exitTimeout = window.setTimeout(function() {
                         if (popout && !popout.popout.contains(event.relatedTarget)) {
                             popout.close();
                         }
@@ -22065,7 +22070,7 @@ ${avatar.outerHTML}
         var giveaway, i, n;
         for (i = 0, n = giveaways.length; i < n; ++i) {
             giveaway = giveaways[i];
-            if ((((esgst.createdPath || esgst.wonPath) && !main) || (!esgst.createdPath && !esgst.wonPath)) && ((giveaway.inviteOnly && giveaway.ended) || !giveaway.inviteOnly) && !giveaway.innerWrap.getElementsByClassName(`esgst-gwc`)[0]) {
+            if ((((esgst.createdPath || esgst.wonPath) && !main) || (!esgst.createdPath && !esgst.wonPath)) && ((giveaway.inviteOnly && giveaway.url) || !giveaway.inviteOnly) && !giveaway.innerWrap.getElementsByClassName(`esgst-gwc`)[0]) {
                 if (giveaway.started) {
                     addGwcChance(insertHtml(giveaway.panel, esgst.gv && esgst.giveawaysPath ? `afterBegin` : `beforeEnd`, `<div class="${esgst.giveawayPath ? `featured__column` : ``} esgst-gwc" title="Giveaway Winning Chance">`), giveaway);
                 } else {
@@ -22122,7 +22127,7 @@ ${avatar.outerHTML}
         var giveaway, i, n;
         for (i = 0, n = giveaways.length; i < n; ++i) {
             giveaway = giveaways[i];
-            if ((((esgst.createdPath || esgst.wonPath) && !main) || (!esgst.createdPath && !esgst.wonPath)) && giveaway.started && ((giveaway.inviteOnly && giveaway.ended) || !giveaway.inviteOnly) && !giveaway.innerWrap.getElementsByClassName(`esgst-gwr`)[0]) {
+            if ((((esgst.createdPath || esgst.wonPath) && !main) || (!esgst.createdPath && !esgst.wonPath)) && giveaway.started && ((giveaway.inviteOnly && giveaway.url) || !giveaway.inviteOnly) && !giveaway.innerWrap.getElementsByClassName(`esgst-gwr`)[0]) {
                 addGwcRatio(insertHtml(giveaway.panel, esgst.gv && esgst.giveawaysPath ? `afterBegin` : `beforeEnd`, `<div class="${esgst.giveawayPath ? `featured__column` : ``} esgst-gwr" title="Giveaway Winning Ratio">`), giveaway);
             }
         }
@@ -22175,7 +22180,7 @@ ${avatar.outerHTML}
             for (i = 0, n = giveaways.length; i < n; ++i) {
                 giveaway = giveaways[i];
                 if (!giveaway.innerWrap.getElementsByClassName(`esgst-button-set`)[0]) {
-                    if (((giveaway.inviteOnly && giveaway.ended) || !giveaway.inviteOnly) && giveaway.started && !giveaway.ended && !giveaway.created && giveaway.level <= esgst.headerData.level && ((giveaway.id && ((games[giveaway.type][giveaway.id] && !games[giveaway.type][giveaway.id].owned) || !games[giveaway.type][giveaway.id])) || !giveaway.id)) {
+                    if (((giveaway.inviteOnly && giveaway.url) || !giveaway.inviteOnly) && giveaway.started && !giveaway.ended && !giveaway.created && giveaway.level <= esgst.headerData.level && ((giveaway.id && ((games[giveaway.type][giveaway.id] && !games[giveaway.type][giveaway.id].owned) || !games[giveaway.type][giveaway.id])) || !giveaway.id)) {
                         addElgbButton(giveaway);
                     }
                 }
