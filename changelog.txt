@@ -1,4 +1,11 @@
 /*
+ * June 27, 2017 - v6.Beta.14.3
+ */
+
+* Fixed a style issue in Fixed Main Page Heading (closes #203).
+* Fixed a bug in Giveaway Winning Chance/Ratio that was adding 1 entry to created/ended giveaways.
+
+/*
  * June 27, 2017 - v6.Beta.14.2
  */
 

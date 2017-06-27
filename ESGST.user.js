@@ -3,7 +3,7 @@
 // @namespace ESGST
 // @description Enhances SteamGifts and SteamTrades by adding some cool features to them.
 // @icon https://github.com/revilheart/ESGST/raw/master/Resources/esgstIcon.ico
-// @version 6.Beta.14.2
+// @version 6.Beta.14.3
 // @author revilheart
 // @contributor Royalgamer06
 // @downloadURL https://github.com/revilheart/ESGST/raw/master/ESGST.user.js
@@ -4251,11 +4251,7 @@ min-width: 0;
                 esgst.mainPageHeading.classList.add(`esgst-fmph`);
                 esgst.mainPageHeadingPlaceholder.classList.remove(`esgst-hidden`);
                 esgst.mainPageHeadingBackground.classList.remove(`esgst-hidden`);
-                if (esgst.sidebar) {
-                    width = `${document.documentElement.clientWidth - esgst.sidebar.offsetWidth - 100}px`;
-                } else {
-                    width = `${esgst.pageOuterWrap.firstElementChild.offsetWidth}px`;
-                }
+                width = `${window.getComputedStyle(esgst.mainPageHeading.parentElement).getPropertyValue(`width`)}`;
                 esgst.mainPageHeading.style.width = width;
                 esgst.mainPageHeadingBackground.style.width = width;
                 document.addEventListener(`scroll`, unfixMainPageHeading);
@@ -22081,7 +22077,7 @@ ${avatar.outerHTML}
 
     function addGwcChance(context, giveaway) {
         var chance, entries, html;
-        if (giveaway.entered) {
+        if (giveaway.entered || giveaway.ended || giveaway.created) {
             entries = giveaway.entries;
         } else {
             entries = giveaway.entries + 1;
@@ -22134,7 +22130,7 @@ ${avatar.outerHTML}
 
     function addGwcRatio(context, giveaway) {
         var entries, html, ratio;
-        if (giveaway.entered) {
+        if (giveaway.entered || giveaway.ended || giveaway.created) {
             entries = giveaway.entries;
         } else {
             entries = giveaway.entries + 1;
