@@ -3,7 +3,7 @@
 // @namespace ESGST
 // @description Enhances SteamGifts and SteamTrades by adding some cool features to them.
 // @icon https://github.com/revilheart/ESGST/raw/master/Resources/esgstIcon.ico
-// @version 6.Beta.14.5
+// @version 6.Beta.14.6
 // @author revilheart
 // @contributor Royalgamer06
 // @downloadURL https://github.com/revilheart/ESGST/raw/master/ESGST.user.js
@@ -5780,11 +5780,7 @@ ${title}
                     endTime = new Date(savedTemplate.endTime);
                     newEndTime = new Date(newStartTime.getTime());
                     newEndTime.setDate(newStartTime.getDate() + (endTime.getDate() - startTime.getDate()));
-                    newEndTimeBackup = new Date(newEndTime.getTime());
                     newEndTime.setHours(endTime.getHours(), endTime.getMinutes(), endTime.getSeconds(), endTime.getMilliseconds());
-                    if (newEndTime.getTime() < newEndTimeBackup.getTime()) {
-                        newEndTime.setDate(newEndTime.getDate() + 1);
-                    }
                     document.querySelector(`[name="start_time"]`).value = formatDate(newStartTime);
                     document.querySelector(`[name="end_time"]`).value = formatDate(newEndTime);
                 } else if (savedTemplate.startTime) {
