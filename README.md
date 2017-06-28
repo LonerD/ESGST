@@ -4,20 +4,22 @@ A script that adds some cool features to SteamGifts and SteamTrades.
 
 ## Installation
 
-To install the script, you must install [Tampermonkey](https://tampermonkey.net/) or [Greasemonkey](http://www.greasespot.net/) first. Then [click here](https://github.com/revilheart/ESGST/raw/master/ESGST.user.js) and you should be prompted to install it.
+To install the script, you must install [Tampermonkey](https://tampermonkey.net/) first (Greasemonkey is not 100% supported and it's not recommended, you can use Tampermonkey with Firefox). Then [click here](https://github.com/revilheart/ESGST/raw/master/ESGST.user.js) and you should be prompted to install it.
 
 ## Compatibility
 
 Fully tested and working in the latest version of:
 
-* Google Chrome (Tampermonkey)
+* Google Chrome
 
 Should be working in the latest version of:
 
-* Firefox (Greasemonkey & Tampermonkey)
-* Opera (Tampermonkey)
+* Firefox
+* Opera
 
-Tested on Microsoft Edge and most of it seems to work fine, but for some reason requests made from `https://www.steamgifts.com/account` redirect to `https://www.steamgifts.com`. I haven't been able to figure out why yet, so avoid Edge for now.
+May or may not be working (try at your own risk) in the latest version of:
+
+* Edge
 
 ## Features
 
