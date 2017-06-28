@@ -1,4 +1,18 @@
 /*
+ * June 28, 2017 - v6.Beta.14.7
+ */
+
+* Fixed various style issues that were brought with cg's latest changes.
+* Fixed a style issue in Fixed Header for SteamTrades.
+* Changed the version alert in ESGST's discussion page to a popup.
+* Added the option not to show the changelog from the current version when updating.
+* Fixed a bug in Giveaway Encrypter/Decrypter that was showing duplicated giveaways (closes #184).
+* Giveaway Encrypter/Decrypter now appears in any page (closes #188) and the giveaways are now sorted by end date. If the page you're on has a giveaway that hasn't been decrypted yet, the icon will turn green.
+* Entered giveaways are now shown correctly in Giveaway Encrypter/Decrypter.
+* Added a link to the giveaways in Giveaway Encrypter/Decrypter that links to the source of the giveaway (the comment where the giveaway came from) - only works for giveaways decrypted since this version or if you revisit the page that the decrypted giveaway is from.
+* Added "Points" filter to Advanced Giveaway Search and also a delay for showing the panel if you have Active Discussions on the sidebar (closes #207).
+
+/*
  * June 28, 2017 - v6.Beta.14.6
  */
 
