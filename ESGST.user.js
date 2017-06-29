@@ -3,7 +3,7 @@
 // @namespace ESGST
 // @description Enhances SteamGifts and SteamTrades by adding some cool features to them.
 // @icon https://github.com/revilheart/ESGST/raw/master/Resources/esgstIcon.ico
-// @version 6.Beta.14.7
+// @version 6.Beta.14.8
 // @author revilheart
 // @contributor Royalgamer06
 // @downloadURL https://github.com/revilheart/ESGST/raw/master/ESGST.user.js
@@ -31,9 +31,10 @@
 // @grant GM_getResourceURL
 // @grant GM_xmlhttpRequest
 // @grant GM_info
-// @require https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js
-// @require https://github.com/dinbror/bpopup/raw/master/jquery.bpopup.min.js
+// @require https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js
+// @require https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js
 // @require https://cdn.steamgifts.com/js/highcharts.js
+// @require https://github.com/dinbror/bpopup/raw/master/jquery.bpopup.min.js
 // @resource esgstIcon https://github.com/revilheart/ESGST/raw/master/Resources/esgstIcon.ico
 // @resource sgIcon https://cdn.steamgifts.com/img/favicon.ico
 // @resource stIcon https://cdn.steamtrades.com/img/favicon.ico
@@ -927,8 +928,8 @@
             {
                 id: `ags`,
                 name: `Advanced Giveaway Search`,
-                check: getValue(`ags`) && esgst.giveawaysPath,
-                load: loadAdvancedGiveawaySearch
+                check: getValue(`ags`),
+                load: loadAgs
             },
             {
                 id: `pgb`,
@@ -2588,7 +2589,7 @@
 
     /* Popout */
 
-    function createPopout_v6(className) {
+    function createPopout_v6(className, click) {
         var currentContext, popout, timeout;
         popout = {};
         popout.popout = insertHtml(document.body, `beforeEnd`, `<div class="${className} esgst-popout esgst-hidden"></div>`);
@@ -2622,19 +2623,27 @@
                 popout.popout.style.top = `${contextTop + contextHeight + window.scrollY}px`;
             }
         };
-        popout.popout.addEventListener(`mouseenter`, function(event) {
-            if (timeout) {
-                window.clearTimeout(timeout);
-                timeout = null;
-            }
-        });
-        popout.popout.addEventListener(`mouseleave`, function(event) {
-            timeout = window.setTimeout(function() {
-                if (!currentContext.contains(event.relatedTarget)) {
+        if (click) {
+            document.addEventListener(`click`, function (event) {
+                if (currentContext && !currentContext.contains(event.target) && !popout.popout.contains(event.target)) {
                     popout.close();
                 }
-            }, 1000);
-        });
+            });
+        } else {
+            popout.popout.addEventListener(`mouseenter`, function(event) {
+                if (timeout) {
+                    window.clearTimeout(timeout);
+                    timeout = null;
+                }
+            });
+            popout.popout.addEventListener(`mouseleave`, function(event) {
+                timeout = window.setTimeout(function() {
+                    if (!currentContext.contains(event.relatedTarget)) {
+                        popout.close();
+                    }
+                }, 1000);
+            });
+        }
         return popout;
     }
 
@@ -3253,7 +3262,7 @@ vertical-align: middle;
 vertical-align: baseline;
 }
 
-.esgst-checkboxm, .esgst-hb-update, .esgst-hb-changelog, .esgst-dh-view-button {
+.esgst-checkbox, .esgst-hb-update, .esgst-hb-changelog, .esgst-dh-view-button {
 cursor: pointer;
 }
 
@@ -3338,26 +3347,6 @@ display: none;
 background-image: none !important;
 }
 
-.esgst-ags-panel {
-margin: 0 0 15px 0;
-}
-
-.esgst-ags-filter {
-display: flex;
-}
-
-.esgst-ags-filter >* {
-display: inline-flex;
-justify-content: space-between;
-margin: 5px;
-width: 150px;
-}
-
-.esgst-ags-panel input, .esgst-ags-panel select {
-padding: 0 5px;
-width: 50px;
-}
-
 .esgst-aas-button, .esgst-es-pause-button, .esgst-es-refresh-button {
 cursor: pointer;
 display: inline-block;
@@ -3410,14 +3399,12 @@ vertical-align: top;
 }
 
 .esgst-gf-basic-filter {
-display: flex;
+margin: 10px;
+width: 300px;
 }
 
 .esgst-gf-basic-filter >* {
-display: inline-flex;
-width: 200px;
-margin: 5px;
-justify-content: space-between;
+margin: 8px;
 }
 
 .esgst-gf-type-filter, .esgst-gf-category-filter, .esgst-gf-exception-filter, .esgst-gf-legend {
@@ -3890,22 +3877,6 @@ min-width: 0;
             ".SGGUnsticky {" +
             "    cursor: pointer;" +
             "    margin: 0 5px 0 0;" +
-            "}" +
-            ".AGSPanel {" +
-            "    margin: 0 0 15px 0;" +
-            "}" +
-            ".AGSFilter {" +
-            "    display: flex;" +
-            "}" +
-            ".AGSFilter >* {" +
-            "    display: inline-flex;" +
-            "    justify-content: space-between;" +
-            "    margin: 5px;" +
-            "    width: 150px;" +
-            "}" +
-            ".AGSPanel input, .AGSPanel select {" +
-            "    padding: 0 5px;" +
-            "    width: 50px;" +
             "}" +
             ".ELGBButton, .ELGBButton + div {" +
             "    background: none;" +
@@ -4806,8 +4777,12 @@ ${title}
             esRefreshButton.addEventListener(`click`, refreshPage);
             esPauseButton.addEventListener(`click`, pauseEndlessScrolling);
             setEsPaginationNavigation();
-            document.addEventListener(`scroll`, loadNextPage);
-            loadNextPage();
+            if (GM_getValue(`esPause`, false)) {
+                esPauseButton.click();
+            } else {
+                document.addEventListener(`scroll`, loadNextPage);
+                loadNextPage();
+            }
         }
 
         function loadNextPage() {
@@ -4968,6 +4943,7 @@ ${title}
             esPauseButton.innerHTML = `
 <i class="fa fa-play"></i>
 `;
+            GM_setValue(`esPause`, true);
             esPauseButton.addEventListener(`click`, resumeEndlessScrolling);
         }
 
@@ -4977,6 +4953,7 @@ ${title}
             esPauseButton.innerHTML = `
 <i class="fa fa-pause"></i>
 `;
+            GM_setValue(`esPause`, false);
             esPauseButton.addEventListener(`click`, pauseEndlessScrolling);
             document.addEventListener(`scroll`, loadNextPage);
             loadNextPage();
@@ -5081,115 +5058,279 @@ ${title}
         esgst.featuredContainer.classList.add(`esgst-hidden`);
     }
 
-    function loadAdvancedGiveawaySearch() {
-        var Context, Input, Match, AGSPanel, AGSPanelPopout, AGS, Level, I, RegionRestricted, timeout;
-        Context = document.getElementsByClassName("sidebar__search-container")[0];
-        Context.firstElementChild.remove();
-        Context.insertAdjacentHTML("afterBegin", "<input class=\"sidebar__search-input\" placeholder=\"Search...\" type=\"text\"/>");
-        Input = Context.firstElementChild;
-        Match = window.location.href.match(/q=(.*?)(&.+?)?$/);
-        if (Match) {
-            Input.value = Match[1];
+    /* [AGS] Advanced Giveaway Search */
+
+    function loadAgs() {
+        if (esgst.giveawaysPath) {
+            addAgsPanel();
+            GM_addStyle(`
+                .esgst-ags-panel {
+                    margin: 0 0 15px 0;
+                }
+
+                .esgst-ags-panel >* {
+                    display: block;
+                    font-size: 0;
+                }
+
+                .esgst-ags-filter {
+                    display: inline-block;
+                    font-size: 0;
+                    margin: 5px;
+                }
+
+                .esgst-ags-filter >* {
+                    display: inline-block;
+                    font-size: 12px;
+                    padding: 0 5px !important;
+                    width: 74px;
+                }
+
+                .esgst-ags-checkbox-filter {
+                    font-size: 12px;
+                    margin: 5px;
+                }
+            `);
         }
-        if (esgst.adots && GM_getValue(`adotsIndex`) === 0) {
-            AGSPanel = insertHtml(Context, `afterEnd`, `<div class="AGSPanel"></div>`);
+    }
+
+    function addAgsPanel() {
+        var context, details, element, filter, filterDetails, filters, i, icon, input, match, n, panel, popout, timeout, value;
+        context = document.getElementsByClassName(`sidebar__search-container`)[0];
+        context.firstElementChild.remove();
+        input = insertHtml(context, `afterBegin`, `
+            <input class="sidebar__search-input" placeholder="Search..." type="text">
+        `);
+        icon = input.nextElementSibling;
+        icon.classList.add(`esgst-clickable`);
+        icon.title = `Use advanced search.`;
+        match = window.location.search.match(/q=(.*?)(&.*?)?$/);
+        if (match) {
+            input.value = decodeURIComponent(match[1]);
+        }
+        if ((esgst.adots && GM_getValue(`adotsIndex`, 0) === 0) || !esgst.adots) {
+            panel = insertHtml(context, `afterEnd`, `
+                <div class="esgst-ags-panel"></div>
+            `);
         } else {
-            AGSPanelPopout = createPopout_v6(`AGSPanel page__outer-wrap global__image-outer-wrap`, true);
-            AGSPanel = AGSPanelPopout.popout;
-            Context.addEventListener(`mouseenter`, function() {
+            popout = createPopout_v6(`esgst-ags-panel global__image-outer-wrap page__outer-wrap`);
+            panel = popout.popout;
+            context.addEventListener(`mouseenter`, function () {
                 timeout = window.setTimeout(function () {
-                    AGSPanelPopout.open(Context);
+                    popout.open(context);
                 }, 1000);
             });
-            Context.addEventListener(`mouseleave`, function(event) {
+            context.addEventListener(`mouseleave`, function (event) {
                 if (timeout) {
                     window.clearTimeout(timeout);
                     timeout = null;
                 }
-                if (!AGSPanel.contains(event.relatedTarget)) {
-                    AGSPanelPopout.close();
+                if (!panel.contains(event.relatedTarget)) {
+                    popout.close();
                 }
             });
         }
-        AGS = {};
-        Level = "<select>";
-        for (I = 0; I <= 10; ++I) {
-            Level += "<option>" + I + "</option>";
+        filterDetails = [
+            {
+                maxKey: `agsMaxLevel`,
+                minKey: `agsMinLevel`,
+                maxParameter: `level_max`,
+                minParameter: `level_min`,
+                name: `Level`,
+                type: `select`
+            },
+            {
+                maxKey: `agsMaxEntries`,
+                minKey: `agsMinEntries`,
+                maxParameter: `entry_max`,
+                minParameter: `entry_min`,
+                name: `Entries`,
+                type: `input`
+            },
+            {
+                maxKey: `agsMaxCopies`,
+                minKey: `agsMinCopies`,
+                maxParameter: `copy_max`,
+                minParameter: `copy_min`,
+                name: `Copies`,
+                type: `input`
+            },
+            {
+                maxKey: `agsMaxPoints`,
+                minKey: `agsMinPoints`,
+                maxParameter: `point_max`,
+                minParameter: `point_min`,
+                name: `Points`,
+                type: `input`
+            },
+            {
+                key: `agsRegionRestricted`,
+                name: `Region Restricted`,
+                parameter: `region_restricted`,
+                type: `checkbox`
+            },
+            {
+                key: `agsDlc`,
+                name: `DLC`,
+                parameter: `dlc`,
+                type: `checkbox`
+            }
+        ];
+        filters = [];
+        for (i = 0, n = filterDetails.length; i < n; ++i) {
+            createAgsFilter(filterDetails[i]);
         }
-        Level += "</select>";
-        createAGSFilters(AGSPanel, AGS, [{
-            Title: "Level",
-            HTML: Level,
-            Key: "level",
-        }, {
-            Title: "Entries",
-            HTML: "<input type=\"text\"/>",
-            Key: "entry",
-        }, {
-            Title: "Copies",
-            HTML: "<input type=\"text\"/>",
-            Key: "copy"
-        }, {
-            Title: "Points",
-            HTML: "<input type=\"text\"/>",
-            Key: "point"
-        }]);
-        AGS.level_max.selectedIndex = 10;
-        AGSPanel.insertAdjacentHTML(
-            "beforeEnd",
-            "<div>" +
-            "    <span></span>" +
-            "    <span>Region Restricted</span>" +
-            "</div>" +
-            "<div>" +
-            "    <span></span>" +
-            "    <span>DLC</span>" +
-            "</div>"
-        );
-        var dlc = AGSPanel.lastElementChild;
-        var regionRestricted = dlc.previousElementSibling;
-        RegionRestricted = createCheckbox(regionRestricted.firstElementChild).Checkbox;
-        var DLC = createCheckbox(dlc.firstElementChild).Checkbox;
-        Context.addEventListener("keydown", function (Event) {
-            var Type, URL, Key;
-            if (Event.key == "Enter") {
-                Event.preventDefault();
-                Type = window.location.href.match(/(type=(.+?))(&.+?)?$/);
-                URL = "https://www.steamgifts.com/giveaways/search?q=" + Input.value + (Type ? ("&" + Type[1]) : "");
-                for (Key in AGS) {
-                    if (AGS[Key].value) {
-                        URL += "&" + Key + "=" + AGS[Key].value;
-                    }
-                }
-                URL += RegionRestricted.checked ? "&region_restricted=true" : "";
-                URL += DLC.checked ? "&dlc=true" : "";
-                window.location.href = URL;
+        input.addEventListener(`keydown`, function (event) {
+            if (event.key === `Enter`) {
+                event.preventDefault();
+                searchAgsQuery();
             }
         });
-    }
+        icon.addEventListener(`click`, function () {
+            searchAgsQuery();
+        });
 
-    function createAGSFilters(AGSPanel, AGS, Filters) {
-        var I, N, AGSFilter;
-        for (I = 0, N = Filters.length; I < N; ++I) {
-            AGSPanel.insertAdjacentHTML(
-                "beforeEnd",
-                "<div class=\"AGSFilter\">" +
-                "    <span>Min " + Filters[I].Title + " " + Filters[I].HTML + "</span>" +
-                "    <span>Max " + Filters[I].Title + " " + Filters[I].HTML + "</span>" +
-                "</div>"
-            );
-            AGSFilter = AGSPanel.lastElementChild;
-            AGS[Filters[I].Key + "_min"] = AGSFilter.firstElementChild.firstElementChild;
-            AGS[Filters[I].Key + "_max"] = AGSFilter.lastElementChild.firstElementChild;
+        function createAgsFilter(details) {
+            var element, filter, html, i, maxFilter, minFilter;
+            if (details.type === `checkbox`) {
+                element = insertHtml(panel, `beforeEnd`, `
+                     <div class="esgst-ags-checkbox-filter">
+                         <span>${details.name}</span>
+                     </div>
+                `);
+                filter = createCheckbox_v6(
+                    element,
+                    GM_getValue(details.key, false)
+                ).input;
+                element.addEventListener(`click`, function () {
+                    GM_setValue(details.key, filter.checked);
+                });
+                filters.push({
+                    filter: filter,
+                    key: `checked`,
+                    parameter: details.parameter
+                });
+            } else {
+                if (details.type === `select`) {
+                    html = `
+                        <select>
+                            <option></option>
+                    `;
+                    for (i = 0; i <= 10; ++i) {
+                        html += `
+                            <option>${i}</option>
+                        `;
+                    }
+                    html += `
+                        </select>
+                    `;
+                } else {
+                    html = `
+                        <input type="text">
+                    `;
+                }
+                element = insertHtml(panel, `beforeEnd`, `
+                    <div>
+                        <div class="esgst-ags-filter">
+                            <div>Min ${details.name}</div>
+                            ${html}
+                        </div>
+                        <div class="esgst-ags-filter">
+                            <div>Max ${details.name}</div>
+                            ${html}
+                        </div>
+                    </div>
+                `);
+                maxFilter = element.lastElementChild.lastElementChild;
+                maxFilter.value = GM_getValue(details.maxKey, ``);
+                maxFilter.addEventListener(`change`, function () {
+                    GM_setValue(details.maxKey, maxFilter.value);
+                });
+                minFilter = element.firstElementChild.lastElementChild;
+                minFilter.value = GM_getValue(details.minKey, ``);
+                minFilter.addEventListener(`change`, function () {
+                    GM_setValue(details.minKey, minFilter.value);
+                });
+                filters.push({
+                    filter: minFilter,
+                    key: `value`,
+                    parameter: details.minParameter
+                });
+                filters.push({
+                    filter: maxFilter,
+                    key: `value`,
+                    parameter: details.maxParameter
+                });
+            }
+        }
+
+        function searchAgsQuery() {
+            var i, match, url;
+            url = `https://www.steamgifts.com/giveaways/search?q=${input.value}`;
+            match = window.location.search.match(/(type=.*?)(&.*?)?$/);
+            if (match) {
+                url += `&${match[1]}`;
+            }
+            for (i = 0, n = filters.length; i < n; ++i) {
+                filter = filters[i];
+                value = filter.filter[filter.key];
+                if (value) {
+                    url += `&${filter.parameter}=${value}`;
+                }
+            }
+            window.location.href = url;
         }
     }
 
     /* [GV] Grid View */
 
     function loadGv() {
+        var button, display, element, elements, i, n, popout, spacing, slider;
         if (esgst.giveawaysPath) {
             esgst.giveawayFeatures.push(setGvContainers);
+            button = insertHtml(esgst.mainPageHeading, `beforeEnd`, `
+                <div class="esgst-heading-button" title="Set Grid View spacing.">
+                    <i class="fa fa-th-large"></i>
+                </div>
+            `);
+            popout = createPopout_v6(`esgst-gv-spacing global__image-outer-wrap page__outer-wrap`, true);
+            spacing = GM_getValue(`gvSpacing`, 0);
+            element = insertHtml(popout.popout, `beforeEnd`, `
+                <div>
+                    <div></div>
+                    <div>${spacing}px</div>
+                </div>
+            `);
+            slider = element.firstElementChild;
+            display = slider.nextElementSibling;
+            $(slider).slider({
+                slide: function (event, ui) {
+                    spacing = ui.value;
+                    elements = document.getElementsByClassName(`esgst-gv-container`);
+                    for (i = 0, n = elements.length; i < n; ++i) {
+                        elements[i].style.margin = `${spacing}px`;
+                    }
+                    popout.reposition();
+                    display.textContent = `${spacing}px`;
+                    GM_setValue(`gvSpacing`, spacing);
+                },
+                max: 10,
+                value: spacing
+            });
+            button.addEventListener(`click`, function () {
+                if (popout.popout.classList.contains(`esgst-hidden`)) {
+                    popout.open(button);
+                } else {
+                    popout.close();
+                }
+            });
             GM_addStyle(`
+                .esgst-gv-spacing {
+                    font-weight: bold;
+                    padding: 10px;
+                    text-align: center;
+                    width: 100px;
+                }
                 .esgst-gv-view {
                     font-size: 0;
                     padding: 5px 0;
@@ -5256,18 +5397,20 @@ ${title}
     }
 
     function setGvContainers(giveaways, main) {
-        var elements, i, n;
+        var elements, i, n, spacing;
         if (main) {
+            spacing = GM_getValue(`gvSpacing`, 0);
             for (i = 0, n = giveaways.length; i < n; ++i) {
-                setGvContainer(giveaways[i]);
+                setGvContainer(giveaways[i], spacing);
             }
         }
     }
 
-    function setGvContainer(giveaway) {
+    function setGvContainer(giveaway, spacing) {
         var icons;
         giveaway.outerWrap.parentElement.classList.add(`esgst-gv-view`);
         giveaway.outerWrap.classList.add(`esgst-gv-container`);
+        giveaway.outerWrap.style.margin = `${spacing}px`;
         giveaway.innerWrap.classList.add(`esgst-gv-box`);
         icons = insertHtml(giveaway.innerWrap, `afterBegin`, `
             <div class="esgst-gv-icons giveaway__columns"></div>
@@ -19123,7 +19266,7 @@ ${esgst.sg ? `
             endTime = parseInt(endTimeColumn.lastElementChild.getAttribute(`data-timestamp`)) * 1000;
             startTimeColumn = endTimeColumn.nextElementSibling;
             startTimeColumn.classList.remove(`featured__column`, `featured__column--width-fill`);
-            startTimeColumn.classList.add(`giveaway__username`);
+            startTimeColumn.classList.add(`giveaway__column--width-fill`);
             avatar = columns.lastElementChild;
             avatar.remove();
             column = startTimeColumn.nextElementSibling;
@@ -19140,8 +19283,8 @@ ${esgst.sg ? `
             }
             counts = context.getElementsByClassName(`sidebar__navigation__item__count`);
             if (counts.length > 1) {
-                entries = counts[0].textContent;
-                comments = counts[1].textContent;
+                entries = counts[1].textContent;
+                comments = counts[0].textContent;
                 started = true;
             } else {
                 comments = counts[0].textContent;
@@ -21830,14 +21973,16 @@ ${avatar.outerHTML}
                     maxValue: 10
                 },
                 {
+                    infinite: true,
                     name: `Entries`,
                     minValue: 0,
-                    maxValue: 999999999999,
+                    maxValue: 1000,
                 },
                 {
+                    infinite: true,
                     name: `Copies`,
                     minValue: 1,
-                    maxValue: 999999999999
+                    maxValue: 1000,
                 },
                 {
                     name: `Points`,
@@ -21958,6 +22103,7 @@ ${avatar.outerHTML}
                         <div class="esgst-gf-basic-filters esgst-hidden">
                             <div>
                                 <strong>Basic Filters:</strong>
+                                <i class="fa fa-question-circle" title="The Entries/Copies filters are infinite. To increase/decrease the max value, simply enter the new max value in the input field and it will be changed."></i>
                             </div>
                         </div>
                         <div class="esgst-gf-type-filters">
@@ -22006,37 +22152,7 @@ ${avatar.outerHTML}
         if (!esgst.gf.advancedSearch) {
             basicFilters.classList.remove(`esgst-hidden`);
             for (i = 0, n = esgst.gf.basicFilters.length; i < n; ++i) {
-                filter = esgst.gf.basicFilters[i];
-                name = filter.name;
-                minValue = filter.minValue;
-                maxValue = filter.maxValue;
-                step = filter.step;
-                values = ``;
-                if (typeof minValue !== `undefined`) {
-                    values += ` min="${minValue}"`;
-                }
-                if (typeof maxValue !== `undefined`) {
-                    values += ` max="${maxValue}"`;
-                }
-                if (typeof step !== `undefined`) {
-                    values += `step="${step}"`;
-                }
-                minKey = `min${name}`;
-                maxKey = `max${name}`;
-                minSaveKey = `gf_${minKey}${esgst.gf.type}`;
-                maxSaveKey = `gf_${maxKey}${esgst.gf.type}`;
-                minSavedValue = GM_getValue(minSaveKey, minValue);
-                maxSavedValue = GM_getValue(maxSaveKey, maxValue);
-                esgst.gf[minKey] = minSavedValue;
-                esgst.gf[maxKey] = maxSavedValue;
-                basicFilter = insertHtml(basicFilters, `beforeEnd`, `
-                    <div class="esgst-gf-basic-filter">
-                        <div>Min ${name} <input ${values} type="number" value="${minSavedValue}"></div>
-                        <div>Max ${name} <input ${values} type="number" value="${maxSavedValue}"></div>
-                    </div>
-                `);
-                basicFilter.firstElementChild.firstElementChild.addEventListener(`change`, saveGfValue.bind(null, minKey, minSaveKey, null));
-                basicFilter.lastElementChild.firstElementChild.addEventListener(`change`, saveGfValue.bind(null, maxKey, maxSaveKey, null));
+                createGfBasicFilter(esgst.gf.basicFilters[i]);
             }
         }
         for (i = 0, n = esgst.gf.typeFilters.length; i < n; ++i) {
@@ -22115,6 +22231,81 @@ ${avatar.outerHTML}
         }
         button.addEventListener(`click`, toggleGfContainer.bind(null, collapse, expand, filters));
         esgst.giveawayFeatures.push(filterGfGiveaways);
+
+        function createGfBasicFilter(filter) {
+            var display, displayMax, displayMin, max, min, element, infinite, maxKey, minKey, maxSaveKey, maxSaveKey, maxSavedValue, minSavedValue, maxValue, minValue, name, slider, step, value;
+            name = filter.name;
+            minValue = filter.minValue;
+            maxValue = filter.maxValue;
+            step = filter.step || 1;
+            infinite = filter.infinite;
+            maxKey = `max${name}`;
+            minKey = `min${name}`;
+            maxSaveKey = `gf_${maxKey}${esgst.gf.type}`;
+            minSaveKey = `gf_${minKey}${esgst.gf.type}`;
+            maxSavedValue = GM_getValue(maxSaveKey, maxValue);
+            minSavedValue = GM_getValue(minSaveKey, minValue);
+            esgst.gf[maxKey] = maxSavedValue;
+            esgst.gf[minKey] = minSavedValue;
+            element = insertHtml(basicFilters, `beforeEnd`, `
+                <div class="esgst-gf-basic-filter">
+                    <div>${name} <span class="esgst-float-right"><input type="text" value="${minSavedValue}"> - <input type="text" value="${maxSavedValue}"></span></div>
+                    <div></div>
+                </div>
+            `);
+            display = element.firstElementChild;
+            displayMin = display.firstElementChild.firstElementChild;
+            displayMax = displayMin.nextElementSibling;
+            displayMin.addEventListener(`change`, function () {
+                min = $(slider).slider(`values`, 0);
+                max = $(slider).slider(`values`, 1);
+                if (step) {
+                    value = parseFloat(displayMin.value);
+                } else {
+                    value = parseInt(displayMin.value);
+                }
+                if (value !== min && value <= max) {
+                    $(slider).slider(`values`, [value, max]);
+                }
+            });
+            displayMax.addEventListener(`change`, function () {
+                max = $(slider).slider(`values`, 1);
+                min = $(slider).slider(`values`, 0);
+                if (step) {
+                    value = parseFloat(displayMax.value);
+                } else {
+                    value = parseInt(displayMax.value);
+                }
+                if (value !== max && value >= min) {
+                    if (infinite) {
+                        $(slider).slider(`option`, `max`, value);
+                    }
+                    $(slider).slider(`values`, [min, value]);
+                }
+            });
+            slider = display.nextElementSibling;
+            if (maxSavedValue > maxValue) {
+                maxValue = maxSavedValue;
+            }
+            $(slider).slider({
+                change: function (event, ui) {
+                    esgst.gf[maxKey] = ui.values[1];
+                    esgst.gf[minKey] = ui.values[0];
+                    filterGfGiveaways();
+                    GM_setValue(maxSaveKey, ui.values[1]);
+                    GM_setValue(minSaveKey, ui.values[0]);
+                },
+                min: minValue,
+                max: maxValue,
+                range: true,
+                slide: function (event, ui) {
+                    displayMax.value = ui.values[1];
+                    displayMin.value = ui.values[0];
+                },
+                step: step,
+                values: [minSavedValue, maxSavedValue]
+            });
+        }
     }
 
     function saveGfValue(key, saveKey, checkbox, event) {
@@ -22190,20 +22381,23 @@ ${avatar.outerHTML}
             element = elements[i];
             context = element.previousElementSibling;
             count = 0;
-            for (j = 0, n2 = context.children.length; j < n2; ++j) {
-                if (context.children[j].classList.contains(`esgst-hidden`)) {
-                    ++count;
+            n2 = context.children.length;
+            if (n2 > 0) {
+                for (j = 0; j < n2; ++j) {
+                    if (context.children[j].classList.contains(`esgst-hidden`)) {
+                        ++count;
+                    }
                 }
+                element = element.firstElementChild;
+                if (element.lastElementChild.classList.contains(`esgst-gf-count`)) {
+                    element.lastElementChild.remove();
+                }
+                element.insertAdjacentHTML(`beforeEnd`, `
+                    <span class="esgst-gf-count">
+                        (<strong>${count}</strong> filtered)
+                    </span>
+                `);
             }
-            element = element.firstElementChild;
-            if (element.lastElementChild.classList.contains(`esgst-gf-count`)) {
-                element.lastElementChild.remove();
-            }
-            element.insertAdjacentHTML(`beforeEnd`, `
-                <span class="esgst-gf-count">
-                    (<strong>${count}</strong> filtered)
-                </span>
-            `);
         }
     }
 

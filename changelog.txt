@@ -1,4 +1,16 @@
 /*
+ * June 28, 2017 - v6.Beta.14.8
+ */
+
+* Fixed a style issue that wasn't enabling the pointer cursor for checkboxes.
+* Endless Scrolling now remembers if you had paused it and will keep it paused when refreshing or loading a new page.
+* Avanced Giveaway Search now remembers your settings.
+* You can now also click in the search icon in addition to hitting Enter to trigger Advanced Giveaway Search.
+* Added a slider to Grid View that allows you to choose the amount of space between the giveaways.
+* Fixed a bug in Giveaway Filters that was happening when there were 0 giveaways in the page.
+* Giveaway Filters now has sliders. The Entries/Copies filters are infinite, to increase/decrease their max value simply enter the new max value in the input field and it will be increased/decreased.
+
+/*
  * June 28, 2017 - v6.Beta.14.7
  */
 
