@@ -1,4 +1,10 @@
 /*
+ * June 30, 2017 - v6.Beta.14.11-Cake.Day.Edition
+ */
+
+Check the discussions for more info.
+
+/*
  * June 29, 2017 - v6.Beta.14.10
  */
 

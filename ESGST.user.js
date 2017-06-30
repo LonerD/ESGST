@@ -3,7 +3,7 @@
 // @namespace ESGST
 // @description Enhances SteamGifts and SteamTrades by adding some cool features to them.
 // @icon https://github.com/revilheart/ESGST/raw/master/Resources/esgstIcon.ico
-// @version 6.Beta.14.10
+// @version 6.Beta.14.11-Cake.Day.Edition
 // @author revilheart
 // @contributor Royalgamer06
 // @downloadURL https://github.com/revilheart/ESGST/raw/master/ESGST.user.js
@@ -302,7 +302,26 @@
         popup.open();
     }
 
+    function huntForDeadCells() {
+        var cells, popup, responseJson;
+        cells = JSON.parse(GM_getValue(`deadCells`, `[]`));
+        if (cells.indexOf(window.location.pathname) < 0) {
+            request(null, false, `https://script.google.com/macros/s/AKfycbyPJUMA_E5NcKpy7n2b8osk6_kjpw-ItxR_wNt4UnNT3I31eOI/exec?url=${window.location.pathname}`, function (response) {
+                responseJson = JSON.parse(response.responseText);
+                if (responseJson.success) {
+                    popup = createPopup_v6(`fa-medkit`, responseJson.message, true);
+                    popup.open();
+                }
+                cells.push(window.location.pathname);
+                GM_setValue(`deadCells`, JSON.stringify(cells));
+            });
+        }
+    }
+
     function loadEsgst() {
+        if (GM_getValue(`sm_hdc`, true)) {
+            huntForDeadCells();
+        }
         esgst.sg = window.location.hostname.match(/www.steamgifts.com/);
         esgst.st = window.location.hostname.match(/www.steamtrades.com/);
         var logoutButton = document.getElementsByClassName(esgst.sg ? "js__logout" : "js_logout")[0];
@@ -456,6 +475,7 @@
         esgst.oldValues = {
             sm_ebd: `SM_D`,
             sm_c: `sm_c`,
+            sm_hdc: `sm_hdc`,
             fh: `FE_H`,
             fs: `FE_S`,
             fmph: `FE_HG`,
@@ -599,6 +619,7 @@
             sm_hb: true,
             sm_ebd: false,
             sm_c: true,
+            sm_hdc: true,
             gp: true,
             gc_b_color: `#ffffff`,
             gc_w_color: `#ffffff`,
@@ -665,6 +686,11 @@
                 id: `sm_c`,
                 name: `Show changelog from current version when updating.`,
                 check: getValue(`sm_c`)
+            },
+            {
+                id: `sm_hdc`,
+                name: `Hunt for dead cells.`,
+                check: getValue(`sm_hdc`)
             },
             {
                 id: `fh`,
@@ -19563,7 +19589,7 @@ ${esgst.sg ? `
         SMDiscussionFeatures = ["adots", "ds", "dh", "mpp", "ded"];
         SMCommentingFeatures = ["ch", "ct", "cfh", "rbot", "rbp", "mr", "rfi", "rml"];
         SMUserGroupGamesFeatures = ["ap", "uh", "un", "rwscvl", "ugd", "namwc", "nrf", "swr", "luc", "sgpb", "stpb", "sgc", "uf", "wbs", "wbc", "wbh", "ut", "iwh", "gh", "gs", "egh", "ggt", "gc"];
-        SMOtherFeatures = ["sm_ebd", "sm_c", "sm_hb", "ged"];
+        SMOtherFeatures = ["sm_ebd", "sm_c", "sm_hdc", "sm_hb", "ged"];
         for (var i = 0, n = esgst.features.length; i < n; ++i) {
             var id = esgst.features[i].id;
             if (SMGeneralFeatures.indexOf(id) >= 0) {
