@@ -3,7 +3,7 @@
 // @namespace ESGST
 // @description Enhances SteamGifts and SteamTrades by adding some cool features to them.
 // @icon https://github.com/revilheart/ESGST/raw/master/Resources/esgstIcon.ico
-// @version 6.Beta.14.9
+// @version 6.Beta.14.10
 // @author revilheart
 // @contributor Royalgamer06
 // @downloadURL https://github.com/revilheart/ESGST/raw/master/ESGST.user.js
@@ -22014,7 +22014,7 @@ ${avatar.outerHTML}
             type: type ? type[1].replace(/^(.)/, function (m, p1) {
                 return p1.toUpperCase();
             }) : (esgst.groupPath ? `Group` : ``),
-            advancedSearch: window.location.search.match(/(level_min|level_max|entry_min|entry_max|copy_min|copy_max|region_restricted|dlc)/),
+            advancedSearch: window.location.search.match(/q=/),
             basicFilters: [
                 {
                     name: `Level`,
