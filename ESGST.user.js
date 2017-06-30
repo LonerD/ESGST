@@ -3,7 +3,7 @@
 // @namespace ESGST
 // @description Enhances SteamGifts and SteamTrades by adding some cool features to them.
 // @icon https://github.com/revilheart/ESGST/raw/master/Resources/esgstIcon.ico
-// @version 6.Beta.14.8
+// @version 6.Beta.14.9
 // @author revilheart
 // @contributor Royalgamer06
 // @downloadURL https://github.com/revilheart/ESGST/raw/master/ESGST.user.js
@@ -628,90 +628,6 @@
             wbh_cw_bgColor: `#228b22`,
             wbh_cb_color: `#ffffff`,
             wbh_cb_bgColor: `#ff4500`,
-            gf_minLevel: 0,
-            gf_maxLevel: 10,
-            gf_minEntries: 0,
-            gf_maxEntries: 999999999,
-            gf_minCopies: 1,
-            gf_maxCopies: 999999999,
-            gf_minPoints: 0,
-            gf_maxPoints: 300,
-            gf_pinned: `enabled`,
-            gf_group: `enabled`,
-            gf_whitelist: `enabled`,
-            gf_regionRestricted: `enabled`,
-            gf_entered: `enabled`,
-            gf_bundled: `enabled`,
-            gf_tradingCards: `enabled`,
-            gf_achievements: `enabled`,
-            gf_multiplayer: `enabled`,
-            gf_steamCloud: `enabled`,
-            gf_linux: `enabled`,
-            gf_mac: `enabled`,
-            gf_dlc: `enabled`,
-            gf_exceptionWishlist: false,
-            gf_exceptionPinned: false,
-            gf_exceptionGroup: false,
-            gf_exceptionWhitelist: false,
-            gf_exceptionRegionRestricted: false,
-            gf_exceptionMultiple: false,
-            gf_exceptionMultipleCopies: 1,
-            gf_minLevelWishlist: 0,
-            gf_maxLevelWishlist: 10,
-            gf_minEntriesWishlist: 0,
-            gf_maxEntriesWishlist: 999999999,
-            gf_minCopiesWishlist: 1,
-            gf_maxCopiesWishlist: 999999999,
-            gf_minPointsWishlist: 0,
-            gf_maxPointsWishlist: 300,
-            gf_pinnedWishlist: `enabled`,
-            gf_groupWishlist: `enabled`,
-            gf_whitelistWishlist: `enabled`,
-            gf_regionRestrictedWishlist: `enabled`,
-            gf_enteredWishlist: `enabled`,
-            gf_bundledWishlist: `enabled`,
-            gf_tradingCardsWishlist: `enabled`,
-            gf_achievementsWishlist: `enabled`,
-            gf_multiplayerWishlist: `enabled`,
-            gf_steamCloudWishlist: `enabled`,
-            gf_linuxWishlist: `enabled`,
-            gf_macWishlist: `enabled`,
-            gf_dlcWishlist: `enabled`,
-            gf_exceptionWishlistWishlist: false,
-            gf_exceptionPinnedWishlist: false,
-            gf_exceptionGroupWishlist: false,
-            gf_exceptionWhitelistWishlist: false,
-            gf_exceptionRegionRestrictedWishlist: false,
-            gf_exceptionMultipleWishlist: false,
-            gf_exceptionMultipleCopiesWishlist: 1,
-            gf_minLevelGroup: 0,
-            gf_maxLevelGroup: 10,
-            gf_minEntriesGroup: 0,
-            gf_maxEntriesGroup: 999999999,
-            gf_minCopiesGroup: 1,
-            gf_maxCopiesGroup: 999999999,
-            gf_minPointsGroup: 0,
-            gf_maxPointsGroup: 300,
-            gf_pinnedGroup: `enabled`,
-            gf_groupGroup: `enabled`,
-            gf_whitelistGroup: `enabled`,
-            gf_regionRestrictedGroup: `enabled`,
-            gf_enteredGroup: `enabled`,
-            gf_bundledGroup: `enabled`,
-            gf_tradingCardsGroup: `enabled`,
-            gf_achievementsGroup: `enabled`,
-            gf_multiplayerGroup: `enabled`,
-            gf_steamCloudGroup: `enabled`,
-            gf_linuxGroup: `enabled`,
-            gf_macGroup: `enabled`,
-            gf_dlcGroup: `enabled`,
-            gf_exceptionWishlistGroup: false,
-            gf_exceptionPinnedGroup: false,
-            gf_exceptionGroupGroup: false,
-            gf_exceptionWhitelistGroup: false,
-            gf_exceptionRegionRestrictedGroup: false,
-            gf_exceptionMultipleGroup: false,
-            gf_exceptionMultipleCopiesGroup: 1,
             Avatar: "",
             Username: "",
             SteamID64: "",
@@ -1467,13 +1383,6 @@
                 endless: true
             },
             {
-                id: `ut`,
-                name: `User Tags`,
-                check: getValue(`ut`),
-                load: loadUserTags,
-                endless: true
-            },
-            {
                 id: `iwh`,
                 name: `Inbox Winners Highlighter`,
                 check: getValue(`iwh`) && esgst.sg && (esgst.winnersPath || esgst.inboxPath),
@@ -1648,6 +1557,13 @@
                 hidden: true,
                 name: `Giveaway Features`,
                 load: startGiveawayFeatures
+            },
+            {
+                id: `ut`,
+                name: `User Tags`,
+                check: getValue(`ut`),
+                load: loadUserTags,
+                endless: true
             },
             {
                 id: `mt`,
@@ -5331,14 +5247,17 @@ ${title}
                     text-align: center;
                     width: 100px;
                 }
+
                 .esgst-gv-view {
                     font-size: 0;
                     padding: 5px 0;
                     text-align: center;
                 }
+
                 .esgst-gv-view.pinned-giveaways__inner-wrap--minimized .giveaway__row-outer-wrap:nth-child(-n + 10) {
                     display: inline-block;" +
                 }
+
                 .esgst-gv-container {
                     border: 0 !important;
                     box-shadow: none !important;
@@ -5348,47 +5267,130 @@ ${title}
                     position: relative;
                     vertical-align: top;
                 }
+
                 .esgst-gv-box {
                     display: block;
                 }
+
                 .esgst-gv-box >*:not(.giveaway__summary) {
                     margin: 0 !important;
                 }
+
                 .esgst-gv-box.is-faded:hover {
                     opacity: 1;
                 }
+
                 .esgst-gv-icons {
                     bottom: 0;
                     position: absolute;
                     right: 0;
                 }
+
+                .esgst-gv-icons >:first-child {
+                    background-color: #fff;
+                    font-weight: bold;
+                }
+
+                .esgst-gv-icons >:first-child i {
+                    font-size: 12px;
+                    vertical-align: baseline;
+                }
+
                 .esgst-gv-icons >* {
                     line-height: normal;
                     margin: 0 !important;
                     padding: 2px;
                 }
+
                 .esgst-gv-icons .giveaway__column--contributor-level {
                     padding: 2px 5px;
                 }
+
                 .esgst-gv-popout {
-                    max-width: 600px;
-                    min-width: 400px;
+                    font-size: 11px;
+                    max-width: 174px;
                     position: absolute;
+                    width: 174px;
                     z-index: 1;
                 }
+
+                .esgst-gv-popout .giveaway__heading {
+                    display: block;
+                    height: auto;
+                }
+
+                .esgst-gv-popout .giveaway__heading__name {
+                    display: inline-block;
+                    font-size: 12px;
+                    max-width: 150px;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    vertical-align: middle;
+                }
+
+                .esgst-gv-popout .giveaway__heading__thin {
+                    font-size: 11px;
+                }
+
+                .esgst-gv-popout .esgst-gc-panel {
+                    font-size: 11px;
+                    text-align: center;
+                }
+
+                .esgst-gv-popout .esgst-gc-panel i, .esgst-gv-popout .giveaway__links i, .esgst-gv-popout .esgst-gwc i, .esgst-gv-popout .esgst-gwr i, .esgst-gv-popout .esgst-ggl-panel, .esgst-gv-popout .esgst-ggl-panel i {
+                    font-size: 11px;
+                }
+
+                .esgst-gv-popout .esgst-gc.genres {
+                    margin: 0;
+                }
+
                 .esgst-gv-popout .giveaway__columns:not(.esgst-giveaway-panel):not(.esgst-gv-icons) {
                     display: block;
                     float: left;
                     width: calc(100% - 37px);
                 }
+
                 .esgst-gv-popout .giveaway__columns:not(.esgst-giveaway-panel):not(.esgst-gv-icons) >* {
                     margin: 0;
                     text-align: left;
                 }
-                .esgst-gv-popout .giveaway_image_avatar {
-                    float: right;
-                    margin: 10px 0;
+
+                .esgst-gv-popout .esgst-giveaway-panel {
+                    display: block;
+                    font-size: 11px;
                 }
+
+                .esgst-gv-popout .esgst-giveaway-panel >* {
+                    display: inline-block;
+                    margin: 0;
+                    width: 67px;
+                }
+
+                .esgst-gv-popout .esgst-button-set {
+                    width: 100%;
+                }
+
+                .esgst-gv-popout .esgst-button-set >* {
+                    padding: 0;
+                    width: 100%;
+                }
+
+                .esgst-gv-creator {
+                    margin: 5px;
+                }
+
+                .esgst-gv-popout .giveaway__links {
+                    display: block;
+                    height: auto;
+                    margin: 5px;
+                    text-align: center;
+                }
+
+                .esgst-gv-popout .esgst-gt-tags, .esgst-gv-popout .PUTTags, .esgst-gv-popout .giveaway_image_avatar {
+                    display: none;
+                }
+
                 .esgst-gv-popout .esgst-giveaway-links, .esgst-gv-popout .esgst-giveaway-panel {
                     float: none;
                 }
@@ -5406,14 +5408,46 @@ ${title}
         }
     }
 
+    function getRemainingTime(time) {
+        var d, dif, h, m, s, w;
+        dif = time - Date.now();
+        w = Math.floor(dif / 604800000);
+        if (w > 0) {
+            return `${w}w`;
+        } else {
+            d = Math.floor(dif / 86400000);
+            if (d > 0) {
+                return `${d}d`;
+            } else {
+                h = Math.floor(dif / 3600000);
+                if (h > 0) {
+                    return `${h}h`;
+                } else {
+                    m = Math.floor(dif / 60000);
+                    if (m > 0) {
+                        return `${m}m`;
+                    } else {
+                        s = Math.floor(dif / 1000);
+                        return `${s}s`;
+                    }
+                }
+            }
+        }
+    }
+
     function setGvContainer(giveaway, spacing) {
-        var icons;
+        var creator, icons;
         giveaway.outerWrap.parentElement.classList.add(`esgst-gv-view`);
         giveaway.outerWrap.classList.add(`esgst-gv-container`);
         giveaway.outerWrap.style.margin = `${spacing}px`;
         giveaway.innerWrap.classList.add(`esgst-gv-box`);
         icons = insertHtml(giveaway.innerWrap, `afterBegin`, `
-            <div class="esgst-gv-icons giveaway__columns"></div>
+            <div class="esgst-gv-icons giveaway__columns">
+                <div title="${giveaway.endTimeColumn.lastElementChild.textContent}">
+                    <i class="fa fa-clock-o"></i>
+                    <span>${getRemainingTime(giveaway.endTime)}</span>
+                </div>
+            </div>
         `);
         if (giveaway.regionRestricted) {
             icons.appendChild(giveaway.regionRestricted);
@@ -5434,6 +5468,18 @@ ${title}
         giveaway.avatar.insertAdjacentHTML(`afterEnd`, `
             <div style="clear: both;"></div>
         `);
+        giveaway.headingName.insertAdjacentHTML(`afterEnd`, `<br>`);
+        giveaway.pointsContainer.insertAdjacentHTML(`afterEnd`, `<br>`);
+        giveaway.endTimeColumn.classList.add(`esgst-hidden`);
+        giveaway.startTimeColumn.classList.add(`esgst-hidden`);
+        giveaway.entriesLink.lastElementChild.textContent = giveaway.entriesLink.textContent.replace(/[^\d,]+/g, ``);
+        giveaway.commentsLink.lastElementChild.textContent = giveaway.commentsLink.textContent.replace(/[^\d,]+/g, ``);
+        creator = insertHtml(giveaway.links, `beforeBegin`, `
+            <div class="esgst-gv-creator">
+                <span>by</span>
+            </div>
+        `);
+        creator.appendChild(giveaway.creatorContainer);
         giveaway.innerWrap.addEventListener(`mouseenter`, function () {
             giveaway.summary.classList.remove(`esgst-hidden`);
             giveaway.summary.style = ``;
@@ -21087,9 +21133,11 @@ Background: <input type="color" value="${bgColor}">
         if (n > 0) {
             if (n > 1) {
                 giveaway.copies = parseInt(thinHeadings[0].textContent.replace(/,/g, ``).match(/\d+/)[0]);
+                giveaway.pointsContainer = thinHeadings[1];
                 giveaway.points = parseInt(thinHeadings[1].textContent.match(/\d+/)[0]);
             } else {
                 giveaway.copies = 1;
+                giveaway.pointsContainer = thinHeadings[0];
                 giveaway.points = parseInt(thinHeadings[0].textContent.match(/\d+/)[0]);
             }
         }
@@ -21106,7 +21154,8 @@ Background: <input type="color" value="${bgColor}">
             }
             giveaway.startTime = parseInt(giveaway.startTimeColumn.firstElementChild.getAttribute(`data-timestamp`)) * 1e3;
             if (!esgst.userPath || ugd) {
-                giveaway.creator = giveaway.startTimeColumn.lastElementChild.textContent;
+                giveaway.creatorContainer = giveaway.startTimeColumn.lastElementChild;
+                giveaway.creator = giveaway.creatorContainer.textContent;
             }
             giveaway.winners = giveaway.columns.textContent.match(/No winners/) ? 0 : giveaway.copies;
         } else {
@@ -21987,7 +22036,7 @@ ${avatar.outerHTML}
                 {
                     name: `Points`,
                     minValue: 0,
-                    maxValue: 300
+                    maxValue: 100
                 },
                 {
                     name: `Chance`,
@@ -22233,7 +22282,7 @@ ${avatar.outerHTML}
         esgst.giveawayFeatures.push(filterGfGiveaways);
 
         function createGfBasicFilter(filter) {
-            var display, displayMax, displayMin, max, min, element, infinite, maxKey, minKey, maxSaveKey, maxSaveKey, maxSavedValue, minSavedValue, maxValue, minValue, name, slider, step, value;
+            var display, displayMax, displayMin, max, min, element, infinite, maxKey, minKey, maxSaveKey, minSaveKey, maxSavedValue, minSavedValue, maxValue, minValue, name, slider, step, value;
             name = filter.name;
             minValue = filter.minValue;
             maxValue = filter.maxValue;
@@ -22245,6 +22294,9 @@ ${avatar.outerHTML}
             minSaveKey = `gf_${minKey}${esgst.gf.type}`;
             maxSavedValue = GM_getValue(maxSaveKey, maxValue);
             minSavedValue = GM_getValue(minSaveKey, minValue);
+            if (!infinite && maxSavedValue > maxValue) {
+                maxSavedValue = maxValue;
+            }
             esgst.gf[maxKey] = maxSavedValue;
             esgst.gf[minKey] = minSavedValue;
             element = insertHtml(basicFilters, `beforeEnd`, `
