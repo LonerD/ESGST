@@ -3,7 +3,7 @@
 // @namespace ESGST
 // @description Enhances SteamGifts and SteamTrades by adding some cool features to them.
 // @icon https://github.com/revilheart/ESGST/raw/master/Resources/esgstIcon.ico
-// @version 6.Beta.15.0
+// @version 6.Beta.15.1
 // @author revilheart
 // @contributor Royalgamer06
 // @downloadURL https://github.com/revilheart/ESGST/raw/master/ESGST.user.js
@@ -3454,7 +3454,7 @@
         var popup;
         popup = {};
         popup.popup = insertHtml(document.body, `beforeEnd`, `
-            <div class="esgst-popup">
+            <div class="esgst-hidden esgst-popup">
                 <div class="popup_summary">
                     <div class="popup_icon">
                         <i class="popup__icon fa ${icon} esgst-popup-icon"></i>
@@ -3471,6 +3471,7 @@
         `);
         popup.description = popup.popup.firstElementChild.nextElementSibling;
         popup.open = function (callback) {
+            popup.popup.classList.remove(`esgst-hidden`);
             popup.opened = $(popup.popup).bPopup({
                 amsl: [0],
                 fadeSpeed: 200,
@@ -3480,6 +3481,8 @@
                 onClose: function () {
                     if (temp) {
                         popup.popup.remove();
+                    } else {
+                        popup.popup.classList.add(`esgst-hidden`);
                     }
                     if (popup.onClose) {
                         popup.onClose();
@@ -4284,10 +4287,10 @@ z-index: 99999;
 .esgst-popup {
 
 color: #465670;
-display: none;
 max-width: 75%;
 overflow: auto;
     padding: 35px 100px;
+    position: absolute;
     background-color: #f0f2f5;
     border-radius: 4px;
     text-align: center;
@@ -18238,12 +18241,17 @@ ${Results.join(``)}
                     }
                 });
             } else if (Item.setPopup) {
-                var popup = createPopup();
-                popup.Icon.classList.add(`fa-table`);
-                popup.Title.textContent = `Add a table:`;
-                Item.setPopup(popup);
+                var popup;
                 Button.addEventListener("click", function () {
-                    popup.popUp();
+                    if (popup) {
+                        popup.popUp();
+                    } else {
+                        popup = createPopup();
+                        popup.Icon.classList.add(`fa-table`);
+                        popup.Title.textContent = `Add a table:`;
+                        Item.setPopup(popup);
+                        popup.popUp();
+                    }
                 });
             } else {
                 if (Item.Callback) {
