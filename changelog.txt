@@ -1,4 +1,33 @@
 /*
+ * July 9, 2017 - v6.Beta.15.0
+ */
+
+This update has a lot of changes, so I probably forgot to list some of them.
+
+* Removed the settings menu from the account page. It's now accessible from any page by clicking on the ESGST button.
+* You can now enable features specifically for SG or ST in the settings menu.
+* Revamped the settings menu and enumerated all settings, making it easier to reference them.
+* All feature descriptions will now be accessible from the settings menu, without the need to keep going back and forth between the settings menu and the GitHub page (this is a work in progress, some features are currently missing their description).
+* New features and functionalities will now be marked with a [NEW] tag, so it's easier to locate what's new in the current version from the settings menu.
+* Started a process of cloning SG's classes so the script no longer needs to rely on them, which will prevent any possible conflict from SG's script (solves an issue that wasn't opening the header menu on Firefox, and another issue that was replacing the ESGST button with the profile button on ST).
+* Optimized memory consumption and speed for sync, Game Categories and Created/Entered/Won Giveaway Details (possibly closes #220 and #222).
+* Brought back avatars to Grid View.
+* Giveaway Groups Loader now shows group avatars again.
+* Improved how the groups are synced in Stickied Giveaway Groups and upgraded the group storage (unfortunately, unlike previous storage upgrades, this upgrade cannot retain your stickied groups, so you will have to sticky your groups again). You must sync through the settings menu (section 9) immediately, otherwise none of the group features will work correctly in this version.
+* Fixed some bugs in Unsent Gifts Sender.
+* Comment Formatting Helper now checks to make sure the user entered the right format for encrypted giveaways (closes #225).
+* Changed the comment count to red in Comment Tracker.
+* Fixed a bug in User Giveaways Data that was showing "undefined" for sent data (closes #177).
+* Game Categories now has links for each category (closes #213) and appears in front of the game title if the simplified mode is enabled.
+* Improved a lot of other things, especially user features.
+
+Added the following features:
+
+* Giveaways/Discussions/Tickets/Trades Tracker (separated from Comment Tracker)
+* Same Tab Opener
+* Main Post Skipper (closes #22)
+
+/*
  * June 30, 2017 - v6.Beta.14.11-Cake.Day.Edition
  */
 

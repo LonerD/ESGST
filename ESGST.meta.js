@@ -1,3 +1,3 @@
 // ==UserScript==
-// @version 6.Beta.14.11-Cake.Day.Edition
+// @version 6.Beta.15.0
 // ==/UserScript==
