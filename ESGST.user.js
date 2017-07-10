@@ -3,7 +3,7 @@
 // @namespace ESGST
 // @description Enhances SteamGifts and SteamTrades by adding some cool features to them.
 // @icon https://github.com/revilheart/ESGST/raw/master/Resources/esgstIcon.ico
-// @version 6.Beta.15.2
+// @version 6.Beta.15.3
 // @author revilheart
 // @contributor Royalgamer06
 // @downloadURL https://github.com/revilheart/ESGST/raw/master/ESGST.user.js
@@ -3040,10 +3040,11 @@
             "<i class=\"fa fa-circle-o-notch fa-spin\"></i> " +
             "<span>Syncing your username and avatar...</span>";
         if (esgst.sg) {
-            GM_setValue(`username`, document.getElementsByClassName("nav__avatar-outer-wrap")[0].href.match(/\/user\/(.+)/)[1]);
+            setValue(`username`, document.getElementsByClassName("nav__avatar-outer-wrap")[0].href.match(/\/user\/(.+)/)[1]);
+            esgst.username = getValue(`username`);
         }
-        GM_setValue(`avatar`, document.getElementsByClassName(esgst.sg ? "nav__avatar-inner-wrap" : "nav_avatar")[0].style.backgroundImage.match(/\("(.+)"\)/)[1]);
-        if (!esgst.steamId && GM_getValue(`username`)) {
+        setValue(`avatar`, document.getElementsByClassName(esgst.sg ? "nav__avatar-inner-wrap" : "nav_avatar")[0].style.backgroundImage.match(/\("(.+)"\)/)[1]);
+        if (!esgst.steamId && esgst.username) {
             getSteamID64(Sync, function () {
                 continueSync(Sync, Callback);
             });
@@ -3124,7 +3125,7 @@
             "<i class=\"fa fa-circle-o-notch fa-spin\"></i> " +
             "<span>Retrieving your SteamID64...</span>";
         makeRequest(null, "/user/" + esgst.username, Sync.Progress, function (Response) {
-            GM_setValue(`steamId`, DOM.parse(Response.responseText).querySelector("a[href*='/profiles/']").getAttribute("href").match(/\d+/)[0]);
+            setValue(`steamId`, DOM.parse(Response.responseText).querySelector("a[href*='/profiles/']").getAttribute("href").match(/\d+/)[0]);
             Callback();
         });
     }

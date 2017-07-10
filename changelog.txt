@@ -1,4 +1,10 @@
 /*
+ * July 9, 2017 - v6.Beta.15.3
+ */
+
+* Fixed a sync bug.
+
+/*
  * July 9, 2017 - v6.Beta.15.2
  */
 
