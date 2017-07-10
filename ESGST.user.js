@@ -3,7 +3,7 @@
 // @namespace ESGST
 // @description Enhances SteamGifts and SteamTrades by adding some cool features to them.
 // @icon https://github.com/revilheart/ESGST/raw/master/Resources/esgstIcon.ico
-// @version 6.Beta.15.1
+// @version 6.Beta.15.2
 // @author revilheart
 // @contributor Royalgamer06
 // @downloadURL https://github.com/revilheart/ESGST/raw/master/ESGST.user.js
@@ -7902,7 +7902,7 @@ ${avatar.outerHTML}
                 newGiveaways = {};
                 newGroups = {};
                 savedGiveaways = JSON.parse(GM_getValue(`giveaways`, `{}`));
-                savedGroups = JSON.parse(GM_getValue(`groups`));
+                savedGroups = JSON.parse(GM_getValue(`groups`, `{}`));
                 loadGglGroups([giveaway], 0, 1, newGiveaways, newGroups, savedGiveaways, savedGroups, function(groups) {
                     var className, groupCount, i, n, key, link;
                     if (groups) {
@@ -7961,7 +7961,7 @@ ${avatar.outerHTML}
         newGiveaways = {};
         newGroups = {};
         savedGiveaways = JSON.parse(GM_getValue(`giveaways`, `{}`));
-        savedGroups = JSON.parse(GM_getValue(`groups`));
+        savedGroups = JSON.parse(GM_getValue(`groups`, `{}`));
         loadGglGroups(giveaways, 0, giveaways.length, newGiveaways, newGroups, savedGiveaways, savedGroups);
     }
 
@@ -8732,7 +8732,7 @@ ${avatar.outerHTML}
 
     function setSggGiveawayGroups() {
         var avatar, communityName, container, context, elements, i, id, key, n, savedGroups, separator, stickied;
-        savedGroups = JSON.parse(GM_getValue(`groups`));
+        savedGroups = JSON.parse(GM_getValue(`groups`, `{}`));
         container = document.getElementsByClassName(`form__groups`)[0];
         separator = container.firstElementChild.nextElementSibling;
         elements = container.getElementsByClassName(`form__group--steam`);
@@ -8767,7 +8767,7 @@ ${avatar.outerHTML}
 
     function setSggGroups(context) {
         var avatar, communityName, element, elements, i, key, n, savedGroups, stickied;
-        savedGroups = JSON.parse(GM_getValue(`groups`));
+        savedGroups = JSON.parse(GM_getValue(`groups`, `{}`));
         elements = context.getElementsByClassName(`table__row-inner-wrap`);
         for (i = 0, n = elements.length; i < n; ++i) {
             element = elements[i];
@@ -19408,7 +19408,7 @@ ${Results.join(``)}
     function loadSgcGroups(profile, response) {
         var avatar, communityName, element, elements, groups, i, info, link, n, responseHtml, savedGroup, savedGroups;
         groups = [];
-        savedGroups = JSON.parse(GM_getValue(`groups`));
+        savedGroups = JSON.parse(GM_getValue(`groups`, `{}`));
         responseHtml = DOM.parse(response.responseText);
         elements = responseHtml.getElementsByClassName(`groupBlock`);
         for (i = 0, n = elements.length; i < n; ++i) {
@@ -21385,7 +21385,7 @@ ${Results.join(``)}
 
     function highlightGhGroups(context) {
         var code, element, elements, i, key, n, savedGroups;
-        savedGroups = JSON.parse(GM_getValue(`groups`));
+        savedGroups = JSON.parse(GM_getValue(`groups`, `{}`));
         elements = context.querySelectorAll(`.table__column__heading[href*="/group/"]`);
         for (i = 0, n = elements.length; i < n; ++i) {
             element = elements[i];
