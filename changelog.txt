@@ -1,4 +1,16 @@
 /*
+ * July 9, 2017 - v6.Beta.16.0
+ */
+
+* Moved Giveaway/Discussions/Tickets/Trades Tracker to General.
+* Added an option that allows users to disable the script completely for SteamTrades, which also cleans the settings menu from any ST options.
+* Fixed a bug that was not showing the "Recent Username History" and "Comment History" buttons in the header menu (closes #231).
+
+Added a new feature:
+
+* Removed Game Redirecter
+
+/*
  * July 9, 2017 - v6.Beta.15.3
  */
 

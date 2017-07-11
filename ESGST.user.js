@@ -3,13 +3,14 @@
 // @namespace ESGST
 // @description Enhances SteamGifts and SteamTrades by adding some cool features to them.
 // @icon https://github.com/revilheart/ESGST/raw/master/Resources/esgstIcon.ico
-// @version 6.Beta.15.3
+// @version 6.Beta.16.0
 // @author revilheart
-// @contributor Royalgamer06
 // @downloadURL https://github.com/revilheart/ESGST/raw/master/ESGST.user.js
 // @updateURL https://github.com/revilheart/ESGST/raw/master/ESGST.meta.js
 // @match https://www.steamgifts.com/*
 // @match https://www.steamtrades.com/*
+// @match http://store.steampowered.com/*
+// @match https://store.steampowered.com/*
 // @connect raw.githubusercontent.com
 // @connect api.steampowered.com
 // @connect store.steampowered.com
@@ -57,11 +58,14 @@
             parser: new DOMParser()
         };
         esgst = {};
+        esgst.settings = JSON.parse(GM_getValue(`settings`, `{}`));
         esgst.sg = window.location.hostname.match(/www.steamgifts.com/);
         esgst.st = window.location.hostname.match(/www.steamtrades.com/);
+        esgst.steam = window.location.hostname.match(/store.steampowered.com/);
         var logoutButton = document.getElementsByClassName(esgst.sg ? "js__logout" : "js_logout")[0];
-        if (logoutButton) {
+        if (logoutButton && (esgst.sg || (esgst.st && esgst.settings.esgst_st))) {
             // User is logged in.
+            if (esgst.sg || esgst.st) {
             updateTemplateStorageToV6();
             updateUserStorageToV6();
             updateGameStorageToV6();
@@ -141,6 +145,9 @@
                     }
                     .esgst-header-menu-row i.grey{
                         color: #77899A;
+                    }
+                    .esgst-header-menu-row i.yellow{
+                        color: #FECC66;
                     }
                     .esgst-header-menu-name {
                         color: #4B72D4;
@@ -257,6 +264,9 @@
                     }
                     .esgst-header-menu-row i.grey{
                         color: #77899a;
+                    }
+                    .esgst-header-menu-row i.yellow{
+                        color: #FECC66;
                     }
                     .esgst-header-menu-description {
                         display: none;
@@ -736,6 +746,7 @@
                 gts_preciseEnd: false,
                 gm_createTrain: true,
                 adots_index: 0,
+                rgr_index: 0,
                 cfh_pasteFormatting: true,
                 gc_b_color: `#ffffff`,
                 gc_w_color: `#ffffff`,
@@ -779,8 +790,13 @@
                 Winners: {}
             };
             esgst.values = {};
-            esgst.settings = JSON.parse(GM_getValue(`settings`, `{}`));
             esgst.features = [
+                {
+                    id: `esgst`,
+                    name: `Enable ESGST for SteamTrades.`,
+                    st: true,
+                    type: `other`
+                },
                 {
                     id: `enableByDefault`,
                     name: `Enable new features and functionalities by default.`,
@@ -1024,7 +1040,7 @@
                     name: `[NEW] Giveaways/Discussions/Tickets/Trades Tracker`,
                     sg: true,
                     st: true,
-                    type: `giveaways`
+                    type: `general`
                 },
                 {
                     description: `
@@ -1391,6 +1407,7 @@
                     type: `giveaways`
                 },
                 {
+                    // by Royalgamer06
                     description: `
                         <ul>
                             <li>Provides search links for the game when you cannot access a giveaway.</li>
@@ -2038,6 +2055,23 @@
                     type: `groups`
                 },
                 {
+                    description: `
+                        <ul>
+                            <li>When you click on a Steam store link from SG or ST, you get redirected to the Steam Community or SteamDB page of the game if it has been removed.</li>
+                        </ul>
+                    `,
+                    id: `rgr`,
+                    load: loadRgr,
+                    name: `Removed Game Redirecter`,
+                    options: {
+                        title: `Redirect to:`,
+                        values: [`Steam Community`, `SteamDB`]
+                    },
+                    sg: true,
+                    st: true,
+                    type: `games`
+                },
+                {
                     features: [
                         {
                             id: `egh_t`,
@@ -2281,7 +2315,6 @@
                     type: `general`
                 }
             ];
-            addHeaderMenu();
             esgst.endlessFeatures = [];
             esgst.gameFeatures = [];
             esgst.userFeatures = [];
@@ -2303,6 +2336,7 @@
                 loadFeature(esgst.features[i]);
             }
             GM_setValue(`settings`, JSON.stringify(esgst.settings));
+            addHeaderMenu();
             for (i = 0, n = esgst.toExecute.length; i < n; ++i) {
                 esgst.toExecute[i]();
             }
@@ -2317,6 +2351,9 @@
                 goToComment();
             });
             GM_addStyle(style);
+        }
+        } else if (esgst.steam) {
+            checkRgrRemoved();
         }
     }
 
@@ -9987,7 +10024,7 @@ ${Results.join(``)}
         }).replace(/\&/g, `and`).replace(/\+/g, `plus`).replace(/[^\d\w]/g, ``);
     }
 
-    /* [GESL] Giveaway Error Search Links */
+    /* [GESL] Giveaway Error Search Links (by Royalgamer06) */
 
     function loadGesl() {
         var Context, Term;
@@ -21454,6 +21491,48 @@ ${Results.join(``)}
         });
     }
 
+    /* [RGR] Removed Game Redirecter */
+
+    function loadRgr() {
+        esgst.endlessFeatures.push(getRgrLinks);
+        getRgrLinks(document);
+    }
+
+    function getRgrLinks(context) {
+        var elements, i, n;
+        elements = context.querySelectorAll(`[href*="store.steampowered.com/app/"], [href*="store.steampowered.com/sub/"]`);
+        for (i = 0, n = elements.length; i < n; ++i) {
+            elements[i].addEventListener(`click`, setRgrLink);
+        }
+    }
+
+    function setRgrLink(event) {
+        var game, match, url;
+        url = event.currentTarget.getAttribute(`href`);
+        match = url.match(/\/(app|sub)\/(\d+)/);
+        game = {
+            id: match[2],
+            type: match[1]
+        };
+        GM_setValue(`rgr_game`, game);
+    }
+
+    function checkRgrRemoved() {
+        var game, string;
+        game = GM_getValue(`rgr_game`);
+        if (game) {
+            string = `/${game.type}/${game.id}`;
+            if (!window.location.href.match(string)) {
+                GM_deleteValue(`rgr_game`);
+                if (esgst.settings.rgr_index === 0) {
+                    window.location.href = `http://steamcommunity.com${string}`;
+                } else {
+                    window.location.href = `https://steamdb.info${string}`;
+                }
+            }
+        }
+    }
+
     /* [EGH] Entered Games Highlighter */
 
     function loadEgh() {
@@ -22405,8 +22484,11 @@ ${Results.join(``)}
         for (var i = 0, n = esgst.features.length; i < n; ++i) {
             var feature = esgst.features[i];
             if (feature.type) {
-                sections[feature.type].section.lastElementChild.appendChild(getSMFeature(feature, sections[feature.type].index));
-                ++sections[feature.type].index;
+                var ft = getSMFeature(feature, sections[feature.type].index);
+                if (ft) {
+                    sections[feature.type].section.lastElementChild.appendChild(ft);
+                    ++sections[feature.type].index;
+                }
             }
         }
         SMMenu.insertAdjacentHTML(`beforeEnd`,
@@ -22922,9 +23004,9 @@ ${Results.join(``)}
             if (typeof val1 === `undefined`) {
                 val1 = false;
             }
-            siwtchSg = createToggleSwitch(Menu, ID, true, `[SG]`, true, false, null, val1);
+            siwtchSg = createToggleSwitch(Menu, ID, true, esgst.settings.esgst_st ? `[SG]` : ``, true, false, null, val1);
         }
-        if (Feature.st) {
+        if (Feature.st && (esgst.settings.esgst_st || Feature.id === `esgst`)) {
             localID = `${ID}_st`;
             val2 = esgst.settings[localID];
             if (typeof val2 === `undefined`) {
@@ -22932,9 +23014,10 @@ ${Results.join(``)}
             }
             siwtchSt = createToggleSwitch(Menu, ID, true, `[ST]`, false, true, null, val2);
         }
+        if (siwtchSg || siwtchSt) {
         val = val1 || val2;
         Menu.insertAdjacentHTML(`beforeEnd`, `
-            <span>- ${Feature.name}</span>
+            <span>${esgst.settings.esgst_st ? `- ` : ``}${Feature.name}</span>
             ${Feature.description ? `<i class="fa fa-question-circle esgst-clickable"></i>` : ``}
             <div class="form__row__indent SMFeatures esgst-hidden"></div>
         `);
@@ -22967,7 +23050,10 @@ ${Results.join(``)}
         }
         if (Feature.features) {
             for (var i = 0, n = Feature.features.length; i < n; ++i) {
-                SMFeatures.appendChild(getSMFeature(Feature.features[i], i + 1));
+                var ft = getSMFeature(Feature.features[i], i + 1);
+                if (ft) {
+                    SMFeatures.appendChild(ft);
+                }
             }
             if (siwtchSg) {
                 siwtchSg.dependencies.push(SMFeatures);
@@ -23059,6 +23145,10 @@ Background: <input type="color" value="${bgColor}">
             }
         }
         return Menu;
+        } else {
+            Menu.lastElementChild.remove();
+            return null;
+        }
     }
 
     function addColorObserver(context, id, key) {
