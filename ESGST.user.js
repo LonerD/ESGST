@@ -3,7 +3,7 @@
 // @namespace ESGST
 // @description Enhances SteamGifts and SteamTrades by adding some cool features to them.
 // @icon https://github.com/revilheart/ESGST/raw/master/Resources/esgstIcon.ico
-// @version 6.Beta.16.0
+// @version 6.Beta.16.1
 // @author revilheart
 // @downloadURL https://github.com/revilheart/ESGST/raw/master/ESGST.user.js
 // @updateURL https://github.com/revilheart/ESGST/raw/master/ESGST.meta.js
@@ -58,7 +58,7 @@
             parser: new DOMParser()
         };
         esgst = {};
-        esgst.settings = JSON.parse(GM_getValue(`settings`, `{}`));
+        esgst.settings = JSON.parse(GM_getValue(`settings`, `{}`) || `{}`);
         esgst.sg = window.location.hostname.match(/www.steamgifts.com/);
         esgst.st = window.location.hostname.match(/www.steamtrades.com/);
         esgst.steam = window.location.hostname.match(/store.steampowered.com/);
@@ -507,7 +507,7 @@
             esgst.pageTop = 25;
             esgst.commentsTop = 0;
             esgst.apPopouts = {};
-            esgst.users = {};
+            esgst.currentUsers = {};
             esgst.games = {};
             esgst.oldValues = {
                 enableByDefault: `sm_ebd`,
@@ -787,7 +787,31 @@
                 Rerolls: [],
                 StickiedGroups: [],
                 Templates: [],
-                Winners: {}
+                Winners: {},
+                users: `
+                    {
+                        steamIds: {},
+                        users: {}
+                    }
+                `,
+                groups: `{}`,
+                comments: `
+                    {
+                        giveaways: {
+                            comments: {}
+                        },
+                        discussions: {
+                            comments: {}
+                        },
+                        tickets: {
+                            comments: {}
+                        },
+                        trades: {
+                            comments: {}
+                        },
+                    }
+                `,
+                giveaways: `{}`
             };
             esgst.values = {};
             esgst.features = [
@@ -1037,7 +1061,7 @@
                     ],
                     id: `gdttt`,
                     load: loadGdttt,
-                    name: `[NEW] Giveaways/Discussions/Tickets/Trades Tracker`,
+                    name: `Giveaways/Discussions/Tickets/Trades Tracker`,
                     sg: true,
                     st: true,
                     type: `general`
@@ -2029,8 +2053,8 @@
                     type: `users`
                 },
                 {
-                    id: `ibh`,
-                    load: loadIbh,
+                    id: `iwh`,
+                    load: loadIwh,
                     name: `Inbox Winners Highlighter`,
                     sg: true,
                     type: `users`
@@ -2319,7 +2343,7 @@
             esgst.gameFeatures = [];
             esgst.userFeatures = [];
             esgst.giveawayFeatures = [];
-            esgst.giveaways = [];
+            esgst.currentGiveaways = [];
             esgst.discussions = [];
             esgst.discussionFeatures = [];
             esgst.commentFeatures = [];
@@ -2330,6 +2354,7 @@
             for (var key in esgst.defaultValues) {
                 esgst[key] = getValue(key);
             }
+                esgst.users = JSON.parse(esgst.users);
             addStyles();
             esgst.toExecute = [];
             for (i = 0, n = esgst.features.length; i < n; ++i) {
@@ -2949,7 +2974,7 @@
                 Match = Response.finalUrl.match(/(.+?)(#(.+))?$/);
                 if (Match[3]) {
                     Callback();
-                    if ((esgst.settings.ch_sg && esgst.sg) || (esgst.settings.ch_st && esgst.st)) {
+                    if (esgst.ch) {
                         saveChComment(Match[3], Date.now());
                     }
                     if (DEDCallback) {
@@ -2961,7 +2986,7 @@
                     makeRequest(Data, Match[1], DEDStatus, function (Response) {
                         Callback();
                         Match = Response.finalUrl.match(/(.+?)(#(.+))?$/);
-                        if ((esgst.settings.ch_sg && esgst.sg) || (esgst.settings.ch_st && esgst.st)) {
+                        if (esgst.ch) {
                             saveChComment(Match[3], Date.now());
                         }
                         if (DEDCallback) {
@@ -2985,7 +3010,7 @@
                 if (ResponseJSON.success) {
                     Callback();
                     var id = DOM.parse(ResponseJSON.html).getElementsByClassName("comment_outer")[0].id;
-                    if ((esgst.settings.ch_sg && esgst.sg) || (esgst.settings.ch_st && esgst.st)) {
+                    if (esgst.ch) {
                         saveChComment(id, Date.now());
                     }
                     if (DEDCallback) {
@@ -5865,6 +5890,22 @@ min-width: 0;
             esgst.endlessFeatures.push(addCtDiscussionPanels);
             addCtDiscussionPanels(document);
         }
+       if (esgst.commentsPath && !esgst.ct) {
+            createLock(`commentLock`, 300, function (deleteLock) {
+                var savedComments = JSON.parse(GM_getValue(`comments`));
+                var match = window.location.pathname.match(/(giveaway|discussion|ticket|trade)\/(.+?)\//);
+                var type = `${match[1]}s`;
+                var code = match[2];
+                if (!savedComments[type][code]) {
+                    savedComments[type][code] = {
+                        comments: {}
+                    };
+                }
+                savedComments[type][code].visited = true;
+                GM_setValue(`comments`, JSON.stringify(savedComments));
+                deleteLock();
+            });
+        }
         esgst.endlessFeatures.push(checkGdtttVisited);
         checkGdtttVisited(document);
     }
@@ -6834,9 +6875,9 @@ min-width: 0;
 
     function filterGfGiveaways() {
         var context, count, element, elements, filtered, genres, giveaway, i, j, k, key, maxKey, minKey, n, n2, n3, name;
-        for (i = 0, n = esgst.giveaways.length; i < n; ++i) {
+        for (i = 0, n = esgst.currentGiveaways.length; i < n; ++i) {
             filtered = false;
-            giveaway = esgst.giveaways[i];
+            giveaway = esgst.currentGiveaways[i];
             if (!esgst.gf.advancedSearch && ((giveaway.pinned && !esgst.gf.exceptionPinned) || (giveaway.regionRestricted && ((esgst.gf.exceptionRegionRestricted && esgst.gf.advancedSearch) || !esgst.gf.exceptionRegionRestricted)) || (giveaway.group && !esgst.gf.exceptionGroup) || (giveaway.whitelist && !esgst.gf.exceptionWhitelist) || (giveaway.wishlisted && !esgst.gf.exceptionWishlist) || ((giveaway.copies > esgst.gf.exceptionMultipleCopies) && !esgst.gf.exceptionMultiple) || (!giveaway.pinned && !giveaway.regionRestricted && !giveaway.group && !giveaway.whitelist && !giveaway.wishlisted && (giveaway.copies <= esgst.gf.exceptionMultipleCopies)))) {
                 for (j = 0, n2 = esgst.gf.basicFilters.length; !filtered && j < n2; ++j) {
                     name = esgst.gf.basicFilters[j].name;
@@ -7610,7 +7651,7 @@ ${avatar.outerHTML}
             </div>
         `);
         button.addEventListener(`click`, function () {
-            esgst.giveaways.sort(function (a, b) {
+            esgst.currentGiveaways.sort(function (a, b) {
                 if (a.chance > b.chance) {
                     return -1;
                 } else if (a.chance < b.chance) {
@@ -7619,8 +7660,8 @@ ${avatar.outerHTML}
                     return 0;
                 }
             });
-            for (i = 0, n = esgst.giveaways.length; i < n; ++i) {
-                esgst.giveaways[i].outerWrap.parentElement.appendChild(esgst.giveaways[i].outerWrap);
+            for (i = 0, n = esgst.currentGiveaways.length; i < n; ++i) {
+                esgst.currentGiveaways[i].outerWrap.parentElement.appendChild(esgst.currentGiveaways[i].outerWrap);
             }
         });
     }
@@ -7729,7 +7770,7 @@ ${avatar.outerHTML}
 
     function loadElgb() {
         esgst.giveawayFeatures.push(addElgbButtons);
-        esgst.elgbCallback = esgst.settings.elgb_d ? checkElgbDescription : enterElgbGiveaway;
+        esgst.elgbCallback = esgst.elgb_d ? checkElgbDescription : enterElgbGiveaway;
     }
 
     function addElgbButtons(giveaways, main) {
@@ -7893,8 +7934,8 @@ ${avatar.outerHTML}
 
     function updateElgbButtons() {
         var giveaway, i, n;
-        for (i = 0, n = esgst.giveaways.length; i < n; ++i) {
-            giveaway = esgst.giveaways[i];
+        for (i = 0, n = esgst.currentGiveaways.length; i < n; ++i) {
+            giveaway = esgst.currentGiveaways[i];
             if (giveaway.elgbButton && !giveaway.entered) {
                 addElgbButton(giveaway);
             }
@@ -20054,7 +20095,7 @@ ${Results.join(``)}
             NAMWC.Users.push(NAMWC.User.Username);
             checkNAMWCUsers(NAMWC, 0, 1, Callback);
         } else {
-            for (Username in esgst.users) {
+            for (Username in esgst.currentUsers) {
                 if (Username != esgst.username) {
                     if (NAMWC.Users.length < 26) {
                         NAMWC.Users.push(Username);
@@ -20199,10 +20240,10 @@ ${Results.join(``)}
         }
     }
 
-    function highlightNamwcUsers(currentUsers, savedUsers) {
+    function highlightNamwcUsers(currentUsers) {
         var container, context, highlight, html, i, icon, id, key, matches, n, notActivated, results, savedUser, title;
-        for (key in savedUsers.users) {
-            savedUser = savedUsers.users[key];
+        for (key in esgst.users.users) {
+            savedUser = esgst.users.users[key];
             if (esgst.sg) {
                 id = savedUser.username;
             } else {
@@ -20756,7 +20797,7 @@ ${Results.join(``)}
             WBC.Users.push(WBC.User.Username);
             checkWBCUsers(WBC, 0, 1, Callback);
         } else {
-            for (Username in esgst.users) {
+            for (Username in esgst.currentUsers) {
                 if (Username != WBC.Username) {
                     WBC.Users.push(Username);
                 }
@@ -21153,10 +21194,10 @@ ${Results.join(``)}
         }
     }
 
-    function addWbcIcons(currentUsers, savedUsers) {
+    function addWbcIcons(currentUsers) {
         var container, context, html, i, id, key, lastChecked, matches, n, result, savedUser;
-        for (key in savedUsers.users) {
-            savedUser = savedUsers.users[key];
+        for (key in esgst.users.users) {
+            savedUser = esgst.users.users[key];
             id = esgst.sg ? savedUser.username : key;
             if (currentUsers[id] && savedUser.wbc) {
                 result = savedUser.wbc.result;
@@ -21189,10 +21230,10 @@ ${Results.join(``)}
         }
     }
 
-    function addWbhIcons(currentUsers, savedUsers) {
+    function addWbhIcons(currentUsers) {
         var container, context, html, i, icon, id, key, matches, n, savedUser, status, title;
-        for (key in savedUsers.users) {
-            savedUser = savedUsers.users[key];
+        for (key in esgst.users.users) {
+            savedUser = esgst.users.users[key];
             id = esgst.sg ? savedUser.username : key;
             if (currentUsers[id] && (savedUser.whitelisted || savedUser.blacklisted)) {
                 if (savedUser.whitelisted) {
@@ -21353,14 +21394,14 @@ ${Results.join(``)}
 
     /* [IBH] Inbox Winners Highlighter */
 
-    function loadIbh() {
+    function loadIwh() {
         if (esgst.winnersPath || esgst.inboxPath) {
-            esgst.endlessFeatures.push(getIbhUsers);
-            getIbhUsers(document);
+            esgst.endlessFeatures.push(getIwhUsers);
+            getIwhUsers(document);
         }
     }
 
-    function getIbhUsers(context) {
+    function getIwhUsers(context) {
         var className;
         var callback;
         if (esgst.winnersPath) {
@@ -21781,8 +21822,8 @@ ${Results.join(``)}
         var category, categories, giveaway, i, id, j, n, numCategories;
         if (gc.count === total) {
             categories = [`bundled`, `tradingCards`, `achievements`, `multiplayer`, `steamCloud`, `linux`, `mac`, `dlc`, `genres`];
-            for (i = 0, n = esgst.giveaways.length; i < n; ++i) {
-                giveaway = esgst.giveaways[i];
+            for (i = 0, n = esgst.currentGiveaways.length; i < n; ++i) {
+                giveaway = esgst.currentGiveaways[i];
                 if (!giveaway.gcReady) {
                     for (j = 0, numCategories = categories.length; j < numCategories; ++j) {
                         id = categories[j];
@@ -22135,7 +22176,7 @@ ${Results.join(``)}
         MT.Tag = Context.getElementsByClassName("MTTag")[0];
         MTUsersCheckbox = createCheckbox(MTUsers);
         MTGamesCheckbox = createCheckbox(MTGames);
-        setMTCheckboxes(MTUsers, MTUsersCheckbox.Checkbox, esgst.users, "User", "beforeBegin", "previousElementSibling", MT);
+        setMTCheckboxes(MTUsers, MTUsersCheckbox.Checkbox, esgst.currentUsers, "User", "beforeBegin", "previousElementSibling", MT);
         setMTCheckboxes(MTGames, MTGamesCheckbox.Checkbox, esgst.games, "Game", "afterBegin", "firstElementChild", MT);
         setMTSelect(MTAll, MT, "check");
         setMTSelect(MTNone, MT, "uncheck");
@@ -23082,9 +23123,9 @@ Background: <input type="color" value="${bgColor}">
             addColorObserver(bgColorContext, Feature.id, `bgColor`);
             bgColorContext.nextElementSibling.addEventListener(`click`, function () {
                 colorContext.value = esgst.defaultValues[`${Feature.id}_color`];
-                GM_setValue(`${Feature.id}_color`, colorContext.value);
+                setValue(`${Feature.id}_color`, colorContext.value);
                 bgColorContext.value = esgst.defaultValues[`${Feature.id}_bgColor`];
-                GM_setValue(`${Feature.id}_bgColor`, bgColorContext.value);
+                setValue(`${Feature.id}_bgColor`, bgColorContext.value);
             });
             if (siwtchSg) {
                 siwtchSg.dependencies.push(SMFeatures);
@@ -23153,7 +23194,7 @@ Background: <input type="color" value="${bgColor}">
 
     function addColorObserver(context, id, key) {
         context.addEventListener(`change`, function () {
-            GM_setValue(`${id}_${key}`, context.value);
+            setValue(`${id}_${key}`, context.value);
         });
     }
 
@@ -24084,7 +24125,7 @@ Background: <input type="color" value="${bgColor}">
         giveaways = getGiveaways(context, main);
         if (main) {
             for (i = 0, n = giveaways.length; i < n; ++i) {
-                esgst.giveaways.push(giveaways[i]);
+                esgst.currentGiveaways.push(giveaways[i]);
             }
         }
         for (i = 0, n = esgst.giveawayFeatures.length; i < n; ++i) {
@@ -24547,15 +24588,15 @@ Background: <input type="color" value="${bgColor}">
         esgst.userFeatures.push(getUtTags);
     }
 
-    function getUtTags(currentUsers, savedUsers) {
+    function getUtTags(currentUsers) {
         var key, i, n, steamId, user, username;
         for (key in currentUsers) {
-            steamId = esgst.sg ? savedUsers.steamIds[key] : key;
-            username = esgst.sg ? key : savedUsers.users[key] && savedUsers.users[key].username;
+            steamId = esgst.sg ? esgst.users.steamIds[key] : key;
+            username = esgst.sg ? key : esgst.users.users[key] && esgst.users.users[key].username;
             for (i = 0, n = currentUsers[key].length; i < n; ++i) {
                 addPUTButton(currentUsers[key][i], steamId, username, key);
             }
-            user = esgst.sg ? steamId && savedUsers.users[steamId] : savedUsers.users[key];
+            user = esgst.sg ? steamId && esgst.users.users[steamId] : esgst.users.users[key];
             if (user && user.tags) {
                 addPUTTags(key, user.tags);
             }
@@ -24618,7 +24659,7 @@ Background: <input type="color" value="${bgColor}">
 
     function addPUTTags(UserID, Tags) {
         var Matches, Prefix, Suffix, HTML, I, N, Context, Container;
-        Matches = esgst.users[UserID];
+        Matches = esgst.currentUsers[UserID];
         Prefix = "<span class=\"global__image-outer-wrap author_avatar is_icon\">";
         Suffix = "</span>";
         if (Tags.length && Tags[0]) {
@@ -24655,21 +24696,20 @@ Background: <input type="color" value="${bgColor}">
             if (match) {
                 id = match[1];
                 if (((esgst.sg && element.textContent === id) || (!esgst.sg && element.textContent && !element.children.length)) && !element.closest(`.markdown`)) {
-                    if (!esgst.users[id]) {
-                        esgst.users[id] = [];
+                    if (!esgst.currentUsers[id]) {
+                        esgst.currentUsers[id] = [];
                     }
                     if (!currentUsers[id]) {
                         currentUsers[id] = [];
                     }
-                    esgst.users[id].push(element);
+                    esgst.currentUsers[id].push(element);
                     currentUsers[id].push(element);
                 }
             }
         }
         if (Object.keys(currentUsers).length) {
-            savedUsers = JSON.parse(GM_getValue(`users`));
             for (i = 0, n = esgst.userFeatures.length; i < n; ++i) {
-                esgst.userFeatures[i](currentUsers, savedUsers);
+                esgst.userFeatures[i](currentUsers);
             }
         }
     }

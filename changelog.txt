@@ -1,4 +1,12 @@
 /*
+ * July 9, 2017 - v6.Beta.16.1
+ */
+
+* Fixed a bug that was not saving color settings.
+* Fixed a bug that was enabling the option to pop up giveaway descriptions even if it was disabled in Enter/Leave Giveaway Button.
+* Fixed a bug that was not marking things as visited in Giveaways/Discussions/Tickets/Trades Tracker if Comment Tracker was disabled (closes #230).
+
+/*
  * July 9, 2017 - v6.Beta.16.0
  */
 
