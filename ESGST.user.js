@@ -3,7 +3,7 @@
 // @namespace ESGST
 // @description Enhances SteamGifts and SteamTrades by adding some cool features to them.
 // @icon https://github.com/revilheart/ESGST/raw/master/Resources/esgstIcon.ico
-// @version 6.Beta.16.5
+// @version 6.Beta.16.6
 // @author revilheart
 // @downloadURL https://github.com/revilheart/ESGST/raw/master/ESGST.user.js
 // @updateURL https://github.com/revilheart/ESGST/raw/master/ESGST.meta.js
@@ -2194,8 +2194,15 @@
                             sg: true
                         },
                         {
+                            features: [
+                                {
+                                    id: `gc_r_s`,
+                                    name: `Show the percentage and number of reviews next to the icon.`,
+                                    sg: true
+                                }
+                            ],
                             id: `gc_r`,
-                            name: `Rating (Slower)`,
+                            name: `Rating`,
                             sg: true
                         },
                         {
@@ -2282,7 +2289,7 @@
                             features: [
                                 {
                                     id: `gc_g_udt`,
-                                    name: `User-Defined Tags (Slower)`,
+                                    name: `User-Defined Tags`,
                                     sg: true
                                 }
                             ],
@@ -4646,14 +4653,17 @@ color: #fff !important;
 }
 
 .esgst-gc.rating.positive {
+color: #fff !important;
 background-color: #66c0f4;
 }
 
 .esgst-gc.rating.negative {
+color: #fff !important;
 background-color: #a34c25;
 }
 
 .esgst-gc.rating.mixed {
+color: #fff !important;
 background-color: #b9a074;
 }
 
@@ -22204,7 +22214,20 @@ ${Results.join(``)}
                         } else {
                             icon = `fa-thumbs-down`;
                         }
-                        text = `<i class="fa ${icon}" title="${savedGames.rating.count}"></i>`;
+                        text = `
+                            <span title="${savedGames.rating.count}">
+                                <i class="fa ${icon}" title="${savedGames.rating.count}"></i>
+                        `;
+                        if (esgst.gc_r_s) {
+                            text += `
+                                    <span>${savedGames.rating.count}</span>
+                                </span>
+                            `;
+                        } else {
+                            text += `
+                                </span>
+                            `;
+                        }
                         category.key += ` ${savedGames.rating.type}`;
                     } else if (esgst.gc_s) {
                         if (esgst.gc_s_i && category.icon) {

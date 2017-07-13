@@ -1,4 +1,10 @@
 /*
+ * July 13, 2017 - v6.Beta.16.6
+ */
+
+* Added an option to Game Categories to show the percentage and number of reviews next to the icon in the rating category (closes #236).
+
+/*
  * July 13, 2017 - v6.Beta.16.5
  */
 
