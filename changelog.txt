@@ -1,4 +1,11 @@
 /*
+ * July 13, 2017 - v6.Beta.16.5
+ */
+
+* Fixed a bug that was exporting the old group storage instead of the v6 one.
+* Fixed a bug in Giveaway Filters for the new giveaways page.
+
+/*
  * July 13, 2017 - v6.Beta.16.4
  */
 

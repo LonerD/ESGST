@@ -3,7 +3,7 @@
 // @namespace ESGST
 // @description Enhances SteamGifts and SteamTrades by adding some cool features to them.
 // @icon https://github.com/revilheart/ESGST/raw/master/Resources/esgstIcon.ico
-// @version 6.Beta.16.4
+// @version 6.Beta.16.5
 // @author revilheart
 // @downloadURL https://github.com/revilheart/ESGST/raw/master/ESGST.user.js
 // @updateURL https://github.com/revilheart/ESGST/raw/master/ESGST.meta.js
@@ -669,6 +669,41 @@
                 gf_exceptionRegionRestrictedRecommended: false,
                 gf_exceptionMultipleRecommended: false,
                 gf_exceptionMultipleCopiesRecommended: 1,
+                gf_minLevelNew: 0,
+                gf_maxLevelNew: 10,
+                gf_minEntriesNew: 0,
+                gf_maxEntriesNew: 999999999,
+                gf_minCopiesNew: 1,
+                gf_maxCopiesNew: 999999999,
+                gf_minPointsNew: 0,
+                gf_maxPointsNew: 100,
+                gf_minChanceNew: 0,
+                gf_maxChanceNew: 100,
+                gf_minRatingNew: 0,
+                gf_maxRatingNew: 100,
+                gf_pinnedNew: `enabled`,
+                gf_groupNew: `enabled`,
+                gf_whitelistNew: `enabled`,
+                gf_regionRestrictedNew: `enabled`,
+                gf_createdNew: `enabled`,
+                gf_enteredNew: `enabled`,
+                gf_bundledNew: `enabled`,
+                gf_tradingCardsNew: `enabled`,
+                gf_achievementsNew: `enabled`,
+                gf_multiplayerNew: `enabled`,
+                gf_steamCloudNew: `enabled`,
+                gf_linuxNew: `enabled`,
+                gf_macNew: `enabled`,
+                gf_dlcNew: `enabled`,
+                gf_genresNew: false,
+                gf_genreListNew: ``,
+                gf_exceptionPinnedNew: false,
+                gf_exceptionWishlistNew: false,
+                gf_exceptionGroupNew: false,
+                gf_exceptionWhitelistNew: false,
+                gf_exceptionRegionRestrictedNew: false,
+                gf_exceptionMultipleNew: false,
+                gf_exceptionMultipleCopiesNew: 1,
                 gf_minLevelGroup: 0,
                 gf_maxLevelGroup: 10,
                 gf_minEntriesGroup: 0,
@@ -22704,7 +22739,7 @@ ${Results.join(``)}
                     users:  `U`,
                     games: `G`,
                     giveaways: `GG`,
-                    Groups: "GP",
+                    groups: "GP",
                     comments: "C",
                     Emojis: "E",
                     Rerolls: "R",
@@ -22827,7 +22862,7 @@ ${Results.join(``)}
                 },
                 Description: "Groups data.",
                 Title: "Includes groups data.",
-                Name: "Groups",
+                Name: "groups",
                 Key: "GP",
                 ID: "SM_GP"
             }, {
