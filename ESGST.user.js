@@ -3,7 +3,7 @@
 // @namespace ESGST
 // @description Enhances SteamGifts and SteamTrades by adding some cool features to them.
 // @icon https://github.com/revilheart/ESGST/raw/master/Resources/esgstIcon.ico
-// @version 6.Beta.16.1
+// @version 6.Beta.16.2
 // @author revilheart
 // @downloadURL https://github.com/revilheart/ESGST/raw/master/ESGST.user.js
 // @updateURL https://github.com/revilheart/ESGST/raw/master/ESGST.meta.js
@@ -76,7 +76,6 @@
                     createAlert(`You are not using the latest ESGST version. Please update before reporting any bugs and make sure the bugs still exist in the latest version.`);
                 }
             }
-            checkNewVersion();
             style = ``;
             if (esgst.sg) {
                 esgst.pageOuterWrapClass = `page__outer-wrap`;
@@ -787,32 +786,32 @@
                 Rerolls: [],
                 StickiedGroups: [],
                 Templates: [],
-                Winners: {},
-                users: `
-                    {
-                        steamIds: {},
-                        users: {}
-                    }
-                `,
-                groups: `{}`,
-                comments: `
-                    {
-                        giveaways: {
-                            comments: {}
-                        },
-                        discussions: {
-                            comments: {}
-                        },
-                        tickets: {
-                            comments: {}
-                        },
-                        trades: {
-                            comments: {}
-                        },
-                    }
-                `,
-                giveaways: `{}`
+                Winners: {}
             };
+            esgst.users = JSON.parse(GM_getValue(`users`, `
+                {
+                    steamIds: {},
+                    users: {}
+                }
+            `));
+            esgst.groups = JSON.parse(GM_getValue(`groups`, `{}`));
+            esgst.comments = JSON.parse(GM_getValue(`comments`, `
+                {
+                    giveaways: {
+                        comments: {}
+                    },
+                    discussions: {
+                        comments: {}
+                    },
+                    tickets: {
+                        comments: {}
+                    },
+                    trades: {
+                        comments: {}
+                    },
+                }
+            `));
+            esgst.giveaways = JSON.parse(GM_getValue(`giveaways`, `{}`));
             esgst.values = {};
             esgst.features = [
                 {
@@ -2354,14 +2353,18 @@
             for (var key in esgst.defaultValues) {
                 esgst[key] = getValue(key);
             }
-                esgst.users = JSON.parse(esgst.users);
             addStyles();
             esgst.toExecute = [];
             for (i = 0, n = esgst.features.length; i < n; ++i) {
                 loadFeature(esgst.features[i]);
             }
+                delete esgst.settings.users;
+                delete esgst.settings.comments;
+                delete esgst.settings.giveaways;
+                delete esgst.settings.groups;
             GM_setValue(`settings`, JSON.stringify(esgst.settings));
             addHeaderMenu();
+            checkNewVersion();
             for (i = 0, n = esgst.toExecute.length; i < n; ++i) {
                 esgst.toExecute[i]();
             }
@@ -2674,15 +2677,24 @@
 
     /* User Saving System */
 
-    function getUser(savedUsers, steamId, username) {
+    function getUser(savedUsers, user) {
+        var savedUser, steamId;
         if (!savedUsers) {
             savedUsers = JSON.parse(GM_getValue(`users`));
         }
-        if (steamId) {
-            return savedUsers.users[steamId];
-        } else if (username) {
-            steamId = savedUsers.steamIds[username];
+        if (user.steamId) {
+            savedUser = savedUsers.users[user.steamId];
+            if (savedUser) {
+                user.id = savedUser.id;
+                user.username = savedUser.username;
+                return savedUser;
+            } else {
+                return null;
+            }
+        } else if (user.username) {
+            steamId = savedUsers.steamIds[user.username];
             if (steamId) {
+                user.steamId = steamId;
                 return savedUsers.users[steamId];
             } else {
                 return null;
@@ -2697,7 +2709,7 @@
         if (!savedUsers) {
             savedUsers = JSON.parse(GM_getValue(`users`));
         }
-        savedUser = getUser(savedUsers, user.steamId, user.username);
+        savedUser = getUser(savedUsers, user);
         if (savedUser) {
             if (list) {
                 if (!user.steamId) {
@@ -2772,7 +2784,7 @@
     function addAndSaveUser(user, callback, deleteLock) {
         var key, savedUser, savedUsers;
         savedUsers = JSON.parse(GM_getValue(`users`));
-        savedUser = getUser(savedUsers, user.steamId, user.username);
+        savedUser = getUser(savedUsers, user);
         if (!savedUser) {
             savedUsers.users[user.steamId] = {};
         }
@@ -2886,7 +2898,7 @@
         savedUsers = JSON.parse(GM_getValue(`users`));
         for (i = 0, n = list.new.length; i < n; ++i) {
             user = list.new[i];
-            savedUser = getUser(savedUsers, user.steamId, user.username);
+            savedUser = getUser(savedUsers, user);
             if (!savedUser) {
                 savedUsers.users[user.steamId] = {};
             }
@@ -3430,16 +3442,6 @@
 
     /* Lock */
 
-    function doLock(lock) {
-        GM_setValue(lock.key, JSON.stringify({
-            timestamp: Date.now(),
-            uuid: lock.uuid
-        }));
-        if (lock.continue) {
-            window.setTimeout(doLock, lock.threshold / 2, lock);
-        }
-    }
-
     function createUuid(c) {
         var r, v;
         r = Math.random() * 16 | 0;
@@ -3462,19 +3464,19 @@
     function checkLock(lock) {
         var locked;
         locked = JSON.parse(GM_getValue(lock.key, `{}`));
-        if (!locked || !locked.uuid || locked.timestamp < Date.now() - lock.threshold) {
-            doLock(lock);
+        if (!locked || !locked.uuid || locked.timestamp < Date.now() - (lock.threshold + 1000)) {
+            GM_setValue(lock.key, JSON.stringify({
+                timestamp: Date.now(),
+                uuid: lock.uuid
+            }));
             window.setTimeout(function () {
                 locked = JSON.parse(GM_getValue(lock.key, `{}`));
                 if (locked && locked.uuid === lock.uuid) {
-                    lock.continue = true;
-                    window.setTimeout(doLock, lock.threshold / 2, lock);
-                    lock.callback(function () {
-                        lock.continue = false;
-                        GM_deleteValue(lock.key);
+                    window.setTimeout(lock.callback, 0, function () {
+                        GM_setValue(lock.key, `{}`);
                     });
                 } else {
-                    checkLock(lock);
+                    window.setTimeout(checkLock, 0, lock);
                 }
             }, lock.threshold / 2);
         } else {
@@ -9357,7 +9359,7 @@ ${avatar.outerHTML}
                                         });
                                     });
                                 } else if (SANM) {
-                                    var savedUser = getUser(null, user.steamId, user.username);
+                                    var savedUser = getUser(null, user);
                                     if (SW && savedUser && savedUser.whitelisted) {
                                         sendUGSGift(UGS, Winners, Keys, I, J, N, Callback);
                                     } else {
@@ -19654,7 +19656,7 @@ ${Results.join(``)}
         createButton(Popup.Button, "fa-bar-chart", "Get Data", "fa-times-circle", "Cancel", function (Callback) {
             UGD.Canceled = false;
             UGDButton.classList.add("rhBusy");
-            var savedUser = getUser(null, user.steamId, user.username), ugd;
+            var savedUser = getUser(null, user), ugd;
             if (savedUser) {
                 ugd = savedUser.ugd;
             }
@@ -20123,7 +20125,7 @@ ${Results.join(``)}
                     id: User.ID,
                     username: User.Username
                 };
-                var savedUser = getUser(null, user.steamId, user.username), namwc;
+                var savedUser = getUser(null, user), namwc = null;
                 if (savedUser) {
                     namwc = savedUser.namwc;
                 }
@@ -20370,7 +20372,7 @@ ${Results.join(``)}
             id: profile.id,
             username: profile.username
         };
-        var savedUser = getUser(null, user.steamId, user.username), nrf;
+        var savedUser = getUser(null, user), nrf;
         if (savedUser) {
             nrf = savedUser.nrf;
         }
@@ -20828,7 +20830,7 @@ ${Results.join(``)}
                     id: User.ID,
                     username: User.Username
                 };
-                var savedUser = getUser(null, user.steamId, user.username), notes, whitelisted, blacklisted, wbc;
+                var savedUser = getUser(null, user), notes, whitelisted, blacklisted, wbc;
                 if (savedUser) {
                     notes = savedUser.notes;
                     whitelisted = savedUser.whitelisted;
@@ -24249,7 +24251,9 @@ Background: <input type="color" value="${bgColor}">
         }
         giveaway.created = giveaway.creator === esgst.username;
         if (esgst.uf && esgst.giveawaysPath && savedUsers) {
-            savedUser = getUser(savedUsers, null, giveaway.creator);
+            savedUser = getUser(savedUsers, {
+                username: giveaway.creator
+            });
             if (savedUser) {
                 uf = savedUser.uf;
                 if (esgst.uf_g && savedUser.blacklisted && !uf) {
@@ -24388,7 +24392,9 @@ Background: <input type="color" value="${bgColor}">
                 discussion.createdTime = parseInt(discussion.created.getAttribute(`data-timestamp`)) * 1e3;
                 discussion.author = discussion.created.nextElementSibling.textContent;
                 if (esgst.uf && savedUsers) {
-                    savedUser = getUser(savedUsers, null, discussion.author);
+                    savedUser = getUser(savedUsers, {
+                        username: discussion.author
+                    });
                     if (savedUser) {
                         uf = savedUser.uf;
                         if (esgst.uf_d && savedUser.blacklisted && !uf) {
@@ -24450,7 +24456,9 @@ Background: <input type="color" value="${bgColor}">
         comment.comment = context;
         comment.author = comment.comment.querySelector(`.comment__author, .author_name`).textContent.trim();
                 if (esgst.uf && savedUsers) {
-                    var savedUser = getUser(savedUsers, null, comment.author);
+                    var savedUser = getUser(savedUsers, {
+                        username: comment.author
+                    });
                     if (savedUser) {
                         var uf = savedUser.uf, comments, extraCount;
                         if (esgst.uf_p && savedUser.blacklisted && !uf) {
@@ -24648,7 +24656,7 @@ Background: <input type="color" value="${bgColor}">
             });
             Popup.popUp(function () {
                 var savedUser;
-                savedUser = getUser(null, user.steamId, user.username);
+                savedUser = getUser(null, user);
                 Popup.TextInput.focus();
                 if (savedUser && savedUser.tags) {
                     Popup.TextInput.value = savedUser.tags.join(`, `);

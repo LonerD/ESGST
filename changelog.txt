@@ -1,4 +1,11 @@
 /*
+ * July 9, 2017 - v6.Beta.16.2
+ */
+
+* Fixed some bugs and made more optimizations.
+* Fixed a bug that was not showing the changelog when updating (closes #233).
+
+/*
  * July 9, 2017 - v6.Beta.16.1
  */
 
