@@ -1,12 +1,18 @@
 /*
- * July 9, 2017 - v6.Beta.16.2
+ * July 13, 2017 - v6.Beta.16.3
+ */
+
+* Fixed a bug in Whitelist/Blacklist Checker that was happening when trying to return whitelists/blacklists.
+
+/*
+ * July 13, 2017 - v6.Beta.16.2
  */
 
 * Fixed some bugs and made more optimizations.
 * Fixed a bug that was not showing the changelog when updating (closes #233).
 
 /*
- * July 9, 2017 - v6.Beta.16.1
+ * July 12, 2017 - v6.Beta.16.1
  */
 
 * Fixed a bug that was not saving color settings.
@@ -14,7 +20,7 @@
 * Fixed a bug that was not marking things as visited in Giveaways/Discussions/Tickets/Trades Tracker if Comment Tracker was disabled (closes #230).
 
 /*
- * July 9, 2017 - v6.Beta.16.0
+ * July 10, 2017 - v6.Beta.16.0
  */
 
 * Moved Giveaway/Discussions/Tickets/Trades Tracker to General.
@@ -26,13 +32,13 @@ Added a new feature:
 * Removed Game Redirecter
 
 /*
- * July 9, 2017 - v6.Beta.15.3
+ * July 10, 2017 - v6.Beta.15.3
  */
 
 * Fixed a sync bug.
 
 /*
- * July 9, 2017 - v6.Beta.15.2
+ * July 10, 2017 - v6.Beta.15.2
  */
 
 * Fixed a bug.
