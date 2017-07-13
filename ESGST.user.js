@@ -3,7 +3,7 @@
 // @namespace ESGST
 // @description Enhances SteamGifts and SteamTrades by adding some cool features to them.
 // @icon https://github.com/revilheart/ESGST/raw/master/Resources/esgstIcon.ico
-// @version 6.Beta.16.3
+// @version 6.Beta.16.4
 // @author revilheart
 // @downloadURL https://github.com/revilheart/ESGST/raw/master/ESGST.user.js
 // @updateURL https://github.com/revilheart/ESGST/raw/master/ESGST.meta.js
@@ -574,6 +574,8 @@
                 gf_maxPoints: 100,
                 gf_minChance: 0,
                 gf_maxChance: 100,
+                gf_minRating: 0,
+                gf_maxRating: 100,
                 gf_pinned: `enabled`,
                 gf_group: `enabled`,
                 gf_whitelist: `enabled`,
@@ -607,6 +609,8 @@
                 gf_maxPointsWishlist: 100,
                 gf_minChanceWishlist: 0,
                 gf_maxChanceWishlist: 100,
+                gf_minRatingWishlist: 0,
+                gf_maxRatingWishlist: 100,
                 gf_pinnedWishlist: `enabled`,
                 gf_groupWishlist: `enabled`,
                 gf_whitelistWishlist: `enabled`,
@@ -640,6 +644,8 @@
                 gf_maxPointsRecommended: 100,
                 gf_minChanceRecommended: 0,
                 gf_maxChanceRecommended: 100,
+                gf_minRatingRecommended: 0,
+                gf_maxRatingRecommended: 100,
                 gf_pinnedRecommended: `enabled`,
                 gf_groupRecommended: `enabled`,
                 gf_whitelistRecommended: `enabled`,
@@ -673,6 +679,8 @@
                 gf_maxPointsGroup: 300,
                 gf_minChanceGroup: 0,
                 gf_maxChanceGroup: 100,
+                gf_minRatingGroup: 0,
+                gf_maxRatingGroup: 100,
                 gf_pinnedGroup: `enabled`,
                 gf_groupGroup: `enabled`,
                 gf_whitelistGroup: `enabled`,
@@ -706,6 +714,8 @@
                 gf_maxPointsGroups: 100,
                 gf_minChanceGroups: 0,
                 gf_maxChanceGroups: 100,
+                gf_minRatingGroups: 0,
+                gf_maxRatingGroups: 100,
                 gf_pinnedGroups: `enabled`,
                 gf_groupGroups: `enabled`,
                 gf_whitelistGroups: `enabled`,
@@ -758,6 +768,7 @@
                 gc_l_color: `#ffffff`,
                 gc_m_color: `#ffffff`,
                 gc_dlc_color: `#ffffff`,
+                gc_p_color: `#ffffff`,
                 gc_g_color: `#ffffff`,
                 gc_b_bgColor: `#641e16`,
                 gc_o_bgColor: `#16a085`,
@@ -770,6 +781,7 @@
                 gc_l_bgColor: `#f39c12`,
                 gc_m_bgColor: `#d35400`,
                 gc_dlc_bgColor: `#8e44ad`,
+                gc_p_bgColor: `#8e44ad`,
                 gc_g_bgColor: `#7f8c8d`,
                 wbh_w_color: `#ffffff`,
                 wbh_w_bgColor: `#228b22`,
@@ -790,24 +802,24 @@
             };
             esgst.users = JSON.parse(GM_getValue(`users`, `
                 {
-                    steamIds: {},
-                    users: {}
+                    "steamIds": {},
+                    "users": {}
                 }
             `));
             esgst.groups = JSON.parse(GM_getValue(`groups`, `{}`));
             esgst.comments = JSON.parse(GM_getValue(`comments`, `
                 {
-                    giveaways: {
-                        comments: {}
+                    "giveaways": {
+                        "comments": {}
                     },
-                    discussions: {
-                        comments: {}
+                    "discussions": {
+                        "comments": {}
                     },
-                    tickets: {
-                        comments: {}
+                    "tickets": {
+                        "comments": {}
                     },
-                    trades: {
-                        comments: {}
+                    "trades": {
+                        "comments": {}
                     },
                 }
             `));
@@ -2222,6 +2234,12 @@
                             colors: true,
                             id: `gc_dlc`,
                             name: `DLC`,
+                            sg: true
+                        },
+                        {
+                            colors: true,
+                            id: `gc_p`,
+                            name: `Package`,
                             sg: true
                         },
                         {
@@ -4219,6 +4237,11 @@
                 mainKey: `esgst-gc`
             },
             {
+                id: `gc_p`,
+                key: `package`,
+                mainKey: `esgst-gc`
+            },
+            {
                 id: `gc_g`,
                 key: `genres`,
                 mainKey: `esgst-gc`
@@ -5666,7 +5689,11 @@ min-width: 0;
 
     function addLplDiscussionLink() {
         var lastLink, url;
-        esgst.lastPage = 999999999;
+        if (esgst.pagination) {
+            esgst.lastPage = Math.ceil(parseInt(esgst.pagination.firstElementChild.lastElementChild.textContent.replace(/,/g, ``)) / 25);
+        } else {
+            esgst.lastPage = 999999999;
+        }
         url = `${window.location.pathname.replace(`/search`, ``)}/search?page=${esgst.lastPage}`;
         esgst.lastPageLink = `
             <a data-page-number="${esgst.lastPage}" href="${url}">
@@ -5892,7 +5919,7 @@ min-width: 0;
             esgst.endlessFeatures.push(addCtDiscussionPanels);
             addCtDiscussionPanels(document);
         }
-       if (esgst.commentsPath && !esgst.ct) {
+        if (esgst.commentsPath && !esgst.ct) {
             createLock(`commentLock`, 300, function (deleteLock) {
                 var savedComments = JSON.parse(GM_getValue(`comments`));
                 var match = window.location.pathname.match(/(giveaway|discussion|ticket|trade)\/(.+?)\//);
@@ -6544,6 +6571,11 @@ min-width: 0;
                     minValue: 0,
                     maxValue: 100,
                     step: 0.01
+                },
+                {
+                    name: `Rating`,
+                    minValue: 0,
+                    maxValue: 100
                 }
             ],
             typeFilters: [
@@ -6614,6 +6646,11 @@ min-width: 0;
                     key: `dlc`
                 },
                 {
+                    id: `gc_p`,
+                    name: `Package`,
+                    key: `package`
+                },
+                {
                     id: `gc_g`,
                     name: `Genres`,
                     key: `genres`
@@ -6661,7 +6698,7 @@ min-width: 0;
                                 <strong>Type Filters:</strong>
                             </div>
                         </div>
-                        <div class="esgst-gf-category-filters">
+                        <div class="esgst-hidden esgst-gf-category-filters">
                             <div>
                                 <strong>Category Filters:</strong>
                             </div>
@@ -6723,6 +6760,7 @@ min-width: 0;
             }
         }
         if (esgst.gc) {
+            categoryFilters.classList.remove(`esgst-hidden`);
             for (i = 0, n = esgst.gf.categoryFilters.length; i < n; ++i) {
                 filter = esgst.gf.categoryFilters[i];
                 id = filter.id;
@@ -6783,81 +6821,83 @@ min-width: 0;
         function createGfBasicFilter(filter) {
             var display, displayMax, displayMin, max, min, element, infinite, maxKey, minKey, maxSaveKey, minSaveKey, maxSavedValue, minSavedValue, maxValue, minValue, name, slider, step, value;
             name = filter.name;
-            minValue = filter.minValue;
-            maxValue = filter.maxValue;
-            step = filter.step || 1;
-            infinite = filter.infinite;
-            maxKey = `max${name}`;
-            minKey = `min${name}`;
-            maxSaveKey = `gf_${maxKey}${esgst.gf.type}`;
-            minSaveKey = `gf_${minKey}${esgst.gf.type}`;
-            maxSavedValue = esgst[maxSaveKey];
-            minSavedValue = esgst[minSaveKey];
-            if (!infinite && maxSavedValue > maxValue) {
-                maxSavedValue = maxValue;
-            }
-            esgst.gf[maxKey] = maxSavedValue;
-            esgst.gf[minKey] = minSavedValue;
-            element = insertHtml(basicFilters, `beforeEnd`, `
-                <div class="esgst-gf-basic-filter">
-                    <div>${name} <span class="esgst-float-right"><input type="text" value="${minSavedValue}"> - <input type="text" value="${maxSavedValue}"></span></div>
-                    <div></div>
-                </div>
-            `);
-            display = element.firstElementChild;
-            displayMin = display.firstElementChild.firstElementChild;
-            displayMax = displayMin.nextElementSibling;
-            displayMin.addEventListener(`change`, function () {
-                min = $(slider).slider(`values`, 0);
-                max = $(slider).slider(`values`, 1);
-                if (step) {
-                    value = parseFloat(displayMin.value);
-                } else {
-                    value = parseInt(displayMin.value);
+            if ((name === `Rating` && esgst.gc) || name !== `Rating`) {
+                minValue = filter.minValue;
+                maxValue = filter.maxValue;
+                step = filter.step || 1;
+                infinite = filter.infinite;
+                maxKey = `max${name}`;
+                minKey = `min${name}`;
+                maxSaveKey = `gf_${maxKey}${esgst.gf.type}`;
+                minSaveKey = `gf_${minKey}${esgst.gf.type}`;
+                maxSavedValue = esgst[maxSaveKey];
+                minSavedValue = esgst[minSaveKey];
+                if (!infinite && maxSavedValue > maxValue) {
+                    maxSavedValue = maxValue;
                 }
-                if (value !== min && value <= max) {
-                    $(slider).slider(`values`, [value, max]);
-                }
-            });
-            displayMax.addEventListener(`change`, function () {
-                max = $(slider).slider(`values`, 1);
-                min = $(slider).slider(`values`, 0);
-                if (step) {
-                    value = parseFloat(displayMax.value);
-                } else {
-                    value = parseInt(displayMax.value);
-                }
-                if (value !== max && value >= min) {
-                    if (infinite) {
-                        $(slider).slider(`option`, `max`, value);
+                esgst.gf[maxKey] = maxSavedValue;
+                esgst.gf[minKey] = minSavedValue;
+                element = insertHtml(basicFilters, `beforeEnd`, `
+                    <div class="esgst-gf-basic-filter">
+                        <div>${name} <span class="esgst-float-right"><input type="text" value="${minSavedValue}"> - <input type="text" value="${maxSavedValue}"></span></div>
+                        <div></div>
+                    </div>
+                `);
+                display = element.firstElementChild;
+                displayMin = display.firstElementChild.firstElementChild;
+                displayMax = displayMin.nextElementSibling;
+                displayMin.addEventListener(`change`, function () {
+                    min = $(slider).slider(`values`, 0);
+                    max = $(slider).slider(`values`, 1);
+                    if (step) {
+                        value = parseFloat(displayMin.value);
+                    } else {
+                        value = parseInt(displayMin.value);
                     }
-                    $(slider).slider(`values`, [min, value]);
+                    if (value !== min && value <= max) {
+                        $(slider).slider(`values`, [value, max]);
+                    }
+                });
+                displayMax.addEventListener(`change`, function () {
+                    max = $(slider).slider(`values`, 1);
+                    min = $(slider).slider(`values`, 0);
+                    if (step) {
+                        value = parseFloat(displayMax.value);
+                    } else {
+                        value = parseInt(displayMax.value);
+                    }
+                    if (value !== max && value >= min) {
+                        if (infinite) {
+                            $(slider).slider(`option`, `max`, value);
+                        }
+                        $(slider).slider(`values`, [min, value]);
+                    }
+                });
+                slider = display.nextElementSibling;
+                if (infinite) {
+                    maxValue = maxSavedValue;
                 }
-            });
-            slider = display.nextElementSibling;
-            if (maxSavedValue > maxValue) {
-                maxValue = maxSavedValue;
+                $(slider).slider({
+                    change: function (event, ui) {
+                        esgst.gf[maxKey] = ui.values[1];
+                        esgst.gf[minKey] = ui.values[0];
+                        filterGfGiveaways();
+                        setValue(maxSaveKey, ui.values[1]);
+                        esgst[maxSaveKey] = ui.values[1];
+                        setValue(minSaveKey, ui.values[0]);
+                        esgst[minSaveKey] = ui.values[0];
+                    },
+                    min: minValue,
+                    max: maxValue,
+                    range: true,
+                    slide: function (event, ui) {
+                        displayMax.value = ui.values[1];
+                        displayMin.value = ui.values[0];
+                    },
+                    step: step,
+                    values: [minSavedValue, maxSavedValue]
+                });
             }
-            $(slider).slider({
-                change: function (event, ui) {
-                    esgst.gf[maxKey] = ui.values[1];
-                    esgst.gf[minKey] = ui.values[0];
-                    filterGfGiveaways();
-                    setValue(maxSaveKey, ui.values[1]);
-                    esgst[maxSaveKey] = ui.values[1];
-                    setValue(minSaveKey, ui.values[0]);
-                    esgst[minSaveKey] = ui.values[0];
-                },
-                min: minValue,
-                max: maxValue,
-                range: true,
-                slide: function (event, ui) {
-                    displayMax.value = ui.values[1];
-                    displayMin.value = ui.values[0];
-                },
-                step: step,
-                values: [minSavedValue, maxSavedValue]
-            });
         }
     }
 
@@ -6883,11 +6923,13 @@ min-width: 0;
             if (!esgst.gf.advancedSearch && ((giveaway.pinned && !esgst.gf.exceptionPinned) || (giveaway.regionRestricted && ((esgst.gf.exceptionRegionRestricted && esgst.gf.advancedSearch) || !esgst.gf.exceptionRegionRestricted)) || (giveaway.group && !esgst.gf.exceptionGroup) || (giveaway.whitelist && !esgst.gf.exceptionWhitelist) || (giveaway.wishlisted && !esgst.gf.exceptionWishlist) || ((giveaway.copies > esgst.gf.exceptionMultipleCopies) && !esgst.gf.exceptionMultiple) || (!giveaway.pinned && !giveaway.regionRestricted && !giveaway.group && !giveaway.whitelist && !giveaway.wishlisted && (giveaway.copies <= esgst.gf.exceptionMultipleCopies)))) {
                 for (j = 0, n2 = esgst.gf.basicFilters.length; !filtered && j < n2; ++j) {
                     name = esgst.gf.basicFilters[j].name;
-                    minKey = `min${name}`;
-                    maxKey = `max${name}`;
-                    key = name.toLowerCase();
-                    if ((giveaway[key] < esgst.gf[minKey]) || (giveaway[key] > esgst.gf[maxKey])) {
-                        filtered = true;
+                    if ((name === `Rating` && esgst.gc && giveaway.gcReady) || name !== `Rating`) {
+                        minKey = `min${name}`;
+                        maxKey = `max${name}`;
+                        key = name.toLowerCase();
+                        if ((giveaway[key] < esgst.gf[minKey]) || (giveaway[key] > esgst.gf[maxKey])) {
+                            filtered = true;
+                        }
                     }
                 }
             }
@@ -7401,7 +7443,7 @@ ${avatar.outerHTML}
                             results.insertAdjacentHTML(`beforeEnd`, builtGiveaway.html);
                             loadEndlessFeatures(results.lastElementChild);
                             if (giveaway.source) {
-                                results.lastElementChild.firstElementChild.insertAdjacentHTML(`beforeEnd`, `
+                                results.lastElementChild.getElementsByClassName(`giveaway__columns`)[0].insertAdjacentHTML(`afterBegin`, `
                                     <a class="esgst-ged-source" href="/go/comment/${giveaway.source}">Source</a>
                                 `);
                             }
@@ -7821,7 +7863,7 @@ ${avatar.outerHTML}
             var box, description, popup, set;
             description = DOM.parse(response.responseText).getElementsByClassName(`page__description`)[0];
             if (description || esgst.elgb_r) {
-                popup = createPopup_v6(`fa-file-text-o`, `Giveaway Description`, true);
+                popup = createPopup_v6(`fa-file-text-o`, `<a href="${giveaway.url}"><span>${giveaway.name}</span></a> by <a href="/user/${giveaway.creator}">${giveaway.creator}</a>`, true);
                 if (description) {
                     description.classList.add(`esgst-text-left`);
                     popup.description.insertAdjacentHTML(`beforeEnd`, description.outerHTML);
@@ -10339,9 +10381,7 @@ ${Results.join(``)}
                     }
                 }
             }
-            if (esgst.discussionsPath) {
-                esgst.discussionFeatures.push(getDhDiscussions);
-            }
+            esgst.discussionFeatures.push(getDhDiscussions);
     }
 
     function getDhDiscussions(discussions) {
@@ -10439,7 +10479,7 @@ ${Results.join(``)}
                         context = DOM.parse(response.responseText);
                         breadcrumbs = context.getElementsByClassName(`page__heading__breadcrumbs`);
                         categoryLink = breadcrumbs[0].firstElementChild.nextElementSibling.nextElementSibling;
-                        usernameLink = context.getElementsByClassName(`comment__username`)[0];
+                        usernameLink = context.getElementsByClassName(`comment__username`)[0].firstElementChild;
                         popup.highlightedDiscussions.insertAdjacentHTML(`beforeEnd`, `
                             <div>
                                 <div class="table__row-outer-wrap">
@@ -10465,6 +10505,16 @@ ${Results.join(``)}
                             </div>
                         `);
                         loadEndlessFeatures(popup.highlightedDiscussions.lastElementChild);
+                        if (!esgst.discussionsPath) {
+                            if (esgst.gdttt) {
+                                addCtDiscussionPanels(popup.highlightedDiscussions.lastElementChild, true);
+                                checkGdtttVisited(popup.highlightedDiscussions.lastElementChild);
+                            } else if (esgst.ct) {
+                                addCtDiscussionPanels(popup.highlightedDiscussions.lastElementChild, true);
+                            }
+                            getDhDiscussions(popup.highlightedDiscussions.lastElementChild);
+                            loadDiscussionFeatures(popup.highlightedDiscussions.lastElementChild);
+                        }
                         popup.reposition();
                         window.setTimeout(getDhHighlightedDiscussions, 0, discussions, ++i, ++j, keys, n, popup, callback);
                     });
@@ -18877,9 +18927,9 @@ ${Results.join(``)}
         });
     }
 
-    function addCtDiscussionPanels(context) {
+    function addCtDiscussionPanels(context, dh) {
         var code, comments, count, countLink, diff, i, id, match, matches, n, read, url, key;
-        if (esgst.discussionsPath) {
+        if (esgst.discussionsPath || dh) {
             key = `discussions`;
         } else if (esgst.ticketsPath) {
             key = `tickets`;
@@ -18889,7 +18939,7 @@ ${Results.join(``)}
             key = `discussions`;
         }
         comments = JSON.parse(GM_getValue(`comments`))[key];
-        matches = context.querySelectorAll(`.table__row-outer-wrap, .row_outer_wrap`);
+        matches = context.querySelectorAll(`.table__row-outer-wrap, .row_outer_wrap`);console.log(matches);
         for (i = 0, n = matches.length; i < n; ++i) {
             match = matches[i];
             countLink = match.querySelector(`.table__column--width-small.text-center, .column_small.text_center`);
@@ -18911,14 +18961,14 @@ ${Results.join(``)}
                         } else {
                             diff = count;
                         }
-                        addCtDiscussionPanel(code, comments, match, countLink, count, diff, url, key);
+                        addCtDiscussionPanel(code, comments, match, countLink, count, diff, url, key, dh);
                     }
                 }
             }
         }
     }
 
-    function addCtDiscussionPanel(code, comments, container, context, count, diff, url, type) {
+    function addCtDiscussionPanel(code, comments, container, context, count, diff, url, type, dh) {
         var diffContainer, goToUnread, loadingIcon, markRead, markUnread, markVisited, markUnvisited, panel;
         panel = insertHtml(context, `beforeEnd`, `
             <span>
@@ -18948,7 +18998,7 @@ ${Results.join(``)}
         markVisited = markUnread.nextElementSibling;
         markUnvisited = markVisited.nextElementSibling;
         loadingIcon = markUnvisited.nextElementSibling;
-        if (esgst.ct && esgst.discussionsPath) {
+        if (esgst.ct && (esgst.discussionsPath || dh)) {
             if (diff > 0) {
                 diffContainer.classList.remove(`esgst-hidden`);
                 goToUnread.classList.remove(`esgst-hidden`);
@@ -19029,7 +19079,7 @@ ${Results.join(``)}
                 GM_setValue(`comments`, JSON.stringify(comments));
                 deleteLock();
                 loadingIcon.classList.add(`esgst-hidden`);
-                if (esgst.ct && esgst.discussionsPath) {
+                if (esgst.ct && (esgst.discussionsPath || dh)) {
                     goToUnread.classList.remove(`esgst-hidden`);
                     markRead.classList.remove(`esgst-hidden`);
                     markUnread.classList.remove(`esgst-hidden`);
@@ -19052,7 +19102,7 @@ ${Results.join(``)}
                 GM_setValue(`comments`, JSON.stringify(comments));
                 deleteLock();
                 loadingIcon.classList.add(`esgst-hidden`);
-                if (esgst.ct && esgst.discussionsPath) {
+                if (esgst.ct && (esgst.discussionsPath || dh)) {
                     goToUnread.classList.remove(`esgst-hidden`);
                     markRead.classList.remove(`esgst-hidden`);
                     markUnread.classList.remove(`esgst-hidden`);
@@ -20696,9 +20746,9 @@ ${Results.join(``)}
         }]);
         Popup.Options.insertAdjacentHTML("afterEnd", createDescription("If an user is highlighted, that means they have been either checked for the first time or updated."));
         if (Context) {
-            WBCButton = insertHtml(Context,
+            esgst.wbcButton = WBCButton = insertHtml(Context,
                 "afterBegin",
-                "<a class=\"WBCButton\" title=\"Check for whitelists" + (WBC.B ? " / blacklists" : "") + "\">" +
+                "<a class=\"esgst-hidden WBCButton\" title=\"Check for whitelists" + (WBC.B ? " / blacklists" : "") + "\">" +
                 "    <i class=\"fa fa-heart\"></i> " + (WBC.B ? (
                     "<i class=\"fa fa-ban\"></i>") : "") +
                 "    <i class=\"fa fa-question-circle\"></i>" +
@@ -21823,7 +21873,7 @@ ${Results.join(``)}
     function checkGcComplete(gc, savedGames, total) {
         var category, categories, giveaway, i, id, j, n, numCategories;
         if (gc.count === total) {
-            categories = [`bundled`, `tradingCards`, `achievements`, `multiplayer`, `steamCloud`, `linux`, `mac`, `dlc`, `genres`];
+            categories = [`bundled`, `tradingCards`, `achievements`, `multiplayer`, `steamCloud`, `linux`, `mac`, `dlc`, `package`, `genres`, `rating`];
             for (i = 0, n = esgst.currentGiveaways.length; i < n; ++i) {
                 giveaway = esgst.currentGiveaways[i];
                 if (!giveaway.gcReady) {
@@ -21831,12 +21881,16 @@ ${Results.join(``)}
                         id = categories[j];
                         category = giveaway.outerWrap.getElementsByClassName(`esgst-gc ${id}`)[0];
                         if (category) {
-                            if (id == `genres`) {
+                            if (id === `genres`) {
                                 giveaway[id] = category.textContent.toLowerCase().split(/,\s/);
+                            } else if (id === `rating`) {
+                                giveaway[id] = parseInt(category.firstElementChild.title.match(/(\d+)%/)[1]);
                             } else {
                                 giveaway[id] = true;
                             }
                             giveaway.gcReady = true;
+                        } else if (id === `rating`) {
+                            giveaway[id] = 0;
                         }
                     }
                 }
@@ -22075,6 +22129,14 @@ ${Results.join(``)}
                 icon: `fa-download`
             },
             {
+                id: `gc_p`,
+                key: `package`,
+                link: `http://store.steampowered.com/${type}/${id}`,
+                name: `Package`,
+                simplified: `P`,
+                icon: `fa-suitcase`
+            },
+            {
                 id: `gc_g`,
                 key: `genres`,
                 link: `http://store.steampowered.com/${type}/${id}`,
@@ -22085,7 +22147,15 @@ ${Results.join(``)}
         for (i = 0, n = categories.length - 1; i <= n; ++i) {
             category = categories[i];
             if (esgst[category.id] && ((category.id == `gc_b` && esgst.newGiveawayPath) || !esgst.newGiveawayPath) && ((category.id == `gc_b` && !esgst.gc_b_r) || (category.id != `gc_b`))) {
-                value = savedGames[category.key];
+                if (category.id === `gc_p`) {
+                    if (type === `sub`) {
+                        value = true;
+                    } else {
+                        value = false;
+                    }
+                } else {
+                    value = savedGames[category.key];
+                }
                 if ((value && category.id != `gc_b_r`) || (!value && category.id == `gc_b_r` && esgst.gc_b)) {
                     var title = ``;
                     if (category.key == `genres`) {
@@ -24715,7 +24785,12 @@ Background: <input type="color" value="${bgColor}">
                 }
             }
         }
-        if (Object.keys(currentUsers).length) {
+        var keys = Object.keys(currentUsers);
+        var length = keys.length;
+        if (length > 0) {
+            if ((length > 1 || keys[0] !== `cg`) && esgst.wbcButton && context === document) {
+                esgst.wbcButton.classList.remove(`esgst-hidden`);
+            }
             for (i = 0, n = esgst.userFeatures.length; i < n; ++i) {
                 esgst.userFeatures[i](currentUsers);
             }

@@ -1,4 +1,19 @@
 /*
+ * July 13, 2017 - v6.Beta.16.4
+ */
+
+* Fixed a few bugs.
+* Enhanced Last Page Link to show the accurate last page number (closes #212).
+* Moved the "Source" link in Giveaways Encrypter/Decrypter (closes #210).
+* Fixed a bug in Giveaway Filters that was not saving the max value for entries and copies.
+* Fixed a bug in Giveaway Filters that was still showing the "Category Filters" heading even if Game Categories was disabled.
+* Added "Ratings" filter to Giveaway Filters (games that do not have a rating, either because the Steam page doesn't have it or because the script was unable to get it, have a predefined rating of 0) (closes #191).
+* Added more info about the giveaway to the popup in Enter/Leave Giveaway Button (closes #226).
+* Fixed a bug that was missing some features in Discussions Highlighter when opening them outside of the main discussions page (closes #208).
+* Fixed a bug that was showing the Whitelist/Blacklist Checker button in all pages (closes #227).
+* Added "Package" category to Game Categories (closes #180).
+
+/*
  * July 13, 2017 - v6.Beta.16.3
  */
 
