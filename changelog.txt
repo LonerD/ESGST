@@ -2,7 +2,7 @@
  * July 14, 2017 - v6.Beta.17.0
  */
 
-* Simplified the formatting for descriptions in Multiple Giveaways Creator (make sure you update your templates to the new format, as the old format is no longer supported - pay extra attention because ending tags now have a slash).
+* Simplified the formatting for descriptions in Multiple Giveaways Creator (make sure you update your templates to the new format, as the old format is no longer supported - pay extra attention because ending tags now have a slash) (closes #237).
 
 /*
  * July 14, 2017 - v6.Beta.17.0
