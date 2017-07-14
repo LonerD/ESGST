@@ -1,4 +1,14 @@
 /*
+ * July 14, 2017 - v6.Beta.17.0
+ */
+
+* Fixed a formatting error in the second connection style example in Multiple Giveaways Creator.
+
+Added the following features:
+
+* 2.25 Next/Previous Train Hotkeys (closes #195)
+
+/*
  * July 14, 2017 - v6.Beta.16.9
  */
 

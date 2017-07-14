@@ -3,7 +3,7 @@
 // @namespace ESGST
 // @description Enhances SteamGifts and SteamTrades by adding some cool features to them.
 // @icon https://github.com/revilheart/ESGST/raw/master/Resources/esgstIcon.ico
-// @version 6.Beta.16.9
+// @version 6.Beta.17.0
 // @author revilheart
 // @downloadURL https://github.com/revilheart/ESGST/raw/master/ESGST.user.js
 // @updateURL https://github.com/revilheart/ESGST/raw/master/ESGST.meta.js
@@ -834,6 +834,8 @@
                 wbh_w_bgColor: `#228b22`,
                 wbh_b_color: `#ffffff`,
                 wbh_b_bgColor: `#ff4500`,
+                npth_previousKey: `ArrowLeft`,
+                npth_nextKey: `ArrowRight`,
                 avatar: ``,
                 username: ``,
                 steamId: ``,
@@ -1489,6 +1491,19 @@
                     type: `giveaways`
                 },
                 {
+                    description: `
+                        <ul>
+                            <li>Allows you to move across trains using hotkeys (use Ctrl with the hotkeys to open the giveaways in new tabs). Does not work if you are typing in an input/text area.</li>
+                        </ul>
+                    `,
+                    id: `npth`,
+                    load: loadNpth,
+                    name: `[NEW] Next/Previous Train Hotkeys`,
+                    input: true,
+                    sg: true,
+                    type: `giveaways`
+                },
+                {
                     // by Royalgamer06
                     description: `
                         <ul>
@@ -1572,7 +1587,7 @@
                     `,
                     id: `mps`,
                     load: loadMps,
-                    name: `[NEW] Main Post Skipper`,
+                    name: `Main Post Skipper`,
                     sg: true,
                     type: `discussions`
                 },
@@ -2404,7 +2419,7 @@
                     `,
                     id: `sto`,
                     load: loadSto,
-                    name: `[NEW] Same Tab Opener`,
+                    name: `Same Tab Opener`,
                     sg: true,
                     st: true,
                     type: `general`
@@ -4732,7 +4747,7 @@ padding: 0 2px;
 .esgst-sm-colors input {
 display: inline-block;
 padding: 0;
-width: 30px;
+width: 100px;
 }
 
 .esgst-sm-colors select {
@@ -8690,7 +8705,7 @@ ${avatar.outerHTML}
                                 <br/>
                                 <div>[ESGST-P][P]Previous[P][ESGST-P][ESGST-S] [ESGST-S][ESGST-N][N]Next[N][ESGST-N]</div>
                                 <br/>
-                                <div>[ESGST-P]### ← [P]Previous[P][ESGST-P][ESGST-S] | [ESGST-S][ESGST-N]### [N]Next[N] →[ESGST-N]</div>
+                                <div>### [ESGST-P]← [P]Previous[P][ESGST-P][ESGST-S] | [ESGST-S][ESGST-N][N]Next[N] →[ESGST-N]</div>
                                 <br/>
                                 <div>[ESGST-P]Go [P]back[P].[ESGST-P][ESGST-S] [ESGST-S][ESGST-N]Go [N]forward[N].[ESGST-N]</div>
                                 <br/>
@@ -10422,6 +10437,57 @@ ${Results.join(``)}
         return name.toLowerCase().replace(/\sthe|the\s/g, ``).replace(/\s/g, ``).replace(/\d/g, function (m) {
             return numbers[m];
         }).replace(/\&/g, `and`).replace(/\+/g, `plus`).replace(/[^\d\w]/g, ``);
+    }
+
+    /* [NPTH] Next/Previous Train Hotkeys */
+
+    function loadNpth() {
+        var description, element, elements, i, n, next, nextMatch, previous, previousMatch;
+        if (esgst.giveawayCommentsPath) {
+            description = document.getElementsByClassName(`page__description`)[0];
+            elements = description.querySelectorAll(`[href*="/giveaway/"]`);
+            for (i = 0, n = elements.length; i < n; ++i) {
+                element = elements[i];
+                previousMatch = element.textContent.toLowerCase().match(/prev|back|less|<|←/);
+                if (previousMatch) {
+                    previous = element;
+                } else {
+                    nextMatch = element.textContent.toLowerCase().match(/next|forw|more|>|→/);
+                    if (nextMatch) {
+                        next = element;
+                    }
+                }
+            }
+            if (previous || next) {
+                document.addEventListener(`keydown`, loadNpthGiveaway.bind(null, next, previous));
+            }
+        }
+    }
+
+    function loadNpthGiveaway(next, previous, event) {
+        if (!event.target.closest(`input, textarea`)) {
+            if (event.key === esgst.npth_previousKey) {
+                if (previous) {
+                    if (event.ctrlKey) {
+                        window.open(previous.getAttribute(`href`));
+                    } else {
+                        window.location.href = previous.getAttribute(`href`);
+                    }
+                } else {
+                    createAlert(`No previous link found.`);
+                }
+            } else if (event.key === esgst.npth_nextKey) {
+                if (next) {
+                    if (event.ctrlKey) {
+                        window.open(next.getAttribute(`href`));
+                    } else {
+                        window.location.href = next.getAttribute(`href`);
+                    }
+                } else {
+                    createAlert(`No next link found.`);
+                }
+            }
+        }
     }
 
     /* [GESL] Giveaway Error Search Links (by Royalgamer06) */
@@ -23537,8 +23603,32 @@ Background: <input type="color" value="${bgColor}">
                 SMFeatures.classList.remove(`esgst-hidden`);
             }
         } else if (Feature.input) {
+            var input, prev, next;
+            if (Feature.id === `npth`) {
+                input = insertHtml(SMFeatures, `beforeEnd`, `
+                    <div class="esgst-sm-colors">
+                        Enter the key you want to use for previous links: <input type="text" value=${esgst.npth_previousKey}>
+                        <br/>
+                        Enter the key you want to use for next links: <input type="text" value=${esgst.npth_nextKey}>
+                    </div>
+                `);
+                prev = input.firstElementChild;
+                next = input.lastElementChild;
+                prev.addEventListener(`keydown`, function (e) {
+                    e.preventDefault();
+                    setValue(`npth_previousKey`, e.key);
+                    esgst.npth_previousKey = e.key;
+                    prev.value = e.key;
+                });
+                next.addEventListener(`keydown`, function (e) {
+                    e.preventDefault();
+                    setValue(`npth_nextKey`, e.key);
+                    esgst.npth_nextKey = e.key;
+                    next.value = e.key;
+                });
+            } else {
             var hours = esgst.gb_hours;
-            var input = insertHtml(SMFeatures, `beforeEnd`, `
+            input = insertHtml(SMFeatures, `beforeEnd`, `
                 <div class="esgst-sm-colors">
                     Time range to trigger highlight: <input type="text" value=${hours}> hours
                 </div>
@@ -23547,6 +23637,7 @@ Background: <input type="color" value="${bgColor}">
                 setValue(`gb_hours`, input.firstElementChild.value);
                 esgst.gb_hours = input.firstElementChild.value;
             });
+            }
             if (siwtchSg) {
                 siwtchSg.dependencies.push(SMFeatures);
             }
