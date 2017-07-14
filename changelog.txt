@@ -1,4 +1,10 @@
 /*
+ * July 14, 2017 - v6.Beta.17.2
+ */
+
+* Fixed a style conflict between the script and SG's jQuery UIs.
+
+/*
  * July 14, 2017 - v6.Beta.17.1
  */
 

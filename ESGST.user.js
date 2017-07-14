@@ -3,7 +3,7 @@
 // @namespace ESGST
 // @description Enhances SteamGifts and SteamTrades by adding some cool features to them.
 // @icon https://github.com/revilheart/ESGST/raw/master/Resources/esgstIcon.ico
-// @version 6.Beta.17.1
+// @version 6.Beta.17.2
 // @author revilheart
 // @downloadURL https://github.com/revilheart/ESGST/raw/master/ESGST.user.js
 // @updateURL https://github.com/revilheart/ESGST/raw/master/ESGST.meta.js
@@ -34,7 +34,6 @@
 // @grant GM_info
 // @require https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js
 // @require https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js
-// @resource jqueryUi https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/themes/smoothness/jquery-ui.css
 // @require https://cdn.steamgifts.com/js/highcharts.js
 // @require https://github.com/dinbror/bpopup/raw/master/jquery.bpopup.min.js
 // @resource esgstIcon https://github.com/revilheart/ESGST/raw/master/Resources/esgstIcon.ico
@@ -65,7 +64,6 @@
         esgst.steam = window.location.hostname.match(/store.steampowered.com/);
         var logoutButton = document.getElementsByClassName(esgst.sg ? "js__logout" : "js_logout")[0];
         if (logoutButton && (esgst.sg || (esgst.st && esgst.settings.esgst_st))) {
-            GM_addStyle(GM_getResourceText(`jqueryUi`));
             // User is logged in.
             if (esgst.sg || esgst.st) {
             updateTemplateStorageToV6();
@@ -81,9 +79,13 @@
             style = `
                 .esgst-progress-bar {
                     height: 10px;
+                    overflow: hidden;
+                    text-align: left;
                 }
                 .esgst-progress-bar .ui-progressbar-value {
                     background-color: #96c468;
+	                height: 100%;
+	                margin: -1px;
                 }
             `;
             if (esgst.sg) {
