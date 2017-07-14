@@ -3,7 +3,7 @@
 // @namespace ESGST
 // @description Enhances SteamGifts and SteamTrades by adding some cool features to them.
 // @icon https://github.com/revilheart/ESGST/raw/master/Resources/esgstIcon.ico
-// @version 6.Beta.17.2
+// @version 6.Beta.17.3
 // @author revilheart
 // @downloadURL https://github.com/revilheart/ESGST/raw/master/ESGST.user.js
 // @updateURL https://github.com/revilheart/ESGST/raw/master/ESGST.meta.js
@@ -803,6 +803,7 @@
                 mgc_createTrain: true,
                 mgc_groupKeys: false,
                 mgc_reversePosition: false,
+                mgc_removeLinks: true,
                 adots_index: 0,
                 rgr_index: 0,
                 cfh_pasteFormatting: true,
@@ -8700,7 +8701,9 @@ ${avatar.outerHTML}
                     <div class="esgst-gm-section form__row__indent">
                         <div>
                             <div></div>
-                            <div class="esgst-hidden form__input-description markdown">
+                            <div class="esgst-hidden">
+                                <div></div>
+                                <div class="form__input-description markdown">
                                 <div>Add the connection style to the description of the giveaway, wherever you want it to appear, using the format [ESGST-P]...[P]...[/P]...[/ESGST-P]...[ESGST-N]...[N]...[/N]...[/ESGST-N] or the simplified format [ESGST-P]...[/ESGST-P]...[ESGST-N]...[/ESGST-N], where [P]...[/P] and [N]...[/N] delimit the clickable link, [ESGST-P]...[/ESGST-P] and [ESGST-N]...[/ESGST-N] delimit the entire text area that includes the clickable link, and the "..." between [/ESGST-P] and [ESGST-N] delimit the separator between the links. If using the simplified format, [P]...[/P] and [N]...[/N] are not required and the entire text inside [ESGST-P]...[/ESGST-P] and [ESGST-N]...[/ESGST-N] will be turned into a link.</div>
                                 <br/>
                                 <div>Some examples:</div>
@@ -8723,6 +8726,7 @@ ${avatar.outerHTML}
                                 <br/>
                                 <div>[ESGST-P]Previous[/ESGST-P] [ESGST-N]Next[/ESGST-N] ([ESGST-C] of [/ESGST-C]) -> Result will look like "<a href="">Previous</a> <a href="">Next</a> (2 of 10)".</div>
                             </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -8734,6 +8738,7 @@ ${avatar.outerHTML}
             }
             createTrainSwitch = createToggleSwitch(createTrainOption.firstElementChild, `mgc_createTrain`, false, `Create train.`, false, false, null, esgst.mgc_createTrain);
             createTrainSwitch.dependencies.push(createTrainDescription);
+            createToggleSwitch(createTrainDescription.firstElementChild, `mgc_removeLinks`, false, `Remove previous/next links from the first/last wagons.`, false, false, `Disabling this keeps the links as plain text.`, esgst.mgc_removeLinks);
             addButton = createButtonSet(`green`, `grey`, `fa-plus-circle`, `fa-circle-o-notch fa-spin`, `Add`, `Adding...`, getMgcValues.bind(null, mgc));
             importButton = createButtonSet(`green`, `grey`, `fa-arrow-circle-up`, `fa-circle-o-notch fa-spin`, `Import`, `Importing...`, importMgcGiveaways.bind(null, mgc));
             exportButton = createButtonSet(`green`, `grey`, `fa-arrow-circle-down`, `fa-circle-o-notch fa-spin`, `Export`, `Exporting...`, exportMgcGiveaways.bind(null, mgc));
@@ -9127,7 +9132,11 @@ ${avatar.outerHTML}
             next = match3;
             nextSuf = ``;
         }
-        return `${nextPref}[${next}](${mgc.created[i + 1].url})${nextSuf}`;
+        if (esgst.mgc_removeLinks) {
+            return `${nextPref}[${next}](${mgc.created[i + 1].url})${nextSuf}`;
+        } else {
+            return `${match1}${match2}${nextPref}[${next}](${mgc.created[i + 1].url})${nextSuf}`;
+        }
     }
 
     function getMgcPrevious(i, mgc, fullMatch, match1, match2, match3) {
@@ -9142,7 +9151,11 @@ ${avatar.outerHTML}
             prev = match1;
             prevSuf = ``;
         }
-        return `${prevPref}[${prev}](${mgc.created[i - 1].url})${prevSuf}`;
+        if (esgst.mgc_removeLinks) {
+            return `${prevPref}[${prev}](${mgc.created[i - 1].url})${prevSuf}`;
+        } else {
+            return `${prevPref}[${prev}](${mgc.created[i - 1].url})${prevSuf}${match2}${match3}`;
+        }
     }
 
     function getMgcBoth(i, mgc, fullMatch, match1, match2, match3) {

@@ -1,4 +1,10 @@
 /*
+ * July 14, 2017 - v6.Beta.17.3
+ */
+
+* Added an option to the new giveaway page in Multiple Giveaways Creator that allows you to choose whether or not to remove the previous/next links in the first/last wagons of the train (closes #240).
+
+/*
  * July 14, 2017 - v6.Beta.17.2
  */
 
