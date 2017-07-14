@@ -1,4 +1,11 @@
 /*
+ * July 14, 2017 - v6.Beta.16.8
+ */
+
+* Fixed a bug in Giveaway Templates that was setting incorrect dates for templates that end in the other month.
+* While importing in Multiple Giveaways Creator, the imported giveaways will now be removed from the text area and a progress bar will be shown.
+
+/*
  * July 14, 2017 - v6.Beta.16.7
  */
 

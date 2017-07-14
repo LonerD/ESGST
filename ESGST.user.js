@@ -3,7 +3,7 @@
 // @namespace ESGST
 // @description Enhances SteamGifts and SteamTrades by adding some cool features to them.
 // @icon https://github.com/revilheart/ESGST/raw/master/Resources/esgstIcon.ico
-// @version 6.Beta.16.7
+// @version 6.Beta.16.8
 // @author revilheart
 // @downloadURL https://github.com/revilheart/ESGST/raw/master/ESGST.user.js
 // @updateURL https://github.com/revilheart/ESGST/raw/master/ESGST.meta.js
@@ -34,6 +34,7 @@
 // @grant GM_info
 // @require https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js
 // @require https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js
+// @resource jqueryUi https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/themes/smoothness/jquery-ui.css
 // @require https://cdn.steamgifts.com/js/highcharts.js
 // @require https://github.com/dinbror/bpopup/raw/master/jquery.bpopup.min.js
 // @resource esgstIcon https://github.com/revilheart/ESGST/raw/master/Resources/esgstIcon.ico
@@ -64,6 +65,7 @@
         esgst.steam = window.location.hostname.match(/store.steampowered.com/);
         var logoutButton = document.getElementsByClassName(esgst.sg ? "js__logout" : "js_logout")[0];
         if (logoutButton && (esgst.sg || (esgst.st && esgst.settings.esgst_st))) {
+            GM_addStyle(GM_getResourceText(`jqueryUi`));
             // User is logged in.
             if (esgst.sg || esgst.st) {
             updateTemplateStorageToV6();
@@ -76,7 +78,14 @@
                     createAlert(`You are not using the latest ESGST version. Please update before reporting any bugs and make sure the bugs still exist in the latest version.`);
                 }
             }
-            style = ``;
+            style = `
+                .esgst-progress-bar {
+                    height: 10px;
+                }
+                .esgst-progress-bar .ui-progressbar-value {
+                    background-color: #96c468;
+                }
+            `;
             if (esgst.sg) {
                 esgst.pageOuterWrapClass = `page__outer-wrap`;
                 esgst.pageHeadingClass = `page__heading`;
@@ -8518,7 +8527,7 @@ ${avatar.outerHTML}
         }
 
         function setGtsTemplate(popup, template, savedTemplate) {
-            var applyButton, context, currentDate, deleteButton, groups, i, id, j, matches, n, newEndTime, newEndTimeBackup, newStartTime, savedTemplates, selected;
+            var applyButton, context, currentDate, days, deleteButton, groups, i, id, j, matches, n, newEndTime, newEndTimeBackup, newStartTime, savedTemplates, selected;
             applyButton = template.firstElementChild;
             deleteButton = applyButton.nextElementSibling;
             applyButton.addEventListener(`click`, function () {
@@ -8532,7 +8541,12 @@ ${avatar.outerHTML}
                     }
                     endTime = new Date(savedTemplate.endTime);
                     newEndTime = new Date(newStartTime.getTime());
-                    newEndTime.setDate(newStartTime.getDate() + (endTime.getDate() - startTime.getDate()));
+                    if (endTime.getMonth() !== startTime.getMonth()) {
+                        days = (new Date(startTime.getFullYear(), startTime.getMonth() + 1, 0).getDate()) - newStartTime.getDate() + endTime.getDate();
+                    } else {
+                        days = endTime.getDate() - startTime.getDate();
+                    }
+                    newEndTime.setDate(newStartTime.getDate() + days);
                     newEndTime.setHours(endTime.getHours(), endTime.getMinutes(), endTime.getSeconds(), endTime.getMilliseconds());
                     document.querySelector(`[name="start_time"]`).value = formatDate(newStartTime);
                     document.querySelector(`[name="end_time"]`).value = formatDate(newEndTime);
@@ -8811,7 +8825,7 @@ ${avatar.outerHTML}
     }
 
     function importMgcGiveaways(mgc, callback) {
-        var popup, textArea;
+        var popup, progress, textArea;
         popup = createPopup_v6(`fa-arrow-up`, `Import Giveaways`, true);
         popup.description.insertAdjacentHTML(`beforeEnd`, `
             <div class="form__input-description">
@@ -8838,23 +8852,38 @@ ${avatar.outerHTML}
         `);
         createToggleSwitch(popup.description, `mgc_reversePosition`, false, `Enable reverse position (the keys come before the name of the game).`, false, false, ``, esgst.mgc_reversePosition);
         createToggleSwitch(popup.description, `mgc_groupKeys`, false, `Group adjacent keys for the same game.`, false, false, ``, esgst.mgc_groupKeys);
+        progress = insertHtml(popup.description, `beforeEnd`, `<div class="esgst-progress-bar"></div>`);
         textArea = insertHtml(popup.description, `beforeEnd`, `
             <textarea></textarea>
         `);
-        popup.description.appendChild(createButtonSet(`green`, `grey`, `fa-arrow-circle-up`, `fa-circle-o-notch fa-spin`, `Import`, `Importing...`, getMgcGiveaways.bind(null, mgc, popup, textArea)).set);
+        popup.description.appendChild(createButtonSet(`green`, `grey`, `fa-arrow-circle-up`, `fa-circle-o-notch fa-spin`, `Import`, `Importing...`, getMgcGiveaways.bind(null, mgc, popup, progress, textArea)).set);
         popup.onClose = callback;
-        mgc.importIndex = 0;
         popup.open(focusMgcTextArea.bind(null, textArea));
     }
 
-    function getMgcGiveaways(mgc, popup, textArea, callback) {
-        var giveaways;
+    function getMgcGiveaways(mgc, popup, progress, textArea, callback) {
+        var giveaways, max, n, value;
         giveaways = textArea.value.split(/\n/);
-        importMgcGiveaway(giveaways, mgc.importIndex, mgc, giveaways.length, popup.close, callback);
+        n = giveaways.length;
+        if ($(progress).progressbar(`instance`)) {
+            max = $(progress).progressbar(`option`, `max`);
+            value = $(progress).progressbar(`option`, `value`);
+            if (value + n > max) {
+                $(progress).progressbar({
+                    max: value + n,
+                    value: value
+                });
+            }
+        } else {
+            $(progress).progressbar({
+                max: n
+            });
+        }
+        importMgcGiveaway(giveaways, 0, mgc, n, progress, textArea, popup.close, callback);
     }
 
-    function importMgcGiveaway(giveaways, i, mgc, n, mainCallback, callback) {
-        var copies, copiesPos, found, giveaway, key, keyPos, match, name, namePos, regExp, values;
+    function importMgcGiveaway(giveaways, i, mgc, n, progress, textArea, mainCallback, callback) {
+        var copies, copiesPos, found, giveaway, j, key, keyPos, match, name, namePos, regExp, values;
         if (i < n) {
             if (esgst.mgc_reversePosition) {
                 regExp = /(([\d\w]{5}(-[\d\w]{5}){2,})\s)?((https?:\/\/.+?)\s)?(.+?)(\s\((\d+?)\sCopies\))?$/;
@@ -8894,6 +8923,7 @@ ${avatar.outerHTML}
                     values.copies = `1`;
                     }
                 }
+                j = 1;
                 if (esgst.mgc_groupKeys && key) {
                     do {
                         found = false;
@@ -8906,15 +8936,15 @@ ${avatar.outerHTML}
                                     found = true;
                                     values.keys += `\n${key}`;
                                     ++i;
+                                    ++j;
                                 }
                             }
                         }
                     } while (found);
                 }
-                request(`do=autocomplete_game&page_number=1&search_query=${name}`, false, `/ajax.php`, getMgcGiveaway.bind(null, giveaways, i, mgc, n, name, values, mainCallback, callback));
+                request(`do=autocomplete_game&page_number=1&search_query=${name}`, false, `/ajax.php`, getMgcGiveaway.bind(null, giveaways, i, j, mgc, n, name, progress, textArea, values, mainCallback, callback));
             } else {
-                createAlert(`The giveaway in line ${i + 1} is not in the right format. Please correct it and click on "Import" again to continue importing from it.`);
-                mgc.importIndex = i;
+                createAlert(`The next giveaway is not in the right format. Please correct it and click on "Import" again to continue importing.`);
                 callback();
             }
         } else {
@@ -8922,17 +8952,21 @@ ${avatar.outerHTML}
         }
     }
 
-    function getMgcGiveaway(giveaways, i, mgc, n, name, values, mainCallback, callback, response) {
-        var elements, j, numElements;
+    function getMgcGiveaway(giveaways, i, j, mgc, n, name, progress, textArea, values, mainCallback, callback, response) {
+        var elements, k, numElements;
         elements = DOM.parse(JSON.parse(response.responseText).html).getElementsByClassName(`table__row-outer-wrap`);
-        for (j = 0, numElements = elements.length; j < numElements && elements[j].getAttribute(`data-autocomplete-name`) !== name; ++j);
-        if (j < numElements) {
-            values.gameId = elements[j].getAttribute(`data-autocomplete-id`);
+        for (k = 0, numElements = elements.length; k < numElements && elements[k].getAttribute(`data-autocomplete-name`) !== name; ++k);
+        if (k < numElements) {
+            values.gameId = elements[k].getAttribute(`data-autocomplete-id`);
             addMgcGiveaway(mgc, values);
-            window.setTimeout(importMgcGiveaway, 0, giveaways, ++i, mgc, n, mainCallback, callback);
+            $(progress).progressbar(`option`, `value`, $(progress).progressbar(`option`, `value`) + j);
+            do {
+                textArea.value = textArea.value.replace(/^(.+?)\n/, ``);
+                --j;
+            } while (j > 0);
+            window.setTimeout(importMgcGiveaway, 0, giveaways, ++i, mgc, n, progress, textArea, mainCallback, callback);
         } else {
-            createAlert(`${name} was not found! Please correct the title of the game and click on "Import" to continue importing from it (it must be exactly like on Steam).`);
-            mgc.importIndex = i;
+            createAlert(`${name} was not found! Please correct the title of the game and click on "Import" again to continue importing (it must be exactly like on Steam).`);
             callback();
         }
     }
