@@ -3,7 +3,7 @@
 // @namespace ESGST
 // @description Enhances SteamGifts and SteamTrades by adding some cool features to them.
 // @icon https://github.com/revilheart/ESGST/raw/master/Resources/esgstIcon.ico
-// @version 6.Beta.17.0
+// @version 6.Beta.17.1
 // @author revilheart
 // @downloadURL https://github.com/revilheart/ESGST/raw/master/ESGST.user.js
 // @updateURL https://github.com/revilheart/ESGST/raw/master/ESGST.meta.js
@@ -8698,28 +8698,28 @@ ${avatar.outerHTML}
                     <div class="esgst-gm-section form__row__indent">
                         <div>
                             <div></div>
-                            <div class="esgst-hidden form__input-description">
-                                <div>Add the connection style to the description of the giveaway, wherever you want it to appear, using the format [ESGST-P]...[P]...[P]...[ESGST-P][ESGST-S]...[ESGST-S][ESGST-N]...[N]...[N]...[ESGST-N], where [P]...[P] and [N]...[N] delimit the clickable link, [ESGST-P]...[ESGST-P] and [ESGST-N]...[ESGST-N] delimit the entire text area that includes the clickable link, and [ESGST-S]...[ESGST-S] delimits the separator between the two links.</div>
+                            <div class="esgst-hidden form__input-description markdown">
+                                <div>Add the connection style to the description of the giveaway, wherever you want it to appear, using the format [ESGST-P]...[P]...[/P]...[/ESGST-P]...[ESGST-N]...[N]...[/N]...[/ESGST-N] or the simplified format [ESGST-P]...[/ESGST-P]...[ESGST-N]...[/ESGST-N], where [P]...[/P] and [N]...[/N] delimit the clickable link, [ESGST-P]...[/ESGST-P] and [ESGST-N]...[/ESGST-N] delimit the entire text area that includes the clickable link, and the "..." between [/ESGST-P] and [ESGST-N] delimit the separator between the links. If using the simplified format, [P]...[/P] and [N]...[/N] are not required and the entire text inside [ESGST-P]...[/ESGST-P] and [ESGST-N]...[/ESGST-N] will be turned into a link.</div>
                                 <br/>
                                 <div>Some examples:</div>
                                 <br/>
-                                <div>[ESGST-P][P]Previous[P][ESGST-P][ESGST-S] [ESGST-S][ESGST-N][N]Next[N][ESGST-N]</div>
+                                <div>[ESGST-P]Previous[/ESGST-P] [ESGST-N]Next[/ESGST-N] -> Result will look like "<a href="">Previous</a> <a href="">Next</a>".</div>
                                 <br/>
-                                <div>### [ESGST-P]← [P]Previous[P][ESGST-P][ESGST-S] | [ESGST-S][ESGST-N][N]Next[N] →[ESGST-N]</div>
+                                <div>### [ESGST-P]← [P]Previous[/P][/ESGST-P] | [ESGST-N][N]Next[/N] →[/ESGST-N] -> Result will look like "← <a href="">Previous</a> | <a href="">Next</a> →" in medium font size.</div>
                                 <br/>
-                                <div>[ESGST-P]Go [P]back[P].[ESGST-P][ESGST-S] [ESGST-S][ESGST-N]Go [N]forward[N].[ESGST-N]</div>
+                                <div>[ESGST-P]Go [P]back[/P].[/ESGST-P] [ESGST-N]Go [N]forward[/N].[/ESGST-N] -> Result will look like "Go <a href="">back</a>. Go <a href="">forward</a>.".</div>
                                 <br/>
-                                <div>You can also add a counter style to the description, using the format [ESGST-C]...[ESGST-C] and putting the separator you want in there.</div>
+                                <div>You can also add a counter style to the description, using the format [ESGST-C]...[/ESGST-C], where "..." delimits the separator between the numbers.</div>
                                 <br/>
                                 <div>Some examples:</div>
                                 <br/>
-                                <div>[ESGST-C] of [ESGST-C] -> Result will look like "2 of 10".</div>
+                                <div>[ESGST-C] of [/ESGST-C] -> Result will look like "2 of 10".</div>
                                 <br/>
-                                <div>[ESGST-C]/[ESGST-C] -> Result will look like "2/10".</div>
+                                <div>[ESGST-C]/[/ESGST-C] -> Result will look like "2/10".</div>
                                 <br/>
                                 <div>An example merging the connection with the counter:</div>
                                 <br/>
-                                <div>[ESGST-P][P]Previous[P][ESGST-P][ESGST-S] [ESGST-S][ESGST-N][N]Next[N][ESGST-N] ([ESGST-C] of [ESGST-C]) -> Result will look like "Previous Next (2 of 10)"</div>
+                                <div>[ESGST-P]Previous[/ESGST-P] [ESGST-N]Next[/ESGST-N] ([ESGST-C] of [/ESGST-C]) -> Result will look like "<a href="">Previous</a> <a href="">Next</a> (2 of 10)".</div>
                             </div>
                         </div>
                     </div>
@@ -9097,35 +9097,75 @@ ${avatar.outerHTML}
     }
 
     function createMgcWagon(i, mgc, n, callback, response) {
-        var description, id, responseHtml;
+        var description, id, replaceCallback, responseHtml;
         responseHtml = DOM.parse(response.responseText);
         id = responseHtml.querySelector(`[name="giveaway_id"]`).value;
         description = responseHtml.querySelector(`[name="description"]`).value;
         if (i === 0) {
-            description = description.replace(/\[ESGST-P\](.*?)\[ESGST-P\]\[ESGST-S\](.*?)\[ESGST-S\]/, ``);
-            description = description.replace(/\[ESGST-N\](.*?)\[N\](.*?)\[N\](.*?)\[ESGST-N\]/, getMgcNext.bind(null, i, mgc));
+            replaceCallback = getMgcNext;
         } else if (i === n - 1) {
-            description = description.replace(/\[ESGST-S\](.*?)\[ESGST-S\]\[ESGST-N\](.*?)\[N\](.*?)\[N\](.*?)\[ESGST-N\]/, ``);
-            description = description.replace(/\[ESGST-P\](.*?)\[P\](.*?)\[P\](.*?)\[ESGST-P\]/, getMgcPrevious.bind(null, i, mgc));
+            replaceCallback = getMgcPrevious;
         } else {
-            description = description.replace(/\[ESGST-P\](.*?)\[P\](.*?)\[P\](.*?)\[ESGST-P\]/, getMgcPrevious.bind(null, i, mgc));
-            description = description.replace(/\[ESGST-S\](.*?)\[ESGST-S\]/, getMgcSeparator);
-            description = description.replace(/\[ESGST-N\](.*?)\[N\](.*?)\[N\](.*?)\[ESGST-N\]/, getMgcNext.bind(null, i, mgc));
+            replaceCallback = getMgcBoth;
         }
-        description = description.replace(/\[ESGST-C\](.*?)\[ESGST-C\]/, getMgcCounter.bind(null, i, n));
+        description = description.replace(/\[ESGST-P\](.+?)\[\/ESGST-P\](.+?)\[ESGST-N\](.+?)\[\/ESGST-N\]/g, replaceCallback.bind(null, i, mgc));
+        description = description.replace(/\[ESGST-C\](.+?)\[\/ESGST-C\]/g, getMgcCounter.bind(null, i, n));
         request(`xsrf_token=${esgst.xsrfToken}&do=edit_giveaway_description&giveaway_id=${id}&description=${encodeURIComponent(description)}`, false, `/ajax.php`, connectMgcWagon.bind(null, i, mgc, n, callback));
     }
 
     function getMgcNext(i, mgc, fullMatch, match1, match2, match3) {
-        return `${match1}[${match2}](${mgc.created[i + 1].url})${match3}`;
+        var match, next, nextPref, nextSuf;
+        match = match3.match(/(.*?)\[N\](.+?)\[\/N\](.*?)$/);
+        if (match) {
+            nextPref = match[1];
+            next = match[2];
+            nextSuf = match[3];
+        } else {
+            nextPref = ``;
+            next = match3;
+            nextSuf = ``;
+        }
+        return `${nextPref}[${next}](${mgc.created[i + 1].url})${nextSuf}`;
     }
 
     function getMgcPrevious(i, mgc, fullMatch, match1, match2, match3) {
-        return `${match1}[${match2}](${mgc.created[i - 1].url})${match3}`;
+        var match, prev, prevPref, prevSuf;
+        match = match1.match(/(.*?)\[P\](.+?)\[\/P\](.*?)$/);
+        if (match) {
+            prevPref = match[1];
+            prev = match[2];
+            prevSuf = match[3];
+        } else {
+            prevPref = ``;
+            prev = match1;
+            prevSuf = ``;
+        }
+        return `${prevPref}[${prev}](${mgc.created[i - 1].url})${prevSuf}`;
     }
 
-    function getMgcSeparator(fullMatch, match1) {
-        return match1;
+    function getMgcBoth(i, mgc, fullMatch, match1, match2, match3) {
+        var match, next, nextPref, nextSuf, prev, prevPref, prevSuf;
+        match = match1.match(/(.*?)\[P\](.+?)\[\/P\](.*?)$/);
+        if (match) {
+            prevPref = match[1];
+            prev = match[2];
+            prevSuf = match[3];
+        } else {
+            prevPref = ``;
+            prev = match1;
+            prevSuf = ``;
+        }
+        match = match3.match(/(.*?)\[N\](.+?)\[\/N\](.*?)$/);
+        if (match) {
+            nextPref = match[1];
+            next = match[2];
+            nextSuf = match[3];
+        } else {
+            nextPref = ``;
+            next = match3;
+            nextSuf = ``;
+        }
+        return `${prevPref}[${prev}](${mgc.created[i - 1].url})${prevSuf}${match2}${nextPref}[${next}](${mgc.created[i + 1].url})${nextSuf}`;
     }
 
     function getMgcCounter(i, n, fullMatch, match1) {
