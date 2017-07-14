@@ -3,7 +3,7 @@
 // @namespace ESGST
 // @description Enhances SteamGifts and SteamTrades by adding some cool features to them.
 // @icon https://github.com/revilheart/ESGST/raw/master/Resources/esgstIcon.ico
-// @version 6.Beta.16.8
+// @version 6.Beta.16.9
 // @author revilheart
 // @downloadURL https://github.com/revilheart/ESGST/raw/master/ESGST.user.js
 // @updateURL https://github.com/revilheart/ESGST/raw/master/ESGST.meta.js
@@ -8825,7 +8825,7 @@ ${avatar.outerHTML}
     }
 
     function importMgcGiveaways(mgc, callback) {
-        var popup, progress, textArea;
+        var counter, popup, progress, progressPanel, textArea;
         popup = createPopup_v6(`fa-arrow-up`, `Import Giveaways`, true);
         popup.description.insertAdjacentHTML(`beforeEnd`, `
             <div class="form__input-description">
@@ -8852,10 +8852,23 @@ ${avatar.outerHTML}
         `);
         createToggleSwitch(popup.description, `mgc_reversePosition`, false, `Enable reverse position (the keys come before the name of the game).`, false, false, ``, esgst.mgc_reversePosition);
         createToggleSwitch(popup.description, `mgc_groupKeys`, false, `Group adjacent keys for the same game.`, false, false, ``, esgst.mgc_groupKeys);
-        progress = insertHtml(popup.description, `beforeEnd`, `<div class="esgst-progress-bar"></div>`);
         textArea = insertHtml(popup.description, `beforeEnd`, `
             <textarea></textarea>
         `);
+        progressPanel = insertHtml(popup.description, `beforeEnd`, `
+            <div>
+                <div class="esgst-progress-bar"></div>
+                <div>
+                    <span>0</span> of <span>0</span> giveaways imported.
+                </div>
+            </div>
+        `);
+        progress = {
+            bar: progressPanel.firstElementChild,
+        };
+        counter = progressPanel.lastElementChild;
+        progress.current = counter.firstElementChild;
+        progress.total = progress.current.nextElementSibling;
         popup.description.appendChild(createButtonSet(`green`, `grey`, `fa-arrow-circle-up`, `fa-circle-o-notch fa-spin`, `Import`, `Importing...`, getMgcGiveaways.bind(null, mgc, popup, progress, textArea)).set);
         popup.onClose = callback;
         popup.open(focusMgcTextArea.bind(null, textArea));
@@ -8865,19 +8878,21 @@ ${avatar.outerHTML}
         var giveaways, max, n, value;
         giveaways = textArea.value.split(/\n/);
         n = giveaways.length;
-        if ($(progress).progressbar(`instance`)) {
-            max = $(progress).progressbar(`option`, `max`);
-            value = $(progress).progressbar(`option`, `value`);
-            if (value + n > max) {
-                $(progress).progressbar({
+        if ($(progress.bar).progressbar(`instance`)) {
+            max = $(progress.bar).progressbar(`option`, `max`);
+            value = $(progress.bar).progressbar(`option`, `value`);
+            if (value + n !== max) {
+                $(progress.bar).progressbar({
                     max: value + n,
                     value: value
                 });
+                progress.total.textContent = value + n;
             }
         } else {
-            $(progress).progressbar({
+            $(progress.bar).progressbar({
                 max: n
             });
+            progress.total.textContent = n;
         }
         importMgcGiveaway(giveaways, 0, mgc, n, progress, textArea, popup.close, callback);
     }
@@ -8953,13 +8968,15 @@ ${avatar.outerHTML}
     }
 
     function getMgcGiveaway(giveaways, i, j, mgc, n, name, progress, textArea, values, mainCallback, callback, response) {
-        var elements, k, numElements;
+        var elements, k, numElements, value;
         elements = DOM.parse(JSON.parse(response.responseText).html).getElementsByClassName(`table__row-outer-wrap`);
         for (k = 0, numElements = elements.length; k < numElements && elements[k].getAttribute(`data-autocomplete-name`) !== name; ++k);
         if (k < numElements) {
             values.gameId = elements[k].getAttribute(`data-autocomplete-id`);
             addMgcGiveaway(mgc, values);
-            $(progress).progressbar(`option`, `value`, $(progress).progressbar(`option`, `value`) + j);
+            value = $(progress.bar).progressbar(`option`, `value`) + j;
+            $(progress.bar).progressbar(`option`, `value`, value);
+            progress.current.textContent = value;
             do {
                 textArea.value = textArea.value.replace(/^(.+?)\n/, ``);
                 --j;

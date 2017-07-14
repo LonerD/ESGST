@@ -1,4 +1,10 @@
 /*
+ * July 14, 2017 - v6.Beta.16.9
+ */
+
+* Improved the progress bar in Multiple Giveaways Creator.
+
+/*
  * July 14, 2017 - v6.Beta.16.8
  */
 
