@@ -1,4 +1,12 @@
 /*
+ * July 14, 2017 - v6.Beta.16.7
+ */
+
+Renamed the following features:
+
+* Giveaway Maker -> Multiple Giveaways Creator - Fixed a bug that was creating duplicate giveaways if clicking on "Create" again after finishing a creation process (closes #214). Added an option to add a counter to trains (closes #209). Added an option to import/export giveaways.
+
+/*
  * July 13, 2017 - v6.Beta.16.6
  */
 
