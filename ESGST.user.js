@@ -3,7 +3,7 @@
 // @namespace ESGST
 // @description Enhances SteamGifts and SteamTrades by adding some cool features to them.
 // @icon https://github.com/revilheart/ESGST/raw/master/Resources/esgstIcon.ico
-// @version 6.Beta.17.6
+// @version 6.Beta.17.7
 // @author revilheart
 // @downloadURL https://github.com/revilheart/ESGST/raw/master/ESGST.user.js
 // @updateURL https://github.com/revilheart/ESGST/raw/master/ESGST.meta.js
@@ -3190,7 +3190,7 @@
                 setValue(`avatar`, document.getElementsByClassName(`nav_avatar`)[0].style.backgroundImage.match(/\("(.+)"\)/)[1]);
             }
             setSync(callback);
-        } else if (Date.now() - esgst.lastSync > esgst.syncFrequency * 86400000) {
+        } else if (esgst.syncFrequency && Date.now() - esgst.lastSync > esgst.syncFrequency * 86400000) {
             if (esgst.sg) {
                 setValue(`username`, document.getElementsByClassName(`nav__avatar-outer-wrap`)[0].href.match(/\/user\/(.+)/)[1]);
                 setValue(`avatar`, document.getElementsByClassName(`nav__avatar-inner-wrap`)[0].style.backgroundImage.match(/\("(.+)"\)/)[1]);

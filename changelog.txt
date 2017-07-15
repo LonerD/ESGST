@@ -1,4 +1,10 @@
 /*
+ * July 15, 2017 - v6.Beta.17.7
+ */
+
+* Fixed a bug that was enabling automatic sync even if disabled.
+
+/*
  * July 15, 2017 - v6.Beta.17.6
  */
 
