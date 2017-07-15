@@ -3,7 +3,7 @@
 // @namespace ESGST
 // @description Enhances SteamGifts and SteamTrades by adding some cool features to them.
 // @icon https://github.com/revilheart/ESGST/raw/master/Resources/esgstIcon.ico
-// @version 6.Beta.17.8
+// @version 6.Beta.17.9
 // @author revilheart
 // @downloadURL https://github.com/revilheart/ESGST/raw/master/ESGST.user.js
 // @updateURL https://github.com/revilheart/ESGST/raw/master/ESGST.meta.js
@@ -2053,6 +2053,11 @@
                                             description: ``,
                                             id: `namwc_h_i`,
                                             name: `Use icons instead of colors.`,
+                                            sg: true
+                                        },
+                                        {
+                                            id: `namwc_h_f`,
+                                            name: `Only highlight users who failed to pass the check.`,
                                             sg: true
                                         },
                                         {
@@ -20855,33 +20860,35 @@ ${Results.join(``)}
                     highlight = `negative`;
                     icon = `fa-thumbs-down`;
                 }
-                if (results.unknown) {
-                    notActivated = `?`;
-                } else {
-                    notActivated = results.notActivated;
-                }
-                title = `${savedUser.username} has ${notActivated} not activated wins and ${results.multiple} multiple wins (last checked ${getTimestamp(savedUser.namwc.lastCheck / 1e3)})`;
-                if (esgst.namwc_h_i || esgst.wbh_w || esgst.wbh_b) {
-                    html = `
-                        <span class="esgst-namwc-icon ${highlight}" title="${title}">
-                            <i class="fa ${icon}"></i>
-                        </span>
-                    `;
-                    matches = currentUsers[id];
-                    for (i = 0, n = matches.length; i < n; ++i) {
-                        context = matches[i];
-                        container = context.parentElement;
-                        if (container.classList.contains(`comment__username`)) {
-                            context = container;
-                        }
-                        context.insertAdjacentHTML(`beforeBegin`, html);
+                if (((highlight === `positive` || highlight === `unknown`) && !esgst.namwc_h_f) || highlight === `negative`) {
+                    if (results.unknown) {
+                        notActivated = `?`;
+                    } else {
+                        notActivated = results.notActivated;
                     }
-                } else {
-                    matches = currentUsers[id];
-                    for (i = 0, n = matches.length; i < n; ++i) {
-                        context = matches[i];
-                        context.classList.add(`esgst-namwc-highlight`, highlight);
-                        context.title = title;
+                    title = `${savedUser.username} has ${notActivated} not activated wins and ${results.multiple} multiple wins (last checked ${getTimestamp(savedUser.namwc.lastCheck / 1e3)})`;
+                    if (esgst.namwc_h_i || esgst.wbh_w || esgst.wbh_b) {
+                        html = `
+                            <span class="esgst-namwc-icon ${highlight}" title="${title}">
+                                <i class="fa ${icon}"></i>
+                            </span>
+                        `;
+                        matches = currentUsers[id];
+                        for (i = 0, n = matches.length; i < n; ++i) {
+                            context = matches[i];
+                            container = context.parentElement;
+                            if (container.classList.contains(`comment__username`)) {
+                                context = container;
+                            }
+                            context.insertAdjacentHTML(`beforeBegin`, html);
+                        }
+                    } else {
+                        matches = currentUsers[id];
+                        for (i = 0, n = matches.length; i < n; ++i) {
+                            context = matches[i];
+                            context.classList.add(`esgst-namwc-highlight`, highlight);
+                            context.title = title;
+                        }
                     }
                 }
             }
