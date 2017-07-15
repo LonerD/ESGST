@@ -3,7 +3,7 @@
 // @namespace ESGST
 // @description Enhances SteamGifts and SteamTrades by adding some cool features to them.
 // @icon https://github.com/revilheart/ESGST/raw/master/Resources/esgstIcon.ico
-// @version 6.Beta.17.4
+// @version 6.Beta.17.5
 // @author revilheart
 // @downloadURL https://github.com/revilheart/ESGST/raw/master/ESGST.user.js
 // @updateURL https://github.com/revilheart/ESGST/raw/master/ESGST.meta.js
@@ -26,8 +26,6 @@
 // @grant GM_getValue
 // @grant GM_deleteValue
 // @grant GM_listValues
-// @grant GM_addValueChangeListener
-// @grant GM_removeValueChangeListener
 // @grant GM_getResourceText
 // @grant GM_getResourceURL
 // @grant GM_xmlhttpRequest
@@ -574,6 +572,7 @@
                         avatar: `Avatar`,
                         username: `Username`,
                         steamId: `SteamID64`,
+                        steamApiKey: `SteamAPIKey`,
                         lastSync: `LastSync`,
                         syncFrequency: `SyncFrequency`
                     };
@@ -852,14 +851,12 @@
                         avatar: ``,
                         username: ``,
                         steamId: ``,
-                        Groups: [],
+                        steamApiKey: ``,
                         lastSync: 0,
                         syncFrequency: 7,
                         LastBundleSync: 0,
                         Emojis: "",
                         Rerolls: [],
-                        StickiedGroups: [],
-                        Templates: [],
                         Winners: {}
                     };
                     esgst.users = GM_getValue(`users`);
@@ -2757,7 +2754,7 @@
         HTML = Element.Progress ? Element.Progress.innerHTML : "";
         Element.Request = setInterval(function () {
             CurrentDate = new Date().getTime();
-            if ((CurrentDate - GM_getValue("LastRequest")) > 5000) {
+            if ((CurrentDate - GM_getValue("LastRequest", 0)) > 5000) {
                 clearInterval(Element.Request);
                 GM_setValue("LastRequest", CurrentDate);
                 if (Element.Progress) {
@@ -3101,7 +3098,7 @@
         var CurrentDate;
         Element.Save = setInterval(function () {
             CurrentDate = new Date().getTime();
-            if ((CurrentDate - GM_getValue("LastSave")) > 5000) {
+            if ((CurrentDate - GM_getValue("LastSave", 0)) > 5000) {
                 clearInterval(Element.Save);
                 GM_setValue("LastSave", CurrentDate);
                 if (Element.Progress) {
@@ -4245,7 +4242,7 @@
         Checkbox = Element[Name].firstElementChild;
         Key = Option.Key;
         ID = Option.ID;
-        Element[Key] = createCheckbox(Checkbox, GM_getValue(ID)).Checkbox;
+        Element[Key] = createCheckbox(Checkbox, GM_getValue(ID, false)).Checkbox;
         Dependency = Option.Dependency;
         Checkbox.addEventListener("click", function () {
             GM_setValue(ID, Element[Key].checked);
@@ -5628,8 +5625,7 @@ min-width: 0;
         var hr;
         hr = {
             lastRefreshName: `${esgst.name}LastHeaderRefresh`,
-            refreshedElementsName: `${esgst.name}RefreshedHeaderElements`,
-            refreshLockName: `${esgst.name}HeaderRefreshLock`
+            refreshedElementsName: `${esgst.name}RefreshedHeaderElements`
         };
         setHrTitle(esgst.headerData.points);
         GM_setValue(hr.refreshedElementsName, JSON.stringify(getHeaderElements()));
@@ -5637,9 +5633,6 @@ min-width: 0;
         if (!esgst.hr_b) {
             window.addEventListener(`focus`, startHeaderRefresher.bind(null, hr));
             window.addEventListener(`blur`, stopHeaderRefresher.bind(null, hr));
-        }
-        if (typeof GM_addValueChangeListener !== `undefined`) {
-            GM_addValueChangeListener(hr.refreshedElementsName, refreshHeader.bind(null, hr));
         }
     }
 
@@ -5680,18 +5673,24 @@ min-width: 0;
             refreshHeaderElements(DOM.parse(response.responseText));
             GM_setValue(hr.refreshedElementsName, JSON.stringify(getHeaderElements()));
             refreshHeader(hr);
-            createLock(hr.refreshLockName, 60000, function () {
-                hr.refresher = window.setTimeout(continueHeaderRefresher, 60000, hr);
-            });
+            GM_setValue(hr.lastRefreshName, Date.now());
+            hr.refresher = window.setTimeout(continueHeaderRefresher, 60000, hr);
         });
     }
 
     function continueHeaderRefresher(hr) {
-        request(null, false, `/`, function(response) {
-            refreshHeaderElements(DOM.parse(response.responseText));
-            GM_setValue(hr.refreshedElementsName, JSON.stringify(getHeaderElements()));
-            hr.refresher = window.setTimeout(continueHeaderRefresher, 60000, hr);
-        });
+        if (Date.now() - GM_getValue(hr.lastRefreshName, 0) > 60000) {
+            GM_setValue(hr.lastRefreshName, Date.now());
+            request(null, false, `/`, function(response) {
+                refreshHeaderElements(DOM.parse(response.responseText));
+                GM_setValue(hr.refreshedElementsName, JSON.stringify(getHeaderElements()));
+                refreshHeader(hr);
+                hr.refresher = window.setTimeout(continueHeaderRefresher, 60000, hr);
+            });
+        } else {
+            refreshHeader(hr);
+            window.setTimeout(continueHeaderRefresher, 60000, hr);
+        }
     }
 
     function stopHeaderRefresher(hr) {
@@ -5702,7 +5701,7 @@ min-width: 0;
         var elements, points;
         refreshHeaderElements(document);
         points = esgst.headerData.points;
-        elements = JSON.parse(GM_getValue(hr.refreshedElementsName));
+        elements = JSON.parse(GM_getValue(hr.refreshedElementsName, `{}`));
         esgst.headerElements.mainButton.outerHTML = elements.mainButton;
         if (esgst.sg) {
             esgst.headerElements.createdButton.outerHTML = elements.createdButton;
@@ -8410,7 +8409,7 @@ ${avatar.outerHTML}
                 templates = insertHtml(popup.description, `beforeEnd`, `
                     <div class="esgst-text-left popup__keys__list"></div>
                 `);
-                savedTemplates = JSON.parse(GM_getValue(`templates`));
+                savedTemplates = JSON.parse(GM_getValue(`templates`, `[]`));
                 for (i = 0, n = savedTemplates.length; i < n; ++i) {
                     savedTemplate = savedTemplates[i];
                     details = ``;
@@ -8545,7 +8544,7 @@ ${avatar.outerHTML}
                         template.endTime = endTime;
                     }
                     createLock(`templateLock`, 300, function(deleteLock) {
-                        savedTemplates = JSON.parse(GM_getValue(`templates`));
+                        savedTemplates = JSON.parse(GM_getValue(`templates`, `[]`));
                         for (i = 0, n = savedTemplates.length; i < n && savedTemplates[i].name !== template.name; ++i);
                         if (i < n) {
                             if (edit) {
@@ -8701,7 +8700,7 @@ ${avatar.outerHTML}
                         <i class="fa fa-circle-o-notch fa-spin"></i>
                     `;
                     createLock(`templateLock`, 300, function (deleteLock) {
-                        savedTemplates = JSON.parse(GM_getValue(`templates`));
+                        savedTemplates = JSON.parse(GM_getValue(`templates`, `[]`));
                         for (i = 0, n = savedTemplates.length; i < n && savedTemplates[i].name !== savedTemplate.name; ++i);
                         savedTemplates.splice(i, 1);
                         GM_setValue(`templates`, JSON.stringify(savedTemplates));
@@ -9573,7 +9572,7 @@ ${avatar.outerHTML}
             var Winner, Rerolls;
             if (document.querySelector("[name='category_id']").value == 1) {
                 Winner = document.querySelector("[name='reroll_winner_id']").value;
-                Rerolls = GM_getValue("Rerolls");
+                Rerolls = GM_getValue("Rerolls", []);
                 if (Rerolls.indexOf(Winner) < 0) {
                     Rerolls.push(Winner);
                     GM_setValue("Rerolls", Rerolls);
@@ -9637,7 +9636,7 @@ ${avatar.outerHTML}
             UGS.Canceled = false;
             UGS.Giveaways = [];
             UGS.Checked = [];
-            UGS.Winners = GM_getValue("Winners");
+            UGS.Winners = GM_getValue("Winners", {});
             Match = window.location.href.match(/page=(\d+)/);
             getUGSGiveaways(UGS, 1, Match ? parseInt(Match[1]) : 1, function () {
                 var N;
@@ -9832,7 +9831,7 @@ ${avatar.outerHTML}
                 UGS.Progress.innerHTML =
                     "<i class=\"fa fa-circle-o-notch fa-spin\"></i> " +
                     "<span>Sending " + UGS.Giveaways[J].Name + " to " + Keys[I] + "...</span>";
-                Reroll = GM_getValue("Rerolls").indexOf(Winners[Keys[I]]) < 0;
+                Reroll = GM_getValue("Rerolls", []).indexOf(Winners[Keys[I]]) < 0;
                 if (Reroll && (UGS.Checked.indexOf(Keys[I] + UGS.Giveaways[J].Name) < 0)) {
                     SANM = UGS.SANM.checked;
                     SW = UGS.SW.checked;
@@ -11397,7 +11396,7 @@ ${Results.join(``)}
                 setPopout: function (Popout) {
                     var Emojis;
                     Popout.innerHTML =
-                        "<div class=\"CFHEmojis\">" + GM_getValue("Emojis") + "</div>" +
+                        "<div class=\"CFHEmojis\">" + GM_getValue("Emojis", ``) + "</div>" +
                         "<div class=\"form__saving-button btn_action white\">Select Emojis</div>";
                     Emojis = Popout.firstElementChild;
                     setCFHEmojis(Emojis, CFH);
@@ -11411,7 +11410,7 @@ ${Results.join(``)}
                             "afterBegin",
                             "<div class=\"CFHEmojis\"></div>" +
                             createDescription("Drag the emojis you want to use and drop them in the box below. Click on an emoji to remove it.") +
-                            "<div class=\"global__image-outer-wrap page_heading_btn CFHEmojis\">" + GM_getValue("Emojis") + "</div>"
+                            "<div class=\"global__image-outer-wrap page_heading_btn CFHEmojis\">" + GM_getValue("Emojis", ``) + "</div>"
                         );
                         Emojis = Popup.Description.firstElementChild;
                         for (I = 0, N = CFH.Emojis.length; I < N; ++I) {
@@ -11455,7 +11454,7 @@ ${Results.join(``)}
                 Callback: function (Popout) {
                     var Emojis;
                     Emojis = Popout.firstElementChild;
-                    Emojis.innerHTML = GM_getValue("Emojis");
+                    Emojis.innerHTML = GM_getValue("Emojis", ``);
                     setCFHEmojis(Emojis, CFH);
                 }
             }, {
@@ -21609,13 +21608,12 @@ ${Results.join(``)}
                                 if (Result) {
                                     Callback(wbc);
                                 } else {
-                                    Groups = GM_getValue("Groups");
+                                    Groups = JSON.parse(GM_getValue(`groups`, `{}`));
                                     for (GroupGiveaway in wbc.groupGiveaways) {
                                         Found = false;
                                         GroupGiveaways = wbc.groupGiveaways[GroupGiveaway];
                                         for (I = 0, N = GroupGiveaways.length; (I < N) && !Found; ++I) {
-                                            for (J = 0, NumGroups = Groups.length; (J < NumGroups) && (Groups[J].Code != GroupGiveaways[I]); ++J);
-                                            if (J < NumGroups) {
+                                            if (Groups[GroupGiveaways[I]] && Groups[GroupGiveaways[I]].member) {
                                                 Found = true;
                                             }
                                         }
@@ -21703,7 +21701,7 @@ ${Results.join(``)}
                         wbc.groupGiveaways[GroupGiveaway] = [];
                     }
                     for (I = 0; I < N; ++I) {
-                        Group = Groups[I].getAttribute("href").match(/\/group\/(.+)\//)[1];
+                        Group = Groups[I].getAttribute("href").match(/\/group\/.+?\/(.+)/)[1];
                         if (wbc.groupGiveaways[GroupGiveaway].indexOf(Group) < 0) {
                             wbc.groupGiveaways[GroupGiveaway].push(Group);
                         }
@@ -21989,7 +21987,7 @@ ${Results.join(``)}
         Username = Context.closest(".table__row-inner-wrap").getElementsByClassName("table__column__heading")[0].querySelector("a[href*='/user/']").textContent;
         Context.addEventListener("click", function () {
             var Winners;
-            Winners = GM_getValue("Winners");
+            Winners = GM_getValue("Winners", {});
             if (!Winners[Key]) {
                 Winners[Key] = [];
             }
@@ -22005,7 +22003,7 @@ ${Results.join(``)}
         Match = Context.firstElementChild.firstElementChild.getAttribute("href").match(/\/giveaway\/(.+?)\//);
         if (Match) {
             Key = Match[1];
-            Winners = GM_getValue("Winners");
+            Winners = GM_getValue("Winners", {});
             if (Winners[Key]) {
                 Matches = Context.nextElementSibling.children;
                 for (I = 0, N = Matches.length; I < N; ++I) {
@@ -22324,7 +22322,7 @@ ${Results.join(``)}
 
     function loadGc() {
             if (esgst.newGiveawayPath) {
-                if (esgst.gc_b && GM_getValue(`LastBundleSync`)) {
+                if (esgst.gc_b && GM_getValue(`LastBundleSync`, 0)) {
                     var table = document.getElementsByClassName(`js__autocomplete-data`)[0];
                     if (table) {
                         var backup = table.innerHTML;
@@ -23202,7 +23200,7 @@ ${Results.join(``)}
                 }
             });
         });
-        LastBundleSync = GM_getValue("LastBundleSync");
+        LastBundleSync = GM_getValue("LastBundleSync", 0);
         if (LastBundleSync) {
             SMLastBundleSync.classList.remove("notification--warning");
             SMLastBundleSync.classList.add("notification--success");
@@ -23221,7 +23219,7 @@ ${Results.join(``)}
                 window.alert(`You synced the bundle list in less than a week ago. You can sync only once per week.`);
             }
         });
-        key = GM_getValue(`steamApiKey`, GM_getValue(`SteamAPIKey`));
+        key = esgst.steamApiKey;
         if (key) {
             SMAPIKey.value = key;
         }
@@ -23631,7 +23629,7 @@ ${Results.join(``)}
             setSMManageFilteredUsers(SMManageFilteredUsers);
         }
         SMAPIKey.addEventListener("input", function () {
-            GM_setValue(`steamApiKey`, SMAPIKey.value);
+            setValue(`steamApiKey`, SMAPIKey.value);
         });
         popup.open();
     }
@@ -23896,7 +23894,7 @@ Background: <input type="color" value="${bgColor}">
                                     } else if (Key.match(/^(comments|Comments|Comments_ST)$/) && SM.C.checked) {
                                         importCommentsAndMerge(File, Key, SM);
                                     } else if (Key == `Emojis` && SM.E.checked) {
-                                        var savedEmojis = GM_getValue(`Emojis`);
+                                        var savedEmojis = GM_getValue(`Emojis`, ``);
                                         var emojis = DOM.parse(File.Data.Emojis).getElementsByTagName(`span`);
                                         for (i = 0, n = emojis.length; i < n; ++i) {
                                             if (!savedEmojis.match(emojis[i].outerHTML)) {
@@ -23907,7 +23905,7 @@ Background: <input type="color" value="${bgColor}">
                                     } else if (Key.match(/^(CommentHistory|sgCommentHistory|stCommentHistory)$/)) {
                                         importCommentHistoryAndMerge(File, Key, SM);
                                     } else if (Key.match(/^(Rerolls|StickiedGroups)$/) && SM[SM.Names[Key]].checked) {
-                                        saved = GM_getValue(Key);
+                                        saved = GM_getValue(Key, []);
                                         for (i = 0, n = File.Data[Key].length; i < n; ++i) {
                                             value = File.Data[Key][i];
                                             if (saved.indexOf(value) < 0) {
@@ -23975,7 +23973,7 @@ Background: <input type="color" value="${bgColor}">
     function importTemplatesAndMerge(File, Key, SM) {
         createLock(`templateLock`, 300, function (deleteLock) {
             var i, j, n, numT, savedTemplates, template, templates;
-            savedTemplates = JSON.parse(GM_getValue(`templates`));
+            savedTemplates = JSON.parse(GM_getValue(`templates`, `[]`));
             if (Key === `Templates`) {
                 templates = getTemplateStorageV6(File.Data.Templates);
             } else {
@@ -24134,7 +24132,7 @@ Background: <input type="color" value="${bgColor}">
     function importCommentHistoryAndMerge(File, kk, SM) {
         createLock(`${kk === `CommentHistory` ? `sgCommentHistory` : kk}Lock`, 300, function (deleteLock) {
             var i, j, nS, nC, k, nK, newComments, comments, savedComments;
-            savedComments = JSON.parse(GM_getValue(kk === `CommentHistory` ? `sgCommentHistory` : kk));
+            savedComments = JSON.parse(GM_getValue(kk === `CommentHistory` ? `sgCommentHistory` : kk, `[]`));
             newComments = savedComments;
             if (kk === `CommentHistory` && SM.CH_SG.checked) {
                 newComments = [];

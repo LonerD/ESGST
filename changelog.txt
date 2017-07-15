@@ -1,4 +1,12 @@
 /*
+ * July 15, 2017 - v6.Beta.17.5
+ */
+
+* Fixed several bugs.
+* Added back Greasemonkey support to the script (Header Refresher now works well on Greasemonkey as well).
+* Fixed a bug in Whitelist/Blacklist Checker that was showing incorrect results for group/whitelist giveaways.
+
+/*
  * July 15, 2017 - v6.Beta.17.4
  */
 
