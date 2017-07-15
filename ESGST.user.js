@@ -3,7 +3,7 @@
 // @namespace ESGST
 // @description Enhances SteamGifts and SteamTrades by adding some cool features to them.
 // @icon https://github.com/revilheart/ESGST/raw/master/Resources/esgstIcon.ico
-// @version 6.Beta.17.7
+// @version 6.Beta.17.8
 // @author revilheart
 // @downloadURL https://github.com/revilheart/ESGST/raw/master/ESGST.user.js
 // @updateURL https://github.com/revilheart/ESGST/raw/master/ESGST.meta.js
@@ -820,6 +820,8 @@
                         gc_w_color: `#ffffff`,
                         gc_o_color: `#ffffff`,
                         gc_i_color: `#ffffff`,
+                        gc_rm_color: `#ffffff`,
+                        gc_ea_color: `#ffffff`,
                         gc_tc_color: `#ffffff`,
                         gc_a_color: `#ffffff`,
                         gc_mp_color: `#ffffff`,
@@ -833,6 +835,8 @@
                         gc_o_bgColor: `#16a085`,
                         gc_w_bgColor: `#3498db`,
                         gc_i_bgColor: `#e74c3c`,
+                        gc_rm_bgColor: `#e74c3c`,
+                        gc_ea_bgColor: `#3498db`,
                         gc_tc_bgColor: `#2ecc71`,
                         gc_a_bgColor: `#145a32`,
                         gc_mp_bgColor: `#0e6251`,
@@ -2314,6 +2318,18 @@
                                 },
                                 {
                                     colors: true,
+                                    id: `gc_rm`,
+                                    name: `Removed`,
+                                    sg: true
+                                },
+                                {
+                                    colors: true,
+                                    id: `gc_ea`,
+                                    name: `Early Access`,
+                                    sg: true
+                                },
+                                {
+                                    colors: true,
                                     id: `gc_tc`,
                                     name: `Trading Cards`,
                                     sg: true
@@ -3377,6 +3393,7 @@
 
     function continueSyncStep3(syncer, callback) {
         if (esgst.settings.syncGames) {
+            syncer.progress.lastElementChild.textContent = `Syncing your wishlisted/owned/ignored games...`;
             syncGames(syncer, callback);
         } else {
             callback();
@@ -3384,7 +3401,6 @@
     }
 
     function syncGames(syncer, callback) {
-        syncer.progress.lastElementChild.textContent = `Syncing your wishlisted/owned/ignored games...`;
         if (esgst.steamApiKey) {
             request(null, false, `http://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/?key=${esgst.steamApiKey}&steamid=${esgst.steamId}&format=json`, getApiResponseAndContinueSync.bind(null, syncer, callback));
         } else {
@@ -4328,6 +4344,16 @@
             {
                 id: `gc_i`,
                 key: `ignored`,
+                mainKey: `esgst-gc`
+            },
+            {
+                id: `gc_rm`,
+                key: `removed`,
+                mainKey: `esgst-gc`
+            },
+            {
+                id: `gc_ea`,
+                key: `earlyAccess`,
                 mainKey: `esgst-gc`
             },
             {
@@ -10005,6 +10031,7 @@ ${avatar.outerHTML}
         }
 
         function getResult() {
+            Popup.Progress.textContent = `Syncing owned games...`;
             syncGames(Popup, checkResult);
         }
 
@@ -22446,60 +22473,63 @@ ${Results.join(``)}
     }
 
     function getGcCategories(games, id, response, response2, savedGames, type, callback) {
-            var appId, i, match, n, responseHtml, responseJson, summary, summaries, tag, tags;
-            responseJson = JSON.parse(response.responseText)[id];
-            if (!savedGames[type][id]) {
-                savedGames[type][id] = {};
+        var appId, i, match, n, responseHtml, responseJson, summary, summaries, tag, tags;
+        responseJson = JSON.parse(response.responseText)[id];
+        if (!savedGames[type][id]) {
+            savedGames[type][id] = {};
+        }
+        if (responseJson.success) {
+            if (responseJson.data.type === `dlc`) {
+                savedGames[type][id].dlc = true;
             }
-            if (responseJson.success) {
-                if (responseJson.data.type === `dlc`) {
-                    savedGames[type][id].dlc = true;
+            if (responseJson.data.apps) {
+                if (!savedGames[type][id].apps) {
+                    savedGames[type][id].apps = [];
                 }
-                if (responseJson.data.apps) {
-                    if (!savedGames[type][id].apps) {
-                        savedGames[type][id].apps = [];
-                    }
-                    for (i = 0, n = responseJson.data.apps.length; i < n; ++i) {
-                        appId = responseJson.data.apps[i].id;
-                        savedGames[type][id].apps.push(appId);
-                        if (savedGames.apps[appId] && savedGames.apps[appId].wishlisted) {
-                            savedGames[type][id].wishlisted = true;
-                        }
-                    }
-                }
-                if (responseJson.data.packages) {
-                    savedGames[type][id].subs = responseJson.data.packages;
-                    if (savedGames[type][id].wishlisted) {
-                        for (i = 0, n = savedGames[type][id].subs.length; i < n; ++i) {
-                            if (savedGames[type][savedGames[type][id].subs[i]]) {
-                                savedGames[type][savedGames[type][id].subs[i]].wishlisted = true;
-                            }
-                        }
-                    }
-                }
-                savedGames[type][id].linux = responseJson.data.platforms.linux;
-                savedGames[type][id].mac = responseJson.data.platforms.mac;
-                if (responseJson.data.categories) {
-                    for (i = 0, n = responseJson.data.categories.length; i < n; ++i) {
-                        if (responseJson.data.categories[i].description == `Steam Achievements`) {
-                            savedGames[type][id].achievements = true;
-                        } else if (responseJson.data.categories[i].description == `Steam Trading Cards`) {
-                            savedGames[type][id].tradingCards = true;
-                        } else if (responseJson.data.categories[i].description == `Multi-player`) {
-                            savedGames[type][id].multiplayer = true;
-                        } else if (responseJson.data.categories[i].description == `Steam Cloud`) {
-                            savedGames[type][id].steamCloud = true;
-                        }
-                    }
-                }
-                if (responseJson.data.genres) {
-                    savedGames[type][id].genres = [];
-                    for (i = 0, n = responseJson.data.genres.length; i < n; ++i) {
-                        savedGames[type][id].genres.push(responseJson.data.genres[i].description);
+                for (i = 0, n = responseJson.data.apps.length; i < n; ++i) {
+                    appId = responseJson.data.apps[i].id;
+                    savedGames[type][id].apps.push(appId);
+                    if (savedGames.apps[appId] && savedGames.apps[appId].wishlisted) {
+                        savedGames[type][id].wishlisted = true;
                     }
                 }
             }
-            if (response2) {
+            if (responseJson.data.packages) {
+                savedGames[type][id].subs = responseJson.data.packages;
+                if (savedGames[type][id].wishlisted) {
+                    for (i = 0, n = savedGames[type][id].subs.length; i < n; ++i) {
+                        if (savedGames[type][savedGames[type][id].subs[i]]) {
+                            savedGames[type][savedGames[type][id].subs[i]].wishlisted = true;
+                        }
+                    }
+                }
+            }
+            savedGames[type][id].linux = responseJson.data.platforms.linux;
+            savedGames[type][id].mac = responseJson.data.platforms.mac;
+            if (responseJson.data.categories) {
+                for (i = 0, n = responseJson.data.categories.length; i < n; ++i) {
+                    if (responseJson.data.categories[i].description == `Steam Achievements`) {
+                        savedGames[type][id].achievements = true;
+                    } else if (responseJson.data.categories[i].description == `Steam Trading Cards`) {
+                        savedGames[type][id].tradingCards = true;
+                    } else if (responseJson.data.categories[i].description == `Multi-player`) {
+                        savedGames[type][id].multiplayer = true;
+                    } else if (responseJson.data.categories[i].description == `Steam Cloud`) {
+                        savedGames[type][id].steamCloud = true;
+                    }
+                }
+            }
+            if (responseJson.data.genres) {
+                savedGames[type][id].genres = [];
+                for (i = 0, n = responseJson.data.genres.length; i < n; ++i) {
+                    savedGames[type][id].genres.push(responseJson.data.genres[i].description);
+                }
+            }
+        } else if (!response2) {
+            savedGames[type][id].removed = true;
+        }
+        if (response2) {
+            if (response2.finalUrl.match(id)) {
                 responseHtml = DOM.parse(response2.responseText);
                 tags = responseHtml.querySelectorAll(`a.app_tag`);
                 n = tags.length;
@@ -22531,10 +22561,16 @@ ${Results.join(``)}
                         });
                     }
                 }
+            } else {
+                savedGames[type][id].removed = true;
             }
-            savedGames[type][id].lastCheck = Date.now();
-            addGcCategory(games[id], savedGames[type][id], id, games[id][0].name, type);
-            callback();
+        }
+        if (savedGames[type][id].genres && savedGames[type][id].genres.indexOf(`Early Access`) >= 0) {
+            savedGames[type][id].earlyAccess = true;            
+        }
+        savedGames[type][id].lastCheck = Date.now();
+        addGcCategory(games[id], savedGames[type][id], id, games[id][0].name, type);
+        callback();
     }
 
     function addGcCategory(games, savedGames, id, name, type) {
@@ -22585,6 +22621,22 @@ ${Results.join(``)}
                 name: `Ignored`,
                 simplified: `I`,
                 icon: `fa-ban`
+            },
+            {
+                id: `gc_rm`,
+                key: `removed`,
+                link: `http://steamdb.info/${type}/${id}`,
+                name: `Removed`,
+                simplified: `R`,
+                icon: `fa-trash`
+            },
+            {
+                id: `gc_ea`,
+                key: `earlyAccess`,
+                link: `http://store.steampowered.com/${type}/${id}`,
+                name: `Early Access`,
+                simplified: `EA`,
+                icon: `fa-unlock`
             },
             {
                 id: `gc_tc`,
