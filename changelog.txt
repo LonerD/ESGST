@@ -1,4 +1,10 @@
 /*
+ * July 15, 2017 - v6.Beta.17.6
+ */
+
+* Fixed a bug that prevented some features from running in giveaways with no descriptions and Next/Previous Train Hotkeys enabled.
+
+/*
  * July 15, 2017 - v6.Beta.17.5
  */
 

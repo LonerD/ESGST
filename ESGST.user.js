@@ -3,7 +3,7 @@
 // @namespace ESGST
 // @description Enhances SteamGifts and SteamTrades by adding some cool features to them.
 // @icon https://github.com/revilheart/ESGST/raw/master/Resources/esgstIcon.ico
-// @version 6.Beta.17.5
+// @version 6.Beta.17.6
 // @author revilheart
 // @downloadURL https://github.com/revilheart/ESGST/raw/master/ESGST.user.js
 // @updateURL https://github.com/revilheart/ESGST/raw/master/ESGST.meta.js
@@ -10577,21 +10577,23 @@ ${Results.join(``)}
         var description, element, elements, i, n, next, nextMatch, previous, previousMatch;
         if (esgst.giveawayCommentsPath) {
             description = document.getElementsByClassName(`page__description`)[0];
-            elements = description.querySelectorAll(`[href*="/giveaway/"]`);
-            for (i = 0, n = elements.length; i < n; ++i) {
-                element = elements[i];
-                previousMatch = element.textContent.toLowerCase().match(/prev|back|less|<|←/);
-                if (previousMatch) {
-                    previous = element;
-                } else {
-                    nextMatch = element.textContent.toLowerCase().match(/next|forw|more|>|→/);
-                    if (nextMatch) {
-                        next = element;
+            if (description) {
+                elements = description.querySelectorAll(`[href*="/giveaway/"]`);
+                for (i = 0, n = elements.length; i < n; ++i) {
+                    element = elements[i];
+                    previousMatch = element.textContent.toLowerCase().match(/prev|back|less|<|←/);
+                    if (previousMatch) {
+                        previous = element;
+                    } else {
+                        nextMatch = element.textContent.toLowerCase().match(/next|forw|more|>|→/);
+                        if (nextMatch) {
+                            next = element;
+                        }
                     }
                 }
-            }
-            if (previous || next) {
-                document.addEventListener(`keydown`, loadNpthGiveaway.bind(null, next, previous));
+                if (previous || next) {
+                    document.addEventListener(`keydown`, loadNpthGiveaway.bind(null, next, previous));
+                }
             }
         }
     }
