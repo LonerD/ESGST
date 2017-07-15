@@ -1,4 +1,13 @@
 /*
+ * July 15, 2017 - v6.Beta.17.4
+ */
+
+* You can now sync from ST.
+* You can now sync groups/whitelist/blacklist/games separately.
+* The automatic sync now opens in a new tab.
+* Multiple Giveaways Creator now automatically corrects the starting time of the giveaways if it has already passed and shows error messages in the their titles if the creation process has failed (closes #215).
+
+/*
  * July 14, 2017 - v6.Beta.17.3
  */
 
