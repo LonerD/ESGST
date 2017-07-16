@@ -1,9 +1,9 @@
-// ==UserScript==
+﻿// ==UserScript==
 // @name ESGST
 // @namespace ESGST
 // @description Enhances SteamGifts and SteamTrades by adding some cool features to them.
 // @icon https://github.com/revilheart/ESGST/raw/master/Resources/esgstIcon.ico
-// @version 6.Beta.17.9
+// @version 6.Beta.17.10
 // @author revilheart
 // @downloadURL https://github.com/revilheart/ESGST/raw/master/ESGST.user.js
 // @updateURL https://github.com/revilheart/ESGST/raw/master/ESGST.meta.js
@@ -2538,7 +2538,7 @@
                     GM_addStyle(style);
                 }
             }
-        } else if (esgst.steam) {
+        } else if ((esgst.settings.rgr_sg || esgst.settings.rgr_st) && esgst.steam) {
             checkRgrRemoved();
         }
     }
