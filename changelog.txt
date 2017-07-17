@@ -1,4 +1,12 @@
 /*
+ * July 17, 2017 - v6.Beta.18.0
+ */
+
+Added the following features:
+
+* 2.26 Train Giveaways Extractor
+
+/*
  * July 17, 2017 - v6.Beta.17.11
  */
 

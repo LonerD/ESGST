@@ -3,7 +3,7 @@
 // @namespace ESGST
 // @description Enhances SteamGifts and SteamTrades by adding some cool features to them.
 // @icon https://github.com/revilheart/ESGST/raw/master/Resources/esgstIcon.ico
-// @version 6.Beta.17.11
+// @version 6.Beta.18.0
 // @author revilheart
 // @downloadURL https://github.com/revilheart/ESGST/raw/master/ESGST.user.js
 // @updateURL https://github.com/revilheart/ESGST/raw/master/ESGST.meta.js
@@ -1551,8 +1551,20 @@
                             `,
                             id: `npth`,
                             load: loadNpth,
-                            name: `[NEW] Next/Previous Train Hotkeys`,
+                            name: `Next/Previous Train Hotkeys`,
                             input: true,
+                            sg: true,
+                            type: `giveaways`
+                        },
+                        {
+                            description: `
+                                <ul>
+                                    <li>Extracts all giveaways from a train, so you don't need to navigate through the entire train to find the ones you're interested in.</li>
+                                </ul>
+                            `,
+                            id: `tge`,
+                            load: loadTge,
+                            name: `[NEW] Train Giveaways Extractor`,
                             sg: true,
                             type: `giveaways`
                         },
@@ -10658,6 +10670,86 @@ ${Results.join(``)}
                 }
             }
         }
+    }
+
+    /* [TGE] Train Giveaways Extractor */
+
+    function loadTge() {
+        var tge;
+        if (esgst.giveawayCommentsPath) {
+            tge = {};
+            tge.button = insertHtml(esgst.mainPageHeading, `afterBegin`, `
+                <div class="esgst-heading-button" title="Extract train giveaways.">
+                    <i class="fa fa-train"></i>
+                    <i class="fa fa-search"></i>
+                </div>
+            `);
+            tge.button.addEventListener(`click`, extractTgeGiveaways.bind(null, tge));
+        }
+    }
+
+    function extractTgeGiveaways(tge) {
+        if (!tge.popup) {
+            tge.popup = createPopup_v6(`fa-train`, `Choo choo!`);
+            tge.results = insertHtml(tge.popup.description, `beforeEnd`, `<div class="esgst-text-left"></div>`);
+            tge.set = createButtonSet(`green`, `grey`, `fa-search`, `fa-times`, `Extract`, `Cancel`, startExtracting.bind(null, tge), completeExtraction.bind(null, tge)).set;
+            tge.popup.description.appendChild(tge.set);
+        }
+        tge.popup.open();
+    }
+
+    function startExtracting(tge, callback) {
+        tge.button.classList.add(`esgst-busy`);
+        tge.progress = insertHtml(tge.popup.description, `beforeEnd`, `
+            <div>
+                <i class="fa fa-circle-o-notch fa-spin"></i>
+                <span>0</span> giveaways extracted.
+            </div>
+        `).lastElementChild;
+        getTgeGiveaways(tge, document, window.location.href, completeExtraction.bind(null, tge, callback));
+    }
+
+    function completeExtraction(tge, callback) {
+        tge.button.classList.remove(`esgst-busy`);
+        tge.progress.previousElementSibling.remove();
+        callback();
+        tge.set.remove();
+        tge.set = null;
+        loadEndlessFeatures(tge.results);
+    }
+
+    function getTgeGiveaways(tge, context, url, callback) {
+        var description, element, elements, giveaway, i, n, next;
+        if (context !== document) {
+            tge.progress.textContent = parseInt(tge.progress.textContent) + 1;
+            giveaway = buildGiveaway(context, url);
+            if (giveaway) {
+                tge.results.insertAdjacentHTML(`beforeEnd`, giveaway.html);
+            }
+            tge.popup.reposition();
+        }
+        description = context.getElementsByClassName(`page__description`)[0];
+        if (description) {
+            elements = description.querySelectorAll(`[href*="/giveaway/"]`);
+            next = null;
+            for (i = 0, n = elements.length; i < n; ++i) {
+                element = elements[i];
+                if (element.textContent.toLowerCase().match(/next|forw|more|>|→/)) {
+                    next = element;
+                }
+            }
+            if (next) {
+                request(null, false, next.getAttribute(`href`), getTgeGiveaway.bind(null, tge, callback));
+            } else {
+                callback();
+            }
+        } else {
+            callback();
+        }
+    }
+
+    function getTgeGiveaway(tge, callback, response) {
+        window.setTimeout(getTgeGiveaways, 0, tge, DOM.parse(response.responseText), response.finalUrl, callback);
     }
 
     /* [GESL] Giveaway Error Search Links (by Royalgamer06) */
