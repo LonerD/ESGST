@@ -3,7 +3,7 @@
 // @namespace ESGST
 // @description Enhances SteamGifts and SteamTrades by adding some cool features to them.
 // @icon https://github.com/revilheart/ESGST/raw/master/Resources/esgstIcon.ico
-// @version 6.Beta.17.10
+// @version 6.Beta.17.11
 // @author revilheart
 // @downloadURL https://github.com/revilheart/ESGST/raw/master/ESGST.user.js
 // @updateURL https://github.com/revilheart/ESGST/raw/master/ESGST.meta.js
@@ -6617,6 +6617,9 @@ min-width: 0;
     function getRemainingTime(time) {
         var d, dif, h, m, s, w;
         dif = time - Date.now();
+        if (dif < 0) {
+            dif *= -1;
+        }
         w = Math.floor(dif / 604800000);
         if (w > 0) {
             return `${w}w`;
@@ -6649,9 +6652,10 @@ min-width: 0;
         giveaway.innerWrap.classList.add(`esgst-gv-box`);
         icons = insertHtml(giveaway.innerWrap, `afterBegin`, `
             <div class="esgst-gv-icons giveaway__columns">
-                <div title="${giveaway.endTimeColumn.lastElementChild.textContent}">
+                <div>
+                    <span title="Ends ${giveaway.endTimeColumn.lastElementChild.textContent}">${getRemainingTime(giveaway.endTime)}</span>
                     <i class="fa fa-clock-o"></i>
-                    <span>${getRemainingTime(giveaway.endTime)}</span>
+                    <span title="Created ${giveaway.startTimeColumn.lastElementChild.previousElementSibling.textContent}">${getRemainingTime(giveaway.startTime)}</span>
                 </div>
             </div>
         `);

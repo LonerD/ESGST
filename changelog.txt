@@ -1,5 +1,11 @@
 /*
- * July 16, 2017 - v6.Beta.17.9
+ * July 17, 2017 - v6.Beta.17.11
+ */
+
+* Added created time to Grid View.
+
+/*
+ * July 16, 2017 - v6.Beta.17.10
  */
 
 * Fixed a bug that was enabling Removed Game Redirecter even if disabled.
