@@ -1,4 +1,10 @@
 /*
+ * July 18, 2017 - v6.Beta.19.7
+ */
+
+* Fixed a bug in Giveaway Encrypter/Decrypter.
+
+/*
  * July 18, 2017 - v6.Beta.19.6
  */
 

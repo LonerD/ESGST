@@ -3,7 +3,7 @@
 // @namespace ESGST
 // @description Enhances SteamGifts and SteamTrades by adding some cool features to them.
 // @icon https://github.com/revilheart/ESGST/raw/master/Resources/esgstIcon.ico
-// @version 6.Beta.19.6
+// @version 6.Beta.19.7
 // @author revilheart
 // @downloadURL https://github.com/revilheart/ESGST/raw/master/ESGST.user.js
 // @updateURL https://github.com/revilheart/ESGST/raw/master/ESGST.meta.js
@@ -8018,7 +8018,7 @@ ${avatar.outerHTML}
     /* [GED] Giveaway Encrypter/Decrypter */
 
     function loadGed() {
-        var builtGiveaways, giveaway, button, code, currentDate, giveaways, i, keys, n, newGiveaways, numNew, popup, progress, results, savedGiveaways, set, timestamp;
+        var builtGiveaways, giveaway, button, code, currentDate, filtered, game, giveaways, i, keys, n, newGiveaways, numNew, popup, progress, results, savedGiveaways, set, timestamp;
         newGiveaways = {};
         button = insertHtml(esgst.headerNavigationLeft, `beforeEnd`, `
             <div class="nav__button-container esgst-hidden" title="View your decrypted giveaways.">
@@ -8043,6 +8043,7 @@ ${avatar.outerHTML}
                 if (timestamp > currentDate) {
                     filtered = false;
                     if (giveaway) {
+                        game = null;
                         if (giveaway.gameType && giveaway.gameSteamId) {
                             game = esgst.games[giveaway.gameType][giveaway.gameSteamId];
                         }
