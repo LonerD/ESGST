@@ -1,4 +1,15 @@
 /*
+ * July 18, 2017 - v6.Beta.19.3
+ */
+
+* Fixed a class conflict with the pinned giveaways button.
+* Fixed a conflict between normal and popup filters in Giveaway Filters (closes #262).
+* Giveaway Encrypter/Decrypter now only loads created/hidden/owned/ignored giveaways if those options are enabled in the filter, instead of loading them first and then filtering. This means that if you change one of those options in the filter, it will only take effect when you refresh the page. Also, giveaways decrypted before this version must be fully loaded (keep clicking "Load more...") if you want them to be filtered correctly.
+* Added bump links to Train Giveaways Extractor (closes #261).
+* Train Giveaways Extractor is now able to extract any amount of trains inside of a train (trainception :P) (closes #263).
+* Added 7.4.4 "Giveaway Info" category to Game Categories (closes #254).
+
+/*
  * July 18, 2017 - v6.Beta.19.2
  */
 

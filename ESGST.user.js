@@ -3,7 +3,7 @@
 // @namespace ESGST
 // @description Enhances SteamGifts and SteamTrades by adding some cool features to them.
 // @icon https://github.com/revilheart/ESGST/raw/master/Resources/esgstIcon.ico
-// @version 6.Beta.19.2
+// @version 6.Beta.19.3
 // @author revilheart
 // @downloadURL https://github.com/revilheart/ESGST/raw/master/ESGST.user.js
 // @updateURL https://github.com/revilheart/ESGST/raw/master/ESGST.meta.js
@@ -888,6 +888,7 @@
                         rgr_index: 0,
                         cfh_pasteFormatting: true,
                         gc_h_color: `#ffffff`,
+                        gc_gi_color: `#ffffff`,
                         gc_b_color: `#ffffff`,
                         gc_w_color: `#ffffff`,
                         gc_o_color: `#ffffff`,
@@ -904,6 +905,7 @@
                         gc_p_color: `#ffffff`,
                         gc_g_color: `#ffffff`,
                         gc_h_bgColor: `#e74c3c`,
+                        gc_gi_bgColor: `#555555`,
                         gc_b_bgColor: `#641e16`,
                         gc_o_bgColor: `#16a085`,
                         gc_w_bgColor: `#3498db`,
@@ -2366,6 +2368,19 @@
                                     sg: true
                                 },
                                 {
+                                    colors: true,
+                                    description: `
+                                        <ul>
+                                            <li>Shows how many giveaways you have already made for a game and how much CV you should get for a new giveaway.</li>
+                                            <li>In order for the feature to work properly, you must scan your profile with User Giveaways Data (currently this must be done every time your giveaways end, if you want to keep it updated).</li>
+                                            <li>The information is not 100% accurate because it cannot know if all the copies were sent when it comes to giveaways with multiple copies, at the moment.</li>
+                                        </ul>
+                                    `,
+                                    id: `gc_gi`,
+                                    name: `[NEW] Giveaway Info`,
+                                    sg: true
+                                },
+                                {
                                     features: [
                                         {
                                             id: `gc_r_s`,
@@ -2611,6 +2626,22 @@
                     addHeaderMenu();
                     checkNewVersion();
                     var sibling, height;
+                    style += `
+                        .esgst-pgb-button, .esgst-gf-button {
+                            border: 1px solid #d2d6e0;
+                            border-top: none;
+                            background-color: #e1e6ef;
+                            background-image: linear-gradient(rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0) 100%);color: #6b7a8c;
+                            cursor: pointer;
+                            margin-bottom: 15px;
+                            padding: 3px;
+                            text-align: center;
+                            border-radius: 0 0 4px 4px;
+                        }
+                        .esgst-pgb-button:hover, .esgst-gf-button:hover {
+                            background-image:linear-gradient(rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0) 100%);
+                        }
+                    `;
                     if (esgst.fh) {
                         esgst.header.classList.add(`esgst-fh`);
                         if (esgst.featuredContainer && ((esgst.hfc && !esgst.giveawaysPath) || !esgst.hfc)) {
@@ -4837,6 +4868,11 @@
                 mainKey: `esgst-gc`
             },
             {
+                id: `gc_gi`,
+                key: `giveawayInfo`,
+                mainKey: `esgst-gc`
+            },
+            {
                 id: `gc_b`,
                 key: `bundled`,
                 mainKey: `esgst-gc`
@@ -5264,6 +5300,10 @@ margin-top: 25px;
 
 .esgst-gc-panel {
 text-align: left;
+}
+
+.esgst-gc-panel a {
+    text-decoration: none;
 }
 
 .esgst-gc-panel.simplified {
@@ -7127,12 +7167,23 @@ min-width: 0;
     /* [GF] Giveaway Filters */
 
     function addGfContainer(context) {
-        var basicFilter, basicFilters, box, button, categoryFilter, categoryFilters, checkbox, collapse, container, exceptionFilter, exceptionFilters, expand, filter, filters, genres, i, id, input, key, maxKey, minKey, maxSaveKey, maxSavedValue, minSaveKey, minSavedValue, maxValue, minValue, multiple, n, name, oldKey, oldSaveKey, saveKey, step, type, typeFilter, typeFilters, value, values;
-        type = window.location.search.match(/type=(wishlist|recommended|group|new)/);
-        esgst.gf = {
-            type: type ? type[1].replace(/^(.)/, function (m, p1) {
-                return p1.toUpperCase();
-            }) : (esgst.groupPath ? `Groups` : (context ? `Popup` : ``)),
+        var gf, basicFilter, basicFilters, box, button, categoryFilter, categoryFilters, checkbox, collapse, container, exceptionFilter, exceptionFilters, expand, filter, filters, genres, i, id, input, key, maxKey, minKey, maxSaveKey, maxSavedValue, minSaveKey, minSavedValue, maxValue, minValue, multiple, n, name, oldKey, oldSaveKey, saveKey, step, type, typeFilter, typeFilters, value, values;
+        if (context) {
+            type = `Popup`;
+        } else {
+            type = window.location.search.match(/type=(wishlist|recommended|group|new)/);
+            if (type) {
+                type = type[1].replace(/^(.)/, function (m, p1) {
+                    return p1.toUpperCase();
+                });
+            } else if (esgst.groupPath) {
+                type = `Groups`;
+            } else {
+                type = ``;
+            }
+        }
+        gf = {
+            type: type,
             advancedSearch: window.location.search.match(/q=/),
             basicFilters: [
                 {
@@ -7299,6 +7350,11 @@ min-width: 0;
                 }
             ]
         };
+        if (gf.type === `Popup`) {
+            esgst.gfPopup = gf;
+        } else {
+            esgst.gf = gf;
+        }
         container = insertHtml(context || esgst.pinnedGiveaways || esgst.mainPageHeading, `beforeBegin`, `
             <div class="pinned-giveaways__outer-wrap esgst-gf-container">
                 <div class="pinned-giveaways__inner-wrap esgst-gf-box">
@@ -7336,7 +7392,7 @@ min-width: 0;
                         </div>
                     </div>
                 </div>
-                <div class="pinned-giveaways__button esgst-gf-button">
+                <div class="esgst-gf-button">
                     <span>Expand</span>
                     <span class="esgst-hidden">Collapse</span> giveaway filters (<span>0</span> giveaways currently being filtered).
                 </div>
@@ -7351,36 +7407,36 @@ min-width: 0;
         button = box.nextElementSibling;
         expand = button.firstElementChild;
         collapse = expand.nextElementSibling;
-        esgst.gf.filteredCount = collapse.nextElementSibling;
-        if (!esgst.gf.advancedSearch) {
+        gf.filteredCount = collapse.nextElementSibling;
+        if (!gf.advancedSearch) {
             basicFilters.classList.remove(`esgst-hidden`);
-            for (i = 0, n = esgst.gf.basicFilters.length; i < n; ++i) {
-                createGfBasicFilter(esgst.gf.basicFilters[i]);
+            for (i = 0, n = gf.basicFilters.length; i < n; ++i) {
+                createGfBasicFilter(gf.basicFilters[i]);
             }
         }
-        for (i = 0, n = esgst.gf.typeFilters.length; i < n; ++i) {
-            filter = esgst.gf.typeFilters[i];
+        for (i = 0, n = gf.typeFilters.length; i < n; ++i) {
+            filter = gf.typeFilters[i];
             key = filter.key;
-            if ((key === `regionRestricted` && !esgst.gf.advancedSearch) || key !== `regionRestricted`) {
+            if ((key === `regionRestricted` && !gf.advancedSearch) || key !== `regionRestricted`) {
                 name = filter.name;
                 typeFilter = insertHtml(typeFilters, `beforeEnd`, `
                     <div class="esgst-gf-type-filter">
                         <span>${name}</span>
                     </div>
                 `);
-                saveKey = `gf_${key}${esgst.gf.type}`;
+                saveKey = `gf_${key}${gf.type}`;
                 value = esgst[saveKey];
-                esgst.gf[key] = value;
+                gf[key] = value;
                 checkbox = createCheckbox_v6(typeFilter, value, true);
-                checkbox.checkbox.addEventListener(`click`, saveGfValue.bind(null, key, saveKey, checkbox));
+                checkbox.checkbox.addEventListener(`click`, saveGfValue.bind(null, gf, key, saveKey, checkbox));
             }
         }
         if (esgst.gc) {
             categoryFilters.classList.remove(`esgst-hidden`);
-            for (i = 0, n = esgst.gf.categoryFilters.length; i < n; ++i) {
-                filter = esgst.gf.categoryFilters[i];
+            for (i = 0, n = gf.categoryFilters.length; i < n; ++i) {
+                filter = gf.categoryFilters[i];
                 id = filter.id;
-                if (((id === `gc_dlc` && !esgst.gf.advancedSearch) || id !== `gc_dlc`) && esgst[id]) {
+                if (((id === `gc_dlc` && !gf.advancedSearch) || id !== `gc_dlc`) && esgst[id]) {
                     name = filter.name;
                     key = filter.key;
                     genres = key === `genres`;
@@ -7389,26 +7445,26 @@ min-width: 0;
                             <span>${name} ${genres ? `<i class="fa fa-question-circle" title="If disabled, no games will be filtered by genre; if enabled, only games with the listed genres will appear"></i> <input placeholder="Genre1, Genre2" type="text">` : ``}</span>
                         </div>
                     `);
-                    saveKey = `gf_${key}${esgst.gf.type}`;
+                    saveKey = `gf_${key}${gf.type}`;
                     value = esgst[saveKey];
-                    esgst.gf[key] = value;
+                    gf[key] = value;
                     checkbox = createCheckbox_v6(categoryFilter, value, genres ? false : true);
-                    checkbox.checkbox.addEventListener(`click`, saveGfValue.bind(null, key, saveKey, checkbox));
+                    checkbox.checkbox.addEventListener(`click`, saveGfValue.bind(null, gf, key, saveKey, checkbox));
                     if (genres) {
                         input = categoryFilter.lastElementChild.lastElementChild;
                         key = `genreList`;
-                        saveKey = `gf_${key}${esgst.gf.type}`;
+                        saveKey = `gf_${key}${gf.type}`;
                         value = esgst[saveKey].replace(/,(?!\s)/g, `, `);
-                        esgst.gf[key] = input.value = value;
-                        input.addEventListener(`change`, saveGfValue.bind(null, key, saveKey, input));
+                        gf[key] = input.value = value;
+                        input.addEventListener(`change`, saveGfValue.bind(null, gf, key, saveKey, input));
                     }
                 }
             }
         }
-        for (i = 0, n = esgst.gf.exceptionFilters.length; i < n; ++i) {
-            filter = esgst.gf.exceptionFilters[i];
+        for (i = 0, n = gf.exceptionFilters.length; i < n; ++i) {
+            filter = gf.exceptionFilters[i];
             key = filter.key;
-            if ((key === `exceptionRegionRestricted` && !esgst.gf.advancedSearch) || key !== `exceptionRegionRestricted`) {
+            if ((key === `exceptionRegionRestricted` && !gf.advancedSearch) || key !== `exceptionRegionRestricted`) {
                 name = filter.name;
                 multiple = key === `exceptionMultiple`;
                 exceptionFilter = insertHtml(exceptionFilters, `beforeEnd`, `
@@ -7416,23 +7472,23 @@ min-width: 0;
                         <span>${name} ${multiple ? `<input type="number" min="1">` : ``}</span>
                     </div>
                 `);
-                saveKey = `gf_${key}${esgst.gf.type}`;
+                saveKey = `gf_${key}${gf.type}`;
                 value = esgst[saveKey];
-                esgst.gf[key] = value;
+                gf[key] = value;
                 checkbox = createCheckbox_v6(exceptionFilter, value);
-                checkbox.checkbox.addEventListener(`click`, saveGfValue.bind(null, key, saveKey, checkbox));
+                checkbox.checkbox.addEventListener(`click`, saveGfValue.bind(null, gf, key, saveKey, checkbox));
                 if (multiple) {
                     input = exceptionFilter.lastElementChild.firstElementChild;
                     key = `exceptionMultipleCopies`;
-                    saveKey = `gf_${key}${esgst.gf.type}`;
+                    saveKey = `gf_${key}${gf.type}`;
                     value = esgst[saveKey];
-                    esgst.gf[key] = input.value = value;
-                    input.addEventListener(`change`, saveGfValue.bind(null, key, saveKey, null));
+                    gf[key] = input.value = value;
+                    input.addEventListener(`change`, saveGfValue.bind(null, gf, key, saveKey, null));
                 }
             }
         }
         button.addEventListener(`click`, toggleGfContainer.bind(null, collapse, expand, filters));
-        esgst.giveawayFeatures.push(filterGfGiveaways);
+        esgst.giveawayFeatures.push(filterGfGiveaways.bind(null, gf));
 
         function createGfBasicFilter(filter) {
             var display, displayMax, displayMin, max, min, element, infinite, maxKey, minKey, maxSaveKey, minSaveKey, maxSavedValue, minSavedValue, maxValue, minValue, name, slider, step, value;
@@ -7444,15 +7500,15 @@ min-width: 0;
                 infinite = filter.infinite;
                 maxKey = `max${name}`;
                 minKey = `min${name}`;
-                maxSaveKey = `gf_${maxKey}${esgst.gf.type}`;
-                minSaveKey = `gf_${minKey}${esgst.gf.type}`;
+                maxSaveKey = `gf_${maxKey}${gf.type}`;
+                minSaveKey = `gf_${minKey}${gf.type}`;
                 maxSavedValue = esgst[maxSaveKey];
                 minSavedValue = esgst[minSaveKey];
                 if (!infinite && maxSavedValue > maxValue) {
                     maxSavedValue = maxValue;
                 }
-                esgst.gf[maxKey] = maxSavedValue;
-                esgst.gf[minKey] = minSavedValue;
+                gf[maxKey] = maxSavedValue;
+                gf[minKey] = minSavedValue;
                 element = insertHtml(basicFilters, `beforeEnd`, `
                     <div class="esgst-gf-basic-filter">
                         <div>${name} <span class="esgst-float-right"><input type="text" value="${minSavedValue}"> - <input type="text" value="${maxSavedValue}"></span></div>
@@ -7495,9 +7551,9 @@ min-width: 0;
                 }
                 $(slider).slider({
                     change: function (event, ui) {
-                        esgst.gf[maxKey] = ui.values[1];
-                        esgst.gf[minKey] = ui.values[0];
-                        filterGfGiveaways();
+                        gf[maxKey] = ui.values[1];
+                        gf[minKey] = ui.values[0];
+                        filterGfGiveaways(gf);
                         setValue(maxSaveKey, ui.values[1]);
                         esgst[maxSaveKey] = ui.values[1];
                         setValue(minSaveKey, ui.values[0]);
@@ -7517,12 +7573,12 @@ min-width: 0;
         }
     }
 
-    function saveGfValue(key, saveKey, checkbox, event) {
+    function saveGfValue(gf, key, saveKey, checkbox, event) {
         var value;
-        esgst.gf[key] = value = checkbox ? checkbox.value : parseFloat(event.currentTarget.value);
+        gf[key] = value = checkbox ? checkbox.value : parseFloat(event.currentTarget.value);
         setValue(saveKey, value);
         esgst[saveKey] = value;
-        filterGfGiveaways();
+        filterGfGiveaways(gf);
     }
 
     function toggleGfContainer(collapse, expand, filters) {
@@ -7531,9 +7587,9 @@ min-width: 0;
         filters.classList.toggle(`esgst-hidden`);
     }
 
-    function filterGfGiveaways() {
+    function filterGfGiveaways(gf) {
         var context, count, element, elements, filtered, genres, giveaway, i, j, k, key, maxKey, minKey, n, n2, n3, name;
-        if (esgst.gf.type === `Popup`) {
+        if (gf.type === `Popup`) {
             giveaways = esgst.popupGiveaways;
         } else {
             giveaways = esgst.currentGiveaways;
@@ -7542,34 +7598,34 @@ min-width: 0;
             filtered = false;
             giveaway = giveaways[i];
             if (document.body.contains(giveaway.outerWrap)) {
-                if (!esgst.gf.advancedSearch && ((giveaway.pinned && !esgst.gf.exceptionPinned) || (giveaway.regionRestricted && ((esgst.gf.exceptionRegionRestricted && esgst.gf.advancedSearch) || !esgst.gf.exceptionRegionRestricted)) || (giveaway.group && !esgst.gf.exceptionGroup) || (giveaway.whitelist && !esgst.gf.exceptionWhitelist) || (giveaway.wishlisted && !esgst.gf.exceptionWishlist) || ((giveaway.copies > esgst.gf.exceptionMultipleCopies) && !esgst.gf.exceptionMultiple) || (!giveaway.pinned && !giveaway.regionRestricted && !giveaway.group && !giveaway.whitelist && !giveaway.wishlisted && (giveaway.copies <= esgst.gf.exceptionMultipleCopies)))) {
-                    for (j = 0, n2 = esgst.gf.basicFilters.length; !filtered && j < n2; ++j) {
-                        name = esgst.gf.basicFilters[j].name;
+                if (!gf.advancedSearch && ((giveaway.pinned && !gf.exceptionPinned) || (giveaway.regionRestricted && ((gf.exceptionRegionRestricted && gf.advancedSearch) || !gf.exceptionRegionRestricted)) || (giveaway.group && !gf.exceptionGroup) || (giveaway.whitelist && !gf.exceptionWhitelist) || (giveaway.wishlisted && !gf.exceptionWishlist) || ((giveaway.copies > gf.exceptionMultipleCopies) && !gf.exceptionMultiple) || (!giveaway.pinned && !giveaway.regionRestricted && !giveaway.group && !giveaway.whitelist && !giveaway.wishlisted && (giveaway.copies <= gf.exceptionMultipleCopies)))) {
+                    for (j = 0, n2 = gf.basicFilters.length; !filtered && j < n2; ++j) {
+                        name = gf.basicFilters[j].name;
                         if ((name === `Rating` && esgst.gc && giveaway.gcReady) || name !== `Rating`) {
                             minKey = `min${name}`;
                             maxKey = `max${name}`;
                             key = name.toLowerCase();
-                            if ((giveaway[key] < esgst.gf[minKey]) || (giveaway[key] > esgst.gf[maxKey])) {
+                            if ((giveaway[key] < gf[minKey]) || (giveaway[key] > gf[maxKey])) {
                                 filtered = true;
                             }
                         }
                     }
                 }
-                for (j = 0, n2 = esgst.gf.typeFilters.length; !filtered && j < n2; ++j) {
-                    key = esgst.gf.typeFilters[j].key;
-                    if ((key === `regionRestricted` && !esgst.gf.advancedSearch) || key !== `regionRestricted`) {
-                        if (((esgst.gf[key] === `disabled`) && giveaway[key]) || ((esgst.gf[key] === `none`) && !giveaway[key])) {
+                for (j = 0, n2 = gf.typeFilters.length; !filtered && j < n2; ++j) {
+                    key = gf.typeFilters[j].key;
+                    if ((key === `regionRestricted` && !gf.advancedSearch) || key !== `regionRestricted`) {
+                        if (((gf[key] === `disabled`) && giveaway[key]) || ((gf[key] === `none`) && !giveaway[key])) {
                             filtered = true;
                         }
                     }
                 }
                 if (esgst.gc && giveaway.gcReady) {
-                    for (j = 0, n2 = esgst.gf.categoryFilters.length; !filtered && j < n2; ++j) {
-                        key = esgst.gf.categoryFilters[j].key;
-                        if ((key === `dlc` && !esgst.gf.advancedSearch) || key !== `dlc`) {
-                            if (key === `genres` && esgst.gf.genres) {
+                    for (j = 0, n2 = gf.categoryFilters.length; !filtered && j < n2; ++j) {
+                        key = gf.categoryFilters[j].key;
+                        if ((key === `dlc` && !gf.advancedSearch) || key !== `dlc`) {
+                            if (key === `genres` && gf.genres) {
                                 if (giveaway.genres) {
-                                    genres = esgst.gf.genreList.toLowerCase().split(/,\s/);
+                                    genres = gf.genreList.toLowerCase().split(/,\s/);
                                     for (k = 0, n3 = genres.length; k < n3 && giveaway.genres.indexOf(genres[k]) < 0; ++k);
                                     if (k >= n3) {
                                         filtered = true;
@@ -7577,25 +7633,25 @@ min-width: 0;
                                 } else {
                                     filtered = true;
                                 }
-                            } else if (((esgst.gf[key] === `disabled`) && giveaway[key]) || ((esgst.gf[key] === `none`) && !giveaway[key])) {
+                            } else if (((gf[key] === `disabled`) && giveaway[key]) || ((gf[key] === `none`) && !giveaway[key])) {
                                 filtered = true;
                             }
                         }
                     }
                 }
-                count = parseInt(esgst.gf.filteredCount.textContent);
+                count = parseInt(gf.filteredCount.textContent);
                 if (filtered) {
                     if (!giveaway.outerWrap.classList.contains(`esgst-hidden`)) {
-                        esgst.gf.filteredCount.textContent = count + 1;
+                        gf.filteredCount.textContent = count + 1;
                         giveaway.outerWrap.classList.add(`esgst-hidden`);
                     }
                 } else if (giveaway.outerWrap.classList.contains(`esgst-hidden`)) {
-                    esgst.gf.filteredCount.textContent = count - 1;
+                    gf.filteredCount.textContent = count - 1;
                     giveaway.outerWrap.classList.remove(`esgst-hidden`);
                 }
             }
         }
-        if (esgst.gf.type !== `Popup`) {
+        if (esgst.gfType !== `Popup`) {
             elements = document.getElementsByClassName(`pagination`);
             for (i = 0, n = elements.length; i < n; ++i) {
                 element = elements[i];
@@ -7635,7 +7691,7 @@ min-width: 0;
             PGBContainer.classList.add("PGBContainer");
             esgst.pinnedGiveawaysButton.remove();
             HTML = `
-                <div class="PGBButton pinned-giveaways__button">
+                <div class="esgst-pgb-button">
                     <i class="PGBIcon fa fa-angle-down"></i>
                 </div>
             `;
@@ -7962,7 +8018,7 @@ ${avatar.outerHTML}
     /* [GED] Giveaway Encrypter/Decrypter */
 
     function loadGed() {
-        var builtGiveaways, button, code, currentDate, giveaways, i, keys, n, newGiveaways, numNew, popup, progress, results, savedGiveaways, set, timestamp;
+        var builtGiveaways, giveaway, button, code, currentDate, giveaways, i, keys, n, newGiveaways, numNew, popup, progress, results, savedGiveaways, set, timestamp;
         newGiveaways = {};
         button = insertHtml(esgst.headerNavigationLeft, `beforeEnd`, `
             <div class="nav__button-container esgst-hidden" title="View your decrypted giveaways.">
@@ -7983,12 +8039,22 @@ ${avatar.outerHTML}
                     delete savedGiveaways[code].html;
                 }
                 timestamp = savedGiveaways[code].timestamp;
+                giveaway = esgst.giveaways[code];
                 if (timestamp > currentDate) {
-                    giveaways.push({
-                        code: code,
-                        source: savedGiveaways[code].source,
-                        timestamp: timestamp
-                    });
+                    filtered = false;
+                    if (giveaway) {
+                        game = esgst.games[giveaway.gameType][giveaway.gameSteamId];
+                        if (((giveaway.level < esgst.gf_minLevelPopup) || (giveaway.level > esgst.gf_maxLevelPopup)) || ((giveaway.copies < esgst.gf_minCopiesPopup) || (giveaway.copies > esgst.gf_maxCopiesPopup)) || ((giveaway.points < esgst.gf_minPointsPopup) || (giveaway.points > esgst.gf_maxPointsPopup)) || ((esgst.gf_createdPopup === `disabled` && giveaway.creator === esgst.username) || (esgst.gf_createdPopup === `none` && giveaway.creator !== esgst.username)) || (game && (((esgst.gf_hiddenPopup === `disabled` && game.hidden) || (esgst.gf_hiddenPopup === `none` && !game.hidden)) || ((esgst.gf_ownedPopup === `disabled` && game.owned) || (esgst.gf_ownedPopup === `none` && !game.owned)) || ((esgst.gf_ignoredPopup === `disabled` && game.ignored) || (esgst.gf_ignoredPopup === `none` && !game.ignored))))) {
+                            filtered = true;
+                        }
+                    }
+                    if (!filtered) {
+                        giveaways.push({
+                            code: code,
+                            source: savedGiveaways[code].source,
+                            timestamp: timestamp
+                        });
+                    }
                 }
             }
             GM_setValue(`decryptedGiveaways`, JSON.stringify(savedGiveaways));
@@ -8014,7 +8080,7 @@ ${avatar.outerHTML}
                 }
                 i = 0;
                 set = createButtonSet(`green`, `grey`, `fa-plus`, `fa-circle-o-notch fa-spin`, `Load More`, `Loading more...`, function (callback) {
-                    getGedGiveaways(giveaways, i, null, i + 5, function (value) {
+                    getGedGiveaways({}, giveaways, i, null, i + 5, function (value) {
                         i = value;
                         if (i > n) {
                             set.set.remove();
@@ -8031,7 +8097,7 @@ ${avatar.outerHTML}
                             <span>Decrypting new giveaways...</span>
                         </div>
                     `);
-                    getGedGiveaways(newGiveaways, 0, keys, numNew, function () {
+                    getGedGiveaways({}, newGiveaways, 0, keys, numNew, function () {
                         progress.remove();
                         popup.description.appendChild(set.set);
                         set.trigger();
@@ -8052,8 +8118,8 @@ ${avatar.outerHTML}
             }
         `);
 
-        function getGedGiveaways(giveaways, i, keys, n, callback) {
-            var builtGiveaway, giveaway, key, responseHtml;
+        function getGedGiveaways(currentGiveaways, giveaways, i, keys, n, callback) {
+            var builtGiveaway, data, giveaway, key, responseHtml;
             if (i < n) {
                 if (keys) {
                     key = keys[i];
@@ -8069,6 +8135,9 @@ ${avatar.outerHTML}
                         builtGiveaway = buildGiveaway(responseHtml, response.finalUrl);
                         if (builtGiveaway && builtGiveaway.started) {
                             results.insertAdjacentHTML(`beforeEnd`, builtGiveaway.html);
+                            var giveawayy = getGiveawayInfo(results.lastElementChild.lastElementChild, document);
+                            esgst.popupGiveaways.push(giveawayy.giveaway);
+                            currentGiveaways[giveawayy.data.code] = giveawayy.data;
                             loadEndlessFeatures(results.lastElementChild);
                             if (giveaway.source) {
                                 results.lastElementChild.getElementsByClassName(`giveaway__columns`)[0].insertAdjacentHTML(`afterBegin`, `
@@ -8089,20 +8158,20 @@ ${avatar.outerHTML}
                                     };
                                     GM_setValue(`decryptedGiveaways`, JSON.stringify(savedGiveaways));
                                     deleteLock();
-                                    window.setTimeout(getGedGiveaways, 0, giveaways, ++i, keys, n, callback);
+                                    window.setTimeout(getGedGiveaways, 0, currentGiveaways, giveaways, ++i, keys, n, callback);
                                 });
                             } else {
-                                window.setTimeout(getGedGiveaways, 0, giveaways, ++i, keys, n, callback);
+                                window.setTimeout(getGedGiveaways, 0, currentGiveaways, giveaways, ++i, keys, n, callback);
                             }
                         } else {
-                            window.setTimeout(getGedGiveaways, 0, giveaways, ++i, keys, n, callback);
+                            window.setTimeout(getGedGiveaways, 0, currentGiveaways, giveaways, ++i, keys, n, callback);
                         }
                     });
                 } else {
-                    callback(i + 1);
+                    saveGiveaways(currentGiveaways, callback.bind(null, i + 1));
                 }
             } else {
-                callback(i);
+                saveGiveaways(currentGiveaways, callback.bind(null, i));
             }
         }
     }
@@ -8331,7 +8400,7 @@ ${avatar.outerHTML}
             giveaway = giveaways[i];
             if ((((esgst.createdPath || esgst.wonPath) && !main) || (!esgst.createdPath && !esgst.wonPath)) && ((giveaway.inviteOnly && giveaway.url) || !giveaway.inviteOnly) && !giveaway.innerWrap.getElementsByClassName(`esgst-gwc`)[0]) {
                 if (giveaway.started) {
-                    addGwcChance(insertHtml(giveaway.panel, esgst.gv && esgst.giveawaysPath ? `afterBegin` : `beforeEnd`, `<div class="${esgst.giveawayPath ? `featured__column` : ``} esgst-gwc" title="Giveaway Winning Chance">`), giveaway);
+                    addGwcChance(insertHtml(giveaway.panel, main && esgst.gv && esgst.giveawaysPath ? `afterBegin` : `beforeEnd`, `<div class="${esgst.giveawayPath ? `featured__column` : ``} esgst-gwc" title="Giveaway Winning Chance">`), giveaway);
                 } else {
                     giveaway.chance = 100;
                 }
@@ -8387,7 +8456,7 @@ ${avatar.outerHTML}
         for (i = 0, n = giveaways.length; i < n; ++i) {
             giveaway = giveaways[i];
             if ((((esgst.createdPath || esgst.wonPath) && !main) || (!esgst.createdPath && !esgst.wonPath)) && giveaway.started && ((giveaway.inviteOnly && giveaway.url) || !giveaway.inviteOnly) && !giveaway.innerWrap.getElementsByClassName(`esgst-gwr`)[0]) {
-                addGwcRatio(insertHtml(giveaway.panel, esgst.gv && esgst.giveawaysPath ? `afterBegin` : `beforeEnd`, `<div class="${esgst.giveawayPath ? `featured__column` : ``} esgst-gwr" title="Giveaway Winning Ratio">`), giveaway);
+                addGwcRatio(insertHtml(giveaway.panel, main && esgst.gv && esgst.giveawaysPath ? `afterBegin` : `beforeEnd`, `<div class="${esgst.giveawayPath ? `featured__column` : ``} esgst-gwr" title="Giveaway Winning Ratio">`), giveaway);
             }
         }
     }
@@ -8440,40 +8509,40 @@ ${avatar.outerHTML}
                 giveaway = giveaways[i];
                 if (!giveaway.innerWrap.getElementsByClassName(`esgst-button-set`)[0]) {
                     if (((giveaway.inviteOnly && giveaway.url) || !giveaway.inviteOnly) && giveaway.started && !giveaway.ended && !giveaway.created && giveaway.level <= esgst.headerData.level && ((giveaway.id && ((games[giveaway.type][giveaway.id] && !games[giveaway.type][giveaway.id].owned) || !games[giveaway.type][giveaway.id])) || !giveaway.id)) {
-                        addElgbButton(giveaway);
+                        addElgbButton(giveaway, null, main);
                     }
                 }
             }
         }
     }
 
-    function addElgbButton(giveaway, error) {
+    function addElgbButton(giveaway, error, main) {
         if (giveaway.elgbButton) {
             giveaway.elgbButton.remove();
         }
         if (giveaway.entered) {
-            giveaway.elgbButton = createButtonSet(`yellow`, `grey`, `fa-minus-circle`, `fa-circle-o-notch fa-spin`, `Leave`, `Leaving...`, leaveElgbGiveaway.bind(null, giveaway)).set;
+            giveaway.elgbButton = createButtonSet(`yellow`, `grey`, `fa-minus-circle`, `fa-circle-o-notch fa-spin`, `Leave`, `Leaving...`, leaveElgbGiveaway.bind(null, giveaway, main)).set;
             giveaway.elgbButton.removeAttribute(`title`);
         } else if (giveaway.error) {
-            giveaway.elgbButton = createButtonSet(`red`, `grey`, `fa-plus-circle`, `fa-circle-o-notch fa-spin`, `Enter`, `Entering...`, esgst.elgbCallback.bind(null, giveaway)).set;
+            giveaway.elgbButton = createButtonSet(`red`, `grey`, `fa-plus-circle`, `fa-circle-o-notch fa-spin`, `Enter`, `Entering...`, esgst.elgbCallback.bind(null, giveaway, main)).set;
             giveaway.elgbButton.setAttribute(`title`, error);
         } else {
             if (giveaway.points <= esgst.headerData.points) {
-                giveaway.elgbButton = createButtonSet(`green`, `grey`, `fa-plus-circle`, `fa-circle-o-notch fa-spin`, `Enter`, `Entering...`, esgst.elgbCallback.bind(null, giveaway)).set;
+                giveaway.elgbButton = createButtonSet(`green`, `grey`, `fa-plus-circle`, `fa-circle-o-notch fa-spin`, `Enter`, `Entering...`, esgst.elgbCallback.bind(null, giveaway, main)).set;
                 giveaway.elgbButton.removeAttribute(`title`);
             } else {
-                giveaway.elgbButton = createButtonSet(`red`, `grey`, `fa-plus-circle`, `fa-circle-o-notch fa-spin`, `Enter`, `Entering...`, esgst.elgbCallback.bind(null, giveaway)).set;
+                giveaway.elgbButton = createButtonSet(`red`, `grey`, `fa-plus-circle`, `fa-circle-o-notch fa-spin`, `Enter`, `Entering...`, esgst.elgbCallback.bind(null, giveaway, main)).set;
                 giveaway.elgbButton.setAttribute(`title`, `Not Enough Points`);
             }
         }
-        if (esgst.gv && esgst.giveawaysPath) {
+        if (main && esgst.gv && esgst.giveawaysPath) {
             giveaway.panel.insertBefore(giveaway.elgbButton, giveaway.panel.firstElementChild);
         } else {
             giveaway.panel.appendChild(giveaway.elgbButton);
         }
     }
 
-    function checkElgbDescription(giveaway, mainCallback) {
+    function checkElgbDescription(giveaway, main, mainCallback) {
         request(null, false, giveaway.url, function(response) {
             var box, description, popup, set;
             description = DOM.parse(response.responseText).getElementsByClassName(`page__description`)[0];
@@ -8483,7 +8552,7 @@ ${avatar.outerHTML}
                     description.classList.add(`esgst-text-left`);
                     popup.description.insertAdjacentHTML(`beforeEnd`, description.outerHTML);
                     set = createButtonSet(`green`, `grey`, `fa-plus-circle`, `fa-circle-o-notch fa-spin`, `Enter Giveaway`, `Entering...`, function (callback) {
-                        enterElgbGiveaway(giveaway, function() {
+                        enterElgbGiveaway(giveaway, main, function() {
                             mainCallback();
                             if (box && box.value) {
                                 request(`xsrf_token=${esgst.xsrfToken}&do=comment_new&description=${box.value}`, false, giveaway.url, function() {
@@ -8497,7 +8566,7 @@ ${avatar.outerHTML}
                         });
                     });
                 } else {
-                    enterElgbGiveaway(giveaway, mainCallback);
+                    enterElgbGiveaway(giveaway, main, mainCallback);
                     set = createButtonSet(`green`, `grey`, `fa-plus-circle`, `fa-circle-o-notch fa-spin`, `Add Comment`, `Adding...`, function (callback) {
                         if (box && box.value) {
                             request(`xsrf_token=${esgst.xsrfToken}&do=comment_new&description=${box.value}`, false, giveaway.url, function() {
@@ -8524,12 +8593,12 @@ ${avatar.outerHTML}
                     mainCallback();
                 };
             } else {
-                enterElgbGiveaway(giveaway, mainCallback);
+                enterElgbGiveaway(giveaway, main, mainCallback);
             }
         });
     }
 
-    function enterElgbGiveaway(giveaway, callback) {
+    function enterElgbGiveaway(giveaway, main, callback) {
         request(`xsrf_token=${esgst.xsrfToken}&do=entry_insert&code=${giveaway.code}`, false, `/ajax.php`, function(response) {
             var responseJson;
             responseJson = JSON.parse(response.responseText);
@@ -8537,7 +8606,7 @@ ${avatar.outerHTML}
                 giveaway.innerWrap.classList.add(`is-faded`);
                 giveaway.entered = true;
                 giveaway.error = false;
-                addElgbButton(giveaway);
+                addElgbButton(giveaway, null, main);
                 esgst.headerElements.pointsContainer.textContent = responseJson.points;
                 refreshHeaderElements(document);
                 if (esgst.hr) {
@@ -8557,19 +8626,20 @@ ${avatar.outerHTML}
                     }
                 }
                 if (esgst.gf && esgst.gf.filteredCount) {
-                    filterGfGiveaways();
+                    filterGfGiveaways(esgst.gf);
+                    filterGfGiveaways(esgst.gfPopup);
                 }
                 callback();
             } else {
                 giveaway.entered = false;
                 giveaway.error = true;
-                addElgbButton(giveaway, responseJson.msg);
+                addElgbButton(giveaway, responseJson.msg, main);
                 callback();
             }
         });
     }
 
-    function leaveElgbGiveaway(giveaway, callback) {
+    function leaveElgbGiveaway(giveaway, main, callback) {
         request(`xsrf_token=${esgst.xsrfToken}&do=entry_delete&code=${giveaway.code}`, false, `/ajax.php`, function(response) {
             var responseJson;
             responseJson = JSON.parse(response.responseText);
@@ -8577,7 +8647,7 @@ ${avatar.outerHTML}
                 giveaway.innerWrap.classList.remove(`is-faded`);
                 giveaway.entered = false;
                 giveaway.error = false;
-                addElgbButton(giveaway);
+                addElgbButton(giveaway, null, main);
                 esgst.headerElements.pointsContainer.textContent = responseJson.points;
                 refreshHeaderElements(document);
                 if (esgst.hr) {
@@ -8596,7 +8666,7 @@ ${avatar.outerHTML}
         for (i = 0, n = esgst.currentGiveaways.length; i < n; ++i) {
             giveaway = esgst.currentGiveaways[i];
             if (giveaway.elgbButton && !giveaway.entered) {
-                addElgbButton(giveaway);
+                addElgbButton(giveaway, null, true);
             }
         }
     }
@@ -11089,6 +11159,7 @@ ${Results.join(``)}
             </div>
         `).lastElementChild;
         tge.visited = [];
+        tge.bump = ``;
         getTgeGiveaways(tge, document, window.location.href, completeExtraction.bind(null, tge, callback));
     }
 
@@ -11099,10 +11170,24 @@ ${Results.join(``)}
         tge.set.remove();
         tge.set = null;
         loadEndlessFeatures(tge.results);
+        tge.results.insertAdjacentHTML(`afterBegin`, `
+            <div class="markdown" style="text-align: center;">
+                <h2>
+                    <a href="${tge.bump}">Bump</a>
+                </h2>
+            </div>
+        `);
+        tge.results.insertAdjacentHTML(`beforeEnd`, `
+            <div class="markdown" style="text-align: center;">
+                <h2>
+                    <a href="${tge.bump}">Bump</a>
+                </h2>
+            </div>
+        `);
     }
 
     function getTgeGiveaways(tge, context, url, callback) {
-        var description, element, elements, giveaway, i, n, next;
+        var bump, description, elements, giveaway, giveaways, i, n, url;
         tge.visited.push(url.match(/\/giveaway\/(.+?)\//)[1]);
         if (context !== document) {
             tge.progress.textContent = parseInt(tge.progress.textContent) + 1;
@@ -11114,25 +11199,23 @@ ${Results.join(``)}
         }
         description = context.getElementsByClassName(`page__description`)[0];
         if (description) {
+            giveaways = [];
             elements = description.querySelectorAll(`[href*="/giveaway/"]`);
-            next = null;
-            n = elements.length;
-            if (n > 1) {
-                for (i = 0; i < n; ++i) {
-                    element = elements[i];
-                    if (tge.visited.indexOf(element.getAttribute(`href`).match(/\/giveaway\/(.+?)\//)[1]) < 0) {
-                        next = element;
-                        i = n;
-                    }
-                }
-            } else if (n > 0) {
-                element = elements[0];
-                if (tge.visited.indexOf(element.getAttribute(`href`).match(/\/giveaway\/(.+?)\//)[1]) < 0) {
-                    next = element;
+            for (i = 0, n = elements.length; i < n; ++i) {
+                url = elements[i].getAttribute(`href`);
+                if (tge.visited.indexOf(url.match(/\/giveaway\/(.+?)\//)[1]) < 0) {
+                    giveaways.push(url);
                 }
             }
-            if (next) {
-                request(null, false, next.getAttribute(`href`), getTgeGiveaway.bind(null, tge, callback));
+            if (!tge.bump) {
+                bump = description.querySelector(`[href*="/discussion/"]`);
+                if (bump) {
+                    tge.bump = bump.getAttribute(`href`);
+                }
+            }
+            n = giveaways.length;
+            if (n > 0) {
+                continueTgeGiveaways(giveaways, 0, n, tge, callback);
             } else {
                 callback();
             }
@@ -11141,8 +11224,20 @@ ${Results.join(``)}
         }
     }
 
-    function getTgeGiveaway(tge, callback, response) {
-        window.setTimeout(getTgeGiveaways, 0, tge, DOM.parse(response.responseText), response.finalUrl, callback);
+    function continueTgeGiveaways(giveaways, i, n, tge, callback) {
+        if (i < n) {
+            request(null, false, giveaways[i], getTgeGiveaway.bind(null, giveaways, i, n, tge, callback));
+        } else {
+            callback();
+        }
+    }
+
+    function getTgeGiveaway(giveaways, i, n, tge, callback, response) {
+        window.setTimeout(getTgeGiveaways, 0, tge, DOM.parse(response.responseText), response.finalUrl, continueTgeGiveaway.bind(null, giveaways, i, n, tge, callback));
+    }
+
+    function continueTgeGiveaway(giveaways, i, n, tge, callback) {
+        window.setTimeout(continueTgeGiveaways, 0, giveaways, ++i, n, tge, callback);        
     }
 
     /* [GESL] Giveaway Error Search Links (by Royalgamer06) */
@@ -22854,7 +22949,8 @@ ${Results.join(``)}
                 }
             }
             if (esgst.gf && esgst.gf.filteredCount) {
-                filterGfGiveaways();
+                filterGfGiveaways(esgst.gf);
+                filterGfGiveaways(esgst.gfPopup);
             }
             createLock(`gameLock`, 300, function(deleteLock) {
                 updateGames(savedGames);
@@ -22868,20 +22964,22 @@ ${Results.join(``)}
     function addGcCategories(games, gc, i, ids, savedGames, type) {
         var category, categories, giveaway, id, j, numCategories, url;
             id = ids[i];
-            if (!savedGames[type][id] || (typeof savedGames[type][id].lastCheck === `undefined`) || ((Date.now() - savedGames[type][id].lastCheck) > 604800000)) {
+            if (!savedGames[type][id] || !savedGames[type][id].price || (typeof savedGames[type][id].lastCheck === `undefined`) || ((Date.now() - savedGames[type][id].lastCheck) > 604800000)) {
                 url = (type === `apps`) ? `appdetails?appids` : `packagedetails?packageids`;
                 request(null, false, `http://store.steampowered.com/api/${url}=${id}&cc=us&l=en`, function (response) {
-                    if (esgst.gc_g_udt || esgst.gc_r) {
-                        request(null, false, `http://store.steampowered.com/${type.slice(0, -1)}/${id}`, function (response2) {
-                            getGcCategories(games, id, response, response2, savedGames, type, function () {
+                    request(null, false, `http://store.steampowered.com/api/${url}=${id}&cc=us&l=en&filters=price,price_overview`, function (response1) {
+                        if (esgst.gc_g_udt || esgst.gc_r) {
+                            request(null, false, `http://store.steampowered.com/${type.slice(0, -1)}/${id}`, function (response2) {
+                                getGcCategories(games, id, response, response1, response2, savedGames, type, function () {
+                                    ++gc.count;
+                                });
+                            });
+                        } else {
+                            getGcCategories(games, id, response, response1, null, savedGames, type, function () {
                                 ++gc.count;
                             });
-                        });
-                    } else {
-                        getGcCategories(games, id, response, null, savedGames, type, function () {
-                            ++gc.count;
-                        });
-                    }
+                        }
+                    });
                 });
             } else {
                 addGcCategory(games[id], savedGames[type][id], id, games[id][0].name, type);
@@ -22889,11 +22987,18 @@ ${Results.join(``)}
             }
     }
 
-    function getGcCategories(games, id, response, response2, savedGames, type, callback) {
-        var appId, i, match, n, responseHtml, responseJson, summary, summaries, tag, tags;
+    function getGcCategories(games, id, response, response1, response2, savedGames, type, callback) {
+        var appId, i, match, n, responseHtml, responseJson, responseJson1, price, summary, summaries, tag, tags;
         responseJson = JSON.parse(response.responseText)[id];
+        responseJson1 = JSON.parse(response1.responseText)[id];
         if (!savedGames[type][id]) {
             savedGames[type][id] = {};
+        }
+        if (responseJson1.success) {
+            price = responseJson1.data.price || responseJson1.data.price_overview;
+            if (price && price.currency === `USD`) {
+                savedGames[type][id].price = Math.ceil(price.initial / 100);
+            }
         }
         if (responseJson.success) {
             if (responseJson.data.type === `dlc`) {
@@ -22991,8 +23096,8 @@ ${Results.join(``)}
     }
 
     function addGcCategory(games, savedGames, id, name, type) {
-        var categories, category, html, i, icon, j, n, numGames, panel, text, nname, value;
-        type = type.slice(0, -1);
+        var categories, category, html, i, icon, j, n, numGames, panel, text, nname, ttype, value;
+        ttype = type.slice(0, -1);
         nname = encodeURIComponent(name.replace(/\.\.\.$/, ``));
         categories = [
             {
@@ -23004,9 +23109,15 @@ ${Results.join(``)}
                 icon: `fa-eye-slash`
             },
             {
+                id: `gc_gi`,
+                key: `giveawayInfo`,
+                link: `https://www.steamgifts.com/user/${esgst.username}`
+            },
+            {
                 id: `gc_r`,
                 key: `rating`,
-                link: `http://store.steampowered.com/${type}/${id}`
+                link: `http://store.steampowered.com/${ttype}/${id}`,
+                name: `Name`
             },
             {
                 id: `gc_b`,
@@ -23043,7 +23154,7 @@ ${Results.join(``)}
             {
                 id: `gc_i`,
                 key: `ignored`,
-                link: `http://store.steampowered.com/${type}/${id}`,
+                link: `http://store.steampowered.com/${ttype}/${id}`,
                 name: `Ignored`,
                 simplified: `I`,
                 icon: `fa-ban`
@@ -23051,7 +23162,7 @@ ${Results.join(``)}
             {
                 id: `gc_rm`,
                 key: `removed`,
-                link: `http://steamdb.info/${type}/${id}`,
+                link: `http://steamdb.info/${ttype}/${id}`,
                 name: `Removed`,
                 simplified: `R`,
                 icon: `fa-trash`
@@ -23059,7 +23170,7 @@ ${Results.join(``)}
             {
                 id: `gc_ea`,
                 key: `earlyAccess`,
-                link: `http://store.steampowered.com/${type}/${id}`,
+                link: `http://store.steampowered.com/${ttype}/${id}`,
                 name: `Early Access`,
                 simplified: `EA`,
                 icon: `fa-unlock`
@@ -23067,7 +23178,7 @@ ${Results.join(``)}
             {
                 id: `gc_tc`,
                 key: `tradingCards`,
-                link: `http://www.steamcardexchange.net/index.php?gamepage-${type}id-${id}`,
+                link: `http://www.steamcardexchange.net/index.php?gamepage-${ttype}id-${id}`,
                 name: `Trading Cards`,
                 simplified: `TC`,
                 icon: `fa-clone`
@@ -23083,7 +23194,7 @@ ${Results.join(``)}
             {
                 id: `gc_mp`,
                 key: `multiplayer`,
-                link: `http://store.steampowered.com/${type}/${id}`,
+                link: `http://store.steampowered.com/${ttype}/${id}`,
                 name: `Multiplayer`,
                 simplified: `MP`,
                 icon: `fa-users`
@@ -23091,7 +23202,7 @@ ${Results.join(``)}
             {
                 id: `gc_sc`,
                 key: `steamCloud`,
-                link: `http://store.steampowered.com/${type}/${id}`,
+                link: `http://store.steampowered.com/${ttype}/${id}`,
                 name: `Steam Cloud`,
                 simplified: `SC`,
                 icon: `fa-cloud`
@@ -23099,7 +23210,7 @@ ${Results.join(``)}
             {
                 id: `gc_l`,
                 key: `linux`,
-                link: `http://store.steampowered.com/${type}/${id}`,
+                link: `http://store.steampowered.com/${ttype}/${id}`,
                 name: `Linux`,
                 simplified: `L`,
                 icon: `fa-linux`
@@ -23107,7 +23218,7 @@ ${Results.join(``)}
             {
                 id: `gc_m`,
                 key: `mac`,
-                link: `http://store.steampowered.com/${type}/${id}`,
+                link: `http://store.steampowered.com/${ttype}/${id}`,
                 name: `Mac`,
                 simplified: `M`,
                 icon: `fa-apple`
@@ -23115,7 +23226,7 @@ ${Results.join(``)}
             {
                 id: `gc_dlc`,
                 key: `dlc`,
-                link: `http://store.steampowered.com/${type}/${id}`,
+                link: `http://store.steampowered.com/${ttype}/${id}`,
                 name: `DLC`,
                 simplified: `DLC`,
                 icon: `fa-download`
@@ -23123,7 +23234,7 @@ ${Results.join(``)}
             {
                 id: `gc_p`,
                 key: `package`,
-                link: `http://store.steampowered.com/${type}/${id}`,
+                link: `http://store.steampowered.com/${ttype}/${id}`,
                 name: `Package`,
                 simplified: `P`,
                 icon: `fa-suitcase`
@@ -23131,7 +23242,7 @@ ${Results.join(``)}
             {
                 id: `gc_g`,
                 key: `genres`,
-                link: `http://store.steampowered.com/${type}/${id}`,
+                link: `http://store.steampowered.com/${ttype}/${id}`,
                 name: `Genres`
             }
         ];
@@ -23140,17 +23251,80 @@ ${Results.join(``)}
             category = categories[i];
             if (esgst[category.id] && ((category.id == `gc_b` && esgst.newGiveawayPath) || !esgst.newGiveawayPath) && ((category.id == `gc_b` && !esgst.gc_b_r) || (category.id != `gc_b`))) {
                 if (category.id === `gc_p`) {
-                    if (type === `sub`) {
+                    if (type === `subs`) {
                         value = true;
                     } else {
                         value = false;
                     }
+                } else if (category.id === `gc_gi`) {
+                    value = true;
                 } else {
                     value = savedGames[category.key];
                 }
                 if ((value && category.id != `gc_b_r`) || (!value && category.id == `gc_b_r` && esgst.gc_b)) {
                     var title = ``;
-                    if (category.key == `genres`) {
+                    text = ``;
+                    if (category.key === `giveawayInfo`) {
+                        var user = esgst.users.users[esgst.steamId];
+                        if (user) {
+                            var ugd = user.ugd;
+                            if (ugd) {
+                                var giveaways = ugd.sent[type][id], value, cv;
+                                if (giveaways) {
+                                    var count = 0;
+                                    var sent = 0;
+                                    var k, numGiveaways;
+                                    for (var k = 0, numGiveaways = giveaways.length; k < numGiveaways; ++k) {
+                                        var giveaway = giveaways[k];
+                                        if (((giveaways.entries < 5) && !giveaway.inviteOnly && !giveaway.group && !giveaway.whitelist) || (giveaway.entries >= 5)) {
+                                            if (giveaway.entries >= giveaway.copies) {
+                                                sent += giveaway.copies;
+                                            } else {
+                                                sent += giveaway.entries;
+                                            }
+                                        }
+                                        if (giveaway.winners > 0) {
+                                            count += giveaway.winners;
+                                        }
+                                    }
+                                    value = savedGames.price;
+                                    if (savedGames.bundled) {
+                                        value *= 0.15;
+                                    }
+                                    if (sent > 5) {
+                                        for (k = 0, numGiveaways = sent - 5; k < numGiveaways; ++k) {
+                                            value *= 0.90;
+                                        }
+                                    }
+                                    cv;
+                                    if ((sent + 1) > 5) {
+                                        cv = value * 0.90;
+                                    } else {
+                                        cv = value;
+                                    }
+                                    cv = Math.round(cv * 100) / 100;
+                                    text = `
+                                        <i class="fa fa-info"></i> ${count}
+                                        <i class="fa fa-dollar"></i> ${cv}
+                                    `;
+                                    title = `You have made ${count} giveaways for this game.`;
+                                    title += ` You should get \$${cv} real CV if you make a giveaway for this game.`;
+                                } else {
+                                    value = savedGames.price;
+                                    if (savedGames.bundled) {
+                                        value *= 0.15;
+                                    }
+                                    cv = Math.round(value * 100) / 100;
+                                    text = `
+                                        <i class="fa fa-info"></i> 0
+                                        <i class="fa fa-dollar"></i> ${cv}
+                                    `;
+                                    title = `You have made 0 giveaways for this game.`;
+                                    title += ` You should get \$${cv} real CV if you make a giveaway for this game.`;
+                                }
+                            }
+                        }
+                    } else if (category.key === `genres`) {
                         text = value.join(`, `);
                         title = text;
                     } else if (category.key == `rating`) {
@@ -23185,9 +23359,11 @@ ${Results.join(``)}
                     } else {
                         text = category.name;
                     }
-                    html += `
-                        <a class="nav__notification esgst-gc ${category.key}" href="${category.link}" title="${title}">${text}</a>
-                    `;
+                    if (text) {
+                        html += `
+                            <a class="nav__notification esgst-gc ${category.key}" href="${category.link}" title="${title}">${text}</a>
+                        `;
+                    }
                 }
             }
         }
@@ -25235,10 +25411,6 @@ Background: <input type="color" value="${bgColor}">
         if (main) {
             for (i = 0, n = giveaways.length; i < n; ++i) {
                 esgst.currentGiveaways.push(giveaways[i]);
-            }
-        } else {
-            for (i = 0, n = giveaways.length; i < n; ++i) {
-                esgst.popupGiveaways.push(giveaways[i]);
             }
         }
         for (i = 0, n = esgst.giveawayFeatures.length; i < n; ++i) {
