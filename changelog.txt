@@ -1,4 +1,20 @@
 /*
+ * July 17, 2017 - v6.Beta.19.0
+ */
+
+* Started a process of grouping feature calls together and minimizing interactions with DOM to optimize performance.
+* Fixed a bug that was happening in the automatic sync (closes #260).
+* Fixed a bug in the sync that was not properly syncing games.
+* Added "Hidden", "Owned", "Wishlisted", "Ignored" and "Removed" filters to Giveaway Filters.
+* Extended Giveaway Filters to popups (works with Giveaway Encrypter/Decrypter and Train Giveaways Extractor) (closes #252).
+* Improved Train Giveaways Extractor to work regardless of the name of the "Next" link.
+* Added 7.4.3 "Hidden" filter to Game Categories (must be synced through the settings menu).
+
+Added the following features:
+
+* 2.24 Hidden Games Enter Button Disabler
+
+/*
  * July 17, 2017 - v6.Beta.18.0
  */
 
