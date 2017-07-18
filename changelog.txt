@@ -1,5 +1,5 @@
 /*
- * July 17, 2017 - v6.Beta.19.1
+ * July 18, 2017 - v6.Beta.19.2
  */
 
 * Fixed a game sync bug.
@@ -7,13 +7,13 @@
 * Fixed a bug in Removed Game Redirecter that was redirecting any Steam page.
 
 /*
- * July 17, 2017 - v6.Beta.19.1
+ * July 18, 2017 - v6.Beta.19.1
  */
 
 * Fixed a bug in Giveaway Filters that was not filtering giveaways. 
 
 /*
- * July 17, 2017 - v6.Beta.19.0
+ * July 18, 2017 - v6.Beta.19.0
  */
 
 * Started a process of grouping feature calls together and minimizing interactions with DOM to optimize performance.
