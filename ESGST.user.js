@@ -3,7 +3,7 @@
 // @namespace ESGST
 // @description Enhances SteamGifts and SteamTrades by adding some cool features to them.
 // @icon https://github.com/revilheart/ESGST/raw/master/Resources/esgstIcon.ico
-// @version 6.Beta.19.0
+// @version 6.Beta.19.1
 // @author revilheart
 // @downloadURL https://github.com/revilheart/ESGST/raw/master/ESGST.user.js
 // @updateURL https://github.com/revilheart/ESGST/raw/master/ESGST.meta.js
@@ -7592,32 +7592,32 @@ min-width: 0;
                     giveaway.outerWrap.classList.remove(`esgst-hidden`);
                 }
             }
-            if (esgst.gf.type !== `Popup`) {
-                elements = document.getElementsByClassName(`pagination`);
-                for (i = 0, n = elements.length; i < n; ++i) {
-                    element = elements[i];
-                    context = element.previousElementSibling;
-                    count = 0;
-                    n2 = context.children.length;
-                    if (n2 > 0) {
-                        for (j = 0; j < n2; ++j) {
-                            if (context.children[j].classList.contains(`esgst-hidden`)) {
-                                ++count;
-                            }
+        }
+        if (esgst.gf.type !== `Popup`) {
+            elements = document.getElementsByClassName(`pagination`);
+            for (i = 0, n = elements.length; i < n; ++i) {
+                element = elements[i];
+                context = element.previousElementSibling;
+                count = 0;
+                n2 = context.children.length;
+                if (n2 > 0) {
+                    for (j = 0; j < n2; ++j) {
+                        if (context.children[j].classList.contains(`esgst-hidden`)) {
+                            ++count;
                         }
-                        var gfCount = element.getElementsByClassName(`esgst-gf-count`)[0];
-                        element = element.firstElementChild;
-                        if (gfCount) {
-                            gfCount.innerHTML = `
+                    }
+                    var gfCount = element.getElementsByClassName(`esgst-gf-count`)[0];
+                    element = element.firstElementChild;
+                    if (gfCount) {
+                        gfCount.innerHTML = `
+                            (<strong>${count}</strong> filtered by Giveaway Filters)
+                        `;
+                    } else {
+                        element.insertAdjacentHTML(`beforeEnd`, `
+                            <span class="esgst-gf-count">
                                 (<strong>${count}</strong> filtered by Giveaway Filters)
-                            `;
-                        } else {
-                            element.insertAdjacentHTML(`beforeEnd`, `
-                                <span class="esgst-gf-count">
-                                    (<strong>${count}</strong> filtered by Giveaway Filters)
-                                </span>
-                            `);
-                        }
+                            </span>
+                        `);
                     }
                 }
             }
