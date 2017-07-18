@@ -1,4 +1,10 @@
 /*
+ * July 18, 2017 - v6.Beta.19.4
+ */
+
+* Fixed a bug in Giveaway Filters.
+
+/*
  * July 18, 2017 - v6.Beta.19.3
  */
 

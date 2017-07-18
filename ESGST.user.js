@@ -3,7 +3,7 @@
 // @namespace ESGST
 // @description Enhances SteamGifts and SteamTrades by adding some cool features to them.
 // @icon https://github.com/revilheart/ESGST/raw/master/Resources/esgstIcon.ico
-// @version 6.Beta.19.3
+// @version 6.Beta.19.4
 // @author revilheart
 // @downloadURL https://github.com/revilheart/ESGST/raw/master/ESGST.user.js
 // @updateURL https://github.com/revilheart/ESGST/raw/master/ESGST.meta.js
@@ -8627,7 +8627,9 @@ ${avatar.outerHTML}
                 }
                 if (esgst.gf && esgst.gf.filteredCount) {
                     filterGfGiveaways(esgst.gf);
-                    filterGfGiveaways(esgst.gfPopup);
+                    if (esgst.gfPopup) {
+                        filterGfGiveaways(esgst.gfPopup);
+                    }
                 }
                 callback();
             } else {
@@ -22950,7 +22952,9 @@ ${Results.join(``)}
             }
             if (esgst.gf && esgst.gf.filteredCount) {
                 filterGfGiveaways(esgst.gf);
-                filterGfGiveaways(esgst.gfPopup);
+                if (esgst.gfPopup) {
+                    filterGfGiveaways(esgst.gfPopup);
+                }
             }
             createLock(`gameLock`, 300, function(deleteLock) {
                 updateGames(savedGames);
