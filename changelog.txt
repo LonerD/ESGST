@@ -3,7 +3,7 @@
  */
 
 * Fixed a game sync bug.
-* Fixed a bug in Train Giveaways Extractor that was not properly extracting giveaways from trains with private links.
+* Fixed a bug in Train Giveaways Extractor that was not properly extracting giveaways from trains with previous links.
 * Fixed a bug in Removed Game Redirecter that was redirecting any Steam page.
 
 /*
