@@ -3,7 +3,7 @@
 // @namespace ESGST
 // @description Enhances SteamGifts and SteamTrades by adding some cool features to them.
 // @icon https://github.com/revilheart/ESGST/raw/master/Resources/esgstIcon.ico
-// @version 6.Beta.19.4
+// @version 6.Beta.19.5
 // @author revilheart
 // @downloadURL https://github.com/revilheart/ESGST/raw/master/ESGST.user.js
 // @updateURL https://github.com/revilheart/ESGST/raw/master/ESGST.meta.js
@@ -8135,7 +8135,7 @@ ${avatar.outerHTML}
                         builtGiveaway = buildGiveaway(responseHtml, response.finalUrl);
                         if (builtGiveaway && builtGiveaway.started) {
                             results.insertAdjacentHTML(`beforeEnd`, builtGiveaway.html);
-                            var giveawayy = getGiveawayInfo(results.lastElementChild.lastElementChild, document);
+                            var giveawayy = getGiveawayInfo(results.lastElementChild.lastElementChild, document, null, null, false, false, null, true);
                             esgst.popupGiveaways.push(giveawayy.giveaway);
                             currentGiveaways[giveawayy.data.code] = giveawayy.data;
                             loadEndlessFeatures(results.lastElementChild);
@@ -25449,7 +25449,7 @@ Background: <input type="color" value="${bgColor}">
         return giveaways;
     }
 
-    function getGiveawayInfo(context, mainContext, games, savedUsers, ugd, main, mainUrl) {
+    function getGiveawayInfo(context, mainContext, games, savedUsers, ugd, main, mainUrl, ged) {
         var category, categories, chance, element, giveaway, i, id, info, match, n, savedUser, uf, thinHeadings;
         giveaway = {};
         giveaway.outerWrap = context;
@@ -25513,7 +25513,7 @@ Background: <input type="color" value="${bgColor}">
                 giveaway.startTimeColumn = giveaway.endTimeColumn.nextElementSibling;
             }
             giveaway.startTime = parseInt(giveaway.startTimeColumn.firstElementChild.getAttribute(`data-timestamp`)) * 1e3;
-            if (!esgst.userPath || ugd) {
+            if (!esgst.userPath || ugd || ged) {
                 giveaway.creatorContainer = giveaway.startTimeColumn.lastElementChild;
                 giveaway.creator = giveaway.creatorContainer.textContent;
             }
@@ -25530,7 +25530,7 @@ Background: <input type="color" value="${bgColor}">
                 giveaway.endTime = 0;
             }
         }
-        if (esgst.userPath && !ugd) {
+        if (esgst.userPath && !ugd && !ged) {
             giveaway.creator = window.location.pathname.match(/^\/user\/(.+)/)[1];
         }
         if (esgst.createdPath && main) {

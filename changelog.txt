@@ -1,4 +1,10 @@
 /*
+ * July 18, 2017 - v6.Beta.19.5
+ */
+
+* Fixed a bug in Giveaway Encrypter/Decrypter that was not showing any giveaways if opening the popup from a user's profile page.
+
+/*
  * July 18, 2017 - v6.Beta.19.4
  */
 
