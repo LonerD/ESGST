@@ -3,7 +3,7 @@
 // @namespace ESGST
 // @description Enhances SteamGifts and SteamTrades by adding some cool features to them.
 // @icon https://github.com/revilheart/ESGST/raw/master/Resources/esgstIcon.ico
-// @version 6.Beta.19.1
+// @version 6.Beta.19.2
 // @author revilheart
 // @downloadURL https://github.com/revilheart/ESGST/raw/master/ESGST.user.js
 // @updateURL https://github.com/revilheart/ESGST/raw/master/ESGST.meta.js
@@ -3937,7 +3937,7 @@
                 delete savedGames.subs[key];
             }
         }
-        if (response2) {
+        if (response1) {
             responseText = response1.responseText;
             if (!responseText.match(/<title>Forbidden<\/title>/)) {
                 ownedGames = JSON.parse(responseText).response.games;
@@ -3950,65 +3950,67 @@
                     ++owned;
                 }
             }
-            responseJson = JSON.parse(response2.responseText);
-        } else {
-            responseJson = JSON.parse(response1.responseText);
         }
-        numOwned = responseJson.rgOwnedApps.length;
-        if (numOwned > 0) {
-            types = [
-                {
-                    key: `wishlisted`,
-                    mainKey: `apps`,
-                    name: `rgWishlist`
-                },
-                {
-                    key: `owned`,
-                    mainKey: `apps`,
-                    name: `rgOwnedApps`
-                },
-                {
-                    key: `owned`,
-                    mainKey: `subs`,
-                    name: `rgOwnedPackages`
-                },
-                {
-                    key: `ignored`,
-                    mainKey: `apps`,
-                    name: `rgIgnoredApps`
-                },
-                {
-                    key: `ignored`,
-                    mainKey: `subs`,
-                    name: `rgIgnoredPackages`
-                }
-            ];
-            for (i = 0, n = types.length; i < n; ++i) {
-                type = types[i];
-                key = type.key;
-                mainKey = type.mainKey;
-                values = responseJson[type.name];
-                for (j = 0, numValues = values.length; j < numValues; ++j) {
-                    id = values[j];
-                    if (!savedGames[mainKey][id]) {
-                        savedGames[mainKey][id] = {};
+        if (response2) {
+            responseJson = JSON.parse(response2.responseText);
+            numOwned = responseJson.rgOwnedApps.length;
+            if (numOwned > 0) {
+                types = [
+                    {
+                        key: `wishlisted`,
+                        mainKey: `apps`,
+                        name: `rgWishlist`
+                    },
+                    {
+                        key: `owned`,
+                        mainKey: `apps`,
+                        name: `rgOwnedApps`
+                    },
+                    {
+                        key: `owned`,
+                        mainKey: `subs`,
+                        name: `rgOwnedPackages`
+                    },
+                    {
+                        key: `ignored`,
+                        mainKey: `apps`,
+                        name: `rgIgnoredApps`
+                    },
+                    {
+                        key: `ignored`,
+                        mainKey: `subs`,
+                        name: `rgIgnoredPackages`
                     }
-                    oldValue = savedGames[mainKey][id][key];
-                    savedGames[mainKey][id][key] = true;
-                    if (key === `owned` && !oldValue) {
-                        ++owned;
-                    }
-                    if (key === `wishlisted` && savedGames[mainKey][id].subs) {
-                        for (var k = 0, numPackages = savedGames[mainKey][id].subs.length; k < numPackages; ++k) {
-                            var subid = savedGames[mainKey][id].subs[k];
-                            if (!savedGames.subs[subid]) {
-                                savedGames.subs[subid] = {};
+                ];
+                for (i = 0, n = types.length; i < n; ++i) {
+                    type = types[i];
+                    key = type.key;
+                    mainKey = type.mainKey;
+                    values = responseJson[type.name];
+                    for (j = 0, numValues = values.length; j < numValues; ++j) {
+                        id = values[j];
+                        if (!savedGames[mainKey][id]) {
+                            savedGames[mainKey][id] = {};
+                        }
+                        oldValue = savedGames[mainKey][id][key];
+                        savedGames[mainKey][id][key] = true;
+                        if (key === `owned` && !oldValue) {
+                            ++owned;
+                        }
+                        if (key === `wishlisted` && savedGames[mainKey][id].subs) {
+                            for (var k = 0, numPackages = savedGames[mainKey][id].subs.length; k < numPackages; ++k) {
+                                var subid = savedGames[mainKey][id].subs[k];
+                                if (!savedGames.subs[subid]) {
+                                    savedGames.subs[subid] = {};
+                                }
+                                savedGames.subs[subid].wishlisted = true;
                             }
-                            savedGames.subs[subid].wishlisted = true;
                         }
                     }
                 }
             }
+        }
+        if (response1 || response2) {
             if (owned !== GM_getValue(`ownedGames`, 0)) {
                 GM_setValue(`ownedGames`, owned);
                 result = 1;
@@ -10459,7 +10461,7 @@ ${avatar.outerHTML}
                     showResult(`<strong>0 new games found.</strong>`);
                     break;
                 case 3:
-                    showResult(`<strong>You are not logged in on Steam. Please log in so you can sync.</strong>`);
+                    showResult(`<strong>You either are not logged in on Steam or do not have a Steam API key set.</strong>`);
                     break;
             }
         }
@@ -11101,6 +11103,7 @@ ${Results.join(``)}
 
     function getTgeGiveaways(tge, context, url, callback) {
         var description, element, elements, giveaway, i, n, next;
+        tge.visited.push(url.match(/\/giveaway\/(.+?)\//)[1]);
         if (context !== document) {
             tge.progress.textContent = parseInt(tge.progress.textContent) + 1;
             giveaway = buildGiveaway(context, url);
@@ -11117,15 +11120,16 @@ ${Results.join(``)}
             if (n > 1) {
                 for (i = 0; i < n; ++i) {
                     element = elements[i];
-                    code = element.getAttribute(`href`).match(/\/giveaway\/(.+?)\//)[1];
-                    if (tge.visited.indexOf(code) < 0) {
-                        tge.visited.push(code);
+                    if (tge.visited.indexOf(element.getAttribute(`href`).match(/\/giveaway\/(.+?)\//)[1]) < 0) {
                         next = element;
                         i = n;
                     }
                 }
             } else if (n > 0) {
-                next = elements[0];
+                element = elements[0];
+                if (tge.visited.indexOf(element.getAttribute(`href`).match(/\/giveaway\/(.+?)\//)[1]) < 0) {
+                    next = element;
+                }
             }
             if (next) {
                 request(null, false, next.getAttribute(`href`), getTgeGiveaway.bind(null, tge, callback));
@@ -22547,9 +22551,9 @@ ${Results.join(``)}
         var game, string;
         game = GM_getValue(`rgr_game`);
         if (game) {
+            GM_deleteValue(`rgr_game`);
             string = `/${game.type}/${game.id}`;
             if (!window.location.href.match(string)) {
-                GM_deleteValue(`rgr_game`);
                 if (esgst.settings.rgr_index === 0) {
                     window.location.href = `http://steamcommunity.com${string}`;
                 } else {
