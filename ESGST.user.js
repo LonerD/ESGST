@@ -3,7 +3,7 @@
 // @namespace ESGST
 // @description Enhances SteamGifts and SteamTrades by adding some cool features to them.
 // @icon https://github.com/revilheart/ESGST/raw/master/Resources/esgstIcon.ico
-// @version 6.Beta.19.5
+// @version 6.Beta.19.6
 // @author revilheart
 // @downloadURL https://github.com/revilheart/ESGST/raw/master/ESGST.user.js
 // @updateURL https://github.com/revilheart/ESGST/raw/master/ESGST.meta.js
@@ -8043,7 +8043,9 @@ ${avatar.outerHTML}
                 if (timestamp > currentDate) {
                     filtered = false;
                     if (giveaway) {
-                        game = esgst.games[giveaway.gameType][giveaway.gameSteamId];
+                        if (giveaway.gameType && giveaway.gameSteamId) {
+                            game = esgst.games[giveaway.gameType][giveaway.gameSteamId];
+                        }
                         if (((giveaway.level < esgst.gf_minLevelPopup) || (giveaway.level > esgst.gf_maxLevelPopup)) || ((giveaway.copies < esgst.gf_minCopiesPopup) || (giveaway.copies > esgst.gf_maxCopiesPopup)) || ((giveaway.points < esgst.gf_minPointsPopup) || (giveaway.points > esgst.gf_maxPointsPopup)) || ((esgst.gf_createdPopup === `disabled` && giveaway.creator === esgst.username) || (esgst.gf_createdPopup === `none` && giveaway.creator !== esgst.username)) || (game && (((esgst.gf_hiddenPopup === `disabled` && game.hidden) || (esgst.gf_hiddenPopup === `none` && !game.hidden)) || ((esgst.gf_ownedPopup === `disabled` && game.owned) || (esgst.gf_ownedPopup === `none` && !game.owned)) || ((esgst.gf_ignoredPopup === `disabled` && game.ignored) || (esgst.gf_ignoredPopup === `none` && !game.ignored))))) {
                             filtered = true;
                         }
@@ -8192,22 +8194,24 @@ ${avatar.outerHTML}
                 if (!encryptedCode.match(/currentVersion/)) {
                     code = decryptGedCode(encryptedCode);
                     comment = element.closest(`.comment__summary`);
-                    comment.getElementsByClassName(`comment__actions`)[0].insertAdjacentHTML(`beforeEnd`, `
-                        <a class="esgst-ged-icon" href="/giveaway/${code}/" title="ESGST Decrypted Giveaway">
-                            <i class="fa fa-star"></i>
-                        </a>
-                    `);
-                    source = comment.id;
-                    if (savedGiveaways[code]) {
-                        if (!savedGiveaways[code].source) {
-                            savedGiveaways[code].source = source;
+                    if (comment) {
+                        comment.getElementsByClassName(`comment__actions`)[0].insertAdjacentHTML(`beforeEnd`, `
+                            <a class="esgst-ged-icon" href="/giveaway/${code}/" title="ESGST Decrypted Giveaway">
+                                <i class="fa fa-star"></i>
+                            </a>
+                        `);
+                        source = comment.id;
+                        if (savedGiveaways[code]) {
+                            if (!savedGiveaways[code].source) {
+                                savedGiveaways[code].source = source;
+                            }
+                        } else if (!newGiveaways[code]) {
+                            newGiveaway = true;
+                            newGiveaways[code] = {
+                                code: code,
+                                source: source
+                            };
                         }
-                    } else if (!newGiveaways[code]) {
-                        newGiveaway = true;
-                        newGiveaways[code] = {
-                            code: code,
-                            source: source
-                        };
                     }
                 }
             }
