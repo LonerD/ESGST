@@ -3,7 +3,7 @@
 // @namespace ESGST
 // @description Enhances SteamGifts and SteamTrades by adding some cool features to them.
 // @icon https://github.com/revilheart/ESGST/raw/master/Resources/esgstIcon.ico
-// @version 6.Beta.19.7
+// @version 6.Beta.19.8
 // @author revilheart
 // @downloadURL https://github.com/revilheart/ESGST/raw/master/ESGST.user.js
 // @updateURL https://github.com/revilheart/ESGST/raw/master/ESGST.meta.js
@@ -502,7 +502,7 @@
                     esgst.pageOuterWrap = document.getElementsByClassName(esgst.pageOuterWrapClass)[0];
                     esgst.paginationNavigation = document.getElementsByClassName(esgst.paginationNavigationClass)[0];
                     esgst.sidebar = document.getElementsByClassName(`sidebar`)[0];
-                    esgst.activeDiscussions = document.getElementsByClassName(`widget-container--margin-top`)[0];
+                    esgst.activeDiscussions = document.querySelector(`.widget-container--margin-top:last-of-type`);
                     esgst.pinnedGiveaways = document.getElementsByClassName(`pinned-giveaways__outer-wrap`)[0];
                     esgst.pinnedGiveawaysButton = document.getElementsByClassName(`pinned-giveaways__button`)[0];
                     var mainPageHeadingIndex;
@@ -1570,7 +1570,6 @@
                                 }
                             ],
                             id: `er`,
-                            load: loadEr,
                             name: `Entries Remover`,
                             sg: true,
                             type: `giveaways`
@@ -1684,7 +1683,6 @@
                                 <img src="https://camo.githubusercontent.com/9f0ebf4ffbf3489529819653853c6cc725cc0047/687474703a2f2f692e696d6775722e636f6d2f584565726f566e2e706e67"/>
                             `,
                             id: `adots`,
-                            load: loadAdots,
                             name: `Active Discussions On Top/Sidebar`,
                             options: {
                                 title: `Move to:`,
@@ -1763,9 +1761,6 @@
                             sg: true,
                             st: true,
                             type: `discussions`
-                        },
-                        {
-                            load: startDiscussionFeatures
                         },
                         {
                             description: `
@@ -2604,7 +2599,6 @@
                     esgst.currentGiveaways = [];
                     esgst.popupGiveaways = [];
                     esgst.discussions = [];
-                    esgst.discussionFeatures = [];
                     esgst.commentFeatures = [];
                     esgst.profileFeatures = [];
                     for (var key in esgst.defaultValues) {
@@ -2692,7 +2686,81 @@
                             addWBCButton(true, button);
                         }
                     }
+                    if (esgst.giveawaysPath || esgst.discussionsPath) {
+                        esgst.endlessFeatures.push(loadDiscussionFeatures);
+                        loadDiscussionFeatures(document);
+                    }
                     if (esgst.giveawaysPath) {
+                        if (esgst.activeDiscussions) {
+                            esgst.activeDiscussions.classList.remove(`widget-container--margin-top`);
+                            esgst.activeDiscussions.classList.add(`esgst-adots`);
+                            if (esgst.adots_index === 0) {
+                                parent = esgst.activeDiscussions.parentElement;
+                                parent.insertBefore(esgst.activeDiscussions, parent.firstElementChild);
+                            } else {
+                                style += `
+                                    .sidebar .table__row-outer-wrap {
+                                        padding: 5px 0;
+                                    }
+                                    .esgst-adots-tab-heading {
+                                        background-color: #2f3540;
+                                        border-top-left-radius: 5px;
+                                        border-top-right-radius: 5px;
+                                        color: #fff;
+                                        cursor: pointer;
+                                        display: inline-block;
+                                        opacity: 0.5;
+                                        padding: 5px 10px;
+                                        text-shadow: none;
+                                    }
+                                    .esgst-adots-tab-heading.esgst-selected {
+                                        opacity: 1;
+                                    }
+                                `;
+                                esgst.activeDiscussions.style.width = `${esgst.sidebar.offsetWidth}px`;
+                                panel = insertHtml(esgst.sidebar, `beforeEnd`, `
+                                    <h3 class="sidebar__heading">
+                                        <span class="esgst-adots-tab-heading esgst-selected">Discussions</span>
+                                        <span class="esgst-adots-tab-heading">Deals</span>
+                                        <a class="esgst-float-right sidebar__navigation__item__name" href="/discussions">More</a>
+                                    </h3>
+                                `);
+                                var tabHeading1 = panel.firstElementChild;
+                                var tabHeading2 = tabHeading1.nextElementSibling;
+                                var discussions = esgst.activeDiscussions.firstElementChild.firstElementChild.lastElementChild;
+                                var deals = esgst.activeDiscussions.lastElementChild.firstElementChild.lastElementChild;
+                                deals.classList.add(`esgst-hidden`, `esgst-adots`);
+                                discussions.classList.add(`esgst-adots`);
+                                esgst.sidebar.appendChild(discussions);
+                                esgst.sidebar.appendChild(deals);
+                                tabHeading1.addEventListener(`click`, changeAdotsTab.bind(null, tabHeading1, tabHeading2, discussions, deals));
+                                tabHeading2.addEventListener(`click`, changeAdotsTab.bind(null, tabHeading2, tabHeading1, deals, discussions));
+                                var element, elements, i, n, comments, parent, panel;
+                                elements = discussions.getElementsByClassName(`table__row-outer-wrap`);
+                                for (i = 0, n = elements.length; i < n; ++i) {
+                                    element = elements[i];
+                                    comments = element.getElementsByClassName(`table__column__secondary-link`)[0];
+                                    parent = comments.parentElement;
+                                    panel = insertHtml(parent, `afterEnd`, `<p></p><div style="clear: both;"></div>`);
+                                    panel.appendChild(comments);
+                                    parent.lastElementChild.classList.add(`esgst-float-right`);
+                                    panel.appendChild(parent.lastElementChild);
+                                    parent.remove();
+                                }
+                                elements = deals.getElementsByClassName(`table__row-outer-wrap`);
+                                for (i = 0, n = elements.length; i < n; ++i) {
+                                    element = elements[i];
+                                    comments = element.getElementsByClassName(`table__column__secondary-link`)[0];
+                                    parent = comments.parentElement;
+                                    panel = insertHtml(parent, `afterEnd`, `<p></p><div style="clear: both;"></div>`);
+                                    panel.appendChild(comments);
+                                    parent.lastElementChild.classList.add(`esgst-float-right`);
+                                    panel.appendChild(parent.lastElementChild);
+                                    parent.remove();                                
+                                }
+                                esgst.activeDiscussions.remove();
+                            }
+                        }
                         if (esgst.hfc && esgst.featuredContainer) {
                             esgst.featuredContainer.classList.add(`esgst-hidden`);
                         }
@@ -2774,7 +2842,9 @@
                                     <i class="fa fa-times-circle"></i>
                                 `;
                                 mainPageHeadingBefore.appendChild(button);
-                                addERButton(button);
+                                button.addEventListener(`click`, openErPopup.bind(null, {
+                                    button: button
+                                }));
                             }
                             if (esgst.gwc) {
                                 esgst.endlessFeatures.push(addGwcrHeading);
@@ -2966,6 +3036,13 @@
                                 `;
                                 mainPageHeadingBefore.appendChild(button2);
                                 addWbsButton(`blacklistedDate`, `blacklist`, `blacklisted`, button1, button2);
+                            }
+                        } else if (esgst.profilePath) {
+                            button = document.getElementsByClassName(`form__sync-default`)[0];
+                            if (esgst.er_s) {
+                                button.addEventListener(`click`, openErPopup.bind(null, {
+                                    button: button
+                                }));
                             }
                         }
                         if (esgst.newGiveawayPath) {
@@ -4053,14 +4130,14 @@
         }
         GM_setValue(`games`, JSON.stringify(savedGames));
         deleteLock();
-        callback(result, savedGames);
+        callback(savedGames, result);
     }
 
-    function lockAndSaveGiveaways(giveaways) {
-        createLock(`giveawayLock`, 300, saveGiveaways.bind(null, giveaways));
+    function lockAndSaveGiveaways(giveaways, callback) {
+        createLock(`giveawayLock`, 300, saveGiveaways.bind(null, giveaways, callback));
     }
 
-    function saveGiveaways(giveaways, deleteLock) {
+    function saveGiveaways(giveaways, callback, deleteLock) {
         var key, savedGiveaways, subKey;
         savedGiveaways = JSON.parse(GM_getValue(`giveaways`, `{}`));
         for (key in giveaways) {
@@ -4074,6 +4151,9 @@
         }
         GM_setValue(`giveaways`, JSON.stringify(savedGiveaways));
         deleteLock();
+        if (callback) {
+            callback();
+        }
     }
 
     function lockAndSaveGroups(groups, sync, callback) {
@@ -5218,6 +5298,7 @@ float: right;
 
 .sidebar .esgst-adots {
 max-height: 300px;
+max-width: 336px;
 overflow: auto;
 }
 
@@ -5234,7 +5315,7 @@ padding: 0 !important;
 padding-bottom: 5px !important;
 }
 
-.sidebar .esgst-adots .table__column__heading {
+.sidebar .esgst-adots .homepage_table_column_heading {
 display: inline-block;
 max-width: 225px;
 overflow: hidden;
@@ -5244,8 +5325,8 @@ white-space: nowrap;
 }
 
 .sidebar .esgst-adots .table__row-outer-wrap {
-padding: 0;
-padding-bottom: 5px;
+padding: 0 !important;
+padding-bottom: 5px !important;
 border: 0;
 box-shadow: none;
 }
@@ -5256,17 +5337,17 @@ display: block;
 
 .sidebar .esgst-adots .table__row-inner-wrap >:first-child {
 float: left;
-width: 45px;
-height: 45px;
+width: 35px;
+height: 35px;
 }
 
 .sidebar .esgst-adots .table__row-inner-wrap >:first-child >* {
-width: 45px;
-height: 45px;
+width: 35px;
+height: 35px;
 }
 
 .sidebar .esgst-adots .table__row-inner-wrap >:last-child {
-margin-left: 50px;
+margin-left: 40px;
 text-align: left;
 width: auto;
 }
@@ -8171,10 +8252,10 @@ ${avatar.outerHTML}
                         }
                     });
                 } else {
-                    saveGiveaways(currentGiveaways, callback.bind(null, i + 1));
+                    lockAndSaveGiveaways(currentGiveaways, callback.bind(null, i + 1));
                 }
             } else {
-                saveGiveaways(currentGiveaways, callback.bind(null, i));
+                lockAndSaveGiveaways(currentGiveaways, callback.bind(null, i));
             }
         }
     }
@@ -8632,9 +8713,9 @@ ${avatar.outerHTML}
                 }
                 if (esgst.gf && esgst.gf.filteredCount) {
                     filterGfGiveaways(esgst.gf);
-                    if (esgst.gfPopup) {
-                        filterGfGiveaways(esgst.gfPopup);
-                    }
+                }
+                if (esgst.gfPopup) {
+                    filterGfGiveaways(esgst.gfPopup);
                 }
                 callback();
             } else {
@@ -9583,7 +9664,7 @@ ${avatar.outerHTML}
                         }
                     } while (found);
                 }
-                request(`do=autocomplete_game&page_number=1&search_query=${name}`, false, `/ajax.php`, getMgcGiveaway.bind(null, giveaways, i, j, mgc, n, name, progress, textArea, values, mainCallback, callback));
+                request(`do=autocomplete_game&page_number=1&search_query=${encodeURIComponent(name)}`, false, `/ajax.php`, getMgcGiveaway.bind(null, giveaways, i, j, mgc, n, name, progress, textArea, values, mainCallback, callback));
             } else {
                 createAlert(`The next giveaway is not in the right format. Please correct it and click on "Import" again to continue importing.`);
                 callback();
@@ -10490,176 +10571,139 @@ ${avatar.outerHTML}
 
     /* [ER] Entries Remover */
 
-    function loadEr() {
-        if (esgst.er_s && esgst.profilePath) {
-            addERButton();
+    function openErPopup(er) {
+        if (!er.popup) {
+            er.popup = createPopup_v6(`fa-times`, `Remove entries for owned games:`);
+            er.set = createButtonSet(`green`, `grey`, `fa-arrow-circle-right`, `fa-times`, `Remove`, `Cancel`, syncErGames.bind(null, er), stopErRemover.bind(null, er));
+            er.popup.description.appendChild(er.set.set);
+            er.progress = insertHtml(er.popup.description, `beforeEnd`, `<div></div>`);
+            er.removed = insertHtml(er.popup.description, `beforeEnd`, `<div class="markdown"></div>`);
+            if (esgst.profilePath) {
+                er.set.trigger();
+            }
+        }
+        er.popup.open();
+    }
+
+    function syncErGames(er, callback) {
+        er.canceled = false;
+        er.button.classList.add(`esgst-busy`);
+        er.progress.innerHTML = `
+            <i class="fa fa-circle-o-notch fa-spin"></i>
+            <span>Syncing games...</span>
+        `;
+        er.removed.innerHTML = ``;
+        syncGames(er, checkErResult.bind(null, er, callback));
+    }
+
+    function checkErResult(er, callback, games, result) {
+        switch (result) {
+            case 1:
+                er.games = games;
+                er.removed.innerHTML = `<strong>Removed Entries:</strong>`;
+                if (esgst.profilePath) {
+                    checkErEntries(null, er, 1, `/giveaways/entered/search?page=`, completeErProcess.bind(null, er, callback));
+                } else {
+                    checkErEntries(document, er, 1, `/giveaways/entered/search?page=`, completeErProcess.bind(null, er, callback));
+                }
+                break;
+            case 2:
+                er.progress.innerHTML = `
+                    <strong>0 new games found.</strong>
+                `;
+                break;
+            case 3:
+                er.progress.innerHTML = `
+                    <strong>You are either not logged in on Steam or you do not have a Steam API key set in the settings menu (section 11).</strong>
+                `;
+                break;
         }
     }
 
-    function addERButton(Button) {
-        var HTML, Popup, URL, CurrentPage, NextPage, RemovedEntries, ownedGames;
-        if (!Button) {
-            Button = document.getElementsByClassName(`form__sync-default`)[0];
-        }
-        if (Button) {
-            Popup = createPopup();
-            Popup.Popup.classList.add(`rhPopupLarge`);
-            Popup.Icon.classList.add(`fa-times`);
-            Popup.Title.textContent = `Remove entries for owned games:`;
-            URL = `/giveaways/entered/search?page=`;
-            if (window.location.pathname.match(/^\/giveaways\/entered/)) {
-                CurrentPage = esgst.currentPage;
-            } else {
-                CurrentPage = 0;
-            }
-            NextPage = 1;
-            Button.addEventListener(`click`, openPopup);
-        }
-
-        function openPopup() {
-            Button.classList.add(`esgst-busy`);
-            Popup.popUp(getResult);
-        }
-
-        function getResult() {
-            Popup.Progress.textContent = `Syncing owned games...`;
-            syncGames(Popup, checkResult);
-        }
-
-        function checkResult(Result, games) {
-            Popup.OverallProgress.textContent = `Removing entries...`;
-            switch (Result) {
-                case 1:
-                    ownedGames = games;
-                    RemovedEntries = {};
-                    checkNextPage();
-                    break;
-                case 2:
-                    showResult(`<strong>0 new games found.</strong>`);
-                    break;
-                case 3:
-                    showResult(`<strong>You either are not logged in on Steam or do not have a Steam API key set.</strong>`);
-                    break;
+    function checkErEntries(context, er, nextPage, url, callback) {
+        var elements, n;
+        if (!er.canceled) {
+            er.progress.innerHTML = `
+                <i class="fa fa-circle-o-notch fa-spin"></i>
+                <span>Removing entries (page ${nextPage})...</span>
+            `;
+            if (context) {
+                elements = context.getElementsByClassName(`table__remove-default`);
+                n = elements.length;
+                if (n > 0) {
+                    removeErEntries(elements, er, 0, n, checkNextErPage.bind(null, context, er, nextPage, url, callback));
+                } else {
+                    callback();
+                }
+            } else if (document.getElementById(`esgst-es-page-${nextPage}`)) {
+                setTimeout(checkErEntries, 0, null, er, ++nextPage, url, callback);
+            } else if (!er.canceled) {
+                request(null, false, `${url}${nextPage}`, getNextErPage.bind(null, er, nextPage, url, callback));
             }
         }
+    }
 
-        function showResult(Result) {
-            Popup.Progress.innerHTML = Popup.OverallProgress.innerHTML = ``;
-            Popup.Results.innerHTML = Result;
-            Button.classList.remove(`esgst-busy`);
-        }
-
-        function checkNextPage() {
-            Popup.Progress.innerHTML = `
-<i class="fa fa-circle-o-notch fa-spin"></i>
-<span>Checking page ${NextPage}...</span>
-`;
-            if (CurrentPage != NextPage) {
-                queueRequest(Popup, null, `${URL}${NextPage}`, getNextPage);
-            } else {
-                goToNextPage(document);
-            }
-        }
-
-        function getNextPage(Response) {
-            goToNextPage(DOM.parse(Response.responseText));
-        }
-
-        function goToNextPage(Context) {
-            ++NextPage;
-            setTimeout(getEntries, 0, Context);
-        }
-
-        function getEntries(Context) {
-            var Entries, N;
-            Entries = Context.getElementsByClassName(`table__remove-default`);
-            N = Entries.length;
-            if (N > 0) {
-                checkEntries(0, N, Entries, Context);
-            } else {
-                checkRemovedEntries();
-            }
-        }
-
-        function checkEntries(I, N, Entries, Context) {
-            checkEntry();
-
-            function checkEntry() {
-                var Entry, Container, Image, Match, ID, Type, Title, Code, Data, Pagination;
-                if (I < N) {
-                    Entry = Entries[I];
-                    Container = Entry.closest(`.table__row-inner-wrap`);
-                    Image = Container.getElementsByClassName(`global__image-inner-wrap`)[0];
-                    if (Image) {
-                        Match = Image.getAttribute(`style`).match(/\/(apps|subs)\/(\d+)/);
-                        ID = parseInt(Match[2]);
-                        if (ownedGames[Match[1]][ID] && ownedGames[Match[1]][ID].owned) {
-                            Type = Match[1].replace(/s$/, ``);
-                            Title = Container.getElementsByClassName(`table__column__heading`)[0].textContent;
-                            if (!RemovedEntries[ID]) {
-                                RemovedEntries[ID] = {
-                                    Type: Type,
-                                    Title: Title,
-                                    Entries: 0
-                                };
-                            }
-                            ++RemovedEntries[ID].Entries;
-                            if (Context == document) {
-                                Entry.click();
-                                goToNextEntry();
+    function removeErEntries(elements, er, i, n, callback) {
+        var container, element, game, heading, info, url;
+        if (!er.canceled) {
+            if (i < n) {
+                element = elements[i];
+                container = element.closest(`.table__row-inner-wrap`);
+                info = getGameInfo(container);
+                if (info) {
+                    game = er.games[info.type][info.id];
+                    if (game && game.owned) {
+                        heading = container.getElementsByClassName(`table__column__heading`)[0];
+                        url = heading.getAttribute(`href`);
+                        er.removed.insertAdjacentHTML(`beforeEnd`, `
+                            <a href="${url}">${heading.textContent}</a>
+                        `);
+                        er.popup.reposition();
+                        if (!er.canceled) {
+                            if (document.body.contains(element)) {
+                                element.click();
+                                setTimeout(removeErEntries, 0, elements, er, ++i, n, callback);
                             } else {
-                                Code = Container.querySelector(`[name="code"]`).value;
-                                Data = `xsrf_token=${esgst.xsrfToken}&do=entry_delete&code=${Code}`;
-                                queueRequest(Popup, Data, `/ajax.php`, goToNextEntry);
+                                request(`xsrf_token=${esgst.xsrfToken}&do=entry_delete&code=${url.match(/\/giveaway\/(.+?)\//)[1]}`, false, `/ajax.php`, setTimeout.bind(null, removeErEntries, 0, elements, er, ++i, n, callback));
                             }
-                        } else {
-                            goToNextEntry();
                         }
                     } else {
-                        goToNextEntry();
+                        setTimeout(removeErEntries, 0, elements, er, ++i, n, callback);
                     }
                 } else {
-                    Pagination = Context.getElementsByClassName(`pagination__navigation`)[0];
-                    if (Pagination && !Pagination.lastElementChild.classList.contains(`is-selected`)) {
-                        checkNextPage();
-                    } else {
-                        checkRemovedEntries();
-                    }
-                }
-            }
-
-            function goToNextEntry() {
-                ++I;
-                setTimeout(checkEntry, 0);
-            }
-        }
-
-        function checkRemovedEntries() {
-            var Results, N, Key, Entry, Result;
-            Results = [];
-            N = 0;
-            for (Key in RemovedEntries) {
-                Entry = RemovedEntries[Key];
-                Result = `
-<a href="https://store.steampowered.com/${Entry.Type}/${Key}" target="_blank">
-${Entry.Title} (${Entry.Entries})
-</a>
-`;
-                Results.push(Result);
-                N += Entry.Entries;
-            }
-            if (Results.length) {
-                Result = `
-<strong>${N} entries removed:</strong>
-<span class="popup__actions">
-${Results.join(``)}
-</span>
-`;
-                showResult(Result);
+                    setTimeout(removeErEntries, 0, elements, er, ++i, n, callback);
+                }         
             } else {
-                showResult(`<strong>0 entries removed.</strong>`);
+                callback();
             }
         }
+    }
+
+
+    function checkNextErPage(context, er, nextPage, url, callback) {
+        var pagination;
+        pagination = context.getElementsByClassName(`pagination__navigation`)[0];
+        if (pagination && !pagination.lastElementChild.classList.contains(`is-selected`)) {
+            setTimeout(checkErEntries, 0, null, er, ++nextPage, url, callback);
+        } else {
+            callback();
+        }
+    }
+
+    function getNextErPage(er, nextPage, url, callback, response) {
+        setTimeout(checkErEntries, 0, DOM.parse(response.responseText), er, ++nextPage, url, callback);
+    }
+
+    function completeErProcess(er, callback) {
+        er.button.classList.remove(`esgst-busy`);
+        er.progress.innerHTML = ``;
+        callback();
+    }
+
+    function stopErRemover(er) {
+        er.canceled = true;
+        er.button.classList.remove(`esgst-busy`);
+        er.progress.innerHTML = ``;
     }
 
     /* [SAL] Steam Activation Links */
@@ -11391,35 +11435,11 @@ ${Results.join(``)}
 
     /* [ADOTS] Active Discussions On Top/Sidebar */
 
-    function loadAdots() {
-        var elements, i, icon, n, parent;
-        if (esgst.activeDiscussions) {
-            esgst.activeDiscussions.classList.remove(`widget-container--margin-top`);
-            esgst.activeDiscussions.classList.add(`esgst-adots`);
-            if (esgst.adots_index === 0) {
-                parent = esgst.activeDiscussions.parentElement;
-                parent.insertBefore(esgst.activeDiscussions, parent.firstElementChild);
-            } else {
-                esgst.activeDiscussions.style.width = `${esgst.sidebar.offsetWidth}px`;
-                esgst.sidebar.insertAdjacentHTML(`beforeEnd`, `
-                    <h3 class="sidebar__heading">
-                        Active Discussions <a class="esgst-float-right sidebar__navigation__item__name" href="/discussions">More</a>
-                    </h3>
-                `);
-                esgst.activeDiscussions.firstElementChild.firstElementChild.remove();
-                esgst.activeDiscussions.firstElementChild.firstElementChild.firstElementChild.remove();
-                elements = esgst.activeDiscussions.getElementsByClassName(`table__column--last-comment`);
-                for (i = 0, n = elements.length; i < n; ++i) {
-                    icon = elements[0].getElementsByClassName(`table__last-comment-icon`)[0];
-                    if (icon) {
-                        icon.classList.add(`esgst-float-right`);
-                        elements[0].previousElementSibling.appendChild(icon);
-                    }
-                    elements[0].remove();
-                }
-                esgst.sidebar.appendChild(esgst.activeDiscussions);
-            }
-        }
+    function changeAdotsTab(button1, button2, first, second) {
+        button2.classList.remove(`esgst-selected`);
+        first.classList.remove(`esgst-hidden`);
+        second.classList.add(`esgst-hidden`);
+        button1.classList.add(`esgst-selected`);
     }
 
     /* [DS] Discussions Sorter */
@@ -11497,7 +11517,6 @@ ${Results.join(``)}
                     }
                 }
             }
-            esgst.discussionFeatures.push(getDhDiscussions);
     }
 
     function getDhDiscussions(discussions) {
@@ -20025,10 +20044,10 @@ ${Results.join(``)}
         matches = context.querySelectorAll(`.table__row-outer-wrap, .row_outer_wrap`);
         for (i = 0, n = matches.length; i < n; ++i) {
             match = matches[i];
-            countLink = match.querySelector(`.table__column--width-small.text-center, .column_small.text_center`);
+            countLink = match.querySelector(`.table__column__secondary-link[href*="/discussion/"], .table__column--width-small.text-center, .column_small.text_center`);
             if (countLink) {
                 count = parseInt(countLink.textContent.replace(/,/g, ``));
-                url = match.querySelector(`.table__column__heading, .column_flex h3 a`).getAttribute(`href`);
+                url = match.querySelector(`.homepage_table_column_heading, .table__column__heading, .column_flex h3 a`).getAttribute(`href`);
                 if (url) {
                     code = url.match(new RegExp(`/${key.slice(0, -1)}/(.+?)(/.*)?$`));
                     if (code) {
@@ -20053,7 +20072,7 @@ ${Results.join(``)}
 
     function addCtDiscussionPanel(code, comments, container, context, count, diff, url, type, dh) {
         var diffContainer, goToUnread, loadingIcon, markRead, markUnread, markVisited, markUnvisited, panel;
-        panel = insertHtml(context, `beforeEnd`, `
+        panel = insertHtml(context, esgst.giveawaysPath ? `afterEnd` : `beforeEnd`, `
             <span>
                 <span class="esgst-ct-count esgst-hidden">(+${diff})</span>
                 <div class="esgst-heading-button esgst-hidden" title="Go to first unread comment of this discussion">
@@ -20081,7 +20100,7 @@ ${Results.join(``)}
         markVisited = markUnread.nextElementSibling;
         markUnvisited = markVisited.nextElementSibling;
         loadingIcon = markUnvisited.nextElementSibling;
-        if (esgst.ct && (esgst.discussionsPath || dh)) {
+        if (esgst.ct && (esgst.giveawaysPath || esgst.discussionsPath || dh)) {
             if (diff > 0) {
                 diffContainer.classList.remove(`esgst-hidden`);
                 goToUnread.classList.remove(`esgst-hidden`);
@@ -20162,7 +20181,7 @@ ${Results.join(``)}
                 GM_setValue(`comments`, JSON.stringify(comments));
                 deleteLock();
                 loadingIcon.classList.add(`esgst-hidden`);
-                if (esgst.ct && (esgst.discussionsPath || dh)) {
+                if (esgst.ct && (esgst.giveawaysPath || esgst.discussionsPath || dh)) {
                     goToUnread.classList.remove(`esgst-hidden`);
                     markRead.classList.remove(`esgst-hidden`);
                     markUnread.classList.remove(`esgst-hidden`);
@@ -20185,7 +20204,7 @@ ${Results.join(``)}
                 GM_setValue(`comments`, JSON.stringify(comments));
                 deleteLock();
                 loadingIcon.classList.add(`esgst-hidden`);
-                if (esgst.ct && (esgst.discussionsPath || dh)) {
+                if (esgst.ct && (esgst.giveawaysPath || esgst.discussionsPath || dh)) {
                     goToUnread.classList.remove(`esgst-hidden`);
                     markRead.classList.remove(`esgst-hidden`);
                     markUnread.classList.remove(`esgst-hidden`);
@@ -22957,9 +22976,9 @@ ${Results.join(``)}
             }
             if (esgst.gf && esgst.gf.filteredCount) {
                 filterGfGiveaways(esgst.gf);
-                if (esgst.gfPopup) {
-                    filterGfGiveaways(esgst.gfPopup);
-                }
+            }
+            if (esgst.gfPopup) {
+                filterGfGiveaways(esgst.gfPopup);
             }
             createLock(`gameLock`, 300, function(deleteLock) {
                 updateGames(savedGames);
@@ -25484,7 +25503,7 @@ Background: <input type="color" value="${bgColor}">
         } else {
             giveaway.copies = 1;
         }
-        giveaway.url = esgst.giveawayPath && !ugd ? window.location.pathname : (mainUrl || giveaway.headingName.getAttribute(`href`));
+        giveaway.url = esgst.giveawayPath && main && !ugd ? window.location.pathname : (mainUrl || giveaway.headingName.getAttribute(`href`));
         if (giveaway.url) {
             match = giveaway.url.match(/\/giveaway\/(.+?)(\/.+?)$/);
             if (match) {
@@ -25633,21 +25652,14 @@ Background: <input type="color" value="${bgColor}">
         };
     }
 
-    function startDiscussionFeatures() {
-        if (esgst.discussionsPath) {
-            esgst.endlessFeatures.push(loadDiscussionFeatures);
-            loadDiscussionFeatures(document);
-        }
-    }
-
     function loadDiscussionFeatures(context) {
         var i, n, discussions;
         discussions = getDiscussions(document);
         for (i = 0, n = discussions.length; i < n; ++i) {
             esgst.discussions.push(discussions[i]);
         }
-        for (i = 0, n = esgst.discussionFeatures.length; i < n; ++i) {
-            esgst.discussionFeatures[i](discussions);
+        if (esgst.dh) {
+            getDhDiscussions(discussions);
         }
     }
 

@@ -1,4 +1,14 @@
 /*
+ * July 21, 2017 - v6.Beta.19.8
+ */
+
+* Fixed some bugs.
+* Fixed a bug in Multiple Giveaways Creator that was not importing games with an ampersand in their name (closes #274).
+* Fixed a bug in Giveaway Encrypter/Decrypter and Train Giveaways Extractor that was not filtering results.
+* Fixed a bug in Entries Remover that was not removing the entries (closes #255).
+* Adapted Active Discussions On Top/Sidebar to recent SG changes (closes #273).
+
+/*
  * July 18, 2017 - v6.Beta.19.7
  */
 
