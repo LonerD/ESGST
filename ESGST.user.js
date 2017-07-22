@@ -3,7 +3,7 @@
 // @namespace ESGST
 // @description Enhances SteamGifts and SteamTrades by adding some cool features to them.
 // @icon https://github.com/revilheart/ESGST/raw/master/Resources/esgstIcon.ico
-// @version 6.Beta.19.8
+// @version 6.Beta.19.9
 // @author revilheart
 // @downloadURL https://github.com/revilheart/ESGST/raw/master/ESGST.user.js
 // @updateURL https://github.com/revilheart/ESGST/raw/master/ESGST.meta.js
@@ -2691,7 +2691,7 @@
                         loadDiscussionFeatures(document);
                     }
                     if (esgst.giveawaysPath) {
-                        if (esgst.activeDiscussions) {
+                        if (esgst.adots && esgst.activeDiscussions) {
                             esgst.activeDiscussions.classList.remove(`widget-container--margin-top`);
                             esgst.activeDiscussions.classList.add(`esgst-adots`);
                             if (esgst.adots_index === 0) {
@@ -2756,7 +2756,7 @@
                                     panel.appendChild(comments);
                                     parent.lastElementChild.classList.add(`esgst-float-right`);
                                     panel.appendChild(parent.lastElementChild);
-                                    parent.remove();                                
+                                    parent.remove();
                                 }
                                 esgst.activeDiscussions.remove();
                             }
@@ -5169,6 +5169,14 @@ overflow: auto;
     border-radius: 4px;
     text-align: center;
     text-shadow: 1px 1px rgba(255,255,255,0.94);
+}
+
+.esgst-popup li:before {
+    margin-left: 0;
+    padding-right: 10px;
+    position: static;
+    width: auto;
+    text-align: left;
 }
 
 .esgst-popup-progress {
@@ -24562,8 +24570,8 @@ Background: <input type="color" value="${bgColor}">
                                 if (Key === `settings`) {
                                     if (SM.S.checked) {
                                         var savedSettings = JSON.parse(GM_getValue(`settings`, `{}`));
-                                        for (Setting in File.Data.Settings) {
-                                            savedSettings[Setting] = File.Data.Settings[Setting];
+                                        for (Setting in File.Data.settings) {
+                                            savedSettings[Setting] = File.Data.settings[Setting];
                                         }
                                         GM_setValue(`settings`, JSON.stringify(savedSettings));
                                     }
@@ -25733,20 +25741,20 @@ Background: <input type="color" value="${bgColor}">
         if (!mainContext) {
             mainContext = document;
         }
-        comments = getComments(context, mainContext);
+        comments = getComments(context, mainContext, main);
         for (i = 0, n = esgst.commentFeatures.length; i < n; ++i) {
             esgst.commentFeatures[i](comments, goToUnread, markRead, markUnread);
         }
     }
 
-    function getComments(context, mainContext) {
+    function getComments(context, mainContext, main) {
         var comment, comments, i, matches, n, sourceLink, savedUsers;
         comments = [];
         savedUsers = JSON.parse(GM_getValue(`users`));
         matches = context.querySelectorAll(`:not(.comment--submit) > .comment__parent, .comment__child, .comment_inner`);
         sourceLink = mainContext.querySelector(`.page__heading__breadcrumbs a[href*="/giveaway/"], .page__heading__breadcrumbs a[href*="/discussion/"], .page__heading__breadcrumbs a[href*="/ticket/"], .page_heading_breadcrumbs a[href*="/trade/"]`);
         for (i = matches.length - 1; i >= 0; --i) {
-            comment = getCommentInfo(matches[i], sourceLink, savedUsers);
+            comment = getCommentInfo(matches[i], sourceLink, savedUsers, main);
             if (comment) {
                 comments.push(comment);
             }
@@ -25754,7 +25762,7 @@ Background: <input type="color" value="${bgColor}">
         return comments;
     }
 
-    function getCommentInfo(context, sourceLink, savedUsers) {
+    function getCommentInfo(context, sourceLink, savedUsers, main) {
         var comment, matches, n, source;
         comment = {};
         comment.comment = context;
@@ -25815,7 +25823,7 @@ Background: <input type="color" value="${bgColor}">
         }
         comment.id = comment.permalink ? comment.permalink.getAttribute(`href`).match(/\/comment\/(.+)/)[1] : ``;
         comment.timestamp = parseInt(comment.actions.firstElementChild.lastElementChild.getAttribute(`data-timestamp`));
-        if (esgst.inboxPath) {
+        if (main && esgst.inboxPath) {
             if (esgst.sg) {
                 source = comment.comment.closest(`.comments`).previousElementSibling.firstElementChild.firstElementChild.getAttribute(`href`);
             } else {

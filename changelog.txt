@@ -1,4 +1,12 @@
 /*
+ * July 21, 2017 - v6.Beta.19.9
+ */
+
+* Fixed a style issue with list items inside popups.
+* Fixed a bug that was not importing settings.
+* Fixed a bug that was enabling Active Discussions On Top/Sidebar even when disabled.
+
+/*
  * July 21, 2017 - v6.Beta.19.8
  */
 
