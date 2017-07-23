@@ -3,7 +3,7 @@
 // @namespace ESGST
 // @description Enhances SteamGifts and SteamTrades by adding some cool features to them.
 // @icon https://github.com/revilheart/ESGST/raw/master/Resources/esgstIcon.ico
-// @version 6.Beta.19.11
+// @version 6.Beta.19.12
 // @author revilheart
 // @downloadURL https://github.com/revilheart/ESGST/raw/master/ESGST.user.js
 // @updateURL https://github.com/revilheart/ESGST/raw/master/ESGST.meta.js
@@ -574,9 +574,11 @@
                         steamId: `SteamID64`,
                         steamApiKey: `SteamAPIKey`,
                         lastSync: `LastSync`,
-                        syncFrequency: `SyncFrequency`
+                        syncFrequency: `SyncFrequency`,
+                        lastBundleSync: `LastBundleSync`
                     };
                     esgst.defaultValues = {
+                        exportBundles: false,
                         enableByDefault: false,
                         showChangelog: true,
                         syncGroups: true,
@@ -933,7 +935,7 @@
                         steamApiKey: ``,
                         lastSync: 0,
                         syncFrequency: 7,
-                        LastBundleSync: 0,
+                        lastBundleSync: 0,
                         Emojis: "",
                         Rerolls: [],
                         Winners: {}
@@ -3271,8 +3273,8 @@
             }).replace(/\n/g, `<br/>`).replace(/#(\d+)/g, function (m, p1) {
                 return `<a href="https://github.com/revilheart/ESGST/issues/${p1}">#${p1}</a>`;
             });
-            changelogPopup.description.insertAdjacentHTML(`afterBegin`, html);
-            changelogPopup.description.classList.add(`esgst-text-left`);
+            changelogPopup.scrollable.insertAdjacentHTML(`afterBegin`, html);
+            changelogPopup.scrollable.classList.add(`esgst-text-left`);
             changelogPopup.open();
         });
     }
@@ -4322,7 +4324,9 @@
                         <div class="popup_heading_h2 esgst-popup-title">${title}</div>
                     </div>
                 </div>
-                <div class="popup_description esgst-popup-description"></div>
+                <div class="popup_description esgst-popup-description">
+                    <div class="esgst-popup-scrollable"></div>
+                </div>
                 <div class="popup__actions popup_actions">
                     <span>Manage</span>
                     <span class="b-close">Close</span>
@@ -4330,6 +4334,7 @@
             </div>
         `);
         popup.description = popup.popup.firstElementChild.nextElementSibling;
+        popup.scrollable = popup.description.firstElementChild;
         var manage = popup.description.nextElementSibling.firstElementChild;
         manage.addEventListener(`click`, loadSMMenu);
         popup.open = function (callback) {
@@ -4350,13 +4355,20 @@
                         popup.onClose();
                     }
                 }
-            }, callback);
+            }, function() {
+                popup.scrollable.style.maxHeight = `${window.innerHeight * 0.9 - (popup.popup.offsetHeight - popup.scrollable.offsetHeight)}px`;
+                popup.opened.reposition();
+                if (callback) {
+                    callback();
+                }
+            });
         };
         popup.close = function () {
             popup.opened.close();
         };
         popup.reposition = function () {
             if (popup.opened) {
+                popup.scrollable.style.maxHeight = `${window.innerHeight * 0.9 - (popup.popup.offsetHeight - popup.scrollable.offsetHeight)}px`;
                 popup.opened.reposition();
             }
         };
@@ -5003,7 +5015,6 @@ background-color: ${backgroundColor} !important;
         Negative = window.getComputedStyle(Negative).color;
         Unknown = window.getComputedStyle(Unknown).color;
         Temp.remove();
-        var maxHeight = window.innerHeight - 300;
         style = `
 .esgst-gm-giveaway {
     background-color: #fff;
@@ -5115,9 +5126,12 @@ overflow: auto;
 margin: 10px 0;
 }
 
-.esgst-popup-description {
-max-height: ${maxHeight}px;
+.esgst-popup-scrollable {
 overflow: auto;
+}
+
+.esgst-popup .popup__actions >* {
+display: inline-block;
 }
 
 .esgst-popup .popup__keys__list {
@@ -5981,7 +5995,9 @@ min-width: 0;
     function checkBundleSync(context, syncer) {
         if (!syncer.popup) {
             syncer.popup = createPopup(`fa-refresh`, `Sync Bundles`);
-            syncer.popup.description.appendChild(createButtonSet(`green`, `grey`, `fa-arrow-circle-right`, `fa-times`, `Sync`, `Cancel`, startBundleSync.bind(null, syncer), cancelBundleSync.bind(null, syncer)).set);
+            createToggleSwitch(syncer.popup.description, `exportBundles`, false, `Export bundles to file.`, false, false, `Exports the list of bundles to a file that can be used for syncing without having to scan everything again.`, esgst.exportBundles);
+            syncer.popup.description.appendChild(createButtonSet(`green`, `grey`, `fa-arrow-circle-right`, `fa-times`, `Sync`, `Cancel`, startBundleSync.bind(null, context, syncer), cancelBundleSync.bind(null, syncer)).set);
+            syncer.popup.description.appendChild(createButtonSet(`green`, `grey`, `fa-arrow-circle-right`, `fa-times`, `Sync From File`, `Cancel`, startBundleSyncFromFile.bind(null, context, syncer), cancelBundleSync.bind(null, syncer)).set);
             syncer.progress = insertHtml(syncer.popup.description, `beforeEnd`, `<div></div>`);
         }
         syncer.popup.open();
@@ -5992,7 +6008,7 @@ min-width: 0;
         syncer.progress.innerHTML = ``;
     }
 
-    function startBundleSync(syncer, callback) {
+    function startBundleSync(context, syncer, callback) {
         if (Date.now() - esgst.lastBundleSync > 604800000) {
             setValue(`lastBundleSync`, Date.now());
             syncer.canceled = false;
@@ -6008,8 +6024,39 @@ min-width: 0;
         }
     }
 
+    function startBundleSyncFromFile(context, syncer, callback) {
+        var file, reader;
+        file = document.createElement(`input`);
+        file.type = `file`;
+        file.click();
+        file.addEventListener(`change`, function () {
+            file = file.files[0];
+            if (file.name.match(/ESGST-Bundles-.+\.json/)) {
+                reader = new FileReader();
+                reader.readAsText(file);
+                reader.onload = function () {
+                    var Key, Setting;
+                    file = JSON.parse(reader.result);
+                    lockAndSaveGames(file.bundles, function () {
+                        context.classList.remove(`notification--warning`);
+                        context.classList.add(`notification--success`);
+                        context.innerHTML = `
+                            <i class="fa fa-check-circle"></i> Last synced ${new Date().toLocaleString()}.
+                        `;
+                        callback();
+                        syncer.progress.innerHTML = ``;
+                        setValue(`lastBundleSync`, Date.now());
+                    });
+                };
+            } else {
+                callback();
+                createAlert(`Wrong file!`);
+            }
+        });
+    }
+
     function syncBundles(context, nextPage, syncer, url, callback) {
-        var elements, i, match, n, pagination;
+        var element, elements, i, match, n, pagination;
         if (!syncer.canceled) {
             syncer.progress.innerHTML = `
                 <i class="fa fa-circle-o-notch fa-spin"></i>
@@ -6018,21 +6065,22 @@ min-width: 0;
             if (context) {
                 elements = context.getElementsByClassName(`table__column__secondary-link`);
                 for (i = 0, n = elements.length; i < n; ++i) {
-                    match = elements[i].textContent.match(/(app|sub)\/(\d+)/);
+                    element = elements[i];
+                    match = element.textContent.match(/(app|sub)\/(\d+)/);
                     if (match) {
                         syncer.games[`${match[1]}s`][match[2]] = {
-                            bundled: true
+                            bundled: element.parentElement.parentElement.nextElementSibling.textContent
                         };
                     }
                 }
                 pagination = context.getElementsByClassName(`pagination__navigation`)[0];
                 if (pagination && !pagination.lastElementChild.classList.contains(`is-selected`)) {
-                    setTimeout(syncBundles, 0, null, ++nextPage, syncer, url, callback);
+                    setTimeout(syncBundles, 0, null, nextPage, syncer, url, callback);
                 } else {
                     callback();
                 }
             } else if (!syncer.canceled) {
-                request(null, true, `${url}${nextPage}`, getNextBundlePage.bind(null, nextPage, syncer, url, callback));
+                request(null, false, `${url}${nextPage}`, getNextBundlePage.bind(null, nextPage, syncer, url, callback));
             }
         }
     }
@@ -6042,6 +6090,7 @@ min-width: 0;
     }
 
     function completeBundleSync(context, syncer, callback) {
+        var data, file, url;
         context.classList.remove(`notification--warning`);
         context.classList.add(`notification--success`);
         context.innerHTML = `
@@ -6050,6 +6099,20 @@ min-width: 0;
         callback();
         syncer.progress.innerHTML = ``;
         setValue(`lastBundleSync`, Date.now());
+        if (esgst.exportBundles) {
+            file = document.createElement(`a`);
+            file.download = `ESGST-Bundles-${(new Date()).toUTCString()}.json`;
+            data = {};
+            data = new Blob([JSON.stringify({
+                bundles: syncer.games
+            })]);
+            url = window.URL.createObjectURL(data);
+            file.href = url;
+            document.body.appendChild(file);
+            file.click();
+            file.remove();
+            window.URL.revokeObjectURL(url);
+        }
     }
 
     function lockAndSaveGames(games, callback) {
@@ -7858,7 +7921,7 @@ min-width: 0;
             var popup = createPopup(`fa-bookmark`, `Bookmarked Giveaways`, true);
             var i = 0;
             var n = bookmarked.length;
-            var gbGiveaways = insertHtml(popup.description, `beforeEnd`, `<div class="esgst-text-left"></div>`);
+            var gbGiveaways = insertHtml(popup.scrollable, `beforeEnd`, `<div class="esgst-text-left"></div>`);
             var set = createButtonSet(`green`, `grey`, `fa-plus`, `fa-circle-o-notch fa-spin`, `Load more...`, `Loading more...`, function (callback) {
                 loadGbGiveaways(i, i + 5, bookmarked, gbGiveaways, popup, function (value) {
                     i = value;
@@ -8120,9 +8183,9 @@ ${avatar.outerHTML}
             }
             button.addEventListener(`click`, function () {
                 popup = createPopup(`fa-star`, `Decrypted Giveaways`, true);
-                results = insertHtml(popup.description, `beforeEnd`, `<div class="esgst-text-left"></div>`);
+                results = insertHtml(popup.scrollable, `beforeEnd`, `<div class="esgst-text-left"></div>`);
                 if (esgst.gf) {
-                    addGfContainer(results);
+                    addGfContainer(popup.scrollable);
                 }
                 i = 0;
                 set = createButtonSet(`green`, `grey`, `fa-plus`, `fa-circle-o-notch fa-spin`, `Load More`, `Loading more...`, function (callback) {
@@ -8599,7 +8662,7 @@ ${avatar.outerHTML}
                 popup = createPopup(`fa-file-text-o`, `<a href="${giveaway.url}"><span>${giveaway.name}</span></a> by <a href="/user/${giveaway.creator}">${giveaway.creator}</a>`, true);
                 if (description) {
                     description.classList.add(`esgst-text-left`);
-                    popup.description.insertAdjacentHTML(`beforeEnd`, description.outerHTML);
+                    popup.scrollable.insertAdjacentHTML(`beforeEnd`, description.outerHTML);
                     set = createButtonSet(`green`, `grey`, `fa-plus-circle`, `fa-circle-o-notch fa-spin`, `Enter Giveaway`, `Entering...`, function (callback) {
                         enterElgbGiveaway(giveaway, main, function() {
                             mainCallback();
@@ -8629,7 +8692,7 @@ ${avatar.outerHTML}
                     });
                 }
                 if (esgst.elgb_r) {
-                    box = insertHtml(popup.description, `beforeEnd`, `<textarea></textarea>`);
+                    box = insertHtml(popup.scrollable, `beforeEnd`, `<textarea></textarea>`);
                     addCFHPanel(box);
                 }
                 popup.description.appendChild(set.set);
@@ -8752,7 +8815,7 @@ ${avatar.outerHTML}
                         <span>Loading groups...</span>
                     </div>
                 `);
-                panel = insertHtml(popup.description, `beforeEnd`, `
+                panel = insertHtml(popup.scrollable, `beforeEnd`, `
                     <div class="esgst-text-left table esgst-hidden">
                         <div class="table__rows"></div>
                     </div>
@@ -8992,7 +9055,7 @@ ${avatar.outerHTML}
             button.addEventListener(`click`, function () {
                 var days, details, hours, i, n, popup, savedTemplate, savedTemplates, template, templates, time, weeks;
                 popup = createPopup(`fa-file`, `View/apply templates:`, true);
-                templates = insertHtml(popup.description, `beforeEnd`, `
+                templates = insertHtml(popup.scrollable, `beforeEnd`, `
                     <div class="esgst-text-left popup__keys__list"></div>
                 `);
                 savedTemplates = JSON.parse(GM_getValue(`templates`, `[]`));
@@ -9497,7 +9560,7 @@ ${avatar.outerHTML}
     function importMgcGiveaways(mgc, callback) {
         var counter, popup, progress, progressPanel, textArea;
         popup = createPopup(`fa-arrow-up`, `Import Giveaways`, true);
-        popup.description.insertAdjacentHTML(`beforeEnd`, `
+        popup.scrollable.insertAdjacentHTML(`beforeEnd`, `
             <div class="form__input-description">
                 <div>Before importing, make sure you have filled the details of the giveaway (time, region, whitelist, group, level and description) or applied a template. Having different details for each giveaway is currently not supported.</div>
                 <br/>
@@ -9522,7 +9585,7 @@ ${avatar.outerHTML}
         `);
         createToggleSwitch(popup.description, `mgc_reversePosition`, false, `Enable reverse position (the keys come before the name of the game).`, false, false, ``, esgst.mgc_reversePosition);
         createToggleSwitch(popup.description, `mgc_groupKeys`, false, `Group adjacent keys for the same game.`, false, false, ``, esgst.mgc_groupKeys);
-        textArea = insertHtml(popup.description, `beforeEnd`, `
+        textArea = insertHtml(popup.scrollable, `beforeEnd`, `
             <textarea></textarea>
         `);
         progressPanel = insertHtml(popup.description, `beforeEnd`, `
@@ -9874,7 +9937,7 @@ ${avatar.outerHTML}
                 </div>
             `;
         }
-        popup.description.insertAdjacentHTML(`beforeEnd`, `
+        popup.scrollable.insertAdjacentHTML(`beforeEnd`, `
             <div class="popup__keys__list">
                 ${html}
             </div>
@@ -10252,7 +10315,7 @@ ${avatar.outerHTML}
         }).set);
         UGS.Progress = insertHtml(Popup.description, `beforeEnd`, `<div></div>`);
         UGS.OverallProgress = insertHtml(Popup.description, `beforeEnd`, `<div></div>`);
-        Popup.Results = insertHtml(Popup.description, `beforeEnd`, `<div class="markdown"></div>`);
+        Popup.Results = insertHtml(Popup.scrollable, `beforeEnd`, `<div class="markdown"></div>`);
         createResults(Popup.Results, UGS, [{
             Icon: "<i class=\"fa fa-check-circle giveaway__column--positive\"></i> ",
             Description: "Sent gifts to ",
@@ -10540,7 +10603,7 @@ ${avatar.outerHTML}
             er.set = createButtonSet(`green`, `grey`, `fa-arrow-circle-right`, `fa-times`, `Remove`, `Cancel`, syncErGames.bind(null, er), stopErRemover.bind(null, er));
             er.popup.description.appendChild(er.set.set);
             er.progress = insertHtml(er.popup.description, `beforeEnd`, `<div></div>`);
-            er.removed = insertHtml(er.popup.description, `beforeEnd`, `<div class="markdown"></div>`);
+            er.removed = insertHtml(er.popup.scrollable, `beforeEnd`, `<div class="markdown"></div>`);
             if (esgst.profilePath) {
                 er.set.trigger();
             }
@@ -11154,10 +11217,11 @@ ${avatar.outerHTML}
     function extractTgeGiveaways(tge) {
         if (!tge.popup) {
             tge.popup = createPopup(`fa-train`, `Choo choo!`);
-            tge.results = insertHtml(tge.popup.description, `beforeEnd`, `<div class="esgst-text-left"></div>`);
+            tge.results = insertHtml(tge.popup.scrollable, `beforeEnd`, `<div class="esgst-text-left"></div>`);
             if (esgst.gf) {
-                addGfContainer(tge.results);
+                addGfContainer(tge.popup.scrollable);
             }
+            tge.full = esgst.gc_gi || esgst.gc_r || esgst.gc_rm || esgst.gc_ea || esgst.gc_tc || esgst.gc_a || esgst.gc_mp || esgst.gc_sc || esgst.gc_l || esgst.gc_m || esgst.gc_dlc || esgst.gc_g;
             tge.count = 0;
             tge.total = 0;
             tge.context = document;
@@ -11186,7 +11250,7 @@ ${avatar.outerHTML}
         tge.progress.firstElementChild.remove();
         callback();
         loadEndlessFeatures(tge.results.lastElementChild);
-        if (tge.count !== 50) {
+        if (tge.count !== 50 || !tge.full) {
             tge.set.remove();
             tge.set = null;
             if (esgst.giveawayPath) {
@@ -11206,13 +11270,14 @@ ${avatar.outerHTML}
                 `);
             }
         } else {
+            tge.set.firstElementChild.lastElementChild.textContent = `Extract More`;
             tge.count = 0;
         }
     }
 
     function getTgeGiveaways(tge, context, url, callback) {
         var bump, code, description, elements, giveaway, giveaways, i, match, n, url;
-        if ((tge.count > 0 && tge.count % 50 !== 0) || tge.count === 0) {
+        if ((tge.full && (tge.count > 0 && tge.count % 50 !== 0) || tge.count === 0) || !tge.full) {
             match = url.match(/\/giveaway\/(.+?)\//);
             if (match) {
                 tge.visited.push(url.match(/\/giveaway\/(.+?)\//)[1]);
@@ -11388,7 +11453,7 @@ ${avatar.outerHTML}
         }).set);
         AS.Progress = insertHtml(Popup.description, `beforeEnd`, `<div></div>`);
         AS.OverallProgress = insertHtml(Popup.description, `beforeEnd`, `<div></div>`);
-        AS.Results = insertHtml(Popup.description, `beforeEnd`, `<div></div>`);
+        AS.Results = insertHtml(Popup.scrollable, `beforeEnd`, `<div></div>`);
         AS.Popup = Popup;
         ASButton.addEventListener("click", function () {
             Popup.open(function () {
@@ -11479,7 +11544,7 @@ ${avatar.outerHTML}
             button.addEventListener(`click`, function() {
                 var discussions, i, keys, popup, set;
                 popup = createPopup(`fa-star`, `Highlighted Discussions`);
-                popup.highlightedDiscussions = insertHtml(popup.description, `afterBegin`, `
+                popup.highlightedDiscussions = insertHtml(popup.scrollable, `afterBegin`, `
                     <div class="table esgst-text-left">
                         <div class="table__heading">
 							<div class="table__column--width-fill">Summary</div>
@@ -11956,7 +12021,7 @@ ${avatar.outerHTML}
                 Icon: "fa-table",
                 setPopup: function (Popup) {
                     var Table, InsertRow, InsertColumn, Popout;
-                    Popout = Popup.description;
+                    Popout = Popup.scrollable;
                     Popout.innerHTML =
                         "<table></table>" +
                         "<div class=\"form__saving-button btn_action white\">Insert Row</div>" +
@@ -12017,13 +12082,13 @@ ${avatar.outerHTML}
                     Emojis.nextElementSibling.addEventListener("click", function () {
                         var Popup, I, N, Emoji, SavedEmojis;
                         Popup = createPopup(`fa-smile-o`, `Select emojis:`);
-                        Popup.description.insertAdjacentHTML(
+                        Popup.scrollable.insertAdjacentHTML(
                             "afterBegin",
                             "<div class=\"CFHEmojis\"></div>" +
                             createDescription("Drag the emojis you want to use and drop them in the box below. Click on an emoji to remove it.") +
                             "<div class=\"global__image-outer-wrap page_heading_btn CFHEmojis\">" + GM_getValue("Emojis", ``) + "</div>"
                         );
-                        Emojis = Popup.description.firstElementChild;
+                        Emojis = Popup.scrollable.firstElementChild;
                         for (I = 0, N = CFH.Emojis.length; I < N; ++I) {
                             Emoji = CFH.Emojis[I].Emoji;
                             Emojis.insertAdjacentHTML("beforeEnd", "<span data-id=\"" + Emoji + "\" draggable=\"true\" title=\"" + CFH.Emojis[I].Title + "\">" + Emoji + "</span>");
@@ -19592,7 +19657,7 @@ ${avatar.outerHTML}
     function loadRbp(button) {
         var Popup;
         Popup = createPopup(`fa-comment`, `Add a comment:`);
-        Popup.TextArea = insertHtml(Popup.description, `beforeEnd`, `<textarea></textarea>`);
+        Popup.TextArea = insertHtml(Popup.scrollable, `beforeEnd`, `<textarea></textarea>`);
         if (esgst.cfh) {
             addCFHPanel(Popup.TextArea);
         }
@@ -20423,7 +20488,7 @@ ${avatar.outerHTML}
     function openUnPopup(profile) {
         var set;
         profile.unPopup = createPopup(`fa-sticky-note`, `Edit user notes for <span>${profile.name}</span>:`, true);
-        profile.unTextArea = insertHtml(profile.unPopup.description, `beforeEnd`, `
+        profile.unTextArea = insertHtml(profile.unPopup.scrollable, `beforeEnd`, `
             <textarea></textarea>
         `);
         set = createButtonSet(`green`, `grey`, `fa-check`, `fa-circle-o-notch fa-spin`, `Save`, `Saving...`, saveUnNotes.bind(null, profile));
@@ -20619,7 +20684,7 @@ ${avatar.outerHTML}
                     <span>Checking shared groups...</span>
                 </div>
             `);
-            profile.sgcResults = insertHtml(profile.sgcPopup.description, `beforeEnd`, `
+            profile.sgcResults = insertHtml(profile.sgcPopup.scrollable, `beforeEnd`, `
                 <div class="esgst-text-left table esgst-hidden">
                     <div class="table__heading">
 					    <div class="table__column--width-fill">Group</div>
@@ -20960,7 +21025,7 @@ ${avatar.outerHTML}
         }).set);
         UGD.Progress = insertHtml(Popup.description, `beforeEnd`, `<div></div>`);
         UGD.OverallProgress = insertHtml(Popup.description, `beforeEnd`, `<div></div>`);
-        Popup.Results = insertHtml(Popup.description, `beforeEnd`, `<div></div>`);
+        Popup.Results = insertHtml(Popup.scrollable, `beforeEnd`, `<div></div>`);
         UGD.Popup = Popup;
         UGDButton.addEventListener("click", function () {
             Popup.open();
@@ -21164,7 +21229,7 @@ ${avatar.outerHTML}
         }
         NAMWC.Progress = insertHtml(Popup.description, `beforeEnd`, `<div></div>`);
         NAMWC.OverallProgress = insertHtml(Popup.description, `beforeEnd`, `<div></div>`);
-        Popup.Results = insertHtml(Popup.description, `beforeEnd`, `<div></div>`);
+        Popup.Results = insertHtml(Popup.scrollable, `beforeEnd`, `<div></div>`);
         createResults(Popup.Results, NAMWC, [{
             Icon: "<i class=\"fa fa-check-circle giveaway__column--positive\"></i> ",
             Description: "Users with 0 not activated wins",
@@ -21489,7 +21554,7 @@ ${avatar.outerHTML}
         }).set);
         NRF.Progress = insertHtml(Popup.description, `beforeEnd`, `<div></div>`);
         NRF.OverallProgress = insertHtml(Popup.description, `beforeEnd`, `<div></div>`);
-        NRF.Results = insertHtml(Popup.description, `beforeEnd`, `<div></div>`);
+        NRF.Results = insertHtml(Popup.scrollable, `beforeEnd`, `<div></div>`);
         NRF.Popup = Popup;
         NRFButton.addEventListener("click", function () {
             Popup.open();
@@ -21841,7 +21906,7 @@ ${avatar.outerHTML}
         }).set);
         WBC.Progress = insertHtml(Popup.description, `beforeEnd`, `<div></div>`);
         WBC.OverallProgress = insertHtml(Popup.description, `beforeEnd`, `<div></div>`);
-        Popup.Results = insertHtml(Popup.description, `beforeEnd`, `<div></div>`);
+        Popup.Results = insertHtml(Popup.scrollable, `beforeEnd`, `<div></div>`);
         createResults(Popup.Results, WBC, [{
             Icon: (
                 "<span class=\"sidebar__shortcut-inner-wrap rhWBIcon\">" +
@@ -22432,7 +22497,7 @@ ${avatar.outerHTML}
             }
         });
         popup = createPopup(icon, title, true);
-        table = insertHtml(popup.description, `beforeEnd`, `
+        table = insertHtml(popup.scrollable, `beforeEnd`, `
             <div class="esgst-text-left table">
                 <div class="table__heading">
 		        <div class="table__column--width-fill">User</div>
@@ -22861,7 +22926,7 @@ ${avatar.outerHTML}
 
     function loadGc() {
             if (esgst.newGiveawayPath) {
-                if (esgst.gc_b && GM_getValue(`LastBundleSync`, 0)) {
+                if (esgst.gc_b && esgst.lastBundleSync) {
                     var table = document.getElementsByClassName(`js__autocomplete-data`)[0];
                     if (table) {
                         var backup = table.innerHTML;
@@ -22981,28 +23046,28 @@ ${avatar.outerHTML}
 
     function addGcCategories(games, gc, i, ids, savedGames, type) {
         var category, categories, giveaway, id, j, numCategories, url;
-            id = ids[i];
-            if ((esgst.gc_h || esgst.gc_gi || esgst.gc_r || esgst.gc_rm || esgst.gc_ea || esgst.gc_tc || esgst.gc_a || esgst.gc_mp || esgst.gc_sc || esgst.gc_l || esgst.gc_m || esgst.gc_dlc || esgst.gc_g) && (!savedGames[type][id] || !savedGames[type][id].price || (typeof savedGames[type][id].lastCheck === `undefined`) || ((Date.now() - savedGames[type][id].lastCheck) > 604800000))) {
-                url = (type === `apps`) ? `appdetails?appids` : `packagedetails?packageids`;
-                request(null, false, `http://store.steampowered.com/api/${url}=${id}&cc=us&l=en`, function (response) {
-                    request(null, false, `http://store.steampowered.com/api/${url}=${id}&cc=us&l=en&filters=price,price_overview`, function (response1) {
-                        if (esgst.gc_g_udt || esgst.gc_r) {
-                            request(null, false, `http://store.steampowered.com/${type.slice(0, -1)}/${id}`, function (response2) {
-                                getGcCategories(games, id, response, response1, response2, savedGames, type, function () {
-                                    ++gc.count;
-                                });
-                            });
-                        } else {
-                            getGcCategories(games, id, response, response1, null, savedGames, type, function () {
+        id = ids[i];
+        if ((esgst.gc_gi || esgst.gc_r || esgst.gc_rm || esgst.gc_ea || esgst.gc_tc || esgst.gc_a || esgst.gc_mp || esgst.gc_sc || esgst.gc_l || esgst.gc_m || esgst.gc_dlc || esgst.gc_g) && (!savedGames[type][id] || !savedGames[type][id].price || (typeof savedGames[type][id].lastCheck === `undefined`) || ((Date.now() - savedGames[type][id].lastCheck) > 604800000))) {
+            url = (type === `apps`) ? `appdetails?appids` : `packagedetails?packageids`;
+            request(null, false, `http://store.steampowered.com/api/${url}=${id}&cc=us&l=en`, function (response) {
+                request(null, false, `http://store.steampowered.com/api/${url}=${id}&cc=us&l=en&filters=price,price_overview`, function (response1) {
+                    if (esgst.gc_g_udt || esgst.gc_r) {
+                        request(null, false, `http://store.steampowered.com/${type.slice(0, -1)}/${id}`, function (response2) {
+                            getGcCategories(games, id, response, response1, response2, savedGames, type, function () {
                                 ++gc.count;
                             });
-                        }
-                    });
+                        });
+                    } else {
+                        getGcCategories(games, id, response, response1, null, savedGames, type, function () {
+                            ++gc.count;
+                        });
+                    }
                 });
-            } else {
-                addGcCategory(games[id], savedGames[type][id], id, games[id][0].name, type);
-                ++gc.count;
-            }
+            });
+        } else {
+            addGcCategory(games[id], savedGames[type][id], id, games[id][0].name, type);
+            ++gc.count;
+        }
     }
 
     function getGcCategories(games, id, response, response1, response2, savedGames, type, callback) {
@@ -23375,10 +23440,18 @@ ${avatar.outerHTML}
                         }
                         category.key += ` ${savedGames.rating.type}`;
                     } else if (esgst.gc_s) {
-                        if (esgst.gc_s_i && category.icon) {
-                            text = `<i class="fa ${category.icon}" title="${category.name}"></i>`;
+                        if (category.id === `gc_b`) {
+                            if (esgst.gc_s_i && category.icon) {
+                                text = `<i class="fa ${category.icon}" title="${category.name} ${value}"></i>`;
+                            } else {
+                                text = `<span title="${category.name} ${value}">${category.simplified}</span>`;
+                            }
                         } else {
-                            text = `<span title="${category.name}">${category.simplified}</span>`;
+                            if (esgst.gc_s_i && category.icon) {
+                                text = `<i class="fa ${category.icon}" title="${category.name}"></i>`;
+                            } else {
+                                text = `<span title="${category.name}">${category.simplified}</span>`;
+                            }
                         }
                     } else {
                         text = category.name;
@@ -23729,7 +23802,7 @@ ${avatar.outerHTML}
             SMSyncFrequency += "<option>" + I + "</option>";
         }
         SMSyncFrequency += "</select>";
-        Container = popup.description;
+        Container = popup.scrollable;
         Container.innerHTML =
             "<div class=\"page__heading\">" +
             "</div>" +
@@ -23913,7 +23986,7 @@ ${avatar.outerHTML}
                     settings: `S`
                 }
             };
-            Popup.Options = insertHtml(Popup.description, `beforeEnd`, `<div></div>`);
+            Popup.Options = insertHtml(Popup.scrollable, `beforeEnd`, `<div></div>`);
             createOptions(Popup.Options, SM, [{
                 Check: function () {
                     return true;
@@ -25307,7 +25380,7 @@ Background: <input type="color" value="${bgColor}">
                     return 1;
                 }
             });
-            var table = insertHtml(popup.description, `beforeEnd`, `
+            var table = insertHtml(popup.scrollable, `beforeEnd`, `
                 <table class="UGDData">
                     <tr>
                         <th>Username</th>
@@ -25343,7 +25416,7 @@ Background: <input type="color" value="${bgColor}">
                 "<div><i class=\"fa fa-circle-o-notch fa-spin\"></i> " +
                 "<span>Loading recent username changes...</span></div>"
             );
-            Popup.Results = insertHtml(Popup.description, `beforeEnd`, `
+            Popup.Results = insertHtml(Popup.scrollable, `beforeEnd`, `
                 <div class="SMRecentUsernameChangesPopup"></div>
             `);
             makeRequest(null, "https://script.google.com/macros/s/AKfycbzvOuHG913mRIXOsqHIeAuQUkLYyxTHOZim5n8iP-k80iza6g0/exec?Action=2", Popup.Progress, function (Response) {
@@ -25368,7 +25441,7 @@ Background: <input type="color" value="${bgColor}">
         SMCommentHistory.addEventListener("click", function () {
             var comments, i, popup, set;
             popup = createPopup(`fa-comments`, `Comment History`);
-            popup.commentHistory = insertHtml(popup.description, `afterBegin`, `<div class="comments esgst-text-left"></div>`);
+            popup.commentHistory = insertHtml(popup.scrollable, `afterBegin`, `<div class="comments esgst-text-left"></div>`);
             comments = JSON.parse(GM_getValue(`${esgst.name}CommentHistory`, `[]`));
             i = 0;
             set = createButtonSet(`green`, `grey`, `fa-plus`, `fa-circle-o-notch fa-spin`, `Load more...`, `Loading more...`, function (callback) {
@@ -25401,7 +25474,7 @@ Background: <input type="color" value="${bgColor}">
                     }).replace(/\n/g, `<br/>`).replace(/#(\d+)/g, function (m, p1) {
                         return `<a href="https://github.com/revilheart/ESGST/issues/${p1}">#${p1}</a>`;
                     });
-                    popup.description.insertAdjacentHTML(`afterBegin`, html);
+                    popup.scrollable.insertAdjacentHTML(`afterBegin`, html);
                     popup.open();
                 }
             });
