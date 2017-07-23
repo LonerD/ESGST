@@ -4,7 +4,7 @@
 
 * Fixed some bugs.
 * Changed the way popups behave when scrolling and which elements stay fixed.
-* Added an option to export the list of bundles when syncing and another option to sync them from a file. This allows you to share bundle lists with other users, which can prevent unecessary requests to SG ([here](https://www.dropbox.com/s/3gsl9ya04cqwa09/ESGST-Bundles-Sun%2C%2023%20Jul%202017%2021-51-21%20GMT.json?dl=0)'s a fresh bundle list synced a few minutes ago).
+* Added an option to export the list of bundles when syncing and another option to sync them from a file. This allows you to share bundle lists with other users, which can prevent unecessary requests to SG (here's a fresh bundle list synced a few minutes ago: https://www.dropbox.com/s/3gsl9ya04cqwa09/ESGST-Bundles-Sun%2C%2023%20Jul%202017%2021-51-21%20GMT.json?dl=0).
 * The "Extract" button in Train Giveaways Extractor now changes to "Extract More" after the first extraction.
 * Hovering over the Bundled category in Game Categories now shows the date that the game was bundled (requires re-sync).
 
