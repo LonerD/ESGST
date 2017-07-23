@@ -3,7 +3,7 @@
 // @namespace ESGST
 // @description Enhances SteamGifts and SteamTrades by adding some cool features to them.
 // @icon https://github.com/revilheart/ESGST/raw/master/Resources/esgstIcon.ico
-// @version 6.Beta.19.10
+// @version 6.Beta.19.11
 // @author revilheart
 // @downloadURL https://github.com/revilheart/ESGST/raw/master/ESGST.user.js
 // @updateURL https://github.com/revilheart/ESGST/raw/master/ESGST.meta.js
@@ -481,7 +481,7 @@
                     esgst.profilePath = window.location.pathname.match(/^\/account\/settings\/profile/);
                     esgst.giveawayPath = window.location.pathname.match(/^\/giveaway\//);
                     esgst.discussionPath = window.location.pathname.match(/^\/discussion\//);
-                    esgst.discussionsPath = window.location.pathname.match(/^\/discussions/);
+                    esgst.discussionsPath = window.location.pathname.match(/^\/discussions(?!\/new)/);
                     esgst.newGiveawayPath = window.location.pathname.match(/^\/giveaways\/new/);
                     esgst.newTicketPath = window.location.pathname.match(/^\/support\/tickets\/new/);
                     esgst.wishlistPath = window.location.pathname.match(/^\/giveaways\/wishlist/);
