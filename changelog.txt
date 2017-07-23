@@ -1,9 +1,25 @@
 /*
+ * July 23, 2017 - v6.Beta.19.10
+ */
+
+* Fixed some bugs.
+* Upgraded all popups to v6.
+* Fixed the "Manage" link in popups (closes #250).
+* Fixed a bug that was happening when importing data.
+* Fixed a style issue with giveaways loaded in popups (closes #270 and #278).
+* Fixed a bug in Giveaways/Discussions/Tickets/Trades Tracker that was not fading discussions in the main page (closes #279).
+* Fixed a bug that was enabling Discussions Sorter in the new discussion page (closes #275).
+* Fixed a bug in Giveaway Filters that was not filtering giveaways with no categories.
+* Fixed a bug in Giveaway Groups Loader that was preventing groups from loading in the popup version (closes #283).
+* Train Giveaways Extractor now works from discussion pages and now also extracts links to SGTools giveaways.
+* Train Giveaways Extractor now extracts giveaways in batches of 50 to prevent the Steam API from blocking requests if using Game Categories. It's recommended to wait a couple minutes before extracting the next batch.
+
+/*
  * July 21, 2017 - v6.Beta.19.9
  */
 
 * Fixed a style issue with list items inside popups.
-* Fixed a bug that was not importing settings.
+* Fixed a bug that was not importing settings (closes #256).
 * Fixed a bug that was enabling Active Discussions On Top/Sidebar even when disabled.
 
 /*

@@ -3,7 +3,7 @@
 // @namespace ESGST
 // @description Enhances SteamGifts and SteamTrades by adding some cool features to them.
 // @icon https://github.com/revilheart/ESGST/raw/master/Resources/esgstIcon.ico
-// @version 6.Beta.19.9
+// @version 6.Beta.19.10
 // @author revilheart
 // @downloadURL https://github.com/revilheart/ESGST/raw/master/ESGST.user.js
 // @updateURL https://github.com/revilheart/ESGST/raw/master/ESGST.meta.js
@@ -2893,7 +2893,7 @@
                         }
                         if (esgst.commentsPath) {
                             if (esgst.giveawayCommentsPath) {
-                                if (esgst.tge) {
+                                if (esgst.tge && document.querySelector(`[href*="/giveaway/"]`)) {
                                     button = document.createElement(`div`);
                                     button.className = `esgst-heading-button`;
                                     button.title = `Extract train giveaways.`;
@@ -2907,6 +2907,19 @@
                                     }));
                                 }
                             } else if (esgst.discussionPath) {
+                                if (esgst.tge && document.querySelector(`[href*="/giveaway/"]`)) {
+                                    button = document.createElement(`div`);
+                                    button.className = `esgst-heading-button`;
+                                    button.title = `Extract train giveaways.`;
+                                    button.innerHTML = `
+                                        <i class="fa fa-train"></i>
+                                        <i class="fa fa-search"></i>
+                                    `;
+                                    mainPageHeadingBefore.appendChild(button);
+                                    button.addEventListener(`click`, extractTgeGiveaways.bind(null, {
+                                        button: button
+                                    }));
+                                }
                                 if (esgst.mpp) {
                                     button = document.createElement(`div`);
                                     button.className = `esgst-heading-button`;
@@ -3250,9 +3263,7 @@
 
     function loadChangelog() {
         makeRequest(null, `https://raw.githubusercontent.com/revilheart/ESGST/master/changelog.txt`, null, function (response) {
-            var changelogPopup = createPopup();
-            changelogPopup.Icon.classList.add(`fa-file-text-o`);
-            changelogPopup.Title.textContent = `Changelog`;
+            var changelogPopup = createPopup(`fa-file-text-o`, `Changelog`, true);
             var html = response.responseText.replace(/\/\*\n\s\*(.+)\n\s\*\//g, function (m, p1) {
                 return `<strong>${p1}</strong>`;
             }).replace(/\* (.+)/g, function (m, p1) {
@@ -3260,9 +3271,9 @@
             }).replace(/\n/g, `<br/>`).replace(/#(\d+)/g, function (m, p1) {
                 return `<a href="https://github.com/revilheart/ESGST/issues/${p1}">#${p1}</a>`;
             });
-            changelogPopup.Description.insertAdjacentHTML(`afterBegin`, html);
-            changelogPopup.Description.classList.add(`left`);
-            changelogPopup.popUp();
+            changelogPopup.description.insertAdjacentHTML(`afterBegin`, html);
+            changelogPopup.description.classList.add(`esgst-text-left`);
+            changelogPopup.open();
         });
     }
 
@@ -3770,7 +3781,7 @@
             canceled: false
         };
         if (mainCallback) {
-            popup = createPopup_v6(`fa-refresh`, `Sync`);
+            popup = createPopup(`fa-refresh`, `Sync`);
             createToggleSwitch(popup.description, `syncGroups`, false, `Sync Steam groups.`, false, false, null, esgst.syncGroups);
             createToggleSwitch(popup.description, `syncWhitelist`, false, `Sync whitelist.`, false, false, null, esgst.syncWhitelist);
             createToggleSwitch(popup.description, `syncBlacklist`, false, `Sync blacklist.`, false, false, null, esgst.syncBlacklist);
@@ -4047,7 +4058,7 @@
         }
         if (response1) {
             responseText = response1.responseText;
-            if (!responseText.match(/<title>Forbidden<\/title>/)) {
+            if (!responseText.match(/(<title>Forbidden<\/title>|<TITLE>Access Denied<\/TITLE>)/)) {
                 ownedGames = JSON.parse(responseText).response.games;
                 for (i = 0, n = ownedGames.length; i < n; ++i) {
                     id = ownedGames[i].appid;
@@ -4059,7 +4070,7 @@
                 }
             }
         }
-        if (response2) {
+        if (response2 && !response2.responseText.match(/<TITLE>Access Denied<\/TITLE>/)) {
             responseJson = JSON.parse(response2.responseText);
             numOwned = responseJson.rgOwnedApps.length;
             if (numOwned > 0) {
@@ -4298,7 +4309,7 @@
 
     /* Popup */
 
-    function createPopup_v6(icon, title, temp) {
+    function createPopup(icon, title, temp) {
         var popup;
         popup = {};
         popup.popup = insertHtml(document.body, `beforeEnd`, `
@@ -4313,11 +4324,14 @@
                 </div>
                 <div class="popup_description esgst-popup-description"></div>
                 <div class="popup__actions popup_actions">
+                    <span>Manage</span>
                     <span class="b-close">Close</span>
                 </div>
             </div>
         `);
         popup.description = popup.popup.firstElementChild.nextElementSibling;
+        var manage = popup.description.nextElementSibling.firstElementChild;
+        manage.addEventListener(`click`, loadSMMenu);
         popup.open = function (callback) {
             popup.popup.classList.remove(`esgst-hidden`);
             popup.opened = $(popup.popup).bPopup({
@@ -4348,88 +4362,6 @@
         };
         popup.popup.addEventListener(`click`, popup.reposition);
         return popup;
-    }
-
-    /* */
-
-    function createPopup(Temp) {
-        var Popup;
-        document.body.insertAdjacentHTML(
-            "beforeEnd",
-            "<div class=\"popup page__outer-wrap page_outer_wrap rhPopup\">" +
-            "    <div class=\"popup_summary\">" +
-            "        <div class=\"popup_icon\">" +
-            "            <i class=\"fa popup__icon rhPopupIcon\"></i>" +
-            "        </div>" +
-            "        <div class=\"popup_heading popup__heading\">" +
-            "            <div class=\"popup_heading_h2 rhPopupTitle\"></div>" +
-            "        </div>" +
-            "    </div>" +
-            "    <div class=\"rhPopupDescription\">" +
-            "        <textarea class=\"rhPopupTextArea rhHidden\"></textarea>" +
-            "        <input class=\"rhPopupTextInput rhHidden\"/>" +
-            "        <ul class=\"rhPopupOptions\"></ul>" +
-            "        <div class=\"rhPopupButton\"></div>" +
-            "        <div class=\"rhPopupStatus\">" +
-            "            <div class=\"rhPopupProgress\"></div>" +
-            "            <div class=\"rhPopupOverallProgress\"></div>" +
-            "        </div>" +
-            "        <ul class=\"rhPopupResults\"></ul>" +
-            "    </div>" +
-            "    <div class=\"popup__actions popup_actions\">" +
-            "        <a href=\"https://www.steamgifts.com/account#ESGST\">Manage</a>" +
-            "        <span class=\"b-close rhPopupClose\">Close</span>" +
-            "    </div>" +
-            "</div>"
-        );
-        Popup = {};
-        Popup.Popup = document.body.lastElementChild;
-        Popup.Icon = Popup.Popup.getElementsByClassName("rhPopupIcon")[0];
-        Popup.Title = Popup.Popup.getElementsByClassName("rhPopupTitle")[0];
-        Popup.Description = Popup.Popup.getElementsByClassName("rhPopupDescription")[0];
-        Popup.TextArea = Popup.Popup.getElementsByClassName("rhPopupTextArea")[0];
-        Popup.TextInput = Popup.Popup.getElementsByClassName("rhPopupTextInput")[0];
-        Popup.Options = Popup.Popup.getElementsByClassName("rhPopupOptions")[0];
-        Popup.Button = Popup.Popup.getElementsByClassName("rhPopupButton")[0];
-        Popup.Status = Popup.Popup.getElementsByClassName("rhPopupStatus")[0];
-        Popup.Progress = Popup.Popup.getElementsByClassName("rhPopupProgress")[0];
-        Popup.OverallProgress = Popup.Popup.getElementsByClassName("rhPopupOverallProgress")[0];
-        Popup.Results = Popup.Popup.getElementsByClassName("rhPopupResults")[0];
-        Popup.Close = Popup.Popup.getElementsByClassName("rhPopupClose")[0];
-        if (esgst.st) {
-            Popup.Popup.classList.remove(`popup`);
-            Popup.Popup.classList.add(`esgst-hidden`);
-        }
-        var popup;
-        Popup.popUp = function (Callback) {
-            if (esgst.st) {
-                Popup.Popup.classList.add(`popup`);
-                Popup.Popup.classList.remove(`esgst-hidden`);
-            }
-            popup = $(Popup.Popup).bPopup({
-                amsl: [0],
-                fadeSpeed: 200,
-                followSpeed: 500,
-                modalColor: "#3c424d",
-                opacity: 0.85,
-                onClose: function () {
-                    if (esgst.st) {
-                        Popup.Popup.classList.remove(`popup`);
-                        Popup.Popup.classList.add(`esgst-hidden`);
-                    }
-                    if (Temp) {
-                        Popup.Popup.remove();
-                    }
-                }
-            }, Callback);
-            return popup;
-        };
-        Popup.Popup.addEventListener(`click`, function () {
-            if (popup) {
-                popup.reposition();
-            }
-        });
-        return Popup;
     }
 
     /* Popout */
@@ -6046,69 +5978,87 @@ min-width: 0;
         }
     }
 
-    function syncBundleList(callback) {
-        var popup = createPopup();
-        popup.Icon.classList.add("fa-refresh");
-        popup.Title.textContent = "Syncing...";
-        var sync = {};
-        createButton(popup.Button, "fa-times-circle", "Cancel", "", "", function () {
-            sync.Canceled = true;
-            popup.Close.click();
-        }, null, true);
-        sync.Progress = popup.Progress;
-        sync.OverallProgress = popup.OverallProgress;
-        popup.popUp().reposition();
-        sync.games = JSON.parse(GM_getValue(`games`));
-        syncBundles(sync, `/bundle-games/search?page=`, 0, function () {
-            queueSave(sync.Progress, function () {
-                updateGames(sync.games);
-                GM_setValue(`LastSave`, 0);
-                popup.Icon.classList.remove("fa-refresh");
-                popup.Icon.classList.add("fa-check");
-                popup.Title.textContent = "Synced!";
-                popup.Button.innerHTML = "";
-                sync.Progress.innerHTML = sync.OverallProgress.innerHTML = "";
-                popup.Close.click();
-                GM_setValue("LastBundleSync", new Date().getTime());
-                callback();
-            });
-        });
+    function checkBundleSync(context, syncer) {
+        if (!syncer.popup) {
+            syncer.popup = createPopup(`fa-refresh`, `Sync Bundles`);
+            syncer.popup.description.appendChild(createButtonSet(`green`, `grey`, `fa-arrow-circle-right`, `fa-times`, `Sync`, `Cancel`, startBundleSync.bind(null, syncer), cancelBundleSync.bind(null, syncer)).set);
+            syncer.progress = insertHtml(syncer.popup.description, `beforeEnd`, `<div></div>`);
+        }
+        syncer.popup.open();
     }
 
-    function syncBundles(sync, url, nextPage, callback, context) {
-        if (context) {
-            var matches = context.getElementsByClassName(`table__column__secondary-link`);
-            for (var i = 0, n = matches.length; i < n; ++i) {
-                var match = matches[i].textContent.match(/(app|sub)\/(\d+)/);
-                if (match) {
-                    var type = `${match[1]}s`;
-                    var id = match[2];
-                    if (!sync.games[type][id]) {
-                        sync.games[type][id] = {};
-                    }
-                    sync.games[type][id].bundled = true;
-                }
-            }
-            var paginationNavigation = context.getElementsByClassName(`pagination__navigation`)[0];
-            if (paginationNavigation && !paginationNavigation.lastElementChild.classList.contains(`is-selected`)) {
-                window.setTimeout(syncBundles, 0, sync, url, nextPage, callback);
-            } else {
-                callback();
-            }
+    function cancelBundleSync(syncer) {
+        syncer.canceled = true;
+        syncer.progress.innerHTML = ``;
+    }
+
+    function startBundleSync(syncer, callback) {
+        if (Date.now() - esgst.lastBundleSync > 604800000) {
+            setValue(`lastBundleSync`, Date.now());
+            syncer.canceled = false;
+            syncer.games = {
+                apps: {},
+                subs: {}
+            };
+            syncer.progress.innerHTML = ``;
+            syncBundles(null, 1, syncer, `https://www.steamgifts.com/bundle-games/search?page=`, lockAndSaveGames.bind(null, syncer.games, completeBundleSync.bind(null, context, syncer, callback)));
         } else {
-            sync.Progress.innerHTML = `
-<i class="fa fa-circle-o-notch fa-spin"></i>
-<span>Syncing bundles (page ${nextPage})...</span>
-`;
-            queueRequest(sync, null, `${url}${nextPage}`, function (response) {
-                window.setTimeout(syncBundles, 0, sync, url, ++nextPage, callback, DOM.parse(response.responseText));
-            });
+            callback();
+            createAlert(`You synced the bundles in less than a week ago. You can sync only once per week.`);
         }
     }
 
-    function updateGames(games) {
-        var key, subKey;
-        var saved = JSON.parse(GM_getValue(`games`));
+    function syncBundles(context, nextPage, syncer, url, callback) {
+        var elements, i, match, n, pagination;
+        if (!syncer.canceled) {
+            syncer.progress.innerHTML = `
+                <i class="fa fa-circle-o-notch fa-spin"></i>
+                <span>Syncing bundles (page ${nextPage})...</span>
+            `;
+            if (context) {
+                elements = context.getElementsByClassName(`table__column__secondary-link`);
+                for (i = 0, n = elements.length; i < n; ++i) {
+                    match = elements[i].textContent.match(/(app|sub)\/(\d+)/);
+                    if (match) {
+                        syncer.games[`${match[1]}s`][match[2]] = {
+                            bundled: true
+                        };
+                    }
+                }
+                pagination = context.getElementsByClassName(`pagination__navigation`)[0];
+                if (pagination && !pagination.lastElementChild.classList.contains(`is-selected`)) {
+                    setTimeout(syncBundles, 0, null, ++nextPage, syncer, url, callback);
+                } else {
+                    callback();
+                }
+            } else if (!syncer.canceled) {
+                request(null, true, `${url}${nextPage}`, getNextBundlePage.bind(null, nextPage, syncer, url, callback));
+            }
+        }
+    }
+
+    function getNextBundlePage(nextPage, syncer, url, callback, response) {
+        setTimeout(syncBundles, 0, DOM.parse(response.responseText), ++nextPage, syncer, url, callback);
+    }
+
+    function completeBundleSync(context, syncer, callback) {
+        context.classList.remove(`notification--warning`);
+        context.classList.add(`notification--success`);
+        context.innerHTML = `
+            <i class="fa fa-check-circle"></i> Last synced ${new Date().toLocaleString()}.
+        `;
+        callback();
+        syncer.progress.innerHTML = ``;
+        setValue(`lastBundleSync`, Date.now());
+    }
+
+    function lockAndSaveGames(games, callback) {
+        createLock(`gameLock`, 300, saveGames.bind(null, games, callback));
+    }
+
+    function saveGames(games, callback, deleteLock) {
+        var key, saved, subKey;
+        saved = JSON.parse(GM_getValue(`games`));
         for (key in games.apps) {
             if (saved.apps[key]) {
                 for (subKey in games.apps[key]) {
@@ -6128,6 +6078,10 @@ min-width: 0;
             }
         }
         GM_setValue(`games`, JSON.stringify(saved));
+        deleteLock();
+        if (callback) {
+            callback();
+        }
     }
 
     function formatDate(EntryDate) {
@@ -6707,7 +6661,7 @@ min-width: 0;
     function checkGdtttVisited(context) {
         var code, comments, container, heading, i, match, matches, n, source, type, url;
         comments = JSON.parse(GM_getValue(`comments`));
-        matches = context.querySelectorAll(`.table__column__heading, .giveaway__heading__name, .column_flex h3 a`);
+        matches = context.querySelectorAll(`.homepage_table_column_heading, .table__column__heading, .giveaway__heading__name, .column_flex h3 a`);
         for (i = 0, n = matches.length; i < n; ++i) {
             match = matches[i];
             url = match.getAttribute(`href`);
@@ -7901,7 +7855,7 @@ min-width: 0;
             deleteLock();
         });
         button.addEventListener(`click`, function() {
-            var popup = createPopup_v6(`fa-bookmark`, `Bookmarked Giveaways`, true);
+            var popup = createPopup(`fa-bookmark`, `Bookmarked Giveaways`, true);
             var i = 0;
             var n = bookmarked.length;
             var gbGiveaways = insertHtml(popup.description, `beforeEnd`, `<div class="esgst-text-left"></div>`);
@@ -8165,7 +8119,7 @@ ${avatar.outerHTML}
                 });
             }
             button.addEventListener(`click`, function () {
-                popup = createPopup_v6(`fa-star`, `Decrypted Giveaways`, true);
+                popup = createPopup(`fa-star`, `Decrypted Giveaways`, true);
                 results = insertHtml(popup.description, `beforeEnd`, `<div class="esgst-text-left"></div>`);
                 if (esgst.gf) {
                     addGfContainer(results);
@@ -8319,15 +8273,15 @@ ${avatar.outerHTML}
             code = url.match(/giveaway\/(.+?)\//)[1];
             id = giveaway.getAttribute(`data-game-id`);
             heading = giveaway.getElementsByClassName(`featured__heading`)[0];
+            icons = heading.getElementsByTagName(`a`);
+            for (i = 0, n = icons.length; i < n; ++i) {
+                icons[i].classList.add(`giveaway__icon`);
+            }
             headingName = heading.firstElementChild;
             headingName.outerHTML = `<a class="giveaway__heading__name" href="${url}">${headingName.innerHTML}</a>`;
             thinHeadings = heading.getElementsByClassName(`featured__heading__small`);
             for (i = 0, n = thinHeadings.length; i < n; ++i) {
                 thinHeadings[0].outerHTML = `<span class="giveaway__heading__thin">${thinHeadings[0].innerHTML}</span>`;
-            }
-            icons = heading.getElementsByTagName(`a`);
-            for (i = 0, n = icons.length; i < n; ++i) {
-                icons[i].classList.add(`giveaway__icon`);
             }
             hideButton = heading.getElementsByClassName(`featured__giveaway__hide`)[0];
             if (hideButton) {
@@ -8342,6 +8296,7 @@ ${avatar.outerHTML}
             startTimeColumn.classList.add(`giveaway__column--width-fill`);
             avatar = columns.lastElementChild;
             avatar.remove();
+            startTimeColumn.querySelector(`[style]`).removeAttribute(`style`);
             column = startTimeColumn.nextElementSibling;
             while (column) {
                 column.classList.remove(`featured__column`);
@@ -8641,7 +8596,7 @@ ${avatar.outerHTML}
             var box, description, popup, set;
             description = DOM.parse(response.responseText).getElementsByClassName(`page__description`)[0];
             if (description || esgst.elgb_r) {
-                popup = createPopup_v6(`fa-file-text-o`, `<a href="${giveaway.url}"><span>${giveaway.name}</span></a> by <a href="/user/${giveaway.creator}">${giveaway.creator}</a>`, true);
+                popup = createPopup(`fa-file-text-o`, `<a href="${giveaway.url}"><span>${giveaway.name}</span></a> by <a href="/user/${giveaway.creator}">${giveaway.creator}</a>`, true);
                 if (description) {
                     description.classList.add(`esgst-text-left`);
                     popup.description.insertAdjacentHTML(`beforeEnd`, description.outerHTML);
@@ -8790,7 +8745,7 @@ ${avatar.outerHTML}
             giveaway.group.removeAttribute(`href`);
             giveaway.group.addEventListener(`click`, function() {
                 var newGiveaways, newGroups, panel, popup, progress, savedGiveaways, savedGroups;
-                popup = createPopup_v6(`fa-user`, `<a href="${giveaway.url}/groups">Giveaway Groups</a>`, true);
+                popup = createPopup(`fa-user`, `<a href="${giveaway.url}/groups">Giveaway Groups</a>`, true);
                 progress = insertHtml(popup.description, `beforeEnd`,  `
                     <div>
                         <i class="fa fa-circle-o-notch fa-spin"></i>
@@ -9036,7 +8991,7 @@ ${avatar.outerHTML}
             rows.appendChild(createGiveawayButton.set);
             button.addEventListener(`click`, function () {
                 var days, details, hours, i, n, popup, savedTemplate, savedTemplates, template, templates, time, weeks;
-                popup = createPopup_v6(`fa-file`, `View/apply templates:`, true);
+                popup = createPopup(`fa-file`, `View/apply templates:`, true);
                 templates = insertHtml(popup.description, `beforeEnd`, `
                     <div class="esgst-text-left popup__keys__list"></div>
                 `);
@@ -9541,7 +9496,7 @@ ${avatar.outerHTML}
 
     function importMgcGiveaways(mgc, callback) {
         var counter, popup, progress, progressPanel, textArea;
-        popup = createPopup_v6(`fa-arrow-up`, `Import Giveaways`, true);
+        popup = createPopup(`fa-arrow-up`, `Import Giveaways`, true);
         popup.description.insertAdjacentHTML(`beforeEnd`, `
             <div class="form__input-description">
                 <div>Before importing, make sure you have filled the details of the giveaway (time, region, whitelist, group, level and description) or applied a template. Having different details for each giveaway is currently not supported.</div>
@@ -9909,7 +9864,7 @@ ${avatar.outerHTML}
 
     function viewMgcResults(mgc, callback) {
         var html, i, n, popup, url;
-        popup = createPopup_v6(`fa-eye`, `Results`);
+        popup = createPopup(`fa-eye`, `Results`);
         html = ``;
         for (i = 0, n = mgc.created.length; i < n; ++i) {
             url = mgc.created[i].url;
@@ -10210,10 +10165,9 @@ ${avatar.outerHTML}
 
     function addUGSButton(UGSButton) {
         var Popup, UGS;
-        Popup = createPopup();
-        Popup.Icon.classList.add("fa-gift");
-        Popup.Title.textContent = "Send unsent gifts:";
+        Popup = createPopup(`fa-gift`, `Send unsent gifts:`);
         UGS = {};
+        Popup.Options = insertHtml(Popup.description, `beforeEnd`, `<div></div>`);
         createOptions(Popup.Options, UGS, [{
             Check: function () {
                 return true;
@@ -10244,7 +10198,7 @@ ${avatar.outerHTML}
             Key: "G",
             ID: "UGS_G"
         }]);
-        createButton(Popup.Button, "fa-send", "Send", "fa-times-circle", "Cancel", function (Callback) {
+        Popup.description.appendChild(createButtonSet(`green`, `grey`, `fa-send`, `fa-times-circle`, `Send`, `Cancel`, function (Callback) {
             var Match;
             UGSButton.classList.add("esgst-busy");
             UGS.Progress.innerHTML = UGS.OverallProgress.innerHTML = "";
@@ -10295,9 +10249,10 @@ ${avatar.outerHTML}
                 UGS.Progress.innerHTML = UGS.OverallProgress.innerHTML = "";
             }, 500);
             UGSButton.classList.remove("esgst-busy");
-        });
-        UGS.Progress = Popup.Progress;
-        UGS.OverallProgress = Popup.OverallProgress;
+        }).set);
+        UGS.Progress = insertHtml(Popup.description, `beforeEnd`, `<div></div>`);
+        UGS.OverallProgress = insertHtml(Popup.description, `beforeEnd`, `<div></div>`);
+        Popup.Results = insertHtml(Popup.description, `beforeEnd`, `<div class="markdown"></div>`);
         createResults(Popup.Results, UGS, [{
             Icon: "<i class=\"fa fa-check-circle giveaway__column--positive\"></i> ",
             Description: "Sent gifts to ",
@@ -10308,7 +10263,7 @@ ${avatar.outerHTML}
             Key: "Unsent"
         }]);
         UGSButton.addEventListener("click", function () {
-            UGS.Popup = Popup.popUp();
+            Popup.open();
         });
     }
 
@@ -10581,7 +10536,7 @@ ${avatar.outerHTML}
 
     function openErPopup(er) {
         if (!er.popup) {
-            er.popup = createPopup_v6(`fa-times`, `Remove entries for owned games:`);
+            er.popup = createPopup(`fa-times`, `Remove entries for owned games:`);
             er.set = createButtonSet(`green`, `grey`, `fa-arrow-circle-right`, `fa-times`, `Remove`, `Cancel`, syncErGames.bind(null, er), stopErRemover.bind(null, er));
             er.popup.description.appendChild(er.set.set);
             er.progress = insertHtml(er.popup.description, `beforeEnd`, `<div></div>`);
@@ -11198,87 +11153,126 @@ ${avatar.outerHTML}
 
     function extractTgeGiveaways(tge) {
         if (!tge.popup) {
-            tge.popup = createPopup_v6(`fa-train`, `Choo choo!`);
+            tge.popup = createPopup(`fa-train`, `Choo choo!`);
             tge.results = insertHtml(tge.popup.description, `beforeEnd`, `<div class="esgst-text-left"></div>`);
             if (esgst.gf) {
                 addGfContainer(tge.results);
             }
+            tge.count = 0;
+            tge.total = 0;
+            tge.context = document;
+            tge.url = window.location.href;
+            tge.visited = [];
+            tge.bump = ``;
             tge.set = createButtonSet(`green`, `grey`, `fa-search`, `fa-times`, `Extract`, `Cancel`, startExtracting.bind(null, tge), completeExtraction.bind(null, tge)).set;
             tge.popup.description.appendChild(tge.set);
+            tge.progress = insertHtml(tge.popup.description, `beforeEnd`, `<div></div>`);
         }
         tge.popup.open();
     }
 
     function startExtracting(tge, callback) {
         tge.button.classList.add(`esgst-busy`);
-        tge.progress = insertHtml(tge.popup.description, `beforeEnd`, `
-            <div>
-                <i class="fa fa-circle-o-notch fa-spin"></i>
-                <span>0</span> giveaways extracted.
-            </div>
-        `).lastElementChild;
-        tge.visited = [];
-        tge.bump = ``;
-        getTgeGiveaways(tge, document, window.location.href, completeExtraction.bind(null, tge, callback));
+        tge.progress.innerHTML = `
+            <i class="fa fa-circle-o-notch fa-spin"></i>
+            <span>${tge.total}</span> giveaways extracted.
+        `;
+        tge.results.insertAdjacentHTML(`beforeEnd`, `<div></div>`);
+        getTgeGiveaways(tge, tge.context, tge.url, completeExtraction.bind(null, tge, callback));
     }
 
-    function completeExtraction(tge, callback) {
+    function completeExtraction(tge, callback, done) {
         tge.button.classList.remove(`esgst-busy`);
-        tge.progress.previousElementSibling.remove();
+        tge.progress.firstElementChild.remove();
         callback();
-        tge.set.remove();
-        tge.set = null;
-        loadEndlessFeatures(tge.results);
-        tge.results.insertAdjacentHTML(`afterBegin`, `
-            <div class="markdown" style="text-align: center;">
-                <h2>
-                    <a href="${tge.bump}">Bump</a>
-                </h2>
-            </div>
-        `);
-        tge.results.insertAdjacentHTML(`beforeEnd`, `
-            <div class="markdown" style="text-align: center;">
-                <h2>
-                    <a href="${tge.bump}">Bump</a>
-                </h2>
-            </div>
-        `);
+        loadEndlessFeatures(tge.results.lastElementChild);
+        if (tge.count !== 50) {
+            tge.set.remove();
+            tge.set = null;
+            if (esgst.giveawayPath) {
+                tge.results.insertAdjacentHTML(`afterBegin`, `
+                    <div class="markdown" style="text-align: center;">
+                        <h2>
+                            <a href="${tge.bump}">Bump</a>
+                        </h2>
+                    </div>
+                `);
+                tge.results.insertAdjacentHTML(`beforeEnd`, `
+                    <div class="markdown" style="text-align: center;">
+                        <h2>
+                            <a href="${tge.bump}">Bump</a>
+                        </h2>
+                    </div>
+                `);
+            }
+        } else {
+            tge.count = 0;
+        }
     }
 
     function getTgeGiveaways(tge, context, url, callback) {
-        var bump, description, elements, giveaway, giveaways, i, n, url;
-        tge.visited.push(url.match(/\/giveaway\/(.+?)\//)[1]);
-        if (context !== document) {
-            tge.progress.textContent = parseInt(tge.progress.textContent) + 1;
-            giveaway = buildGiveaway(context, url);
-            if (giveaway) {
-                esgst.popupGiveaways.push(getGiveawayInfo(insertHtml(tge.results, `beforeEnd`, giveaway.html).firstElementChild, document).giveaway);
+        var bump, code, description, elements, giveaway, giveaways, i, match, n, url;
+        if ((tge.count > 0 && tge.count % 50 !== 0) || tge.count === 0) {
+            match = url.match(/\/giveaway\/(.+?)\//);
+            if (match) {
+                tge.visited.push(url.match(/\/giveaway\/(.+?)\//)[1]);
             }
-            tge.popup.reposition();
-        }
-        description = context.getElementsByClassName(`page__description`)[0];
-        if (description) {
-            giveaways = [];
-            elements = description.querySelectorAll(`[href*="/giveaway/"]`);
-            for (i = 0, n = elements.length; i < n; ++i) {
-                url = elements[i].getAttribute(`href`);
-                if (tge.visited.indexOf(url.match(/\/giveaway\/(.+?)\//)[1]) < 0) {
-                    giveaways.push(url);
+            if (context !== document) {
+                tge.count += 1;
+                tge.total += 1;
+                tge.progress.lastElementChild.textContent = tge.total;
+                giveaway = buildGiveaway(context, url);
+                if (giveaway) {
+                    esgst.popupGiveaways.push(getGiveawayInfo(insertHtml(tge.results.lastElementChild, `beforeEnd`, giveaway.html).firstElementChild, document).giveaway);
                 }
+                tge.popup.reposition();
             }
-            if (!tge.bump) {
-                bump = description.querySelector(`[href*="/discussion/"]`);
-                if (bump) {
-                    tge.bump = bump.getAttribute(`href`);
+            description = context.getElementsByClassName(`page__description`)[0];
+            if (esgst.discussionPath && context === document) {
+                description = context;
+            }
+            if (description) {
+                giveaways = [];
+                elements = description.querySelectorAll(`[href*="sgtools.info/giveaways/"]`);
+                for (i = 0, n = elements.length; i < n; ++i) {
+                    url = elements[i].getAttribute(`href`);
+                    code = url.match(/\/giveaways\/(.+)/)[1];
+                    if (tge.visited.indexOf(code) < 0) {
+                        tge.results.insertAdjacentHTML(`afterBegin`, `
+                            <div>
+                                <a href="${url}">${url}</a>
+                            </div>
+                        `);
+                        tge.visited.push(code);
+                    }
                 }
-            }
-            n = giveaways.length;
-            if (n > 0) {
-                continueTgeGiveaways(giveaways, 0, n, tge, callback);
+                elements = description.querySelectorAll(`[href*="/giveaway/"]`);
+                for (i = 0, n = elements.length; i < n; ++i) {
+                    url = elements[i].getAttribute(`href`);
+                    if (tge.visited.indexOf(url.match(/\/giveaway\/(.+?)\//)[1]) < 0) {
+                        giveaways.push(url);
+                    }
+                }
+                if (!tge.bump) {
+                    bump = description.querySelector(`[href*="/discussion/"]`);
+                    if (bump) {
+                        tge.bump = bump.getAttribute(`href`);
+                    }
+                }
+                n = giveaways.length;
+                if (n > 0) {
+                    continueTgeGiveaways(giveaways, 0, n, tge, callback);
+                } else {
+                    callback();
+                }
             } else {
                 callback();
             }
         } else {
+            if (esgst.giveawayPath) {
+                tge.context = context;
+                tge.url = url;
+            }
             callback();
         }
     }
@@ -11334,13 +11328,11 @@ ${avatar.outerHTML}
 
     function loadAs(ASButton) {
         var Popup, Category, AS;
-        Popup = createPopup();
-        Popup.Popup.style.width = "600px";
-        Popup.Icon.classList.add("fa-folder");
         Category = window.location.pathname.match(/^\/archive\/(coming-soon|open|closed|deleted)/);
-        Popup.Title.textContent = "Search archive" + (Category ? (" for " + Category[1] + " giveaways") : "") + ":";
-        Popup.TextInput.classList.remove("rhHidden");
+        Popup = createPopup(`fa-folder`, `Search archive${Category ? ` for ${Category[1]} giveaways` : ``}:`);
+        Popup.TextInput = insertHtml(Popup.description, `beforeEnd`, `<input type="text">`);
         AS = {};
+        Popup.Options = insertHtml(Popup.description, `beforeEnd`, `<div></div>`);
         createOptions(Popup.Options, AS, [{
             Check: function () {
                 return true;
@@ -11351,7 +11343,7 @@ ${avatar.outerHTML}
             Name: "AppIDSearch",
             ID: "AS_AIS"
         }]);
-        createButton(Popup.Button, "fa-search", "Search", "fa-times-circle", "Cancel", function (Callback) {
+        Popup.description.appendChild(createButtonSet(`green`, `grey`, `fa-search`, `fa-times-circle`, `Search`, `Cancel`, function (Callback) {
             ASButton.classList.add("esgst-busy");
             AS.Progress.innerHTML = AS.OverallProgress.innerHTML = AS.Results.innerHTML = "";
             AS.Popup.reposition();
@@ -11393,12 +11385,13 @@ ${avatar.outerHTML}
                 AS.Progress.innerHTML = "";
             }, 500);
             ASButton.classList.remove("esgst-busy");
-        });
-        AS.Progress = Popup.Progress;
-        AS.OverallProgress = Popup.OverallProgress;
-        AS.Results = Popup.Results;
+        }).set);
+        AS.Progress = insertHtml(Popup.description, `beforeEnd`, `<div></div>`);
+        AS.OverallProgress = insertHtml(Popup.description, `beforeEnd`, `<div></div>`);
+        AS.Results = insertHtml(Popup.description, `beforeEnd`, `<div></div>`);
+        AS.Popup = Popup;
         ASButton.addEventListener("click", function () {
-            AS.Popup = Popup.popUp(function () {
+            Popup.open(function () {
                 Popup.TextInput.focus();
             });
         });
@@ -11485,7 +11478,7 @@ ${avatar.outerHTML}
             `);
             button.addEventListener(`click`, function() {
                 var discussions, i, keys, popup, set;
-                popup = createPopup_v6(`fa-star`, `Highlighted Discussions`);
+                popup = createPopup(`fa-star`, `Highlighted Discussions`);
                 popup.highlightedDiscussions = insertHtml(popup.description, `afterBegin`, `
                     <div class="table esgst-text-left">
                         <div class="table__heading">
@@ -11648,14 +11641,13 @@ ${avatar.outerHTML}
                             </div>
                         `);
                         loadEndlessFeatures(popup.highlightedDiscussions.lastElementChild);
-                        if (!esgst.discussionsPath) {
+                        if (!esgst.giveawaysPath && !esgst.discussionsPath) {
                             if (esgst.gdttt) {
                                 addCtDiscussionPanels(popup.highlightedDiscussions.lastElementChild, true);
                                 checkGdtttVisited(popup.highlightedDiscussions.lastElementChild);
                             } else if (esgst.ct) {
                                 addCtDiscussionPanels(popup.highlightedDiscussions.lastElementChild, true);
                             }
-                            getDhDiscussions(popup.highlightedDiscussions.lastElementChild);
                             loadDiscussionFeatures(popup.highlightedDiscussions.lastElementChild);
                         }
                         popup.reposition();
@@ -11964,7 +11956,7 @@ ${avatar.outerHTML}
                 Icon: "fa-table",
                 setPopup: function (Popup) {
                     var Table, InsertRow, InsertColumn, Popout;
-                    Popout = Popup.Description;
+                    Popout = Popup.description;
                     Popout.innerHTML =
                         "<table></table>" +
                         "<div class=\"form__saving-button btn_action white\">Insert Row</div>" +
@@ -12006,7 +11998,7 @@ ${avatar.outerHTML}
                             CFH.TextArea.value = CFH.TextArea.value.slice(0, Start) + Value + CFH.TextArea.value.slice(End);
                             CFH.TextArea.setSelectionRange(End + Value.length, End + Value.length);
                             CFH.TextArea.focus();
-                            Popup.Close.click();
+                            Popup.close();
                         }
                     });
                 }
@@ -12024,16 +12016,14 @@ ${avatar.outerHTML}
 
                     Emojis.nextElementSibling.addEventListener("click", function () {
                         var Popup, I, N, Emoji, SavedEmojis;
-                        Popup = createPopup(true);
-                        Popup.Icon.classList.add("fa-smile-o");
-                        Popup.Title.textContent = "Select emojis:";
-                        Popup.Description.insertAdjacentHTML(
+                        Popup = createPopup(`fa-smile-o`, `Select emojis:`);
+                        Popup.description.insertAdjacentHTML(
                             "afterBegin",
                             "<div class=\"CFHEmojis\"></div>" +
                             createDescription("Drag the emojis you want to use and drop them in the box below. Click on an emoji to remove it.") +
                             "<div class=\"global__image-outer-wrap page_heading_btn CFHEmojis\">" + GM_getValue("Emojis", ``) + "</div>"
                         );
-                        Emojis = Popup.Description.firstElementChild;
+                        Emojis = Popup.description.firstElementChild;
                         for (I = 0, N = CFH.Emojis.length; I < N; ++I) {
                             Emoji = CFH.Emojis[I].Emoji;
                             Emojis.insertAdjacentHTML("beforeEnd", "<span data-id=\"" + Emoji + "\" draggable=\"true\" title=\"" + CFH.Emojis[I].Title + "\">" + Emoji + "</span>");
@@ -12067,7 +12057,7 @@ ${avatar.outerHTML}
                                 });
                             }
                         });
-                        Popup = Popup.popUp(function () {
+                        Popup.open(function () {
                             Popout.classList.add("rhHidden");
                         });
                     });
@@ -19509,13 +19499,11 @@ ${avatar.outerHTML}
                 var popup;
                 Button.addEventListener("click", function () {
                     if (popup) {
-                        popup.popUp();
+                        popup.open();
                     } else {
-                        popup = createPopup();
-                        popup.Icon.classList.add(`fa-table`);
-                        popup.Title.textContent = `Add a table:`;
+                        popup = createPopup(`fa-table`, `Add a table:`);
                         Item.setPopup(popup);
-                        popup.popUp();
+                        popup.open();
                     }
                 });
             } else {
@@ -19603,21 +19591,19 @@ ${avatar.outerHTML}
 
     function loadRbp(button) {
         var Popup;
-        Popup = createPopup();
-        Popup.Popup.classList.add("rhPopupLarge");
-        Popup.Icon.classList.add("fa-comment");
-        Popup.Title.textContent = "Add a comment:";
-        Popup.TextArea.classList.remove("rhHidden");
+        Popup = createPopup(`fa-comment`, `Add a comment:`);
+        Popup.TextArea = insertHtml(Popup.description, `beforeEnd`, `<textarea></textarea>`);
         if (esgst.cfh) {
             addCFHPanel(Popup.TextArea);
         }
-        createButton(Popup.Button, "fa-check", "Save", "fa-circle-o-notch fa-spin", "Saving...", function (Callback) {
+        Popup.description.appendChild(createButtonSet(`green`, `grey`, `fa-check`, `fa-circle-o-notch fa-spin`, `Save`, `Saving...`, function (Callback) {
             Popup.Progress.innerHTML = "";
             saveComment(esgst.sg ? "" : document.querySelector("[name='trade_code']").value, "", Popup.TextArea.value, esgst.sg ? window.location.href.match(/(.+?)(#.+?)?$/)[1] : "/ajax.php", Popup.Progress,
                 Callback);
-        });
+        }).set);
+        Popup.Progress = insertHtml(Popup.description, `beforeEnd`, `<div></div>`);
         button.addEventListener("click", function () {
-            Popup.popUp(function () {
+            Popup.open(function () {
                 Popup.TextArea.focus();
             });
         });
@@ -20436,7 +20422,7 @@ ${avatar.outerHTML}
 
     function openUnPopup(profile) {
         var set;
-        profile.unPopup = createPopup_v6(`fa-sticky-note`, `Edit user notes for <span>${profile.name}</span>:`, true);
+        profile.unPopup = createPopup(`fa-sticky-note`, `Edit user notes for <span>${profile.name}</span>:`, true);
         profile.unTextArea = insertHtml(profile.unPopup.description, `beforeEnd`, `
             <textarea></textarea>
         `);
@@ -20527,7 +20513,7 @@ ${avatar.outerHTML}
 
     function openUfPopup(profile) {
         var resetSet, saveSet;
-        profile.ufPopup = createPopup_v6(`fa-eye`, `Apply user filters for <span>${profile.name}</span>:`, true);
+        profile.ufPopup = createPopup(`fa-eye`, `Apply user filters for <span>${profile.name}</span>:`, true);
         profile.ufOptions = insertHtml(profile.ufPopup.description, `beforeEnd`, `<div></div>`);
         profile.ufGiveawaysOption = createToggleSwitch(profile.ufOptions, null, false, `Filter this user's giveaways.`, false, false, `Hides the user's giveaways from the main pages.`, profile.ufValues.giveaways);
         profile.ufDiscussionsOption = createToggleSwitch(profile.ufOptions, null, false, `Filter this user's discussions.`, false, false, `Hides the user's discussions from the main pages.`, profile.ufValues.discussions);
@@ -20626,7 +20612,7 @@ ${avatar.outerHTML}
         if (profile.sgcPopup) {
             profile.sgcPopup.open();
         } else {
-            profile.sgcPopup = createPopup_v6(`fa-users`, `Shared Groups`);
+            profile.sgcPopup = createPopup(`fa-users`, `Shared Groups`);
             profile.sgcProgress = insertHtml(profile.sgcPopup.description, `beforeEnd`, `
                 <div>
                     <i class="fa fa-circle-o-notch fa-spin"></i>
@@ -20799,10 +20785,8 @@ ${avatar.outerHTML}
             "</span>"
         );
         UGDButton = Context.lastElementChild;
-        Popup = createPopup();
-        Popup.Popup.classList.add("rhPopupLarge");
-        Popup.Icon.classList.add("fa-bar-chart");
-        Popup.Title.textContent = "Get " + user.username + "'s " + UGD.Key + " giveaways data:";
+        Popup = createPopup(`fa-bar-chart`, `Get ${user.username}'s ${UGD.Key} giveaways data:`);
+        Popup.Options = insertHtml(Popup.description, `beforeEnd`, `<div></div>`);
         createOptions(Popup.Options, UGD, [{
             Check: function () {
                 return true;
@@ -20813,7 +20797,7 @@ ${avatar.outerHTML}
             Key: "CC",
             ID: "UGD_CC"
         }]);
-        createButton(Popup.Button, "fa-bar-chart", "Get Data", "fa-times-circle", "Cancel", function (Callback) {
+        Popup.description.appendChild(createButtonSet(`green`, `grey`, `fa-bar-chart`, `fa-times-circle`, `Get Data`, `Cancel`, function (Callback) {
             UGD.Canceled = false;
             UGDButton.classList.add("esgst-busy");
             var savedUser = getUser(null, user), ugd;
@@ -20973,11 +20957,13 @@ ${avatar.outerHTML}
                 UGD.Progress.innerHTML = UGD.OverallProgress = "";
             }, 500);
             UGDButton.classList.remove("esgst-busy");
-        });
-        UGD.Progress = Popup.Progress;
-        UGD.OverallProgress = Popup.OverallProgress;
+        }).set);
+        UGD.Progress = insertHtml(Popup.description, `beforeEnd`, `<div></div>`);
+        UGD.OverallProgress = insertHtml(Popup.description, `beforeEnd`, `<div></div>`);
+        Popup.Results = insertHtml(Popup.description, `beforeEnd`, `<div></div>`);
+        UGD.Popup = Popup;
         UGDButton.addEventListener("click", function () {
-            UGD.Popup = Popup.popUp();
+            Popup.open();
         });
     }
 
@@ -21130,15 +21116,13 @@ ${avatar.outerHTML}
 
     function setNAMWCPopup(NAMWCButton, User, Mnu) {
         var Popup, NAMWC;
-        Popup = createPopup();
-        Popup.Popup.classList.add("rhPopupLarge");
-        Popup.Icon.classList.add(!Mnu ? "fa-question" : "fa-cog");
         NAMWC = {
             User: (User ? User : null)
         };
-        Popup.Title.textContent = (!Mnu ? "Check for " + (NAMWC.User ? (NAMWC.User.Username + "'s ") : "") + "not activated / multiple wins" :
-            "Manage Not Activated / Multiple Wins Checker caches") + ":";
+        Popup = createPopup(!Mnu ? "fa-question" : "fa-cog", (!Mnu ? "Check for " + (NAMWC.User ? (NAMWC.User.Username + "'s ") : "") + "not activated / multiple wins" :
+            "Manage Not Activated / Multiple Wins Checker caches") + ":");
         if (!Mnu) {
+            Popup.Options = insertHtml(Popup.description, `beforeEnd`, `<div></div>`);
             createOptions(Popup.Options, NAMWC, [{
                 Check: function () {
                     return true;
@@ -21161,7 +21145,7 @@ ${avatar.outerHTML}
                 Dependency: "NotActivatedCheck"
             }]);
             Popup.Options.insertAdjacentHTML("afterEnd", createDescription("If an user is highlighted, that means they have been either checked for the first time or updated."));
-            createButton(Popup.Button, "fa-question-circle", "Check", "fa-times-circle", "Cancel", function (Callback) {
+            Popup.description.appendChild(createButtonSet(`green`, `grey`, `fa-question-circle`, `fa-times-circle`, `Check`, `Cancel`, function (Callback) {
                 NAMWC.ShowResults = false;
                 NAMWCButton.classList.add("esgst-busy");
                 setNAMWCCheck(NAMWC, function () {
@@ -21176,10 +21160,11 @@ ${avatar.outerHTML}
                     NAMWC.Progress.innerHTML = "";
                 }, 500);
                 NAMWCButton.classList.remove("esgst-busy");
-            });
+            }).set);
         }
-        NAMWC.Progress = Popup.Progress;
-        NAMWC.OverallProgress = Popup.OverallProgress;
+        NAMWC.Progress = insertHtml(Popup.description, `beforeEnd`, `<div></div>`);
+        NAMWC.OverallProgress = insertHtml(Popup.description, `beforeEnd`, `<div></div>`);
+        Popup.Results = insertHtml(Popup.description, `beforeEnd`, `<div></div>`);
         createResults(Popup.Results, NAMWC, [{
             Icon: "<i class=\"fa fa-check-circle giveaway__column--positive\"></i> ",
             Description: "Users with 0 not activated wins",
@@ -21201,8 +21186,9 @@ ${avatar.outerHTML}
             Description: "Users who cannot be checked for not activated wins either because they have a private profile or SteamCommunity is down",
             Key: "unknown"
         }]);
+        NAMWC.Popup = Popup;
         NAMWCButton.addEventListener("click", function () {
-            NAMWC.Popup = Popup.popUp(function () {
+            Popup.open(function () {
                 if (Mnu) {
                     NAMWC.ShowResults = true;
                     setNAMWCCheck(NAMWC);
@@ -21472,10 +21458,8 @@ ${avatar.outerHTML}
 
     function setNRFPopup(NRF, NRFButton, profile) {
         var Popup;
-        Popup = createPopup();
-        Popup.Popup.classList.add("rhPopupLarge");
-        Popup.Icon.classList.add("fa-times");
-        Popup.Title.textContent = "Find " + profile.username + "'s not received giveaways:";
+        Popup = createPopup(`fa-times`, "Find " + profile.username + "'s not received giveaways:");
+        Popup.Options = insertHtml(Popup.description, `beforeEnd`, `<div></div>`);
         createOptions(Popup.Options, NRF, [{
             Check: function () {
                 return true;
@@ -21487,7 +21471,7 @@ ${avatar.outerHTML}
             ID: "NRF_FS"
         }]);
         Popup.Options.insertAdjacentHTML("afterEnd", createDescription("If you're blacklisted / not whitelisted / not a member of the same Steam groups, not all giveaways will be found."));
-        createButton(Popup.Button, "fa-search", "Find", "fa-times-circle", "Cancel", function (Callback) {
+        Popup.description.appendChild(createButtonSet(`green`, `grey`, `fa-search`, `fa-times-circle`, `Find`, `Cancel`, function (Callback) {
             NRFButton.classList.add("esgst-busy");
             setNRFSearch(NRF, profile, function () {
                 NRF.Progress.innerHTML = "";
@@ -21502,12 +21486,13 @@ ${avatar.outerHTML}
                 NRF.Progress.innerHTML = "";
             }, 500);
             NRFButton.classList.remove("esgst-busy");
-        });
-        NRF.Progress = Popup.Progress;
-        NRF.OverallProgress = Popup.OverallProgress;
-        NRF.Results = Popup.Results;
+        }).set);
+        NRF.Progress = insertHtml(Popup.description, `beforeEnd`, `<div></div>`);
+        NRF.OverallProgress = insertHtml(Popup.description, `beforeEnd`, `<div></div>`);
+        NRF.Results = insertHtml(Popup.description, `beforeEnd`, `<div></div>`);
+        NRF.Popup = Popup;
         NRFButton.addEventListener("click", function () {
-            NRF.Popup = Popup.popUp();
+            Popup.open();
         });
     }
 
@@ -21758,15 +21743,12 @@ ${avatar.outerHTML}
 
     function addWBCButton(Context, WBCButton) {
         var Popup, WBC;
-        Popup = createPopup();
         WBC = {
             Update: (Context ? false : true),
             B: esgst.wbc_b,
             Username: esgst.username
         };
-        Popup.Popup.classList.add("rhPopupLarge");
-        Popup.Icon.classList.add(WBC.Update ? "fa-cog" : "fa-question");
-        Popup.Title.textContent = (WBC.Update ? "Manage Whitelist / Blacklist Checker caches" : ("Check for whitelists" + (WBC.B ? " / blacklists" : ""))) + ":";
+        Popup = createPopup(WBC.Update ? `fa-cog` : `fa-question`, WBC.Update ? `Manage Whitelist/Blacklist Checker caches:` : `Check for whitelists${WBC.B ? `/blacklists` : ``}:`);
         if (window.location.pathname.match(new RegExp("^\/user\/(?!" + WBC.Username + ")"))) {
             WBC.User = {
                 Username: document.getElementsByClassName("featured__heading__medium")[0].textContent,
@@ -21774,6 +21756,7 @@ ${avatar.outerHTML}
                 SteamID64: document.querySelector("a[href*='/profiles/']").href.match(/\d+/)[0],
             };
         }
+        Popup.Options = insertHtml(Popup.description, `beforeEnd`, `<div></div>`);
         createOptions(Popup.Options, WBC, [{
             Check: function () {
                 return WBC.User;
@@ -21840,7 +21823,7 @@ ${avatar.outerHTML}
             ID: "WBC_CC"
         }]);
         Popup.Options.insertAdjacentHTML("afterEnd", createDescription("If an user is highlighted, that means they have been either checked for the first time or updated."));
-        createButton(Popup.Button, WBC.Update ? "fa-refresh" : "fa-question-circle", WBC.Update ? "Update" : "Check", "fa-times-circle", "Cancel", function (Callback) {
+        Popup.description.appendChild(createButtonSet(`green`, `grey`, WBC.Update ? `fa-refresh` : `fa-question-circle`, `fa-times-circle`, WBC.Update ? `Update` : `Check`, `Cancel`, function (Callback) {
             WBC.ShowResults = false;
             WBCButton.classList.add("esgst-busy");
             setWBCCheck(WBC, function () {
@@ -21855,9 +21838,10 @@ ${avatar.outerHTML}
                 WBC.Progress.innerHTML = "";
             }, 500);
             WBCButton.classList.remove("esgst-busy");
-        });
-        WBC.Progress = Popup.Progress;
-        WBC.OverallProgress = Popup.OverallProgress;
+        }).set);
+        WBC.Progress = insertHtml(Popup.description, `beforeEnd`, `<div></div>`);
+        WBC.OverallProgress = insertHtml(Popup.description, `beforeEnd`, `<div></div>`);
+        Popup.Results = insertHtml(Popup.description, `beforeEnd`, `<div></div>`);
         createResults(Popup.Results, WBC, [{
             Icon: (
                 "<span class=\"sidebar__shortcut-inner-wrap rhWBIcon\">" +
@@ -21888,7 +21872,8 @@ ${avatar.outerHTML}
             Key: "unknown"
         }]);
         WBCButton.addEventListener("click", function () {
-            WBC.Popup = Popup.popUp(function () {
+            WBC.Popup = Popup;
+            Popup.open(function () {
                 if (WBC.Update) {
                     WBC.ShowResults = true;
                     setWBCCheck(WBC);
@@ -22446,7 +22431,7 @@ ${avatar.outerHTML}
                 return 0;
             }
         });
-        popup = createPopup_v6(icon, title, true);
+        popup = createPopup(icon, title, true);
         table = insertHtml(popup.description, `beforeEnd`, `
             <div class="esgst-text-left table">
                 <div class="table__heading">
@@ -22811,7 +22796,7 @@ ${avatar.outerHTML}
                 <span class="esgst-gt-tags"></span>
             </a>
         `).addEventListener(`click`, function () {
-                    popup = createPopup_v6(`fa-tag`, `Edit game tags for <span>${context.name}</span>:`, true);
+                    popup = createPopup(`fa-tag`, `Edit game tags for <span>${context.name}</span>:`, true);
                     input = insertHtml(popup.description, `beforeEnd`, `
                 <input type="text"/>
             `);
@@ -22954,10 +22939,10 @@ ${avatar.outerHTML}
                             } else {
                                 giveaway[id] = true;
                             }
-                            giveaway.gcReady = true;
                         } else if (id === `rating`) {
                             giveaway[id] = 0;
                         }
+                        giveaway.gcReady = true;
                     }
                 }
             }
@@ -22975,10 +22960,10 @@ ${avatar.outerHTML}
                             } else {
                                 giveaway[id] = true;
                             }
-                            giveaway.gcReady = true;
                         } else if (id === `rating`) {
                             giveaway[id] = 0;
                         }
+                        giveaway.gcReady = true;
                     }
                 }
             }
@@ -22988,10 +22973,7 @@ ${avatar.outerHTML}
             if (esgst.gfPopup) {
                 filterGfGiveaways(esgst.gfPopup);
             }
-            createLock(`gameLock`, 300, function(deleteLock) {
-                updateGames(savedGames);
-                deleteLock();
-            });
+            lockAndSaveGames(savedGames);
         } else {
             window.setTimeout(checkGcComplete.bind(null, gc, savedGames, total), 1000);
         }
@@ -23000,7 +22982,7 @@ ${avatar.outerHTML}
     function addGcCategories(games, gc, i, ids, savedGames, type) {
         var category, categories, giveaway, id, j, numCategories, url;
             id = ids[i];
-            if (!savedGames[type][id] || !savedGames[type][id].price || (typeof savedGames[type][id].lastCheck === `undefined`) || ((Date.now() - savedGames[type][id].lastCheck) > 604800000)) {
+            if ((esgst.gc_h || esgst.gc_gi || esgst.gc_r || esgst.gc_rm || esgst.gc_ea || esgst.gc_tc || esgst.gc_a || esgst.gc_mp || esgst.gc_sc || esgst.gc_l || esgst.gc_m || esgst.gc_dlc || esgst.gc_g) && (!savedGames[type][id] || !savedGames[type][id].price || (typeof savedGames[type][id].lastCheck === `undefined`) || ((Date.now() - savedGames[type][id].lastCheck) > 604800000))) {
                 url = (type === `apps`) ? `appdetails?appids` : `packagedetails?packageids`;
                 request(null, false, `http://store.steampowered.com/api/${url}=${id}&cc=us&l=en`, function (response) {
                     request(null, false, `http://store.steampowered.com/api/${url}=${id}&cc=us&l=en&filters=price,price_overview`, function (response1) {
@@ -23025,68 +23007,74 @@ ${avatar.outerHTML}
 
     function getGcCategories(games, id, response, response1, response2, savedGames, type, callback) {
         var appId, i, match, n, responseHtml, responseJson, responseJson1, price, summary, summaries, tag, tags;
-        responseJson = JSON.parse(response.responseText)[id];
-        responseJson1 = JSON.parse(response1.responseText)[id];
         if (!savedGames[type][id]) {
             savedGames[type][id] = {};
         }
-        if (responseJson1.success) {
-            price = responseJson1.data.price || responseJson1.data.price_overview;
-            if (price && price.currency === `USD`) {
-                savedGames[type][id].price = Math.ceil(price.initial / 100);
-            }
-        }
-        if (responseJson.success) {
-            if (responseJson.data.type === `dlc`) {
-                savedGames[type][id].dlc = true;
-            }
-            if (responseJson.data.apps) {
-                if (!savedGames[type][id].apps) {
-                    savedGames[type][id].apps = [];
-                }
-                for (i = 0, n = responseJson.data.apps.length; i < n; ++i) {
-                    appId = responseJson.data.apps[i].id;
-                    savedGames[type][id].apps.push(appId);
-                    if (savedGames.apps[appId] && savedGames.apps[appId].wishlisted) {
-                        savedGames[type][id].wishlisted = true;
+        if (!response.responseText.match(/<TITLE>Access Denied<\/TITLE>/) && !response1.responseText.match(/<TITLE>Access Denied<\/TITLE>/)) {
+            responseJson = JSON.parse(response.responseText);
+            responseJson1 = JSON.parse(response1.responseText);
+            if (responseJson && responseJson1) {
+                responseJson = responseJson[id];
+                responseJson1 = responseJson1[id];
+                if (responseJson1.success) {
+                    price = responseJson1.data.price || responseJson1.data.price_overview;
+                    if (price && price.currency === `USD`) {
+                        savedGames[type][id].price = Math.ceil(price.initial / 100);
                     }
                 }
-            }
-            if (responseJson.data.packages) {
-                savedGames[type][id].subs = responseJson.data.packages;
-                if (savedGames[type][id].wishlisted) {
-                    for (i = 0, n = savedGames[type][id].subs.length; i < n; ++i) {
-                        if (savedGames[type][savedGames[type][id].subs[i]]) {
-                            savedGames[type][savedGames[type][id].subs[i]].wishlisted = true;
+                if (responseJson.success) {
+                    if (responseJson.data.type === `dlc`) {
+                        savedGames[type][id].dlc = true;
+                    }
+                    if (responseJson.data.apps) {
+                        if (!savedGames[type][id].apps) {
+                            savedGames[type][id].apps = [];
+                        }
+                        for (i = 0, n = responseJson.data.apps.length; i < n; ++i) {
+                            appId = responseJson.data.apps[i].id;
+                            savedGames[type][id].apps.push(appId);
+                            if (savedGames.apps[appId] && savedGames.apps[appId].wishlisted) {
+                                savedGames[type][id].wishlisted = true;
+                            }
                         }
                     }
-                }
-            }
-            savedGames[type][id].linux = responseJson.data.platforms.linux;
-            savedGames[type][id].mac = responseJson.data.platforms.mac;
-            if (responseJson.data.categories) {
-                for (i = 0, n = responseJson.data.categories.length; i < n; ++i) {
-                    if (responseJson.data.categories[i].description == `Steam Achievements`) {
-                        savedGames[type][id].achievements = true;
-                    } else if (responseJson.data.categories[i].description == `Steam Trading Cards`) {
-                        savedGames[type][id].tradingCards = true;
-                    } else if (responseJson.data.categories[i].description == `Multi-player`) {
-                        savedGames[type][id].multiplayer = true;
-                    } else if (responseJson.data.categories[i].description == `Steam Cloud`) {
-                        savedGames[type][id].steamCloud = true;
+                    if (responseJson.data.packages) {
+                        savedGames[type][id].subs = responseJson.data.packages;
+                        if (savedGames[type][id].wishlisted) {
+                            for (i = 0, n = savedGames[type][id].subs.length; i < n; ++i) {
+                                if (savedGames[type][savedGames[type][id].subs[i]]) {
+                                    savedGames[type][savedGames[type][id].subs[i]].wishlisted = true;
+                                }
+                            }
+                        }
                     }
+                    savedGames[type][id].linux = responseJson.data.platforms.linux;
+                    savedGames[type][id].mac = responseJson.data.platforms.mac;
+                    if (responseJson.data.categories) {
+                        for (i = 0, n = responseJson.data.categories.length; i < n; ++i) {
+                            if (responseJson.data.categories[i].description == `Steam Achievements`) {
+                                savedGames[type][id].achievements = true;
+                            } else if (responseJson.data.categories[i].description == `Steam Trading Cards`) {
+                                savedGames[type][id].tradingCards = true;
+                            } else if (responseJson.data.categories[i].description == `Multi-player`) {
+                                savedGames[type][id].multiplayer = true;
+                            } else if (responseJson.data.categories[i].description == `Steam Cloud`) {
+                                savedGames[type][id].steamCloud = true;
+                            }
+                        }
+                    }
+                    if (responseJson.data.genres) {
+                        savedGames[type][id].genres = [];
+                        for (i = 0, n = responseJson.data.genres.length; i < n; ++i) {
+                            savedGames[type][id].genres.push(responseJson.data.genres[i].description);
+                        }
+                    }
+                } else if (!response2) {
+                    savedGames[type][id].removed = true;
                 }
             }
-            if (responseJson.data.genres) {
-                savedGames[type][id].genres = [];
-                for (i = 0, n = responseJson.data.genres.length; i < n; ++i) {
-                    savedGames[type][id].genres.push(responseJson.data.genres[i].description);
-                }
-            }
-        } else if (!response2) {
-            savedGames[type][id].removed = true;
         }
-        if (response2) {
+        if (response2 && !response2.responseText.match(/<TITLE>Access Denied<\/TITLE>/)) {
             if (response2.finalUrl.match(id)) {
                 responseHtml = DOM.parse(response2.responseText);
                 tags = responseHtml.querySelectorAll(`a.app_tag`);
@@ -23734,7 +23722,7 @@ ${avatar.outerHTML}
         var Selected, Item, SMSyncFrequency, I, Container, SMGeneral, SMGiveaways, SMDiscussions, SMCommenting, SMUsers, SMOthers, SMManageData, SMManageFilteredUsers, SMRecentUsernameChanges,
             SMCommentHistory, SMManageTags, SMGeneralFeatures, SMGiveawayFeatures, SMDiscussionFeatures, SMCommentingFeatures, SMUserGroupGamesFeatures, SMOtherFeatures,
             SMLastSync, LastSync, SMAPIKey, SMLastBundleSync, LastBundleSync;
-        var popup = createPopup_v6(`fa-gear`, `Settings`, true);
+        var popup = createPopup(`fa-gear`, `Settings`, true);
         popup.description.classList.add(`esgst-text-left`);
         SMSyncFrequency = "<select class=\"SMSyncFrequency\">";
         for (I = 0; I <= 30; ++I) {
@@ -23892,25 +23880,12 @@ ${avatar.outerHTML}
                 }
             });
         });
-        LastBundleSync = GM_getValue("LastBundleSync", 0);
-        if (LastBundleSync) {
+        if (esgst.lastBundleSync) {
             SMLastBundleSync.classList.remove("notification--warning");
             SMLastBundleSync.classList.add("notification--success");
-            SMLastBundleSync.innerHTML = "<i class=\"fa fa-check-circle\"></i> Last synced " + (new Date(LastBundleSync).toLocaleString()) + ".";
+            SMLastBundleSync.innerHTML = "<i class=\"fa fa-check-circle\"></i> Last synced " + (new Date(esgst.lastBundleSync).toLocaleString()) + ".";
         }
-        document.getElementsByClassName("SMBundleSync")[0].addEventListener("click", function () {
-            if (((new Date().getTime()) - LastBundleSync) > 604800000) {
-                syncBundleList(function() {
-                    var current = new Date();
-                    SMLastBundleSync.classList.remove("notification--warning");
-                    SMLastBundleSync.classList.add("notification--success");
-                    SMLastBundleSync.innerHTML =
-                        "<i class=\"fa fa-check-circle\"></i> Last synced " + current.toLocaleString() + ".";
-                });
-            } else {
-                window.alert(`You synced the bundle list in less than a week ago. You can sync only once per week.`);
-            }
-        });
+        document.getElementsByClassName("SMBundleSync")[0].addEventListener("click", checkBundleSync.bind(null, SMLastBundleSync, {}));
         key = esgst.steamApiKey;
         if (key) {
             SMAPIKey.value = key;
@@ -23920,9 +23895,7 @@ ${avatar.outerHTML}
         });
         SMManageData.addEventListener("click", function () {
             var Popup, SM, SMImport, SMExport, SMDelete;
-            Popup = createPopup(true);
-            Popup.Icon.classList.add("fa-cog");
-            Popup.Title.textContent = "Manage data:";
+            Popup = createPopup(`fa-cog`, `Manage data:`, true);
             SM = {
                 Names: {
                     users:  `U`,
@@ -23940,6 +23913,7 @@ ${avatar.outerHTML}
                     settings: `S`
                 }
             };
+            Popup.Options = insertHtml(Popup.description, `beforeEnd`, `<div></div>`);
             createOptions(Popup.Options, SM, [{
                 Check: function () {
                     return true;
@@ -24145,6 +24119,7 @@ ${avatar.outerHTML}
                 Key: "M",
                 ID: "SM_M"
             }]);
+            Popup.Button = insertHtml(Popup.description, `beforeEnd`, `<div></div>`);
             Popup.Button.classList.add("SMManageDataPopup");
             Popup.Button.innerHTML =
                 "<div class=\"SMImport\"></div>" +
@@ -24165,7 +24140,7 @@ ${avatar.outerHTML}
                 Callback();
                 deleteSMData(SM);
             });
-            Popup.popUp();
+            Popup.open();
         });
         if (SMManageTags) {
             SMManageTags.addEventListener("click", function () {
@@ -24669,7 +24644,7 @@ Background: <input type="color" value="${bgColor}">
             if (Key === `Templates`) {
                 templates = getTemplateStorageV6(File.Data.Templates);
             } else {
-                templates = File.data.templates;
+                templates = File.Data.templates;
             }
             for (i = 0, n = templates.length; i < n; ++i) {
                 template = templates[i];
@@ -24689,7 +24664,7 @@ Background: <input type="color" value="${bgColor}">
             if (Key === `Templates`) {
                 templates = getTemplateStorageV6(File.Data.Templates);
             } else {
-                templates = File.data.templates;
+                templates = File.Data.templates;
             }
             GM_setValue(`templates`, JSON.stringify(templates));
             deleteLock();
@@ -25317,7 +25292,7 @@ Background: <input type="color" value="${bgColor}">
             var popup;
         SMManageFilteredUsers.addEventListener(`click`, function() {
             if (!popup) {
-                popup = createPopup_v6(`fa-eye-slash`, `Filtered Users`);
+                popup = createPopup(`fa-eye-slash`, `Filtered Users`);
             var users = JSON.parse(GM_getValue(`users`));
             var filtered = [];
             for (var key in users.users) {
@@ -25363,13 +25338,14 @@ Background: <input type="color" value="${bgColor}">
     function setSMRecentUsernameChanges(SMRecentUsernameChanges) {
         SMRecentUsernameChanges.addEventListener("click", function () {
             var Popup, SMRecentUsernameChangesPopup;
-            Popup = createPopup(true);
-            Popup.Results.classList.add("SMRecentUsernameChangesPopup");
-            Popup.Icon.classList.add("fa-comments");
-            Popup.Title.textContent = "Recent Username Changes";
-            Popup.Progress.innerHTML =
-                "<i class=\"fa fa-circle-o-notch fa-spin\"></i> " +
-                "<span>Loading recent username changes...</span>";
+            Popup = createPopup(`fa-comments`, `Recent Username Changes`);
+            Popup.Progress = insertHtml(Popup.description, `beforeEnd`,
+                "<div><i class=\"fa fa-circle-o-notch fa-spin\"></i> " +
+                "<span>Loading recent username changes...</span></div>"
+            );
+            Popup.Results = insertHtml(Popup.description, `beforeEnd`, `
+                <div class="SMRecentUsernameChangesPopup"></div>
+            `);
             makeRequest(null, "https://script.google.com/macros/s/AKfycbzvOuHG913mRIXOsqHIeAuQUkLYyxTHOZim5n8iP-k80iza6g0/exec?Action=2", Popup.Progress, function (Response) {
                 var RecentChanges, HTML, I, N;
                 Popup.Progress.innerHTML = "";
@@ -25382,16 +25358,16 @@ Background: <input type="color" value="${bgColor}">
                 if (esgst.sg) {
                     loadEndlessFeatures(Popup.Results);
                 }
-                SMRecentUsernameChangesPopup.reposition();
+                Popup.reposition();
             });
-            SMRecentUsernameChangesPopup = Popup.popUp();
+            Popup.open();
         });
     }
 
     function setSMCommentHistory(SMCommentHistory) {
         SMCommentHistory.addEventListener("click", function () {
             var comments, i, popup, set;
-            popup = createPopup_v6(`fa-comments`, `Comment History`);
+            popup = createPopup(`fa-comments`, `Comment History`);
             popup.commentHistory = insertHtml(popup.description, `afterBegin`, `<div class="comments esgst-text-left"></div>`);
             comments = JSON.parse(GM_getValue(`${esgst.name}CommentHistory`, `[]`));
             i = 0;
@@ -25419,16 +25395,14 @@ Background: <input type="color" value="${bgColor}">
                 var reg = new RegExp(`v${version}\\n\\s\\*\\/\\n\\n([\\s\\S]*?)\\n\\n\\/\\*`);
                 var changelog = response.responseText.match(reg);
                 if (changelog) {
-                    var popup = createPopup(true);
-                    popup.Icon.classList.add(`fa-code`);
-                    popup.Title.textContent = `ESGST v${version} Changelog`;
+                    var popup = createPopup(`fa-code`, `ESGST v${version} Changelog`);
                     var html = changelog[1].replace(/\* (.+)/g, function (m, p1) {
                         return `<li>${p1}</li>`;
                     }).replace(/\n/g, `<br/>`).replace(/#(\d+)/g, function (m, p1) {
                         return `<a href="https://github.com/revilheart/ESGST/issues/${p1}">#${p1}</a>`;
                     });
-                    popup.Description.insertAdjacentHTML(`afterBegin`, html);
-                    popup.popUp();
+                    popup.description.insertAdjacentHTML(`afterBegin`, html);
+                    popup.open();
                 }
             });
         }
@@ -25694,45 +25668,47 @@ Background: <input type="color" value="${bgColor}">
         discussion.headingContainer = discussion.firstColumn.firstElementChild;
         discussion.info = discussion.headingContainer.nextElementSibling;
         discussion.heading = discussion.headingContainer.lastElementChild;
-        discussion.title = discussion.heading.textContent;
-        discussion.url = discussion.heading.getAttribute(`href`);
-        if (discussion.url) {
-            match = discussion.url.match(/discussion\/(.+?)\//);
-            if (match) {
-                discussion.code = match[1];
-                discussion.created = discussion.info.firstElementChild.nextElementSibling;
-                discussion.createdTime = parseInt(discussion.created.getAttribute(`data-timestamp`)) * 1e3;
-                discussion.author = discussion.created.nextElementSibling.textContent;
-                if (esgst.uf && savedUsers) {
-                    savedUser = getUser(savedUsers, {
-                        username: discussion.author
-                    });
-                    if (savedUser) {
-                        uf = savedUser.uf;
-                        if (esgst.uf_d && savedUser.blacklisted && !uf) {
-                            updateUfCount(discussion.outerWrap.parentElement.parentElement.nextElementSibling);
-                            discussion.outerWrap.remove();
-                            return null;
-                        } else if (uf && uf.discussions) {
-                            updateUfCount(discussion.outerWrap.parentElement.parentElement.nextElementSibling);
-                            discussion.outerWrap.remove();
-                            return null;
+        if (discussion.heading) {
+            discussion.title = discussion.heading.textContent;
+            discussion.url = discussion.heading.getAttribute(`href`);
+            if (discussion.url) {
+                match = discussion.url.match(/discussion\/(.+?)\//);
+                if (match) {
+                    discussion.code = match[1];
+                    discussion.created = discussion.info.firstElementChild.nextElementSibling;
+                    discussion.createdTime = parseInt(discussion.created.getAttribute(`data-timestamp`)) * 1e3;
+                    discussion.author = discussion.created.nextElementSibling.textContent;
+                    if (esgst.uf && savedUsers) {
+                        savedUser = getUser(savedUsers, {
+                            username: discussion.author
+                        });
+                        if (savedUser) {
+                            uf = savedUser.uf;
+                            if (esgst.uf_d && savedUser.blacklisted && !uf) {
+                                updateUfCount(discussion.outerWrap.parentElement.parentElement.nextElementSibling);
+                                discussion.outerWrap.remove();
+                                return null;
+                            } else if (uf && uf.discussions) {
+                                updateUfCount(discussion.outerWrap.parentElement.parentElement.nextElementSibling);
+                                discussion.outerWrap.remove();
+                                return null;
+                            }
                         }
                     }
+                    return discussion;
+                } else {
+                    return null;
                 }
-                return discussion;
             } else {
                 return null;
             }
-        } else {
-            return null;
         }
     }
 
     function startCommentFeatures() {
         if (esgst.commentsPath || esgst.inboxPath) {
             esgst.endlessFeatures.push(loadCommentFeatures);
-            loadCommentFeatures(document);
+            loadCommentFeatures(document, true);
         }
     }
 
@@ -25937,14 +25913,12 @@ Background: <input type="color" value="${bgColor}">
             "</a>"
         );
         Context.nextElementSibling.addEventListener("click", function () {
-            var Popup;
-            Popup = createPopup(true);
-            Popup.Icon.classList.add("fa-tag");
-            Popup.Title.innerHTML = "Edit user tags for <span>" + key + "</span>:";
-            Popup.TextInput.classList.remove("rhHidden");
+            var Popup, set;
+            Popup = createPopup(`fa-tag`, `Edit user tags for <span>${key}</span>:`);
+            Popup.TextInput = insertHtml(Popup.description, `beforeEnd`, `<input type="text">`);
             Popup.TextInput.addEventListener(`keydown`, function(e) {
                 if (e.key === `Enter`) {
-                    Popup.Button.firstElementChild.click();
+                    set.trigger();
                 }
             });
             var user = {
@@ -25952,7 +25926,7 @@ Background: <input type="color" value="${bgColor}">
                 username: username
             };
             Popup.TextInput.insertAdjacentHTML("afterEnd", createDescription("Use commas to separate tags, for example: Tag1, Tag2, ..."));
-            createButton(Popup.Button, "fa-check", "Save", "fa-circle-o-notch fa-spin", "Saving...", function (Callback) {
+            set = createButtonSet(`green`, `grey`, `fa-check`, `fa-circle-o-notch fa-spin`, `Save`, `Saving...`, function (Callback) {
                 var tags;
                 tags = Popup.TextInput.value.replace(/(,\s*)+/g, function (Match, P1, Offset, String) {
                     return (((Offset === 0) || (Offset == (String.length - Match.length))) ? "" : ", ");
@@ -25963,10 +25937,11 @@ Background: <input type="color" value="${bgColor}">
                 saveUser(null, null, user, function () {
                     addPUTTags(key, tags);
                     Callback();
-                    Popup.Close.click();
+                    Popup.close();
                 });
             });
-            Popup.popUp(function () {
+            Popup.description.appendChild(set.set);
+            Popup.open(function () {
                 var savedUser;
                 savedUser = getUser(null, user);
                 Popup.TextInput.focus();
@@ -26817,7 +26792,7 @@ Background: <input type="color" value="${bgColor}">
 
     function createAlert(message) {
         var popup;
-        popup = createPopup_v6(`fa-exclamation`, message, true);
+        popup = createPopup(`fa-exclamation`, message, true);
         popup.open();
     }
 
