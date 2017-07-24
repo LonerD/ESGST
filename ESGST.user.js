@@ -3,7 +3,7 @@
 // @namespace ESGST
 // @description Enhances SteamGifts and SteamTrades by adding some cool features to them.
 // @icon https://github.com/revilheart/ESGST/raw/master/Resources/esgstIcon.ico
-// @version 6.Beta.19.12
+// @version 6.Beta.19.13
 // @author revilheart
 // @downloadURL https://github.com/revilheart/ESGST/raw/master/ESGST.user.js
 // @updateURL https://github.com/revilheart/ESGST/raw/master/ESGST.meta.js
@@ -1295,6 +1295,23 @@
                                 </ul>
                                 <img src="https://camo.githubusercontent.com/daaefaee73d0f1f51fb7f830064cdd97d0455998/687474703a2f2f692e696d6775722e636f6d2f6a6864316d34412e706e67"/>
                             `,
+                            features: [
+                                {
+                                    id: `gv_gb`,
+                                    name: `Extend to Giveaway Bookmarks.`,
+                                    sg: true
+                                },
+                                {
+                                    id: `gv_ged`,
+                                    name: `Extend to Giveaway Encrypter / Decrypter.`,
+                                    sg: true
+                                },
+                                {
+                                    id: `gv_tge`,
+                                    name: `Extend to Train Giveaways Extractor.`,
+                                    sg: true
+                                }
+                            ],
                             id: `gv`,
                             name: `Grid View`,
                             sg: true,
@@ -2638,6 +2655,7 @@
                             background-image:linear-gradient(rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0) 100%);
                         }
                     `;
+                    esgst.esCheck = (esgst.es_g && esgst.giveawaysPath) || (esgst.es_d && esgst.discussionsTicketsPath) || (esgst.es_t && esgst.tradesPath) || (esgst.es_c && esgst.commentsPath) || (esgst.es_l && !esgst.giveawaysPath && !esgst.discussionsTicketsPath && !esgst.tradesPath && !esgst.commentsPath);
                     if (esgst.fh) {
                         esgst.header.classList.add(`esgst-fh`);
                         if (esgst.featuredContainer && ((esgst.hfc && !esgst.giveawaysPath) || !esgst.hfc)) {
@@ -2659,7 +2677,7 @@
                         esgst.footer.classList.add(`esgst-ff`);
                         esgst.pageOuterWrap.classList.add(`esgst-ff-sibling`);
                     }
-                    if ((esgst.pnot || esgst.es) && esgst.paginationNavigation && esgst.mainPageHeading) {
+                    if ((esgst.pnot || esgst.esCheck) && esgst.paginationNavigation && esgst.mainPageHeading) {
                         esgst.paginationNavigation.classList.add(`page_heading_btn`);
                         esgst.mainPageHeading.appendChild(esgst.paginationNavigation);
                     }
@@ -2691,6 +2709,181 @@
                     if (esgst.giveawaysPath || esgst.discussionsPath) {
                         esgst.endlessFeatures.push(loadDiscussionFeatures);
                         loadDiscussionFeatures(document);
+                    }
+                    if (esgst.gv && (esgst.giveawaysPath || esgst.gv_gb || esgst.gv_ged || esgst.gv_tge)) {
+                        esgst.giveawayFeatures.push(setGvContainers);
+                        style += `
+                            .esgst-gv-spacing {
+                                font-weight: bold;
+                                padding: 10px;
+                                text-align: center;
+                                width: 100px;
+                            }
+
+                            .esgst-gv-view {
+                                font-size: 0;
+                                padding: 5px 0;
+                                text-align: center;
+                            }
+
+                            .esgst-gv-view.pinned-giveaways__inner-wrap--minimized .giveaway__row-outer-wrap:nth-child(-n + 10) {
+                                display: inline-block;" +
+                            }
+
+                            .esgst-gv-container {
+                                border: 0 !important;
+                                box-shadow: none !important;
+                                display: inline-block;
+                                font-size: 12px;
+                                padding: 0;
+                                text-align: center;
+                                vertical-align: top;
+                            }
+
+                            .esgst-gv-box {
+                                display: block;
+                            }
+
+                            .esgst-gv-box >*:not(.giveaway__summary):not(.esgst-gv-icons) {
+                                margin: 0 !important;
+                            }
+
+                            .esgst-gv-box.is-faded:hover {
+                                opacity: 1;
+                            }
+
+                            .esgst-gv-icons {
+                                float: right;
+                                margin: 52px 0 0 !important;
+                            }
+
+                            .esgst-popup .esgst-gv-icons {
+                                float: right;
+                                margin: 62px 0 0 !important;
+                            }
+
+                            .esgst-gv-time, .esgst-popup .esgst-ged-source {
+                                background-color: #fff;
+                                font-weight: bold;
+                            }
+
+                            .esgst-gv-time i {
+                                font-size: 12px;
+                                vertical-align: baseline;
+                            }
+
+                            .esgst-gv-icons >* {
+                                line-height: normal;
+                                margin: 0 !important;
+                                padding: 2px;
+                            }
+                            .esgst-gv-icons .giveaway__column--invite-only {
+                                padding: 1px 2px;
+                            }
+                            .esgst-gv-icons .giveaway__column--contributor-level {
+                                padding: 2px 5px;
+                            }
+
+                            .esgst-gv-popout {
+                                font-size: 11px;
+                                max-width: 174px;
+                                position: absolute;
+                                width: 174px;
+                                z-index: 1;
+                            }
+
+                            .esgst-gv-popout .giveaway__heading {
+                                display: block;
+                                height: auto;
+                            }
+
+                            .esgst-gv-popout .giveaway__heading__name {
+                                display: inline-block;
+                                font-size: 12px;
+                                max-width: 150px;
+                                overflow: hidden;
+                                text-overflow: ellipsis;
+                                vertical-align: middle;
+                            }
+
+                            .esgst-gv-popout .giveaway__heading__thin {
+                                font-size: 11px;
+                            }
+
+                            .esgst-gv-popout .esgst-gc-panel {
+                                font-size: 11px;
+                                text-align: center;
+                            }
+
+                            .esgst-gv-popout .esgst-gc-panel i, .esgst-gv-popout .giveaway__links i, .esgst-gv-popout .esgst-gwc i, .esgst-gv-popout .esgst-gwr i, .esgst-gv-popout .esgst-ggl-panel, .esgst-gv-popout .esgst-ggl-panel i {
+                                font-size: 11px;
+                            }
+
+                            .esgst-gv-popout .esgst-gc.genres {
+                                margin: 0;
+                            }
+
+                            .esgst-gv-popout .giveaway__columns:not(.esgst-giveaway-panel):not(.esgst-gv-icons) {
+                                display: block;
+                                float: left;
+                                width: calc(100% - 37px);
+                            }
+
+                            .esgst-gv-popout .giveaway__columns:not(.esgst-giveaway-panel):not(.esgst-gv-icons) >* {
+                                margin: 0;
+                                text-align: left;
+                            }
+
+                            .esgst-gv-popout .esgst-giveaway-panel {
+                                display: block;
+                                font-size: 11px;
+                            }
+
+                            .esgst-gv-popout .esgst-giveaway-panel >* {
+                                display: inline-block;
+                                margin: 0;
+                                width: 67px;
+                            }
+
+                            .esgst-gv-popout .esgst-button-set {
+                                width: 100%;
+                            }
+
+                            .esgst-gv-popout .esgst-button-set >* {
+                                padding: 0;
+                                width: 100%;
+                            }
+
+                            .esgst-gv-creator {
+                                margin: 5px;
+                                width: 132px;
+                            }
+
+                            .esgst-gv-popout .giveaway__links {
+                                display: block;
+                                height: auto;
+                                margin: 5px;
+                                text-align: center;
+                                width: 132px;
+                            }
+
+                            .esgst-gv-popout .esgst-gt-tags, .esgst-gv-popout .PUTTags {
+                                display: none;
+                            }
+
+                            .esgst-gv-popout .giveaway_image_avatar, .esgst-gv-popout .featured_giveaway_image_avatar {
+                                margin: 5px;
+                                position: absolute;
+                                right: 10px;
+                            }
+
+                            .esgst-gv-popout .esgst-giveaway-links, .esgst-gv-popout .esgst-giveaway-panel {
+                                float: none;
+                            }
+                        `;
+                        if (esgst.giveawaysPath) {
+                            loadGv();
+                        }
                     }
                     if (esgst.giveawaysPath) {
                         if (esgst.adots && esgst.activeDiscussions) {
@@ -2800,9 +2993,6 @@
                                     margin: 5px;
                                 }
                             `;
-                        }
-                        if (esgst.gv) {
-                            loadGv();
                         }
                         if (esgst.gf) {
                             addGfContainer();
@@ -5105,7 +5295,6 @@ z-index: 99999;
 
 color: #465670;
 max-width: 75%;
-overflow: auto;
     padding: 35px 100px;
     position: absolute;
     background-color: #f0f2f5;
@@ -6970,213 +7159,48 @@ min-width: 0;
 
     function loadGv() {
         var button, display, element, elements, i, n, popout, spacing, slider;
-            esgst.giveawayFeatures.push(setGvContainers);
-            button = insertHtml(esgst.mainPageHeading, `beforeEnd`, `
-                <div class="esgst-heading-button" title="Set Grid View spacing.">
-                    <i class="fa fa-th-large"></i>
-                </div>
-            `);
-            popout = createPopout_v6(`esgst-gv-spacing global__image-outer-wrap page__outer-wrap`, true);
-            spacing = esgst.gv_spacing;
-            element = insertHtml(popout.popout, `beforeEnd`, `
-                <div>
-                    <div></div>
-                    <div>${spacing}px</div>
-                </div>
-            `);
-            slider = element.firstElementChild;
-            display = slider.nextElementSibling;
-            $(slider).slider({
-                slide: function (event, ui) {
-                    spacing = ui.value;
-                    elements = document.getElementsByClassName(`esgst-gv-container`);
-                    for (i = 0, n = elements.length; i < n; ++i) {
-                        elements[i].style.margin = `${spacing}px`;
-                    }
-                    popout.reposition();
-                    display.textContent = `${spacing}px`;
-                    setValue(`gv_spacing`, spacing);
-                    esgst.gv_spacing = spacing;
-                },
-                max: 10,
-                value: spacing
-            });
-            button.addEventListener(`click`, function () {
-                if (popout.popout.classList.contains(`esgst-hidden`)) {
-                    popout.open(button);
-                } else {
-                    popout.close();
+        button = insertHtml(esgst.mainPageHeading, `beforeEnd`, `
+            <div class="esgst-heading-button" title="Set Grid View spacing.">
+                <i class="fa fa-th-large"></i>
+            </div>
+        `);
+        popout = createPopout_v6(`esgst-gv-spacing global__image-outer-wrap page__outer-wrap`, true);
+        spacing = esgst.gv_spacing;
+        element = insertHtml(popout.popout, `beforeEnd`, `
+            <div>
+                <div></div>
+                <div>${spacing}px</div>
+            </div>
+        `);
+        slider = element.firstElementChild;
+        display = slider.nextElementSibling;
+        $(slider).slider({
+            slide: function (event, ui) {
+                spacing = ui.value;
+                elements = document.getElementsByClassName(`esgst-gv-container`);
+                for (i = 0, n = elements.length; i < n; ++i) {
+                    elements[i].style.margin = `${spacing}px`;
                 }
-            });
-            GM_addStyle(`
-                .esgst-gv-spacing {
-                    font-weight: bold;
-                    padding: 10px;
-                    text-align: center;
-                    width: 100px;
-                }
-
-                .esgst-gv-view {
-                    font-size: 0;
-                    padding: 5px 0;
-                    text-align: center;
-                }
-
-                .esgst-gv-view.pinned-giveaways__inner-wrap--minimized .giveaway__row-outer-wrap:nth-child(-n + 10) {
-                    display: inline-block;" +
-                }
-
-                .esgst-gv-container {
-                    border: 0 !important;
-                    box-shadow: none !important;
-                    display: inline-block;
-                    font-size: 12px;
-                    padding: 0;
-                    position: relative;
-                    vertical-align: top;
-                }
-
-                .esgst-gv-box {
-                    display: block;
-                }
-
-                .esgst-gv-box >*:not(.giveaway__summary) {
-                    margin: 0 !important;
-                }
-
-                .esgst-gv-box.is-faded:hover {
-                    opacity: 1;
-                }
-
-                .esgst-gv-icons {
-                    bottom: 0;
-                    position: absolute;
-                    right: 0;
-                }
-
-                .esgst-gv-icons >:first-child {
-                    background-color: #fff;
-                    font-weight: bold;
-                }
-
-                .esgst-gv-icons >:first-child i {
-                    font-size: 12px;
-                    vertical-align: baseline;
-                }
-
-                .esgst-gv-icons >* {
-                    line-height: normal;
-                    margin: 0 !important;
-                    padding: 2px;
-                }
-
-                .esgst-gv-icons .giveaway__column--contributor-level {
-                    padding: 2px 5px;
-                }
-
-                .esgst-gv-popout {
-                    font-size: 11px;
-                    max-width: 174px;
-                    position: absolute;
-                    width: 174px;
-                    z-index: 1;
-                }
-
-                .esgst-gv-popout .giveaway__heading {
-                    display: block;
-                    height: auto;
-                }
-
-                .esgst-gv-popout .giveaway__heading__name {
-                    display: inline-block;
-                    font-size: 12px;
-                    max-width: 150px;
-                    overflow: hidden;
-                    text-overflow: ellipsis;
-                    vertical-align: middle;
-                }
-
-                .esgst-gv-popout .giveaway__heading__thin {
-                    font-size: 11px;
-                }
-
-                .esgst-gv-popout .esgst-gc-panel {
-                    font-size: 11px;
-                    text-align: center;
-                }
-
-                .esgst-gv-popout .esgst-gc-panel i, .esgst-gv-popout .giveaway__links i, .esgst-gv-popout .esgst-gwc i, .esgst-gv-popout .esgst-gwr i, .esgst-gv-popout .esgst-ggl-panel, .esgst-gv-popout .esgst-ggl-panel i {
-                    font-size: 11px;
-                }
-
-                .esgst-gv-popout .esgst-gc.genres {
-                    margin: 0;
-                }
-
-                .esgst-gv-popout .giveaway__columns:not(.esgst-giveaway-panel):not(.esgst-gv-icons) {
-                    display: block;
-                    float: left;
-                    width: calc(100% - 37px);
-                }
-
-                .esgst-gv-popout .giveaway__columns:not(.esgst-giveaway-panel):not(.esgst-gv-icons) >* {
-                    margin: 0;
-                    text-align: left;
-                }
-
-                .esgst-gv-popout .esgst-giveaway-panel {
-                    display: block;
-                    font-size: 11px;
-                }
-
-                .esgst-gv-popout .esgst-giveaway-panel >* {
-                    display: inline-block;
-                    margin: 0;
-                    width: 67px;
-                }
-
-                .esgst-gv-popout .esgst-button-set {
-                    width: 100%;
-                }
-
-                .esgst-gv-popout .esgst-button-set >* {
-                    padding: 0;
-                    width: 100%;
-                }
-
-                .esgst-gv-creator {
-                    margin: 5px;
-                    width: 132px;
-                }
-
-                .esgst-gv-popout .giveaway__links {
-                    display: block;
-                    height: auto;
-                    margin: 5px;
-                    text-align: center;
-                    width: 132px;
-                }
-
-                .esgst-gv-popout .esgst-gt-tags, .esgst-gv-popout .PUTTags {
-                    display: none;
-                }
-
-                .esgst-gv-popout .giveaway_image_avatar {
-                    margin: 5px;
-                    position: absolute;
-                    right: 10px;
-                }
-
-                .esgst-gv-popout .esgst-giveaway-links, .esgst-gv-popout .esgst-giveaway-panel {
-                    float: none;
-                }
-            `);
-        
+                popout.reposition();
+                display.textContent = `${spacing}px`;
+                setValue(`gv_spacing`, spacing);
+                esgst.gv_spacing = spacing;
+            },
+            max: 10,
+            value: spacing
+        });
+        button.addEventListener(`click`, function () {
+            if (popout.popout.classList.contains(`esgst-hidden`)) {
+                popout.open(button);
+            } else {
+                popout.close();
+            }
+        });        
     }
 
-    function setGvContainers(giveaways, main) {
+    function setGvContainers(giveaways, main, source) {
         var elements, i, n, spacing;
-        if (main) {
+        if ((main && esgst.giveawaysPath) || (!main && ((source === `gb` && esgst.gv_gb) || (source === `ged` && esgst.gv_ged) || (source === `tge` && esgst.gv_tge)))) {
             spacing = esgst.gv_spacing;
             for (i = 0, n = giveaways.length; i < n; ++i) {
                 setGvContainer(giveaways[i], spacing);
@@ -7216,19 +7240,31 @@ min-width: 0;
 
     function setGvContainer(giveaway, spacing) {
         var creator, icons;
-        giveaway.outerWrap.parentElement.classList.add(`esgst-gv-view`);
-        giveaway.outerWrap.classList.add(`esgst-gv-container`);
-        giveaway.outerWrap.style.margin = `${spacing}px`;
+        popup = giveaway.outerWrap.closest(`.esgst-popup-scrollable`);
+        if (popup) {
+            giveaway.outerWrap.parentElement.parentElement.classList.add(`esgst-gv-view`);
+            giveaway.outerWrap.parentElement.style.display = `inline-block`;
+            giveaway.outerWrap.classList.add(`esgst-gv-container`);
+            giveaway.outerWrap.style.margin = `${spacing}px`;
+        } else {
+            giveaway.outerWrap.parentElement.classList.add(`esgst-gv-view`);
+            giveaway.outerWrap.classList.add(`esgst-gv-container`);
+            giveaway.outerWrap.style.margin = `${spacing}px`;
+        }
         giveaway.innerWrap.classList.add(`esgst-gv-box`);
         icons = insertHtml(giveaway.innerWrap, `afterBegin`, `
             <div class="esgst-gv-icons giveaway__columns">
-                <div>
+                <div class="esgst-gv-time">
                     <span title="Ends ${giveaway.endTimeColumn.lastElementChild.textContent}">${getRemainingTime(giveaway.endTime)}</span>
                     <i class="fa fa-clock-o"></i>
                     <span title="Created ${giveaway.startTimeColumn.lastElementChild.previousElementSibling.textContent}">${getRemainingTime(giveaway.startTime)}</span>
                 </div>
             </div>
         `);
+        if (giveaway.inviteOnly) {
+            giveaway.inviteOnly.lastChild.remove();
+            icons.appendChild(giveaway.inviteOnly);
+        }
         if (giveaway.regionRestricted) {
             icons.appendChild(giveaway.regionRestricted);
         }
@@ -8013,7 +8049,7 @@ ${avatar.outerHTML}
 </div></div>
 `;
                                 gbGiveaways.insertAdjacentHTML(`beforeEnd`, popupHtml);
-                                loadEndlessFeatures(gbGiveaways.lastElementChild);
+                                loadEndlessFeatures(gbGiveaways.lastElementChild, false, `gb`);
                                 popup.reposition();
                                 if (endTime > 0) {
                                     createLock(`giveawayLock`, 300, function (deleteLock) {
@@ -8247,7 +8283,7 @@ ${avatar.outerHTML}
                             var giveawayy = getGiveawayInfo(results.lastElementChild.lastElementChild, document, null, null, false, false, null, true);
                             esgst.popupGiveaways.push(giveawayy.giveaway);
                             currentGiveaways[giveawayy.data.code] = giveawayy.data;
-                            loadEndlessFeatures(results.lastElementChild);
+                            loadEndlessFeatures(results.lastElementChild, false, `ged`);
                             if (giveaway.source) {
                                 results.lastElementChild.getElementsByClassName(`giveaway__columns`)[0].insertAdjacentHTML(`afterBegin`, `
                                     <a class="esgst-ged-source" href="/go/comment/${giveaway.source}">Source</a>
@@ -8506,13 +8542,13 @@ ${avatar.outerHTML}
         });
     }
 
-    function addGwcChances(giveaways, main) {
+    function addGwcChances(giveaways, main, source) {
         var giveaway, i, n;
         for (i = 0, n = giveaways.length; i < n; ++i) {
             giveaway = giveaways[i];
             if ((((esgst.createdPath || esgst.wonPath) && !main) || (!esgst.createdPath && !esgst.wonPath)) && ((giveaway.inviteOnly && giveaway.url) || !giveaway.inviteOnly) && !giveaway.innerWrap.getElementsByClassName(`esgst-gwc`)[0]) {
                 if (giveaway.started) {
-                    addGwcChance(insertHtml(giveaway.panel, main && esgst.gv && esgst.giveawaysPath ? `afterBegin` : `beforeEnd`, `<div class="${esgst.giveawayPath ? `featured__column` : ``} esgst-gwc" title="Giveaway Winning Chance">`), giveaway);
+                    addGwcChance(insertHtml(giveaway.panel, (esgst.gv && ((main && esgst.giveawaysPath) || (source === `gb` && esgst.gv_gb) || (source === `ged` && esgst.gv_ged) || (source === `tge` && esgst.gv_tge))) ? `afterBegin` : `beforeEnd`, `<div class="${esgst.giveawayPath ? `featured__column` : ``} esgst-gwc" title="Giveaway Winning Chance">`), giveaway);
                 } else {
                     giveaway.chance = 100;
                 }
@@ -8563,12 +8599,12 @@ ${avatar.outerHTML}
         esgst.giveawayFeatures.push(addGwrRatios);
     }
 
-    function addGwrRatios(giveaways, main) {
+    function addGwrRatios(giveaways, main, source) {
         var giveaway, i, n;
         for (i = 0, n = giveaways.length; i < n; ++i) {
             giveaway = giveaways[i];
             if ((((esgst.createdPath || esgst.wonPath) && !main) || (!esgst.createdPath && !esgst.wonPath)) && giveaway.started && ((giveaway.inviteOnly && giveaway.url) || !giveaway.inviteOnly) && !giveaway.innerWrap.getElementsByClassName(`esgst-gwr`)[0]) {
-                addGwcRatio(insertHtml(giveaway.panel, main && esgst.gv && esgst.giveawaysPath ? `afterBegin` : `beforeEnd`, `<div class="${esgst.giveawayPath ? `featured__column` : ``} esgst-gwr" title="Giveaway Winning Ratio">`), giveaway);
+                addGwcRatio(insertHtml(giveaway.panel, (esgst.gv && ((main && esgst.giveawaysPath) || (source === `gb` && esgst.gv_gb) || (source === `ged` && esgst.gv_ged) || (source === `tge` && esgst.gv_tge))) ? `afterBegin` : `beforeEnd`, `<div class="${esgst.giveawayPath ? `featured__column` : ``} esgst-gwr" title="Giveaway Winning Ratio">`), giveaway);
             }
         }
     }
@@ -8613,7 +8649,7 @@ ${avatar.outerHTML}
         esgst.elgbCallback = esgst.elgb_d ? checkElgbDescription : enterElgbGiveaway;
     }
 
-    function addElgbButtons(giveaways, main) {
+    function addElgbButtons(giveaways, main, source) {
         var games, giveaway, i, n;
             games = JSON.parse(GM_getValue(`games`));
         if (((esgst.createdPath || esgst.enteredPath || esgst.wonPath || esgst.giveawayPath) && !main) || (!esgst.createdPath && !esgst.enteredPath && !esgst.wonPath && !esgst.giveawayPath)) {
@@ -8621,40 +8657,40 @@ ${avatar.outerHTML}
                 giveaway = giveaways[i];
                 if (!giveaway.innerWrap.getElementsByClassName(`esgst-button-set`)[0]) {
                     if (((giveaway.inviteOnly && giveaway.url) || !giveaway.inviteOnly) && giveaway.started && !giveaway.ended && !giveaway.created && giveaway.level <= esgst.headerData.level && ((giveaway.id && ((games[giveaway.type][giveaway.id] && !games[giveaway.type][giveaway.id].owned) || !games[giveaway.type][giveaway.id])) || !giveaway.id)) {
-                        addElgbButton(giveaway, null, main);
+                        addElgbButton(giveaway, null, main, source);
                     }
                 }
             }
         }
     }
 
-    function addElgbButton(giveaway, error, main) {
+    function addElgbButton(giveaway, error, main, source) {
         if (giveaway.elgbButton) {
             giveaway.elgbButton.remove();
         }
         if (giveaway.entered) {
-            giveaway.elgbButton = createButtonSet(`yellow`, `grey`, `fa-minus-circle`, `fa-circle-o-notch fa-spin`, `Leave`, `Leaving...`, leaveElgbGiveaway.bind(null, giveaway, main)).set;
+            giveaway.elgbButton = createButtonSet(`yellow`, `grey`, `fa-minus-circle`, `fa-circle-o-notch fa-spin`, `Leave`, `Leaving...`, leaveElgbGiveaway.bind(null, giveaway, main, source)).set;
             giveaway.elgbButton.removeAttribute(`title`);
         } else if (giveaway.error) {
-            giveaway.elgbButton = createButtonSet(`red`, `grey`, `fa-plus-circle`, `fa-circle-o-notch fa-spin`, `Enter`, `Entering...`, esgst.elgbCallback.bind(null, giveaway, main)).set;
+            giveaway.elgbButton = createButtonSet(`red`, `grey`, `fa-plus-circle`, `fa-circle-o-notch fa-spin`, `Enter`, `Entering...`, esgst.elgbCallback.bind(null, giveaway, main, source)).set;
             giveaway.elgbButton.setAttribute(`title`, error);
         } else {
             if (giveaway.points <= esgst.headerData.points) {
-                giveaway.elgbButton = createButtonSet(`green`, `grey`, `fa-plus-circle`, `fa-circle-o-notch fa-spin`, `Enter`, `Entering...`, esgst.elgbCallback.bind(null, giveaway, main)).set;
+                giveaway.elgbButton = createButtonSet(`green`, `grey`, `fa-plus-circle`, `fa-circle-o-notch fa-spin`, `Enter`, `Entering...`, esgst.elgbCallback.bind(null, giveaway, main, source)).set;
                 giveaway.elgbButton.removeAttribute(`title`);
             } else {
-                giveaway.elgbButton = createButtonSet(`red`, `grey`, `fa-plus-circle`, `fa-circle-o-notch fa-spin`, `Enter`, `Entering...`, esgst.elgbCallback.bind(null, giveaway, main)).set;
+                giveaway.elgbButton = createButtonSet(`red`, `grey`, `fa-plus-circle`, `fa-circle-o-notch fa-spin`, `Enter`, `Entering...`, esgst.elgbCallback.bind(null, giveaway, main, source)).set;
                 giveaway.elgbButton.setAttribute(`title`, `Not Enough Points`);
             }
         }
-        if (main && esgst.gv && esgst.giveawaysPath) {
+        if (esgst.gv && ((main && esgst.giveawaysPath) || (source === `gb` && esgst.gv_gb) || (source === `ged` && esgst.gv_ged) || (source === `tge` && esgst.gv_tge))) {
             giveaway.panel.insertBefore(giveaway.elgbButton, giveaway.panel.firstElementChild);
         } else {
             giveaway.panel.appendChild(giveaway.elgbButton);
         }
     }
 
-    function checkElgbDescription(giveaway, main, mainCallback) {
+    function checkElgbDescription(giveaway, main, source, mainCallback) {
         request(null, false, giveaway.url, function(response) {
             var box, description, popup, set;
             description = DOM.parse(response.responseText).getElementsByClassName(`page__description`)[0];
@@ -8664,7 +8700,7 @@ ${avatar.outerHTML}
                     description.classList.add(`esgst-text-left`);
                     popup.scrollable.insertAdjacentHTML(`beforeEnd`, description.outerHTML);
                     set = createButtonSet(`green`, `grey`, `fa-plus-circle`, `fa-circle-o-notch fa-spin`, `Enter Giveaway`, `Entering...`, function (callback) {
-                        enterElgbGiveaway(giveaway, main, function() {
+                        enterElgbGiveaway(giveaway, main, source, function() {
                             mainCallback();
                             if (box && box.value) {
                                 request(`xsrf_token=${esgst.xsrfToken}&do=comment_new&description=${box.value}`, false, giveaway.url, function() {
@@ -8678,7 +8714,7 @@ ${avatar.outerHTML}
                         });
                     });
                 } else {
-                    enterElgbGiveaway(giveaway, main, mainCallback);
+                    enterElgbGiveaway(giveaway, main, source, mainCallback);
                     set = createButtonSet(`green`, `grey`, `fa-plus-circle`, `fa-circle-o-notch fa-spin`, `Add Comment`, `Adding...`, function (callback) {
                         if (box && box.value) {
                             request(`xsrf_token=${esgst.xsrfToken}&do=comment_new&description=${box.value}`, false, giveaway.url, function() {
@@ -8705,12 +8741,12 @@ ${avatar.outerHTML}
                     mainCallback();
                 };
             } else {
-                enterElgbGiveaway(giveaway, main, mainCallback);
+                enterElgbGiveaway(giveaway, main, source, mainCallback);
             }
         });
     }
 
-    function enterElgbGiveaway(giveaway, main, callback) {
+    function enterElgbGiveaway(giveaway, main, source, callback) {
         request(`xsrf_token=${esgst.xsrfToken}&do=entry_insert&code=${giveaway.code}`, false, `/ajax.php`, function(response) {
             var responseJson;
             responseJson = JSON.parse(response.responseText);
@@ -8718,7 +8754,7 @@ ${avatar.outerHTML}
                 giveaway.innerWrap.classList.add(`is-faded`);
                 giveaway.entered = true;
                 giveaway.error = false;
-                addElgbButton(giveaway, null, main);
+                addElgbButton(giveaway, null, main, source);
                 esgst.headerElements.pointsContainer.textContent = responseJson.points;
                 refreshHeaderElements(document);
                 if (esgst.hr) {
@@ -8747,13 +8783,13 @@ ${avatar.outerHTML}
             } else {
                 giveaway.entered = false;
                 giveaway.error = true;
-                addElgbButton(giveaway, responseJson.msg, main);
+                addElgbButton(giveaway, responseJson.msg, main, source);
                 callback();
             }
         });
     }
 
-    function leaveElgbGiveaway(giveaway, main, callback) {
+    function leaveElgbGiveaway(giveaway, main, source, callback) {
         request(`xsrf_token=${esgst.xsrfToken}&do=entry_delete&code=${giveaway.code}`, false, `/ajax.php`, function(response) {
             var responseJson;
             responseJson = JSON.parse(response.responseText);
@@ -8761,7 +8797,7 @@ ${avatar.outerHTML}
                 giveaway.innerWrap.classList.remove(`is-faded`);
                 giveaway.entered = false;
                 giveaway.error = false;
-                addElgbButton(giveaway, null, main);
+                addElgbButton(giveaway, null, main, source);
                 esgst.headerElements.pointsContainer.textContent = responseJson.points;
                 refreshHeaderElements(document);
                 if (esgst.hr) {
@@ -11249,7 +11285,7 @@ ${avatar.outerHTML}
         tge.button.classList.remove(`esgst-busy`);
         tge.progress.firstElementChild.remove();
         callback();
-        loadEndlessFeatures(tge.results.lastElementChild);
+        loadEndlessFeatures(tge.results.lastElementChild, false, `tge`);
         if (tge.count !== 50 || !tge.full) {
             tge.set.remove();
             tge.set = null;
@@ -23065,7 +23101,9 @@ ${avatar.outerHTML}
                 });
             });
         } else {
-            addGcCategory(games[id], savedGames[type][id], id, games[id][0].name, type);
+            if (savedGames[type][id]) {
+                addGcCategory(games[id], savedGames[type][id], id, games[id][0].name, type);
+            }
             ++gc.count;
         }
     }
@@ -25488,7 +25526,7 @@ Background: <input type="color" value="${bgColor}">
         }
     }
 
-    function loadGiveawayFeatures(context, main) {
+    function loadGiveawayFeatures(context, main, source) {
         var giveaways, i, n, savedGiveaways;
         giveaways = getGiveaways(context, main);
         if (main) {
@@ -25497,7 +25535,7 @@ Background: <input type="color" value="${bgColor}">
             }
         }
         for (i = 0, n = esgst.giveawayFeatures.length; i < n; ++i) {
-            esgst.giveawayFeatures[i](giveaways, main);
+            esgst.giveawayFeatures[i](giveaways, main, source);
         }
     }
 
@@ -25545,8 +25583,8 @@ Background: <input type="color" value="${bgColor}">
             return;
         }
         giveaway.innerWrap = giveaway.outerWrap.querySelector(`.giveaway__row-inner-wrap, .featured__inner-wrap, .table__row-inner-wrap`);
-        giveaway.avatar = giveaway.outerWrap.getElementsByClassName(`giveaway_image_avatar`)[0];
-        giveaway.image = giveaway.outerWrap.querySelector(`.giveaway_image_thumbnail, .giveaway_image_thumbnail_missing`);
+        giveaway.avatar = giveaway.outerWrap.querySelector(`.giveaway_image_avatar, .featured_giveaway_image_avatar`);
+        giveaway.image = giveaway.outerWrap.querySelector(`.giveaway_image_thumbnail, .giveaway_image_thumbnail_missing, .global__image-outer-wrap--game-medium`);
         giveaway.summary = giveaway.innerWrap.querySelector(`.giveaway__summary, .featured__summary, .table__column--width-fill`);
         giveaway.entered = giveaway.innerWrap.classList.contains(`is-faded`);
         giveaway.headingName = giveaway.innerWrap.querySelector(`.giveaway__heading__name, .featured__heading__medium, .table__column__heading`);
@@ -26273,7 +26311,7 @@ Background: <input type="color" value="${bgColor}">
             esPageHeading,
             mainPaginationNavigationBackup,
             esRefreshButton, esPauseButton;
-        if (((esgst.es_g && esgst.giveawaysPath) || (esgst.es_d && esgst.discussionsTicketsPath) || (esgst.es_t && esgst.tradesPath) || (esgst.es_c && esgst.commentsPath) || (esgst.es_l && !esgst.giveawaysPath && !esgst.discussionsTicketsPath && !esgst.tradesPath && !esgst.commentsPath)) && esgst.pagination) {
+        if (esgst.esCheck && esgst.pagination) {
         pagination = esgst.pagination;
         context = pagination.previousElementSibling;
         if (esgst.paginationNavigation) {
@@ -26604,9 +26642,9 @@ Background: <input type="color" value="${bgColor}">
         }
     }
 
-    function loadEndlessFeatures(Context, main) {
+    function loadEndlessFeatures(Context, main, source) {
         for (var i = 0, n = esgst.endlessFeatures.length; i < n; ++i) {
-            esgst.endlessFeatures[i](Context, main);
+            esgst.endlessFeatures[i](Context, main, source);
         }
     }
 

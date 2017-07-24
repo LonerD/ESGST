@@ -1,4 +1,12 @@
 /*
+ * July 23, 2017 - v6.Beta.19.13
+ */
+
+* Fixed a bug that was moving the pagination navigation to the top in pages that had Endless Scrolling disabled.
+* Added options (2.4.1-2.4.3) to enable Grid View for Giveaway Bookmarks, Giveaway Encrypter/Decrypter and Train Giveaways Extractor.
+* Fixed a bug in Game Categories.
+
+/*
  * July 23, 2017 - v6.Beta.19.12
  */
 
