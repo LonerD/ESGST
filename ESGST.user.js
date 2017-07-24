@@ -3,7 +3,7 @@
 // @namespace ESGST
 // @description Enhances SteamGifts and SteamTrades by adding some cool features to them.
 // @icon https://github.com/revilheart/ESGST/raw/master/Resources/esgstIcon.ico
-// @version 6.Beta.19.13
+// @version 6.Beta.19.14
 // @author revilheart
 // @downloadURL https://github.com/revilheart/ESGST/raw/master/ESGST.user.js
 // @updateURL https://github.com/revilheart/ESGST/raw/master/ESGST.meta.js
@@ -25775,10 +25775,12 @@ Background: <input type="color" value="${bgColor}">
         discussion = {};
         discussion.outerWrap = context;
         discussion.innerWrap = discussion.outerWrap.firstElementChild;
-        discussion.firstColumn = discussion.innerWrap.firstElementChild.nextElementSibling;
-        discussion.headingContainer = discussion.firstColumn.firstElementChild;
-        discussion.info = discussion.headingContainer.nextElementSibling;
+        discussion.avatarColumn = discussion.innerWrap.firstElementChild;
+        discussion.avatar = discussion.avatarColumn.firstElementChild;
+        discussion.headingColumn = discussion.avatarColumn.nextElementSibling;
+        discussion.headingContainer = discussion.headingColumn.firstElementChild;
         discussion.heading = discussion.headingContainer.lastElementChild;
+        discussion.info = discussion.headingContainer.nextElementSibling;
         if (discussion.heading) {
             discussion.title = discussion.heading.textContent;
             discussion.url = discussion.heading.getAttribute(`href`);
@@ -25788,7 +25790,11 @@ Background: <input type="color" value="${bgColor}">
                     discussion.code = match[1];
                     discussion.created = discussion.info.firstElementChild.nextElementSibling;
                     discussion.createdTime = parseInt(discussion.created.getAttribute(`data-timestamp`)) * 1e3;
-                    discussion.author = discussion.created.nextElementSibling.textContent;
+                    if (esgst.giveawaysPath) {
+                        discussion.author = discussion.avatar.getAttribute(`href`).match(/\/user\/(.+)/)[1];
+                    } else {
+                        discussion.author = discussion.created.nextElementSibling.textContent;
+                    }
                     if (esgst.uf && savedUsers) {
                         savedUser = getUser(savedUsers, {
                             username: discussion.author
@@ -25796,11 +25802,15 @@ Background: <input type="color" value="${bgColor}">
                         if (savedUser) {
                             uf = savedUser.uf;
                             if (esgst.uf_d && savedUser.blacklisted && !uf) {
-                                updateUfCount(discussion.outerWrap.parentElement.parentElement.nextElementSibling);
+                                if (!esgst.giveawaysPath) {
+                                    updateUfCount(discussion.outerWrap.parentElement.parentElement.nextElementSibling);
+                                }
                                 discussion.outerWrap.remove();
                                 return null;
                             } else if (uf && uf.discussions) {
-                                updateUfCount(discussion.outerWrap.parentElement.parentElement.nextElementSibling);
+                                if (!esgst.giveawaysPath) {
+                                    updateUfCount(discussion.outerWrap.parentElement.parentElement.nextElementSibling);
+                                }
                                 discussion.outerWrap.remove();
                                 return null;
                             }
@@ -25813,6 +25823,8 @@ Background: <input type="color" value="${bgColor}">
             } else {
                 return null;
             }
+        } else {
+            return null;
         }
     }
 

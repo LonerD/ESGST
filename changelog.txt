@@ -1,5 +1,11 @@
 /*
- * July 23, 2017 - v6.Beta.19.13
+ * July 24, 2017 - v6.Beta.19.14
+ */
+
+* Fixed a bug in User Filters that was not filtering discussions in the main page and was causing a bug (closes #284 and #285).
+
+/*
+ * July 24, 2017 - v6.Beta.19.13
  */
 
 * Fixed a bug that was moving the pagination navigation to the top in pages that had Endless Scrolling disabled.
