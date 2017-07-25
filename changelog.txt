@@ -1,4 +1,10 @@
 /*
+ * July 24, 2017 - v6.Beta.19.17
+ */
+
+* Fixed a bug in Train Giveaways Extractor that was happening for trains that have not started yet.
+
+/*
  * July 24, 2017 - v6.Beta.19.16
  */
 
