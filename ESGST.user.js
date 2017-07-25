@@ -3,7 +3,7 @@
 // @namespace ESGST
 // @description Enhances SteamGifts and SteamTrades by adding some cool features to them.
 // @icon https://github.com/revilheart/ESGST/raw/master/Resources/esgstIcon.ico
-// @version 6.Beta.19.17
+// @version 6.Beta.19.18
 // @author revilheart
 // @downloadURL https://github.com/revilheart/ESGST/raw/master/ESGST.user.js
 // @updateURL https://github.com/revilheart/ESGST/raw/master/ESGST.meta.js
@@ -5244,6 +5244,10 @@ display: inline-block;
 margin: 5px;
 }
 
+.esgst-button-set .sidebar__entry-delete {
+    display: inline-block;
+}
+
 .esgst-ggl-panel {
 color: #6b7a8c;
 font-size: 12px;
@@ -8642,7 +8646,6 @@ ${avatar.outerHTML}
 
     function loadElgb() {
         esgst.giveawayFeatures.push(addElgbButtons);
-        esgst.elgbCallback = esgst.elgb_d ? checkElgbDescription : enterElgbGiveaway;
     }
 
     function addElgbButtons(giveaways, main, source) {
@@ -8668,14 +8671,14 @@ ${avatar.outerHTML}
             giveaway.elgbButton = createButtonSet(`yellow`, `grey`, `fa-minus-circle`, `fa-circle-o-notch fa-spin`, `Leave`, `Leaving...`, leaveElgbGiveaway.bind(null, giveaway, main, source)).set;
             giveaway.elgbButton.removeAttribute(`title`);
         } else if (giveaway.error) {
-            giveaway.elgbButton = createButtonSet(`red`, `grey`, `fa-plus-circle`, `fa-circle-o-notch fa-spin`, `Enter`, `Entering...`, esgst.elgbCallback.bind(null, giveaway, main, source)).set;
+            giveaway.elgbButton = createButtonSet(`red`, `grey`, `fa-plus-circle`, `fa-circle-o-notch fa-spin`, `Enter`, `Entering...`, enterElgbGiveaway.bind(null, giveaway, main, source)).set;
             giveaway.elgbButton.setAttribute(`title`, error);
         } else {
             if (giveaway.points <= esgst.headerData.points) {
-                giveaway.elgbButton = createButtonSet(`green`, `grey`, `fa-plus-circle`, `fa-circle-o-notch fa-spin`, `Enter`, `Entering...`, esgst.elgbCallback.bind(null, giveaway, main, source)).set;
+                giveaway.elgbButton = createButtonSet(`green`, `grey`, `fa-plus-circle`, `fa-circle-o-notch fa-spin`, `Enter`, `Entering...`, enterElgbGiveaway.bind(null, giveaway, main, source)).set;
                 giveaway.elgbButton.removeAttribute(`title`);
             } else {
-                giveaway.elgbButton = createButtonSet(`red`, `grey`, `fa-plus-circle`, `fa-circle-o-notch fa-spin`, `Enter`, `Entering...`, esgst.elgbCallback.bind(null, giveaway, main, source)).set;
+                giveaway.elgbButton = createButtonSet(`red`, `grey`, `fa-plus-circle`, `fa-circle-o-notch fa-spin`, `Enter`, `Entering...`, enterElgbGiveaway.bind(null, giveaway, main, source)).set;
                 giveaway.elgbButton.setAttribute(`title`, `Not Enough Points`);
             }
         }
@@ -8686,19 +8689,27 @@ ${avatar.outerHTML}
         }
     }
 
-    function checkElgbDescription(giveaway, main, source, mainCallback) {
-        request(null, false, giveaway.url, function(response) {
-            var box, description, popup, set;
-            description = DOM.parse(response.responseText).getElementsByClassName(`page__description`)[0];
-            if (description || esgst.elgb_r) {
-                popup = createPopup(`fa-file-text-o`, `<a href="${giveaway.url}"><span>${giveaway.name}</span></a> by <a href="/user/${giveaway.creator}">${giveaway.creator}</a>`, true);
+    function openElgbPopup(giveaway, main, source, mainCallback) {
+        var box, description, popup, set;
+        if (esgst.elgb_d) {
+            request(null, false, giveaway.url, function(response) {
+                description = DOM.parse(response.responseText).getElementsByClassName(`page__description`)[0];
                 if (description) {
+                    popup = createPopup(`fa-file-text-o`, `<a href="${giveaway.url}"><span>${giveaway.name}</span></a> by <a href="/user/${giveaway.creator}">${giveaway.creator}</a>`, true);
                     description.classList.add(`esgst-text-left`);
                     popup.scrollable.insertAdjacentHTML(`beforeEnd`, description.outerHTML);
-                    set = createButtonSet(`green`, `grey`, `fa-plus-circle`, `fa-circle-o-notch fa-spin`, `Enter Giveaway`, `Entering...`, function (callback) {
-                        enterElgbGiveaway(giveaway, main, source, function() {
-                            mainCallback();
-                            if (box && box.value) {
+                    set = createButtonSet(`yellow`, `grey`, `fa-plus-circle`, `fa-circle-o-notch fa-spin`, `Leave Giveaway`, `Leaving...`, function (callback) {
+                        leaveElgbGiveaway(giveaway, main, source, function () {
+                            callback();
+                            popup.opened.close();
+                        });
+                    });
+                    if (esgst.elgb_r) {
+                        box = insertHtml(popup.scrollable, `beforeEnd`, `<textarea></textarea>`);
+                        addCFHPanel(box);
+                        popup.description.appendChild(set.set);
+                        popup.description.appendChild(createButtonSet(`green`, `grey`, `fa-arrow-circle-right`, `fa-circle-o-notch fa-spin`, `Add Comment`, `Saving...`, function (callback) {
+                            if (box.value) {
                                 request(`xsrf_token=${esgst.xsrfToken}&do=comment_new&description=${box.value}`, false, giveaway.url, function() {
                                     callback();
                                     popup.opened.close();
@@ -8707,12 +8718,18 @@ ${avatar.outerHTML}
                                 callback();
                                 popup.opened.close();
                             }
-                        });
-                    });
-                } else {
-                    enterElgbGiveaway(giveaway, main, source, mainCallback);
-                    set = createButtonSet(`green`, `grey`, `fa-plus-circle`, `fa-circle-o-notch fa-spin`, `Add Comment`, `Adding...`, function (callback) {
-                        if (box && box.value) {
+                        }).set);
+                        popup.open(box.focus);
+                    } else {
+                        popup.description.appendChild(set.set);
+                        popup.open();
+                    }
+                } else if (esgst.elgb_r) {
+                    popup = createPopup(`fa-comment`, `<a href="${giveaway.url}"><span>${giveaway.name}</span></a> by <a href="/user/${giveaway.creator}">${giveaway.creator}</a>`, true);
+                    box = insertHtml(popup.scrollable, `beforeEnd`, `<textarea></textarea>`);
+                    addCFHPanel(box);
+                    popup.description.appendChild(createButtonSet(`green`, `grey`, `fa-arrow-circle-right`, `fa-circle-o-notch fa-spin`, `Add Comment`, `Saving...`, function (callback) {
+                        if (box.value) {
                             request(`xsrf_token=${esgst.xsrfToken}&do=comment_new&description=${box.value}`, false, giveaway.url, function() {
                                 callback();
                                 popup.opened.close();
@@ -8721,25 +8738,27 @@ ${avatar.outerHTML}
                             callback();
                             popup.opened.close();
                         }
+                    }).set);
+                    popup.open(box.focus);
+                }
+            });
+        } else if (esgst.elgb_r) {
+            popup = createPopup(`fa-comment`, `<a href="${giveaway.url}"><span>${giveaway.name}</span></a> by <a href="/user/${giveaway.creator}">${giveaway.creator}</a>`, true);
+            box = insertHtml(popup.scrollable, `beforeEnd`, `<textarea></textarea>`);
+            addCFHPanel(box);
+            popup.description.appendChild(createButtonSet(`green`, `grey`, `fa-arrow-circle-right`, `fa-circle-o-notch fa-spin`, `Add Comment`, `Saving...`, function (callback) {
+                if (box.value) {
+                    request(`xsrf_token=${esgst.xsrfToken}&do=comment_new&description=${box.value}`, false, giveaway.url, function() {
+                        callback();
+                        popup.opened.close();
                     });
+                } else {
+                    callback();
+                    popup.opened.close();
                 }
-                if (esgst.elgb_r) {
-                    box = insertHtml(popup.scrollable, `beforeEnd`, `<textarea></textarea>`);
-                    addCFHPanel(box);
-                }
-                popup.description.appendChild(set.set);
-                popup.open(function() {
-                    if (box) {
-                        box.focus();
-                    }
-                });
-                popup.close = function () {
-                    mainCallback();
-                };
-            } else {
-                enterElgbGiveaway(giveaway, main, source, mainCallback);
-            }
-        });
+            }).set);
+            popup.open(box.focus);
+        }
     }
 
     function enterElgbGiveaway(giveaway, main, source, callback) {
@@ -8776,6 +8795,7 @@ ${avatar.outerHTML}
                     filterGfGiveaways(esgst.gfPopup);
                 }
                 callback();
+                openElgbPopup(giveaway, main, source);
             } else {
                 giveaway.entered = false;
                 giveaway.error = true;
@@ -8800,6 +8820,12 @@ ${avatar.outerHTML}
                     GM_setValue(`sgRefreshedHeaderElements`, JSON.stringify(getHeaderElements()));
                 }
                 updateElgbButtons();
+                if (esgst.gf && esgst.gf.filteredCount) {
+                    filterGfGiveaways(esgst.gf);
+                }
+                if (esgst.gfPopup) {
+                    filterGfGiveaways(esgst.gfPopup);
+                }
                 callback();
             } else {
                 callback();
@@ -22179,7 +22205,7 @@ ${avatar.outerHTML}
                 };
             }
             if (((Date.now() - wbc.lastCheck) > 86400000) || WBC.Update) {
-                if ((WBC.FC.checked && wbc.whitelistGiveaway) || (!WBC.FC.checked && wbc.giveaway)) {
+                if (((WBC.FC.checked || !WBC.B) && wbc.whitelistGiveaway) || (!WBC.FC.checked && WBC.B && wbc.giveaway)) {
                     WBC.Timestamp = wbc.timestamp;
                     checkWBCGiveaway(WBC, wbc, Callback);
                 } else {
@@ -22242,7 +22268,7 @@ ${avatar.outerHTML}
             if (wbc.giveaway) {
                 checkWBCGiveaway(WBC, wbc, function (wbc, stop) {
                     var WhitelistGiveaways, I, N, GroupGiveaway;
-                    if ((wbc.result === `notBlacklisted`) && !stop && WBC.FC.checked) {
+                    if ((wbc.result === `notBlacklisted`) && !stop && (WBC.FC.checked || !WBC.B)) {
                         WhitelistGiveaways = Context.getElementsByClassName("giveaway__column--whitelist");
                         for (I = 0, N = WhitelistGiveaways.length; (I < N) && !wbc.whitelistGiveaway; ++I) {
                             GroupGiveaway = WhitelistGiveaways[I].parentElement.getElementsByClassName("giveaway__column--group")[0];

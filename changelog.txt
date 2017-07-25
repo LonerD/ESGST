@@ -1,4 +1,12 @@
 /*
+ * July 25, 2017 - v6.Beta.19.18
+ */
+
+* Enter/Leave Giveaway Button now immediately enters the giveaway and then checks for the description/opens the popup to reply if those options are enabled.
+* Added a "Leave" button to the popup in Enter/Leave Giveaway Button if a description has been found.
+* Fixed a bug in Whitelist/Blacklist Checker that was not checking users correctly if the option to show blacklist information was disabled and the user had not enabled the option to also check for whitelist previously.
+
+/*
  * July 24, 2017 - v6.Beta.19.17
  */
 
