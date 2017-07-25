@@ -1,4 +1,10 @@
 /*
+ * July 24, 2017 - v6.Beta.19.16
+ */
+
+* Fixed a style issue in Grid View for popups.
+
+/*
  * July 24, 2017 - v6.Beta.19.15
  */
 
