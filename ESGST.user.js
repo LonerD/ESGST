@@ -3,7 +3,7 @@
 // @namespace ESGST
 // @description Enhances SteamGifts and SteamTrades by adding some cool features to them.
 // @icon https://github.com/revilheart/ESGST/raw/master/Resources/esgstIcon.ico
-// @version 6.Beta.19.19
+// @version 6.Beta.20.0
 // @author revilheart
 // @downloadURL https://github.com/revilheart/ESGST/raw/master/ESGST.user.js
 // @updateURL https://github.com/revilheart/ESGST/raw/master/ESGST.meta.js
@@ -314,7 +314,7 @@
                             .esgst-header-menu-button:not(.arrow) > i {
                                 margin-right: 10px;
                             }
-                            .esgst-un-button {
+                            .esgst-un-button, .page_heading .esgst-heading-button {
                                 background-image: linear-gradient(#fff 0%, rgba(255, 255, 255, 0.4) 100%);
                                 border: 1px solid #d2d6e0;
                                 border-radius: 3px;
@@ -524,7 +524,7 @@
                     esgst.oldValues = {
                         enableByDefault: `sm_ebd`,
                         showChangelog: `sm_c`,
-                        hr_w: `hr_dw`,
+                        hr_g: `hr_dw`,
                         hr_m: `hr_mc`,
                         at_24: `at_c24`,
                         elgb_r: `elgb_rb`,
@@ -1088,8 +1088,23 @@
                                     st: true
                                 },
                                 {
+                                    description: `
+                                        <ul>
+                                            <li>A heart icon will appear in the title.</li>
+                                        </ul>
+                                    `,
                                     id: `hr_w`,
-                                    name: `Change the color of the tab icon to red if there are unviewed keys for won gifts.`,
+                                    name: `[NEW] Indicate if there are unentered wishlist giveaways open.`,
+                                    sg: true
+                                },
+                                {
+                                    description: `
+                                        <ul>
+                                            <li>A trophy icon will appear in the title.</li>
+                                        </ul>
+                                    `,
+                                    id: `hr_g`,
+                                    name: `Indicate if there are unviewed keys for won gifts in the tab title.`,
                                     sg: true
                                 },
                                 {
@@ -1325,6 +1340,18 @@
                                 </ul>
                                 <img src="https://camo.githubusercontent.com/d302b8f1a79edae54fd32c943201f452e6378802/687474703a2f2f692e696d6775722e636f6d2f457a344e794d6d2e706e67"/>
                             `,
+                            features: [
+                                {
+                                    description: `
+                                        <ul>
+                                            <li>Hidden giveaways can be unhidden through the settings menu.</li>
+                                        </ul>
+                                    `,
+                                    id: `gf_h`,
+                                    name: `[NEW] Enable the option to hide giveaways.`,
+                                    sg: true
+                                }
+                            ],
                             id: `gf`,
                             name: `Giveaway Filters`,
                             sg: true,
@@ -1614,7 +1641,7 @@
                                 </ul>
                             `,
                             id: `hgebd`,
-                            name: `[NEW] Hidden Games Enter Button Disabler`,
+                            name: `Hidden Games Enter Button Disabler`,
                             sg: true,
                             type: `giveaways`
                         },
@@ -1655,10 +1682,11 @@
                             description: `
                                 <ul>
                                     <li>Extracts all giveaways from a train, so you don't need to navigate through the entire train to find the ones you're interested in.</li>
+                                    <li>You will find the button in discussions/giveaways that have a giveaway link.</li>
                                 </ul>
                             `,
                             id: `tge`,
-                            name: `[NEW] Train Giveaways Extractor`,
+                            name: `Train Giveaways Extractor`,
                             sg: true,
                             type: `giveaways`
                         },
@@ -1780,6 +1808,18 @@
                             sg: true,
                             st: true,
                             type: `discussions`
+                        },
+                        {
+                            description: `
+                                <ul>
+                                    <li>Allows you to bump all your current trades with a single click.</li>
+                                    <li>You will find the button in you created trades page.</li>
+                                </ul>
+                            `,
+                            id: `tb`,
+                            name: `[NEW] Trades Bumper`,
+                            st: true,
+                            type: `trades`
                         },
                         {
                             description: `
@@ -2378,7 +2418,7 @@
                                 {
                                     colors: true,
                                     id: `gc_h`,
-                                    name: `[NEW] Hidden`,
+                                    name: `Hidden`,
                                     sg: true
                                 },
                                 {
@@ -2391,7 +2431,7 @@
                                         </ul>
                                     `,
                                     id: `gc_gi`,
-                                    name: `[NEW] Giveaway Info`,
+                                    name: `Giveaway Info`,
                                     sg: true
                                 },
                                 {
@@ -2880,6 +2920,9 @@
                             loadGv();
                         }
                     }
+                    if (esgst.gf && esgst.gf_h) {
+                        esgst.giveawayFeatures.push(getGfGiveaways);
+                    }
                     if (esgst.giveawaysPath) {
                         if (esgst.adots && esgst.activeDiscussions) {
                             esgst.activeDiscussions.classList.remove(`widget-container--margin-top`);
@@ -3256,6 +3299,18 @@
                                 `;
                                 mainPageHeadingBefore.appendChild(button);
                                 addGtsButtonSection(button, rows);
+                            }
+                        }
+                        if (location.href.match(new RegExp(`\\/trades\\/search\\?user=${esgst.steamId}`))) {
+                            if (esgst.tb) {
+                                button = document.createElement(`div`);
+                                button.className = `esgst-heading-button`;
+                                button.title = `Bump trades.`;
+                                button.innerHTML = `
+                                    <i class="fa fa-chevron-circle-up"></i>
+                                `;
+                                mainPageHeadingBefore.appendChild(button);
+                                button.addEventListener(`click`, getTbTrades.bind(null, button));
                             }
                         }
                         if (esgst.at) {
@@ -4489,7 +4544,9 @@
                 if (closeLock) {
                     closeLock();
                 }
-                callback(response);
+                if (callback) {
+                    callback(response);
+                }
             }
         });
     }
@@ -6066,7 +6123,7 @@ min-width: 0;
             ".esgst-ct-comment-read:hover, .esgst-ct-visited:hover {" +
             "    background-color: " + Unknown.replace(/rgb/, "rgba").replace(/\)/, ", 0.1)") + " !important;" +
             "}" +
-            ".esgst-gb-button, .esgst-dh-button {" +
+            ".esgst-gf-hide-button, .esgst-gf-unhide-button, .esgst-gb-button, .esgst-dh-button {" +
             "    cursor: pointer; display: inline-block;" +
             "    margin: 0 5px 0 0;" +
             "}" +
@@ -6475,7 +6532,7 @@ min-width: 0;
             lastRefreshName: `${esgst.name}LastHeaderRefresh`,
             refreshedElementsName: `${esgst.name}RefreshedHeaderElements`
         };
-        setHrTitle(esgst.headerData.points);
+        setHrTitle(esgst.headerData.points, false);
         GM_setValue(hr.refreshedElementsName, JSON.stringify(getHeaderElements()));
         startHeaderRefresher(hr);
         if (!esgst.hr_b) {
@@ -6497,6 +6554,11 @@ min-width: 0;
             esgst.headerData.level = parseInt(esgst.headerElements.levelContainer.textContent.match(/\d+/)[0]);
             esgst.headerElements.createdButton = navigation.getElementsByClassName(`fa-gift`)[0].closest(`.nav__button-container`);
             esgst.headerElements.wonButton = navigation.getElementsByClassName(`fa-trophy`)[0].closest(`.nav__button-container`);
+            if (context.getElementsByClassName(`page__heading`)[0].nextElementSibling.querySelector(`.giveaway__row-inner-wrap:not(.is-faded)`)) {
+                esgst.headerData.wishlist = true;
+            } else {
+                esgst.headerData.wishlist = false;
+            }
         }
         esgst.headerElements.inboxButton = navigation.getElementsByClassName(`fa-envelope`)[0].closest(`.nav__button-container, .nav_btn_container`);
         esgst.headerElements.messageCountContainer = esgst.headerElements.inboxButton.querySelector(`.nav__notification, .message_count`);
@@ -6512,12 +6574,13 @@ min-width: 0;
         if (esgst.sg) {
             elements.createdButton = esgst.headerElements.createdButton.outerHTML;
             elements.wonButton = esgst.headerElements.wonButton.outerHTML;
+            elements.wishlist = esgst.headerData.wishlist;
         }
         return elements;
     }
 
     function startHeaderRefresher(hr) {
-        request(null, false, `/`, function(response) {
+        request(null, false, esgst.sg ? `/giveaways/search?type=wishlist` : `/`, function(response) {
             refreshHeaderElements(DOM.parse(response.responseText));
             GM_setValue(hr.refreshedElementsName, JSON.stringify(getHeaderElements()));
             refreshHeader(hr);
@@ -6529,7 +6592,7 @@ min-width: 0;
     function continueHeaderRefresher(hr) {
         if (Date.now() - GM_getValue(hr.lastRefreshName, 0) > 60000) {
             GM_setValue(hr.lastRefreshName, Date.now());
-            request(null, false, `/`, function(response) {
+            request(null, false, esgst.sg ? `/giveaways/search?type=wishlist` : `/`, function(response) {
                 refreshHeaderElements(DOM.parse(response.responseText));
                 GM_setValue(hr.refreshedElementsName, JSON.stringify(getHeaderElements()));
                 refreshHeader(hr);
@@ -6547,9 +6610,13 @@ min-width: 0;
 
     function refreshHeader(hr) {
         var elements, points;
+        wishlist = esgst.headerData.wishlist;
         refreshHeaderElements(document);
         points = esgst.headerData.points;
         elements = JSON.parse(GM_getValue(hr.refreshedElementsName, `{}`));
+        if (!wishlist) {
+            wishlist = elements.wishlist;
+        }
         esgst.headerElements.mainButton.outerHTML = elements.mainButton;
         if (esgst.sg) {
             esgst.headerElements.createdButton.outerHTML = elements.createdButton;
@@ -6558,38 +6625,44 @@ min-width: 0;
         esgst.headerElements.inboxButton.outerHTML = elements.inboxButton;
         refreshHeaderElements(document);
         if (esgst.hr) {
-            setHrTitle(points);
+            setHrTitle(points, wishlist);
         }
         if (esgst.lpv) {
             setLpvStyle();
         }
     }
 
-    function setHrTitle(points) {
+    function setHrTitle(points, wishlist) {
         var title;
         drawHrIcons();
         if (esgst.sg) {
             if (esgst.headerData.points !== points) {
                 updateElgbButtons(esgst.headerData.points);
             }
-            if (esgst.hr_p) {
-                title = `(${esgst.headerData.points}P) ${esgst.originalTitle}`;
-                if (document.title !== title) {
-                    document.title = title;
+            title = ``;
+            if (esgst.hr_g) {
+                delivered = esgst.headerElements.wonButton.getElementsByClassName(`fade_infinite`)[0];
+                if (delivered) {
+                    title += `🏆 `;
                 }
+            }
+            if (esgst.hr_w && wishlist) {
+                title += `❤ `;
+            }
+            if (esgst.hr_p) {
+                title += `(${esgst.headerData.points}P) `;
+            }
+            title += esgst.originalTitle;
+            if (document.title !== title) {
+                document.title = title;
             }
         }
     }
 
     function drawHrIcons() {
-        var canvas, context, delivered, i, image, imageData, index, length, messageCount, pixelArray, x, r, g, b, a;
-        if (esgst.sg) {
-            delivered = esgst.headerElements.wonButton.getElementsByClassName(`fade_infinite`)[0];
-        } else {
-            delivered = null;
-        }
+        var canvas, context, image, messageCount;
         messageCount = esgst.headerData.messageCount;
-        if ((delivered && esgst.hr_g) || (messageCount > 0 && esgst.hr_m)) {
+        if (messageCount > 0 && esgst.hr_m) {
             canvas = document.createElement(`canvas`);
             image = document.createElement(`img`);
             canvas.width = 16;
@@ -6597,35 +6670,15 @@ min-width: 0;
             context = canvas.getContext(`2d`);
             image.onload = function () {
                 context.drawImage(image, 0, 0);
-                if (delivered && esgst.hr_g) {
-                    imageData = context.getImageData(0, 0, canvas.width, canvas.height);
-                    pixelArray = imageData.data;
-                    length = pixelArray.length / 4;
-                    for (i = 0; i < length; i++) {
-                        index = 4 * i;
-                        r = pixelArray[index];
-                        g = pixelArray[++index];
-                        b = pixelArray[++index];
-                        a = pixelArray[++index];
-                        if (r === 0 && g === 0 && b === 0) {
-                            pixelArray[--index] = 42;
-                            pixelArray[--index] = 32;
-                            pixelArray[--index] = 233;
-                        }
-                    }
-                    context.putImageData(imageData, 0, 0);
+                context.fillStyle = `#e9202a`;
+                context.fillRect(8, 6, 8, 10);
+                context.fillStyle = `#fff`;
+                context.font = `bold 10px Arial`;
+                context.textAlign = `left`;
+                if (messageCount > 9) {
+                    messageCount = `+`;
                 }
-                if (messageCount > 0 && esgst.hr_m) {
-                    context.fillStyle = `#e9202a`;
-                    context.fillRect(8, 6, 8, 10);
-                    context.fillStyle = `#fff`;
-                    context.font = `bold 10px Arial`;
-                    context.textAlign = `left`;
-                    if (messageCount > 9) {
-                        messageCount = `+`;
-                    }
-                    context.fillText(messageCount, 9, 14);
-                }
+                context.fillText(messageCount, 9, 14);
                 esgst.favicon.href = canvas.toDataURL(`image/png`);
             };
             image.src = GM_getResourceURL(`${esgst.name}Icon`);
@@ -7306,6 +7359,87 @@ min-width: 0;
     }
 
     /* [GF] Giveaway Filters */
+
+    function getGfGiveaways(giveaways, main, source) {
+        var giveaway, i, n, savedGiveaways;
+        savedGiveaways = JSON.parse(GM_getValue(`giveaways`, `{}`));
+        for (i = 0, n = giveaways.length; i < n; ++i) {
+            giveaway = giveaways[i];
+            if (giveaway.creator !== esgst.username && !giveaway.ended && !giveaway.entered && giveaway.url) {
+                if (source === `gf`) {
+                    if (!giveaway.innerWrap.getElementsByClassName(`esgst-gf-unhide-button`)[0] && savedGiveaways[giveaway.code] && savedGiveaways[giveaway.code].hidden) {
+                        addGfUnhideButton(giveaway);
+                    }
+                } else if (esgst.giveawaysPath) {
+                    if (!giveaway.innerWrap.getElementsByClassName(`esgst-gf-hide-button`)[0] && (!savedGiveaways[giveaway.code] || !savedGiveaways[giveaway.code].hidden || !savedGiveaways[giveaway.code].code)) {
+                        addGfHideButton(giveaway);
+                    }
+                }
+            }
+        }
+    }
+
+    function addGfHideButton(giveaway) {
+        var button;
+        button = insertHtml(giveaway.headingName, `beforeBegin`, `
+            <div class="esgst-gf-hide-button" title="Hide giveaway.">
+                <i class="fa fa-eye-slash"></i>
+            </div>
+        `);
+        button.firstElementChild.addEventListener(`click`, function() {
+            button.innerHTML = `<i class="fa fa-circle-o-notch fa-spin"></i>`;
+            hideGfGiveaway(giveaway, function() {
+                giveaway.outerWrap.remove();
+            });
+        });
+    }
+
+    function hideGfGiveaway(giveaway, callback) {
+        createLock(`giveawayLock`, 300, function(deleteLock) {
+            var giveaways;
+            giveaways = JSON.parse(GM_getValue(`giveaways`, `{}`));
+            if (!giveaways[giveaway.code]) {
+                giveaways[giveaway.code] = {};
+            }
+            giveaways[giveaway.code].code = giveaway.code;
+            giveaways[giveaway.code].hidden = true;
+            GM_setValue(`giveaways`, JSON.stringify(giveaways));
+            deleteLock();
+            if (callback) {
+                callback();
+            }
+        });
+    }
+
+    function addGfUnhideButton(giveaway) {
+        var button;
+        button = insertHtml(giveaway.headingName, `beforeBegin`, `
+            <div class="esgst-gf-unhide-button" title="Unhide giveaway.">
+                <i class="fa fa-eye"></i>
+            </div>
+        `);
+        button.firstElementChild.addEventListener(`click`, function() {
+            button.innerHTML = `<i class="fa fa-circle-o-notch fa-spin"></i>`;
+            unhideGfGiveaway(giveaway, function() {
+                giveaway.outerWrap.remove();
+            });
+        });
+    }
+
+    function unhideGfGiveaway(giveaway, callback) {
+        createLock(`giveawayLock`, 300, function(deleteLock) {
+            var giveaways;
+            giveaways = JSON.parse(GM_getValue(`giveaways`, `{}`));
+            if (giveaways[giveaway.code]) {
+                giveaways[giveaway.code].hidden = false;
+                GM_setValue(`giveaways`, JSON.stringify(giveaways));
+            }
+            deleteLock();
+            if (callback) {
+                callback();
+            }
+        });
+    }
 
     function addGfContainer(context) {
         var gf, basicFilter, basicFilters, box, button, categoryFilter, categoryFilters, checkbox, collapse, container, exceptionFilter, exceptionFilters, expand, filter, filters, genres, i, id, input, key, maxKey, minKey, maxSaveKey, maxSavedValue, minSaveKey, minSavedValue, maxValue, minValue, multiple, n, name, oldKey, oldSaveKey, saveKey, step, type, typeFilter, typeFilters, value, values;
@@ -11890,6 +12024,32 @@ ${avatar.outerHTML}
                 saveComment(TradeCode, ParentID.value, Description.value, URL, DEDStatus, Callback, DEDCallback);
             }
         }, null, true);
+    }
+
+    /* [TB] Trades Bumper */
+
+    function getTbTrades(button) {
+        var elements, i, n;
+        button.innerHTML = `
+            <i class="fa fa-circle-o-notch fa-spin"></i>
+        `;
+        elements = document.querySelectorAll(`.row_inner_wrap:not(.is_faded)`);
+        n = elements.length;
+        if (n > 0) {
+            bumpTbTrades(elements, i, n);
+        } else {
+            button.innerHTML = `
+                <i class="fa fa-chevron-circle-up"></i>
+            `;
+        }
+    }
+
+    function bumpTbTrades(elements, i, n) {
+        if (i < n) {
+            request(`xsrf_token=${esgst.xsrfToken}&do=trade_bump&code=${elements[i].querySelector(`[href*="/trade/"]`).getAttribute(`href`).match(/\/trade\/(.+?)\//)[1]}`, false, `/ajax.php`, bumpTbTrades.bind(null, elements, ++i, n));
+        } else {
+            location.reload();
+        }
     }
 
     /* [RML] Reply Mention Link */
@@ -23885,6 +24045,11 @@ ${avatar.outerHTML}
             Name: "SMManageFilteredUsers",
             Title: "See list of filtered users."
         }, {
+            Check: esgst.gf && esgst.gf_h,
+            Icons: ["fa-gift", "fa-eye-slash"],
+            Name: "SMManageFilteredGiveaways",
+            Title: "Manage hidden giveaways."
+        }, {
             Check: false,
             Icons: ["fa-tags", "fa-cog"],
             Name: "SMManageTags",
@@ -23909,6 +24074,9 @@ ${avatar.outerHTML}
                 index: 1
             },
             discussions: {
+                index: 1
+            },
+            trades: {
                 index: 1
             },
             comments: {
@@ -23987,6 +24155,7 @@ ${avatar.outerHTML}
         SMManageData = Container.getElementsByClassName("SMManageData")[0];
         SMRecentUsernameChanges = Container.getElementsByClassName("SMRecentUsernameChanges")[0];
         SMManageFilteredUsers = Container.getElementsByClassName("SMManageFilteredUsers")[0];
+        var SMManageFilteredGiveaways = Container.getElementsByClassName("SMManageFilteredGiveaways")[0];
         SMManageTags = Container.getElementsByClassName("SMManageTags")[0];
         SMSyncFrequency = Container.getElementsByClassName("SMSyncFrequency")[0];
         if (esgst.wbc) {
@@ -24433,6 +24602,9 @@ ${avatar.outerHTML}
         }
         if (SMManageFilteredUsers) {
             setSMManageFilteredUsers(SMManageFilteredUsers);
+        }
+        if (SMManageFilteredGiveaways) {
+            setSMManageFilteredGiveaways(SMManageFilteredGiveaways);
         }
         SMAPIKey.addEventListener("input", function () {
             setValue(`steamApiKey`, SMAPIKey.value);
@@ -25474,6 +25646,63 @@ Background: <input type="color" value="${bgColor}">
         });
     }
 
+    function setSMManageFilteredGiveaways(SMManageFilteredGiveaways) {
+        var gfGiveaways, giveaway, hidden, i, key, n, popup, set;
+        SMManageFilteredGiveaways.addEventListener(`click`, function() {
+            popup = createPopup(`fa-gift`, `Hidden Giveaways`, true);
+            hidden = [];
+            for (key in esgst.giveaways) {
+                giveaway = esgst.giveaways[key];
+                if (giveaway.hidden && giveaway.code) {
+                    hidden.push(giveaway.code);
+                }
+            }
+            i = 0;
+            n = hidden.length;
+            gfGiveaways = insertHtml(popup.scrollable, `beforeEnd`, `<div class="esgst-text-left"></div>`);
+            if (n > 0) {
+                set = createButtonSet(`green`, `grey`, `fa-plus`, `fa-circle-o-notch fa-spin`, `Load more...`, `Loading more...`, function (callback) {
+                    loadGfGiveaways(i, i + 5, hidden, gfGiveaways, popup, function (value) {
+                        i = value;
+                        if (i > n) {
+                            set.set.remove();
+                        }
+                        callback();
+                    });
+                });
+                popup.description.appendChild(set.set);
+                popup.open();
+                set.trigger();
+            } else {
+                gfGiveaways.textContent = `No hidden giveaways found.`;
+                popup.open();
+            }
+        });
+    }
+
+    function loadGfGiveaways(i, n, hidden, gfGiveaways, popup, callback) {
+        var giveaway;
+        if (i < n) {
+            if (hidden[i]) {
+                request(null, true, `https://www.steamgifts.com/giveaway/${hidden[i]}/`, function (response) {
+                    giveaway = buildGiveaway(DOM.parse(response.responseText), response.finalUrl);
+                    if (giveaway) {
+                        gfGiveaways.insertAdjacentHTML(`beforeEnd`, giveaway.html);
+                        loadEndlessFeatures(gfGiveaways.lastElementChild, false, `gf`);
+                        popup.reposition();
+                        setTimeout(loadGfGiveaways, 0, ++i, n, hidden, gfGiveaways, popup, callback);
+                    } else {
+                        setTimeout(loadGfGiveaways, 0, ++i, n, hidden, gfGiveaways, popup, callback);
+                    }
+                });
+            } else {
+                callback(i + 1);
+            }
+        } else {
+            callback(i);
+        }
+    }
+
     function setSMRecentUsernameChanges(SMRecentUsernameChanges) {
         SMRecentUsernameChanges.addEventListener("click", function () {
             var Popup, SMRecentUsernameChangesPopup;
@@ -25697,6 +25926,13 @@ Background: <input type="color" value="${bgColor}">
                     giveaway.outerWrap.remove();
                     return null;
                 }
+            }
+        }
+        if (esgst.gf && esgst.gf_h && main) {
+            var savedGiveaway = esgst.giveaways[giveaway.code];
+            if (savedGiveaway && savedGiveaway.hidden && savedGiveaway.code) {
+                giveaway.outerWrap.remove();
+                return null;
             }
         }
         giveaway.links = giveaway.innerWrap.getElementsByClassName(`giveaway__links`)[0];

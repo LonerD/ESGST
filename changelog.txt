@@ -1,4 +1,17 @@
 /*
+ * July 25, 2017 - v6.Beta.20.0
+ */
+
+* Fixed a bug in Header Refresher that was not indicating unviewed keys in the tab.
+* Changed the unviewed keys indicator in Header Refresher from coloring the icon to showing a trophy emoji in the title.
+* Added an option (1.5.2) to indicate if there are unentered wishlist giveaways open to Header Refresher.
+* Added an option (2.5.1) to Giveaway Filters that allows you to hide giveaways in the main page.
+
+Added the following features:
+
+* 4.1 Trades Bumper
+
+/*
  * July 25, 2017 - v6.Beta.19.19
  */
 
