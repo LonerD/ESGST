@@ -3,7 +3,7 @@
 // @namespace ESGST
 // @description Enhances SteamGifts and SteamTrades by adding some cool features to them.
 // @icon https://github.com/revilheart/ESGST/raw/master/Resources/esgstIcon.ico
-// @version 6.Beta.19.18
+// @version 6.Beta.19.19
 // @author revilheart
 // @downloadURL https://github.com/revilheart/ESGST/raw/master/ESGST.user.js
 // @updateURL https://github.com/revilheart/ESGST/raw/master/ESGST.meta.js
@@ -8719,7 +8719,9 @@ ${avatar.outerHTML}
                                 popup.opened.close();
                             }
                         }).set);
-                        popup.open(box.focus);
+                        popup.open(function () {
+                            box.focus();
+                        });
                     } else {
                         popup.description.appendChild(set.set);
                         popup.open();
@@ -8739,7 +8741,9 @@ ${avatar.outerHTML}
                             popup.opened.close();
                         }
                     }).set);
-                    popup.open(box.focus);
+                    popup.open(function () {
+                        box.focus();
+                    });
                 }
             });
         } else if (esgst.elgb_r) {
@@ -8757,7 +8761,9 @@ ${avatar.outerHTML}
                     popup.opened.close();
                 }
             }).set);
-            popup.open(box.focus);
+            popup.open(function () {
+                box.focus();
+            });
         }
     }
 

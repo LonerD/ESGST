@@ -1,4 +1,10 @@
 /*
+ * July 25, 2017 - v6.Beta.19.19
+ */
+
+* Fixed a small bug in Enter/Leave Giveaway Button.
+
+/*
  * July 25, 2017 - v6.Beta.19.18
  */
 
