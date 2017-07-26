@@ -3,7 +3,7 @@
 // @namespace ESGST
 // @description Enhances SteamGifts and SteamTrades by adding some cool features to them.
 // @icon https://github.com/revilheart/ESGST/raw/master/Resources/esgstIcon.ico
-// @version 6.Beta.21.2
+// @version 6.Beta.21.3
 // @author revilheart
 // @downloadURL https://github.com/revilheart/ESGST/raw/master/ESGST.user.js
 // @updateURL https://github.com/revilheart/ESGST/raw/master/ESGST.meta.js
@@ -2792,7 +2792,7 @@
                     esgst.esCheck = (esgst.es_g && esgst.giveawaysPath) || (esgst.es_d && esgst.discussionsTicketsPath) || (esgst.es_t && esgst.tradesPath) || (esgst.es_c && esgst.commentsPath) || (esgst.es_l && !esgst.giveawaysPath && !esgst.discussionsTicketsPath && !esgst.tradesPath && !esgst.commentsPath);
                     if (esgst.ib) {
                         esgst.style += `
-                            .giveaway_image_avatar, .table_image_avatar {
+                            .esgst-ib-user {
                                 background-color: #fff;
                                 background-position: 5px 5px;
                                 background-size: 32px;
@@ -2802,7 +2802,7 @@
                                 padding: 5px;
                                 width: 44px;
                             }
-                            .giveaway_image_thumbnail {
+                            .esgst-ib-game {
                                 background-color: #fff;
                                 background-position: 5px 5px;
                                 background-size: 184px;
@@ -2813,6 +2813,8 @@
                                 width: 196px;
                             }
                         `;
+                        esgst.endlessFeatures.push(addIbBorders);
+                        addIbBorders(document);
                     }
                     if (esgst.fh) {
                         esgst.header.classList.add(`esgst-fh`);
@@ -6496,6 +6498,19 @@ min-width: 0;
         }
     }
 
+    /* [IB] Image Borders */
+
+    function addIbBorders(context) {
+        var elements, i, n;
+        elements = context.querySelectorAll(`.giveaway_image_avatar, :not(.esgst-ggl-panel) .table_image_avatar`);
+        for (i = 0, n = elements.length; i < n; ++i) {
+            elements[i].classList.add(`esgst-ib-user`);
+        }
+        elements = context.getElementsByClassName(`giveaway_image_thumbnail`);
+        for (i = 0, n = elements.length; i < n; ++i) {
+            elements[i].classList.add(`esgst-ib-game`);
+        }
+    }
     /* [FMPH] Fixed Main Page Heading */
 
     function loadFmph() {
