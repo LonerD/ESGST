@@ -3,7 +3,7 @@
 // @namespace ESGST
 // @description Enhances SteamGifts and SteamTrades by adding some cool features to them.
 // @icon https://github.com/revilheart/ESGST/raw/master/Resources/esgstIcon.ico
-// @version 6.Beta.21.0
+// @version 6.Beta.21.1
 // @author revilheart
 // @downloadURL https://github.com/revilheart/ESGST/raw/master/ESGST.user.js
 // @updateURL https://github.com/revilheart/ESGST/raw/master/ESGST.meta.js
@@ -325,7 +325,7 @@
                             }
                         `);
                     }
-                    esgst.style += `
+                    GM_addStyle(`
                         .esgst-fh {
                             height: auto !important;
                             position: fixed;
@@ -430,7 +430,7 @@
                         .esgst-gh-highlight {
                             background-color: rgba(150, 196, 104, 0.2);
                         }
-                    `;
+                    `);
                     esgst.currentPage = window.location.href.match(/page=(\d+)/);
                     if (esgst.currentPage) {
                         esgst.currentPage = parseInt(esgst.currentPage[1]);
@@ -2076,6 +2076,12 @@
                                     st: true
                                 },
                                 {
+                                    id: `ct_a`,
+                                    name: `[NEW] Automatically mark comments as read in the inbox when clicking on the "Mark as Read" button.`,
+                                    sg: true,
+                                    st: true
+                                },
+                                {
                                     description: `
                                         <ul>
                                             <li>Scans the page from the bottom to top if reverse scrolling is disabled, or from the top to bottom if it's enabled.</li>
@@ -2803,6 +2809,8 @@
                             loadOadd();
                         } else if (esgst.adots) {
                             loadAdots();
+                            loadFeatures();
+                        } else {
                             loadFeatures();
                         }
                     } else {
@@ -12233,7 +12241,7 @@ ${avatar.outerHTML}
         elements = document.querySelectorAll(`.row_inner_wrap:not(.is_faded)`);
         n = elements.length;
         if (n > 0) {
-            bumpTbTrades(elements, i, n);
+            bumpTbTrades(elements, 0, n);
         } else {
             button.innerHTML = `
                 <i class="fa fa-chevron-circle-up"></i>
@@ -20530,38 +20538,80 @@ ${avatar.outerHTML}
     }
 
     function addCtCommentPanel(goToUnread, markRead, markUnread) {
-        goToUnread.addEventListener(`click`, function() {
-            goToUnread.innerHTML = `
-                <i class="fa fa-circle-o-notch fa-spin"></i>
-            `;
-            getCtComments(0, esgst.currentComments, true, false, false, function (found) {
-                goToUnread.innerHTML = `
-                    <i class="fa fa-comments-o"></i>
-                `;
-                if (!found) {
-                    createAlert(`No unread comments were found.`);
+        var button, key, newButton;
+        goToUnread.addEventListener(`click`, goToCtUnread.bind(null, goToUnread));
+        markRead.addEventListener(`click`, markCtCommentsRead.bind(null, markRead, null));
+        markUnread.addEventListener(`click`, markCtCommentsUnread.bind(null, markUnread));
+        if (esgst.ct_a) {
+            button = document.querySelector(`.js__submit-form, .js_mark_as_read`);
+            if (button) {
+                if (esgst.sg) {
+                    newButton = insertHtml(button, `afterEnd`, `
+                        <div class="sidebar__action-button">
+                            <i class="fa fa-check-circle"></i> Mark as Read
+                        </div>
+                    `);
+                    key = `read_messages`;
+                } else {
+                    newButton = insertHtml(button, `afterEnd`, `
+                        <a class="page_heading_btn green">
+                            <i class="fa fa-check-square-o"></i>
+                            <span>Mark as Read</span>
+                        </a>
+                    `);
+                    key = `mark_as_read`;
                 }
-            });
+                button.remove();
+                newButton.addEventListener(`click`, request.bind(null, `xsrf_token=${esgst.xsrfToken}&do=${key}`, false, `/messages`, markCtCommentsRead.bind(null, markRead, completeCtInboxRead.bind(null, newButton))));
+            }
+        }
+    }
+
+    function completeCtInboxRead(newButton) {
+        var elements, i, n;
+        elements = document.querySelectorAll(`.comment__envelope, .comment_unread`);
+        for (i = 0, n = elements.length; i < n; ++i) {
+            elements[i].remove();
+        }
+        newButton.remove();
+    }
+    
+    function goToCtUnread(goToUnread) {
+        goToUnread.innerHTML = `
+            <i class="fa fa-circle-o-notch fa-spin"></i>
+        `;
+        getCtComments(0, esgst.currentComments, true, false, false, function (found) {
+            goToUnread.innerHTML = `
+                <i class="fa fa-comments-o"></i>
+            `;
+            if (!found) {
+                createAlert(`No unread comments were found.`);
+            }
         });
-        markRead.addEventListener(`click`, function() {
+    }
+
+    function markCtCommentsRead(markRead, callback) {
+        markRead.innerHTML = `
+            <i class="fa fa-circle-o-notch fa-spin"></i>
+        `;
+        getCtComments(0, esgst.currentComments, false, true, false, function () {
             markRead.innerHTML = `
-                <i class="fa fa-circle-o-notch fa-spin"></i>
+                <i class="fa fa-eye"></i>
             `;
-            getCtComments(0, esgst.currentComments, false, true, false, function () {
-                markRead.innerHTML = `
-                    <i class="fa fa-eye"></i>
-                `;
-            });
+            if (callback) {
+                callback();
+            }
         });
-        markUnread.addEventListener(`click`, function() {
+    }
+
+    function markCtCommentsUnread(markUnread) {
+        markUnread.innerHTML = `
+            <i class="fa fa-circle-o-notch fa-spin"></i>
+        `;
+        getCtComments(0, esgst.currentComments, false, false, true, function () {
             markUnread.innerHTML = `
-                <i class="fa fa-circle-o-notch fa-spin"></i>
+                <i class="fa fa-eye-slash"></i>
             `;
-            getCtComments(0, esgst.currentComments, false, false, true, function () {
-                markUnread.innerHTML = `
-                    <i class="fa fa-eye-slash"></i>
-                `;
-            });
         });
     }
 
@@ -20775,7 +20825,7 @@ ${avatar.outerHTML}
         request(null, true, `${url}${nextPage}`, function(response) {
             var context, lastLink, pagination;
             context = DOM.parse(response.responseText);
-            getCtComments(0, getComments(context), goToUnread, markRead, markUnread);
+            getCtComments(0, getComments(context, context), goToUnread, markRead, markUnread);
             if ((goToUnread && !esgst.ctUnreadFound) || !goToUnread) {
                 pagination = context.getElementsByClassName(`pagination__navigation`)[0];
                 ++nextPage;
@@ -26381,7 +26431,7 @@ Background: <input type="color" value="${bgColor}">
 
     function loadCommentFeatures(context, main) {
         var count, comments, i, n;
-        comments = getComments(context, main);
+        comments = getComments(context, document, main);
         if (main) {
             for (i = 0, n = comments.length; i < n; ++i) {
                 esgst.currentComments.push(comments[i]);
@@ -26390,21 +26440,24 @@ Background: <input type="color" value="${bgColor}">
         if (esgst.ct) {
             if (esgst.inboxPath) {
                 count = 0;
-            } else if (main) {
-                count = parseInt(context.getElementsByClassName(`page__heading__breadcrumbs`)[1].firstElementChild.textContent.replace(/,/g, ``).match(/\d+/));
             } else {
-                count = 0;
+                count = context.getElementsByClassName(`page__heading__breadcrumbs`)[1];
+                if (count) {
+                    count = parseInt(count.firstElementChild.textContent.replace(/,/g, ``).match(/\d+/));
+                } else {
+                    count = 0;
+                }
             }
             getCtComments(count, comments);
         }
     }
 
-    function getComments(context, main) {
+    function getComments(context, mainContext, main) {
         var comment, comments, i, matches, n, sourceLink, savedUsers;
         comments = [];
         savedUsers = JSON.parse(GM_getValue(`users`));
         matches = context.querySelectorAll(`:not(.comment--submit) > .comment__parent, .comment__child, .comment_inner`);
-        sourceLink = context.querySelector(`.page__heading__breadcrumbs a[href*="/giveaway/"], .page__heading__breadcrumbs a[href*="/discussion/"], .page__heading__breadcrumbs a[href*="/ticket/"], .page_heading_breadcrumbs a[href*="/trade/"]`);
+        sourceLink = mainContext.querySelector(`.page__heading__breadcrumbs a[href*="/giveaway/"], .page__heading__breadcrumbs a[href*="/discussion/"], .page__heading__breadcrumbs a[href*="/ticket/"], .page_heading_breadcrumbs a[href*="/trade/"]`);
         for (i = matches.length - 1; i >= 0; --i) {
             comment = getCommentInfo(matches[i], sourceLink, savedUsers, main);
             if (comment) {

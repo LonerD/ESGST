@@ -1,4 +1,14 @@
 /*
+ * July 26, 2017 - v6.Beta.21.1
+ */
+
+* Fixed a bug that was preventing the script from running if some features were disabled.
+* Fixed a bug in Fixed Header for SteamTrades.
+* Fixed a bug in Trades Bumper that wasn't bumping the trades.
+* Fixed a bug in Comment Tracker that wasn't loading the feature for the other pages when using Endless Scrolling.
+* Added an option (Comments.7.2) to Comment Tracker to automatically mark all comments in the inbox as read when clicking on the "Mark as Read" button.
+
+/*
  * July 25, 2017 - v6.Beta.21.0
  */
 
