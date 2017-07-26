@@ -3,7 +3,7 @@
 // @namespace ESGST
 // @description Enhances SteamGifts and SteamTrades by adding some cool features to them.
 // @icon https://github.com/revilheart/ESGST/raw/master/Resources/esgstIcon.ico
-// @version 6.Beta.20.0
+// @version 6.Beta.21.0
 // @author revilheart
 // @downloadURL https://github.com/revilheart/ESGST/raw/master/ESGST.user.js
 // @updateURL https://github.com/revilheart/ESGST/raw/master/ESGST.meta.js
@@ -50,7 +50,6 @@
     }
 
     function loadEsgst() {
-        var style;
         DOM = {
             parse: parseHtml,
             parser: new DOMParser()
@@ -78,7 +77,7 @@
                             createAlert(`You are not using the latest ESGST version. Please update before reporting any bugs and make sure the bugs still exist in the latest version.`);
                         }
                     }
-                    style = `
+                    esgst.style = `
                         .esgst-progress-bar {
                             height: 10px;
                             overflow: hidden;
@@ -101,7 +100,7 @@
                         esgst.hiddenClass = `is-hidden`;
                         esgst.name = `sg`;
                         esgst.selectedClass = `is-selected`;
-                        style += `
+                        GM_addStyle(`
                             .esgst-header-menu {
                                 box-shadow: 1px 1px 1px rgba(255, 255, 255, 0.07) inset, 1px 1px 0 rgba(255, 255, 255, 0.02) inset;
                                 background-image: linear-gradient(#8a92a1 0px, #757e8f 8px, #4e5666 100%);
@@ -205,7 +204,7 @@
                             .esgst-header-menu.selected .esgst-header-menu-button:hover:not(.selected) {
                                 background-image: linear-gradient(#f0f1f5 0px, #d1d4de 100%);
                             }
-                        `;
+                        `);
                     } else {
                         esgst.pageOuterWrapClass = `page_outer_wrap`;
                         esgst.pageHeadingClass = `page_heading`;
@@ -217,7 +216,7 @@
                         esgst.hiddenClass = `is_hidden`;
                         esgst.name = `st`;
                         esgst.selectedClass = `is_selected`;
-                        style += `
+                        GM_addStyle(`
                             .esgst-header-menu {
                                 display: flex;
                                 margin: 0 5px 0 0;
@@ -324,9 +323,9 @@
                                 font: 700 14px/22px "Open Sans", sans-serif;
                                 padding: 5px 15px;
                             }
-                        `;
+                        `);
                     }
-                    style += `
+                    esgst.style += `
                         .esgst-fh {
                             height: auto !important;
                             position: fixed;
@@ -432,7 +431,6 @@
                             background-color: rgba(150, 196, 104, 0.2);
                         }
                     `;
-                    GM_addStyle(style);
                     esgst.currentPage = window.location.href.match(/page=(\d+)/);
                     if (esgst.currentPage) {
                         esgst.currentPage = parseInt(esgst.currentPage[1]);
@@ -1028,6 +1026,17 @@
                         {
                             description: `
                                 <ul>
+                                    <li>Brings back image borders to SG.</li>
+                                </ul>
+                            `,
+                            id: `ib`,
+                            name: `[NEW] Image Borders`,
+                            sg: true,
+                            type: `general`
+                        },
+                        {
+                            description: `
+                                <ul>
                                     <li>Allows the header to stay fixed at the top while you scroll down the page.</li>
                                 </ul>
                             `,
@@ -1483,6 +1492,13 @@
                                     sg: true
                                 },
                                 {
+                                    features: [
+                                        {
+                                            id: `elgb_r_d`,
+                                            name: `Only pop up if the giveaway has a description.`,
+                                            sg: true
+                                        }
+                                    ],
                                     id: `elgb_r`,
                                     name: `Pop up a box to reply to the giveaway when entering.`,
                                     sg: true
@@ -1714,6 +1730,17 @@
                             name: `Archive Searcher`,
                             sg: true,
                             type: `giveaways`
+                        },
+                        {
+                            description: `
+                                <ul>
+                                    <li>Brings back SG's old active discussions design, while keeping the new Deals section.</li>
+                                </ul>
+                            `,
+                            id: `oadd`,
+                            name: `[NEW] Old Active Discussions Design`,
+                            sg: true,
+                            type: `discussions`
                         },
                         {
                             description: `
@@ -2036,8 +2063,26 @@
                             `,
                             features: [
                                 {
+                                    description: `
+                                        <ul>
+                                            <li>Simply shows the number of comments since the last visit.</li>
+                                            <li>Marking a discussion as visited with Giveaways/Discussions/Tickets/Trades Tracker will update the count without having to enter the discussion.</li>
+                                            <li>Marking a discussion as unvisited will reset the count to 0.</li>
+                                        </ul>
+                                    `,
+                                    id: `ct_s`,
+                                    name: `[NEW] Enable simplified version.`,
+                                    sg: true,
+                                    st: true
+                                },
+                                {
+                                    description: `
+                                        <ul>
+                                            <li>Scans the page from the bottom to top if reverse scrolling is disabled, or from the top to bottom if it's enabled.</li>
+                                        </ul>
+                                    `,
                                     id: `ct_r`,
-                                    name: `Search for the first unread comment in reverse order (from newest to oldest).`,
+                                    name: `Search for the first unread comment in reverse order.`,
                                     sg: true,
                                     st: true
                                 }
@@ -2656,9 +2701,9 @@
                     esgst.userFeatures = [];
                     esgst.giveawayFeatures = [];
                     esgst.currentGiveaways = [];
+                    esgst.currentComments = [];
                     esgst.popupGiveaways = [];
                     esgst.discussions = [];
-                    esgst.commentFeatures = [];
                     esgst.profileFeatures = [];
                     for (var key in esgst.defaultValues) {
                         esgst[key] = getValue(key);
@@ -2679,7 +2724,7 @@
                     addHeaderMenu();
                     checkNewVersion();
                     var sibling, height;
-                    style += `
+                    esgst.style += `
                         .esgst-pgb-button, .esgst-gf-button {
                             border: 1px solid #d2d6e0;
                             border-top: none;
@@ -2696,6 +2741,30 @@
                         }
                     `;
                     esgst.esCheck = (esgst.es_g && esgst.giveawaysPath) || (esgst.es_d && esgst.discussionsTicketsPath) || (esgst.es_t && esgst.tradesPath) || (esgst.es_c && esgst.commentsPath) || (esgst.es_l && !esgst.giveawaysPath && !esgst.discussionsTicketsPath && !esgst.tradesPath && !esgst.commentsPath);
+                    if (esgst.ib) {
+                        esgst.style += `
+                            .giveaway_image_avatar, .table_image_avatar {
+                                background-color: #fff;
+                                background-position: 5px 5px;
+                                background-size: 32px;
+                                border: 1px solid #d2d6e0;
+                                border-radius: 4px;
+                                height: 44px;
+                                padding: 5px;
+                                width: 44px;
+                            }
+                            .giveaway_image_thumbnail {
+                                background-color: #fff;
+                                background-position: 5px 5px;
+                                background-size: 184px;
+                                border: 1px solid #d2d6e0;
+                                border-radius: 4px;
+                                height: 81px;
+                                padding: 5px;
+                                width: 196px;
+                            }
+                        `;
+                    }
                     if (esgst.fh) {
                         esgst.header.classList.add(`esgst-fh`);
                         if (esgst.featuredContainer && ((esgst.hfc && !esgst.giveawaysPath) || !esgst.hfc)) {
@@ -2707,7 +2776,7 @@
                         height = esgst.header.offsetHeight;
                         esgst.pageTop += height;
                         esgst.commentsTop += height;
-                        style += `
+                        esgst.style += `
                             .esgst-fh-sibling {
                                 margin-top: ${height}px;
                             }
@@ -2721,623 +2790,578 @@
                         esgst.paginationNavigation.classList.add(`page_heading_btn`);
                         esgst.mainPageHeading.appendChild(esgst.paginationNavigation);
                     }
-                    var button, button1, button2, button3, title, html, rows, mainPageHeadingBefore = document.createDocumentFragment();
-                    if (esgst.sg) {
-                        if (esgst.wbc) {
-                            esgst.wbcButton = button = document.createElement(`div`);
-                            button.className = `esgst-hidden esgst-heading-button`;
-                            if (esgst.wbc_b) {
-                                title = `Check for whitelists/blacklists.`;
-                                html = `
-                                    <i class="fa fa-heart"></i>
-                                    <i class="fa fa-ban"></i>
-                                    <i class="fa fa-question-circle"></i>
-                                `;
-                            } else {
-                                title = `Check for whitelists.`;
-                                html = `
-                                    <i class="fa fa-heart"></i>
-                                    <i class="fa fa-question-circle"></i>
-                                `;
-                            }
-                            button.title = title;
-                            button.innerHTML = html;
-                            mainPageHeadingBefore.appendChild(button);
-                            addWBCButton(true, button);
-                        }
-                    }
-                    if (esgst.giveawaysPath || esgst.discussionsPath) {
-                        esgst.endlessFeatures.push(loadDiscussionFeatures);
-                        loadDiscussionFeatures(document);
-                    }
-                    if (esgst.gv && (esgst.giveawaysPath || esgst.gv_gb || esgst.gv_ged || esgst.gv_tge)) {
-                        esgst.giveawayFeatures.push(setGvContainers);
-                        style += `
-                            .esgst-gv-spacing {
-                                font-weight: bold;
-                                padding: 10px;
-                                text-align: center;
-                                width: 100px;
-                            }
-
-                            .esgst-gv-view {
-                                font-size: 0;
-                                padding: 5px 0;
-                                text-align: center;
-                            }
-
-                            .esgst-gv-view.pinned-giveaways__inner-wrap--minimized .giveaway__row-outer-wrap:nth-child(-n + 10) {
-                                display: inline-block;" +
-                            }
-
-                            .esgst-gv-container {
-                                border: 0 !important;
-                                box-shadow: none !important;
-                                display: inline-block;
-                                font-size: 12px;
-                                padding: 0;
-                                text-align: center;
-                                vertical-align: top;
-                            }
-
-                            .esgst-gv-box {
-                                display: block;
-                            }
-
-                            .esgst-gv-box >*:not(.giveaway__summary):not(.esgst-gv-icons) {
-                                margin: 0 !important;
-                            }
-
-                            .esgst-gv-box.is-faded:hover {
-                                opacity: 1;
-                            }
-
-                            .esgst-gv-icons {
-                                float: right;
-                                margin: -18px 0 0 !important;
-                            }
-
-                            .esgst-gv-time, .esgst-popup .esgst-ged-source {
-                                background-color: #fff;
-                                font-weight: bold;
-                            }
-
-                            .esgst-gv-time i {
-                                font-size: 12px;
-                                vertical-align: baseline;
-                            }
-
-                            .esgst-gv-icons >* {
-                                line-height: normal;
-                                margin: 0 !important;
-                                padding: 2px;
-                            }
-                            .esgst-gv-icons .giveaway__column--invite-only {
-                                padding: 1px 2px;
-                            }
-                            .esgst-gv-icons .giveaway__column--contributor-level {
-                                padding: 2px 5px;
-                            }
-
-                            .esgst-gv-popout {
-                                font-size: 11px;
-                                max-width: 174px;
-                                position: absolute;
-                                width: 174px;
-                                z-index: 1;
-                            }
-
-                            .esgst-gv-popout .giveaway__heading {
-                                display: block;
-                                height: auto;
-                            }
-
-                            .esgst-gv-popout .giveaway__heading__name {
-                                display: inline-block;
-                                font-size: 12px;
-                                max-width: 150px;
-                                overflow: hidden;
-                                text-overflow: ellipsis;
-                                vertical-align: middle;
-                            }
-
-                            .esgst-gv-popout .giveaway__heading__thin {
-                                font-size: 11px;
-                            }
-
-                            .esgst-gv-popout .esgst-gc-panel {
-                                font-size: 11px;
-                                text-align: center;
-                            }
-
-                            .esgst-gv-popout .esgst-gc-panel i, .esgst-gv-popout .giveaway__links i, .esgst-gv-popout .esgst-gwc i, .esgst-gv-popout .esgst-gwr i, .esgst-gv-popout .esgst-ggl-panel, .esgst-gv-popout .esgst-ggl-panel i {
-                                font-size: 11px;
-                            }
-
-                            .esgst-gv-popout .esgst-gc.genres {
-                                margin: 0;
-                            }
-
-                            .esgst-gv-popout .giveaway__columns:not(.esgst-giveaway-panel):not(.esgst-gv-icons) {
-                                display: block;
-                                float: left;
-                                width: calc(100% - 37px);
-                            }
-
-                            .esgst-gv-popout .giveaway__columns:not(.esgst-giveaway-panel):not(.esgst-gv-icons) >* {
-                                margin: 0;
-                                text-align: left;
-                            }
-
-                            .esgst-gv-popout .esgst-giveaway-panel {
-                                display: block;
-                                font-size: 11px;
-                            }
-
-                            .esgst-gv-popout .esgst-giveaway-panel >* {
-                                display: inline-block;
-                                margin: 0;
-                                width: 67px;
-                            }
-
-                            .esgst-gv-popout .esgst-button-set {
-                                width: 100%;
-                            }
-
-                            .esgst-gv-popout .esgst-button-set >* {
-                                padding: 0;
-                                width: 100%;
-                            }
-
-                            .esgst-gv-creator {
-                                margin: 5px;
-                                width: 132px;
-                            }
-
-                            .esgst-gv-popout .giveaway__links {
-                                display: block;
-                                height: auto;
-                                margin: 5px;
-                                text-align: center;
-                                width: 132px;
-                            }
-
-                            .esgst-gv-popout .esgst-gt-tags, .esgst-gv-popout .PUTTags {
-                                display: none;
-                            }
-
-                            .esgst-gv-popout .giveaway_image_avatar, .esgst-gv-popout .featured_giveaway_image_avatar {
-                                margin: 5px;
-                                position: absolute;
-                                right: 10px;
-                            }
-
-                            .esgst-gv-popout .esgst-giveaway-links, .esgst-gv-popout .esgst-giveaway-panel {
-                                float: none;
-                            }
-                        `;
-                        if (esgst.giveawaysPath) {
-                            loadGv();
-                        }
-                    }
-                    if (esgst.gf && esgst.gf_h) {
-                        esgst.giveawayFeatures.push(getGfGiveaways);
-                    }
-                    if (esgst.giveawaysPath) {
-                        if (esgst.adots && esgst.activeDiscussions) {
-                            esgst.activeDiscussions.classList.remove(`widget-container--margin-top`);
-                            esgst.activeDiscussions.classList.add(`esgst-adots`);
-                            if (esgst.adots_index === 0) {
-                                parent = esgst.activeDiscussions.parentElement;
-                                parent.insertBefore(esgst.activeDiscussions, parent.firstElementChild);
-                            } else {
-                                style += `
-                                    .sidebar .table__row-outer-wrap {
-                                        padding: 5px 0;
-                                    }
-                                    .esgst-adots-tab-heading {
-                                        background-color: #2f3540;
-                                        border-top-left-radius: 5px;
-                                        border-top-right-radius: 5px;
-                                        color: #fff;
-                                        cursor: pointer;
-                                        display: inline-block;
-                                        opacity: 0.5;
-                                        padding: 5px 10px;
-                                        text-shadow: none;
-                                    }
-                                    .esgst-adots-tab-heading.esgst-selected {
-                                        opacity: 1;
-                                    }
-                                `;
-                                esgst.activeDiscussions.style.width = `${esgst.sidebar.offsetWidth}px`;
-                                panel = insertHtml(esgst.sidebar, `beforeEnd`, `
-                                    <h3 class="sidebar__heading">
-                                        <span class="esgst-adots-tab-heading esgst-selected">Discussions</span>
-                                        <span class="esgst-adots-tab-heading">Deals</span>
-                                        <a class="esgst-float-right sidebar__navigation__item__name" href="/discussions">More</a>
-                                    </h3>
-                                `);
-                                var tabHeading1 = panel.firstElementChild;
-                                var tabHeading2 = tabHeading1.nextElementSibling;
-                                var discussions = esgst.activeDiscussions.firstElementChild.firstElementChild.lastElementChild;
-                                var deals = esgst.activeDiscussions.lastElementChild.firstElementChild.lastElementChild;
-                                deals.classList.add(`esgst-hidden`, `esgst-adots`);
-                                discussions.classList.add(`esgst-adots`);
-                                esgst.sidebar.appendChild(discussions);
-                                esgst.sidebar.appendChild(deals);
-                                tabHeading1.addEventListener(`click`, changeAdotsTab.bind(null, tabHeading1, tabHeading2, discussions, deals));
-                                tabHeading2.addEventListener(`click`, changeAdotsTab.bind(null, tabHeading2, tabHeading1, deals, discussions));
-                                var element, elements, i, n, comments, parent, panel;
-                                elements = discussions.getElementsByClassName(`table__row-outer-wrap`);
-                                for (i = 0, n = elements.length; i < n; ++i) {
-                                    element = elements[i];
-                                    comments = element.getElementsByClassName(`table__column__secondary-link`)[0];
-                                    parent = comments.parentElement;
-                                    panel = insertHtml(parent, `afterEnd`, `<p></p><div style="clear: both;"></div>`);
-                                    panel.appendChild(comments);
-                                    parent.lastElementChild.classList.add(`esgst-float-right`);
-                                    panel.appendChild(parent.lastElementChild);
-                                    parent.remove();
-                                }
-                                elements = deals.getElementsByClassName(`table__row-outer-wrap`);
-                                for (i = 0, n = elements.length; i < n; ++i) {
-                                    element = elements[i];
-                                    comments = element.getElementsByClassName(`table__column__secondary-link`)[0];
-                                    parent = comments.parentElement;
-                                    panel = insertHtml(parent, `afterEnd`, `<p></p><div style="clear: both;"></div>`);
-                                    panel.appendChild(comments);
-                                    parent.lastElementChild.classList.add(`esgst-float-right`);
-                                    panel.appendChild(parent.lastElementChild);
-                                    parent.remove();
-                                }
-                                esgst.activeDiscussions.remove();
-                            }
-                        }
-                        if (esgst.hfc && esgst.featuredContainer) {
-                            esgst.featuredContainer.classList.add(`esgst-hidden`);
-                        }
-                        if (esgst.at && esgst.at_g) {
-                            esgst.endlessFeatures.push(getTimestamps);
-                            getTimestamps(document);
-                        }
-                        if (esgst.ags) {
-                            addAgsPanel();
-                            style += `
-                                .esgst-ags-panel {
-                                    margin: 0 0 15px 0;
-                                }
-
-                                .esgst-ags-panel >* {
-                                    display: block;
-                                    font-size: 0;
-                                }
-
-                                .esgst-ags-filter {
-                                    display: inline-block;
-                                    font-size: 0;
-                                    margin: 5px;
-                                }
-
-                                .esgst-ags-filter >* {
-                                    display: inline-block;
-                                    font-size: 12px;
-                                    padding: 0 5px !important;
-                                    width: 74px;
-                                }
-
-                                .esgst-ags-checkbox-filter {
-                                    font-size: 12px;
-                                    margin: 5px;
+                    if (esgst.giveawaysPath && esgst.activeDiscussions) {
+                        if (esgst.oadd) {
+                            esgst.style += `
+                                .esgst-oadd >* {
+                                    padding-left: 0 !important;
+                                    margin-left: 0 !important;
+                                    border-left: none !important;
+                                    box-shadow: none !important;
                                 }
                             `;
-                        }
-                        if (esgst.gf) {
-                            addGfContainer();
-                        }
-                        if (esgst.gwc) {
-                            button = document.createElement(`div`);
-                            button.className = `esgst-heading-button`;
-                            button.title = `Sort giveaways by winning chance (highest to lowest).`;
-                            button.innerHTML = `
-                                <i class="fa fa-area-chart"></i>
-                                <i class="fa fa-sort-numeric-desc"></i>
-                            `;
-                            mainPageHeadingBefore.appendChild(button);
-                            addGwcSortButton(button);
+                            loadOadd();
+                        } else if (esgst.adots) {
+                            loadAdots();
+                            loadFeatures();
                         }
                     } else {
-                        if (esgst.groupPath && esgst.gf) {
-                            addGfContainer();
-                        }
-                        if (esgst.createdPath) {
-                            if (esgst.ugs) {
-                                button = document.createElement(`div`);
-                                button.className = `esgst-heading-button`;
-                                button.title = `Send unsent gifts.`;
-                                button.innerHTML = `
-                                    <i class="fa fa-gift"></i>
-                                    <i class="fa fa-send"></i>
-                                `;
-                                mainPageHeadingBefore.appendChild(button);
-                                addUGSButton(button);
-                            }
-                        } else if (esgst.enteredPath) {
-                            if (esgst.er) {
-                                button = document.createElement(`div`);
-                                button.className = `esgst-heading-button`;
-                                button.title = `Remove entries for owned games.`;
-                                button.innerHTML = `
-                                    <i class="fa fa-tag"></i>
-                                    <i class="fa fa-times-circle"></i>
-                                `;
-                                mainPageHeadingBefore.appendChild(button);
-                                button.addEventListener(`click`, openErPopup.bind(null, {
-                                    button: button
-                                }));
-                            }
-                            if (esgst.gwc) {
-                                esgst.endlessFeatures.push(addGwcrHeading);
-                                addGwcrHeading(document, true);
-                                button = document.createElement(`div`);
-                                button.className = `esgst-heading-button`;
-                                button.title = `Sort giveaways by winning chance (highest to lowest).`;
-                                button.innerHTML = `
-                                    <i class="fa fa-area-chart"></i>
-                                    <i class="fa fa-sort-numeric-desc"></i>
-                                `;
-                                mainPageHeadingBefore.appendChild(button);
-                                addGwcSortButton(button);
-                            }
-                        } else if (esgst.giveawayPath) {
-                            if (esgst.hgebd) {
-                                var entryButton = esgst.sidebar.getElementsByClassName(`sidebar__entry-insert`)[0];
-                                var errorButton = esgst.sidebar.getElementsByClassName(`sidebar__error`)[0];
-                                var hideButton = document.getElementsByClassName(`featured__giveaway__hide`)[0];
-                                if ((entryButton || errorButton) && !hideButton) {
-                                    var parent = (entryButton || errorButton).parentElement;
-                                    if (entryButton) {
-                                        entryButton.remove();
-                                    }
-                                    if (errorButton) {
-                                        errorButton.remove();
-                                    }
-                                    parent.insertAdjacentHTML(`afterBegin`, `
-                                        <div class="sidebar__error is-disabled">
-                                            <i class="fa fa-exclamation-circle"></i> Hidden Game
-                                        </div>
-                                    `);
-                                }
-                            }
-                        } else if (esgst.discussionsPath) {
-                            if (esgst.ds) {
-                                button = document.createElement(`div`);
-                                button.className = `esgst-heading-button`;
-                                button.title = `Sort discussions by creation date (newest to oldest).`;
-                                button.innerHTML = `
-                                    <i class="fa fa-sort-amount-asc"></i>
-                                `;
-                                mainPageHeadingBefore.appendChild(button);
-                                addDsButton(button);
-                            }
-                        }
-                        if (esgst.commentsPath) {
-                            if (esgst.giveawayCommentsPath) {
-                                if (esgst.tge && document.querySelector(`[href*="/giveaway/"]`)) {
-                                    button = document.createElement(`div`);
-                                    button.className = `esgst-heading-button`;
-                                    button.title = `Extract train giveaways.`;
-                                    button.innerHTML = `
-                                        <i class="fa fa-train"></i>
-                                        <i class="fa fa-search"></i>
-                                    `;
-                                    mainPageHeadingBefore.appendChild(button);
-                                    button.addEventListener(`click`, extractTgeGiveaways.bind(null, {
-                                        button: button
-                                    }));
-                                }
-                            } else if (esgst.discussionPath) {
-                                if (esgst.tge && document.querySelector(`[href*="/giveaway/"]`)) {
-                                    button = document.createElement(`div`);
-                                    button.className = `esgst-heading-button`;
-                                    button.title = `Extract train giveaways.`;
-                                    button.innerHTML = `
-                                        <i class="fa fa-train"></i>
-                                        <i class="fa fa-search"></i>
-                                    `;
-                                    mainPageHeadingBefore.appendChild(button);
-                                    button.addEventListener(`click`, extractTgeGiveaways.bind(null, {
-                                        button: button
-                                    }));
-                                }
-                                if (esgst.mpp) {
-                                    button = document.createElement(`div`);
-                                    button.className = `esgst-heading-button`;
-                                    button.title = `Open the main post.`;
-                                    button.innerHTML = `
-                                        <i class="fa fa-home"></i>
-                                    `;
-                                    mainPageHeadingBefore.appendChild(button);
-                                    loadMpp(button);
-                                }
-                            }
-                            if (esgst.replyBox) {
-                                button = document.createElement(`div`);
-                                button.className = `esgst-heading-button`;
-                                button.title = `Add a comment.`;
-                                button.innerHTML = `
-                                    <i class="fa fa-comment"></i>
-                                `;
-                                mainPageHeadingBefore.appendChild(button);
-                                loadRbp(button);
-                            }
-                            if (esgst.ct) {
-                                button1 = document.createElement(`div`);
-                                button1.className = `esgst-heading-button`;
-                                button1.title = `Go to the first unread comment of this page.`;
-                                button1.innerHTML = `
-                                    <i class="fa fa-comments-o"></i>
-                                `;
-                                mainPageHeadingBefore.appendChild(button1);
-                                button2 = document.createElement(`div`);
-                                button2.className = `esgst-heading-button`;
-                                button2.title = `Mark all comments in this page as read.`;
-                                button2.innerHTML = `
-                                    <i class="fa fa-eye"></i>
-                                `;
-                                mainPageHeadingBefore.appendChild(button2);
-                                button3 = document.createElement(`div`);
-                                button3.className = `esgst-heading-button`;
-                                button3.title = `Mark all comments in this page as unread.`;
-                                button3.innerHTML = `
-                                    <i class="fa fa-eye-slash"></i>
-                                `;
-                                mainPageHeadingBefore.appendChild(button3);
-                                addCtCommentPanel(button1, button2, button3);
-                            }
-                        } else if (esgst.inboxPath) {
-                            if (esgst.ct) {
-                                button1 = document.createElement(`div`);
-                                button1.className = `esgst-heading-button`;
-                                button1.title = `Go to the first unread comment of this page.`;
-                                button1.innerHTML = `
-                                    <i class="fa fa-comments-o"></i>
-                                `;
-                                mainPageHeadingBefore.appendChild(button1);
-                                button2 = document.createElement(`div`);
-                                button2.className = `esgst-heading-button`;
-                                button2.title = `Mark all comments in this page as read.`;
-                                button2.innerHTML = `
-                                    <i class="fa fa-eye"></i>
-                                `;
-                                mainPageHeadingBefore.appendChild(button2);
-                                button3 = document.createElement(`div`);
-                                button3.className = `esgst-heading-button`;
-                                button3.title = `Mark all comments in this page as unread.`;
-                                button3.innerHTML = `
-                                    <i class="fa fa-eye-slash"></i>
-                                `;
-                                mainPageHeadingBefore.appendChild(button3);
-                                addCtCommentPanel(button1, button2, button3);
-                            }
-                        } else if (esgst.winnersPath) {
-                            if (esgst.namwc) {
-                                button = document.createElement(`div`);
-                                button.className = `esgst-heading-button`;
-                                button.title = `Check for not activated/multiple wins.`;
-                                button.innerHTML = `
-                                    <i class="fa fa-trophy"></i>
-                                    <i class="fa fa-question-circle"></i>
-                                `;
-                                mainPageHeadingBefore.appendChild(button);
-                                setNAMWCPopup(button);
-                            }
-                        } else if (esgst.archivePath) {
-                            if (esgst.as) {
-                                button = document.createElement(`div`);
-                                button.className = `esgst-heading-button`;
-                                button.title = `Search archive.`;
-                                button.innerHTML = `
-                                    <i class="fa fa-folder"></i>
-                                    <i class="fa fa-search"></i>
-                                `;
-                                mainPageHeadingBefore.appendChild(button);
-                                loadAs(button);
-                            }
-                        } else if (esgst.whitelistPath) {
-                            if (esgst.wbs) {
-                                button1 = document.createElement(`div`);
-                                button1.className = `esgst-heading-button`;
-                                button1.title = `Sort by added date from oldest to newest.`;
-                                button1.innerHTML = `
-                                    <i class="fa fa-sort-amount-asc"></i>
-                                `;
-                                mainPageHeadingBefore.appendChild(button1);
-                                button2 = document.createElement(`div`);
-                                button2.className = `esgst-heading-button`;
-                                button2.title = `Sort by added date from newest to oldest.`;
-                                button2.innerHTML = `
-                                    <i class="fa fa-sort-amount-desc"></i>
-                                `;
-                                mainPageHeadingBefore.appendChild(button2);
-                                addWbsButton(`whitelistedDate`, `whitelist`, `whitelisted`, button1, button2);
-                            }
-                        } else if (esgst.blacklistPath) {
-                            if (esgst.wbs) {
-                                button1 = document.createElement(`div`);
-                                button1.className = `esgst-heading-button`;
-                                button1.title = `Sort by added date from oldest to newest.`;
-                                button1.innerHTML = `
-                                    <i class="fa fa-sort-amount-asc"></i>
-                                `;
-                                mainPageHeadingBefore.appendChild(button1);
-                                button2 = document.createElement(`div`);
-                                button2.className = `esgst-heading-button`;
-                                button2.title = `Sort by added date from newest to oldest.`;
-                                button2.innerHTML = `
-                                    <i class="fa fa-sort-amount-desc"></i>
-                                `;
-                                mainPageHeadingBefore.appendChild(button2);
-                                addWbsButton(`blacklistedDate`, `blacklist`, `blacklisted`, button1, button2);
-                            }
-                        } else if (esgst.profilePath) {
-                            button = document.getElementsByClassName(`form__sync-default`)[0];
-                            if (esgst.er_s) {
-                                button.addEventListener(`click`, openErPopup.bind(null, {
-                                    button: button
-                                }));
-                            }
-                        }
-                        if (esgst.newGiveawayPath) {
-                            rows = document.getElementsByClassName(`form__rows`)[0];
-                            if (rows) {
-                                button = document.createElement(`div`);
-                                button.className = `esgst-gts-button esgst-heading-button`;
-                                button.title = `View/apply templates.`;
-                                button.innerHTML = `
-                                    <i class="fa fa-file"></i>
-                                `;
-                                mainPageHeadingBefore.appendChild(button);
-                                addGtsButtonSection(button, rows);
-                            }
-                        }
-                        if (location.href.match(new RegExp(`\\/trades\\/search\\?user=${esgst.steamId}`))) {
-                            if (esgst.tb) {
-                                button = document.createElement(`div`);
-                                button.className = `esgst-heading-button`;
-                                button.title = `Bump trades.`;
-                                button.innerHTML = `
-                                    <i class="fa fa-chevron-circle-up"></i>
-                                `;
-                                mainPageHeadingBefore.appendChild(button);
-                                button.addEventListener(`click`, getTbTrades.bind(null, button));
-                            }
-                        }
-                        if (esgst.at) {
-                            esgst.endlessFeatures.push(getTimestamps);
-                            getTimestamps(document);
-                        }
+                        loadFeatures();
                     }
-                    esgst.mainPageHeading.insertBefore(mainPageHeadingBefore, esgst.mainPageHeading.firstElementChild);
-                    for (i = 0, n = esgst.toExecute.length; i < n; ++i) {
-                        esgst.toExecute[i]();
-                    }
-                    goToComment(esgst.originalHash);
-                    window.addEventListener("beforeunload", function (event) {
-                        if (document.getElementsByClassName("esgst-busy")[0]) {
-                            event.returnValue = true;
-                            return true;
-                        }
-                    });
-                    window.addEventListener("hashchange", function () {
-                        goToComment();
-                    });
-                    GM_addStyle(style);
                 }
             }
         } else if ((esgst.settings.rgr_sg || esgst.settings.rgr_st) && esgst.steam) {
             checkRgrRemoved();
         }
+    }
+
+    function loadFeatures() {
+        var button, button1, button2, button3, title, html, rows, mainPageHeadingBefore = document.createDocumentFragment();
+        if (esgst.sg) {
+            if (esgst.wbc) {
+                esgst.wbcButton = button = document.createElement(`div`);
+                button.className = `esgst-hidden esgst-heading-button`;
+                if (esgst.wbc_b) {
+                    title = `Check for whitelists/blacklists.`;
+                    html = `
+                        <i class="fa fa-heart"></i>
+                        <i class="fa fa-ban"></i>
+                        <i class="fa fa-question-circle"></i>
+                    `;
+                } else {
+                    title = `Check for whitelists.`;
+                    html = `
+                        <i class="fa fa-heart"></i>
+                        <i class="fa fa-question-circle"></i>
+                    `;
+                }
+                button.title = title;
+                button.innerHTML = html;
+                mainPageHeadingBefore.appendChild(button);
+                addWBCButton(true, button);
+            }
+        }
+        if (esgst.giveawaysPath || esgst.discussionsPath) {
+            esgst.endlessFeatures.push(loadDiscussionFeatures);
+            loadDiscussionFeatures(document);
+        }
+        if (esgst.gv && (esgst.giveawaysPath || esgst.gv_gb || esgst.gv_ged || esgst.gv_tge)) {
+            esgst.giveawayFeatures.push(setGvContainers);
+            esgst.style += `
+                .esgst-gv-spacing {
+                    font-weight: bold;
+                    padding: 10px;
+                    text-align: center;
+                    width: 100px;
+                }
+
+                .esgst-gv-view {
+                    font-size: 0;
+                    padding: 5px 0;
+                    text-align: center;
+                }
+
+                .esgst-gv-view.pinned-giveaways__inner-wrap--minimized .giveaway__row-outer-wrap:nth-child(-n + 10) {
+                    display: inline-block;" +
+                }
+
+                .esgst-gv-container {
+                    border: 0 !important;
+                    box-shadow: none !important;
+                    display: inline-block;
+                    font-size: 12px;
+                    padding: 0;
+                    text-align: center;
+                    vertical-align: top;
+                }
+
+                .esgst-gv-box {
+                    display: block;
+                }
+
+                .esgst-gv-box >*:not(.giveaway__summary):not(.esgst-gv-icons) {
+                    margin: 0 !important;
+                }
+
+                .esgst-gv-box.is-faded:hover {
+                    opacity: 1;
+                }
+
+                .esgst-gv-icons {
+                    float: right;
+                    margin: -18px 0 0 !important;
+                }
+
+                .esgst-gv-time, .esgst-popup .esgst-ged-source {
+                    background-color: #fff;
+                    font-weight: bold;
+                }
+
+                .esgst-gv-time i {
+                    font-size: 12px;
+                    vertical-align: baseline;
+                }
+
+                .esgst-gv-icons >* {
+                    line-height: normal;
+                    margin: 0 !important;
+                    padding: 2px;
+                }
+                .esgst-gv-icons .giveaway__column--invite-only {
+                    padding: 1px 2px;
+                }
+                .esgst-gv-icons .giveaway__column--contributor-level {
+                    padding: 2px 5px;
+                }
+
+                .esgst-gv-popout {
+                    font-size: 11px;
+                    max-width: 174px;
+                    position: absolute;
+                    width: 174px;
+                    z-index: 1;
+                }
+
+                .esgst-gv-popout .giveaway__heading {
+                    display: block;
+                    height: auto;
+                }
+
+                .esgst-gv-popout .giveaway__heading__name {
+                    display: inline-block;
+                    font-size: 12px;
+                    max-width: 150px;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    vertical-align: middle;
+                }
+
+                .esgst-gv-popout .giveaway__heading__thin {
+                    font-size: 11px;
+                }
+
+                .esgst-gv-popout .esgst-gc-panel {
+                    font-size: 11px;
+                    text-align: center;
+                }
+
+                .esgst-gv-popout .esgst-gc-panel i, .esgst-gv-popout .giveaway__links i, .esgst-gv-popout .esgst-gwc i, .esgst-gv-popout .esgst-gwr i, .esgst-gv-popout .esgst-ggl-panel, .esgst-gv-popout .esgst-ggl-panel i {
+                    font-size: 11px;
+                }
+
+                .esgst-gv-popout .esgst-gc.genres {
+                    margin: 0;
+                }
+
+                .esgst-gv-popout .giveaway__columns:not(.esgst-giveaway-panel):not(.esgst-gv-icons) {
+                    display: block;
+                    float: left;
+                    width: calc(100% - 37px);
+                }
+
+                .esgst-gv-popout .giveaway__columns:not(.esgst-giveaway-panel):not(.esgst-gv-icons) >* {
+                    margin: 0;
+                    text-align: left;
+                }
+
+                .esgst-gv-popout .esgst-giveaway-panel {
+                    display: block;
+                    font-size: 11px;
+                }
+
+                .esgst-gv-popout .esgst-giveaway-panel >* {
+                    display: inline-block;
+                    margin: 0;
+                    width: 67px;
+                }
+
+                .esgst-gv-popout .esgst-button-set {
+                    width: 100%;
+                }
+
+                .esgst-gv-popout .esgst-button-set >* {
+                    padding: 0;
+                    width: 100%;
+                }
+
+                .esgst-gv-creator {
+                    margin: ${esgst.ib ? 10 : 5}px 5px 5px;
+                    width: ${esgst.ib ? 127 : 132}px;
+                }
+
+                .esgst-gv-popout .giveaway__links a:last-child {
+                    margin: 0 !important;
+                }
+
+                .esgst-gv-popout .giveaway__links {
+                    display: block;
+                    height: auto;
+                    margin: 5px 5px ${esgst.ib ? 10 : 5}px;
+                    text-align: center;
+                    width: ${esgst.ib ? 127 : 132}px;
+                }
+
+                .esgst-gv-popout .esgst-gt-tags, .esgst-gv-popout .PUTTags {
+                    display: none;
+                }
+
+                .esgst-gv-popout .giveaway_image_avatar, .esgst-gv-popout .featured_giveaway_image_avatar {
+                    margin: 5px;
+                    position: absolute;
+                    right: 5px;
+                }
+
+                .esgst-gv-popout .esgst-giveaway-links, .esgst-gv-popout .esgst-giveaway-panel {
+                    float: none;
+                }
+            `;
+            if (esgst.giveawaysPath) {
+                loadGv();
+            }
+        }
+        if (esgst.gf && esgst.gf_h) {
+            esgst.giveawayFeatures.push(getGfGiveaways);
+        }
+        if (esgst.giveawaysPath) {
+            if (esgst.hfc && esgst.featuredContainer) {
+                esgst.featuredContainer.classList.add(`esgst-hidden`);
+            }
+            if (esgst.at && esgst.at_g) {
+                esgst.endlessFeatures.push(getTimestamps);
+                getTimestamps(document);
+            }
+            if (esgst.ags) {
+                addAgsPanel();
+                esgst.style += `
+                    .esgst-ags-panel {
+                        margin: 0 0 15px 0;
+                    }
+
+                    .esgst-ags-panel >* {
+                        display: block;
+                        font-size: 0;
+                    }
+
+                    .esgst-ags-filter {
+                        display: inline-block;
+                        font-size: 0;
+                        margin: 5px;
+                    }
+
+                    .esgst-ags-filter >* {
+                        display: inline-block;
+                        font-size: 12px;
+                        padding: 0 5px !important;
+                        width: 74px;
+                    }
+
+                    .esgst-ags-checkbox-filter {
+                        font-size: 12px;
+                        margin: 5px;
+                    }
+                `;
+            }
+            if (esgst.gf) {
+                addGfContainer();
+            }
+            if (esgst.gwc) {
+                button = document.createElement(`div`);
+                button.className = `esgst-heading-button`;
+                button.title = `Sort giveaways by winning chance (highest to lowest).`;
+                button.innerHTML = `
+                    <i class="fa fa-area-chart"></i>
+                    <i class="fa fa-sort-numeric-desc"></i>
+                `;
+                mainPageHeadingBefore.appendChild(button);
+                addGwcSortButton(button);
+            }
+        } else {
+            if (esgst.groupPath && esgst.gf) {
+                addGfContainer();
+            }
+            if (esgst.createdPath) {
+                if (esgst.ugs) {
+                    button = document.createElement(`div`);
+                    button.className = `esgst-heading-button`;
+                    button.title = `Send unsent gifts.`;
+                    button.innerHTML = `
+                        <i class="fa fa-gift"></i>
+                        <i class="fa fa-send"></i>
+                    `;
+                    mainPageHeadingBefore.appendChild(button);
+                    addUGSButton(button);
+                }
+            } else if (esgst.enteredPath) {
+                if (esgst.er) {
+                    button = document.createElement(`div`);
+                    button.className = `esgst-heading-button`;
+                    button.title = `Remove entries for owned games.`;
+                    button.innerHTML = `
+                        <i class="fa fa-tag"></i>
+                        <i class="fa fa-times-circle"></i>
+                    `;
+                    mainPageHeadingBefore.appendChild(button);
+                    button.addEventListener(`click`, openErPopup.bind(null, {
+                        button: button
+                    }));
+                }
+                if (esgst.gwc) {
+                    esgst.endlessFeatures.push(addGwcrHeading);
+                    addGwcrHeading(document, true);
+                    button = document.createElement(`div`);
+                    button.className = `esgst-heading-button`;
+                    button.title = `Sort giveaways by winning chance (highest to lowest).`;
+                    button.innerHTML = `
+                        <i class="fa fa-area-chart"></i>
+                        <i class="fa fa-sort-numeric-desc"></i>
+                    `;
+                    mainPageHeadingBefore.appendChild(button);
+                    addGwcSortButton(button);
+                }
+            } else if (esgst.giveawayPath) {
+                if (esgst.hgebd) {
+                    var entryButton = esgst.sidebar.getElementsByClassName(`sidebar__entry-insert`)[0];
+                    var errorButton = esgst.sidebar.getElementsByClassName(`sidebar__error`)[0];
+                    var hideButton = document.getElementsByClassName(`featured__giveaway__hide`)[0];
+                    if ((entryButton || errorButton) && !hideButton) {
+                        var parent = (entryButton || errorButton).parentElement;
+                        if (entryButton) {
+                            entryButton.remove();
+                        }
+                        if (errorButton) {
+                            errorButton.remove();
+                        }
+                        parent.insertAdjacentHTML(`afterBegin`, `
+                            <div class="sidebar__error is-disabled">
+                                <i class="fa fa-exclamation-circle"></i> Hidden Game
+                            </div>
+                        `);
+                    }
+                }
+            } else if (esgst.discussionsPath) {
+                if (esgst.ds) {
+                    button = document.createElement(`div`);
+                    button.className = `esgst-heading-button`;
+                    button.title = `Sort discussions by creation date (newest to oldest).`;
+                    button.innerHTML = `
+                        <i class="fa fa-sort-amount-asc"></i>
+                    `;
+                    mainPageHeadingBefore.appendChild(button);
+                    addDsButton(button);
+                }
+            }
+            if (esgst.commentsPath) {
+                if (esgst.giveawayCommentsPath) {
+                    if (esgst.tge && document.querySelector(`[href*="/giveaway/"]`)) {
+                        button = document.createElement(`div`);
+                        button.className = `esgst-heading-button`;
+                        button.title = `Extract train giveaways.`;
+                        button.innerHTML = `
+                            <i class="fa fa-train"></i>
+                            <i class="fa fa-search"></i>
+                        `;
+                        mainPageHeadingBefore.appendChild(button);
+                        button.addEventListener(`click`, extractTgeGiveaways.bind(null, {
+                            button: button
+                        }));
+                    }
+                } else if (esgst.discussionPath) {
+                    if (esgst.tge && document.querySelector(`[href*="/giveaway/"]`)) {
+                        button = document.createElement(`div`);
+                        button.className = `esgst-heading-button`;
+                        button.title = `Extract train giveaways.`;
+                        button.innerHTML = `
+                            <i class="fa fa-train"></i>
+                            <i class="fa fa-search"></i>
+                        `;
+                        mainPageHeadingBefore.appendChild(button);
+                        button.addEventListener(`click`, extractTgeGiveaways.bind(null, {
+                            button: button
+                        }));
+                    }
+                    if (esgst.mpp) {
+                        button = document.createElement(`div`);
+                        button.className = `esgst-heading-button`;
+                        button.title = `Open the main post.`;
+                        button.innerHTML = `
+                            <i class="fa fa-home"></i>
+                        `;
+                        mainPageHeadingBefore.appendChild(button);
+                        loadMpp(button);
+                    }
+                }
+                if (esgst.replyBox) {
+                    button = document.createElement(`div`);
+                    button.className = `esgst-heading-button`;
+                    button.title = `Add a comment.`;
+                    button.innerHTML = `
+                        <i class="fa fa-comment"></i>
+                    `;
+                    mainPageHeadingBefore.appendChild(button);
+                    loadRbp(button);
+                }
+                if (esgst.ct && !esgst.ct_s) {
+                    button1 = document.createElement(`div`);
+                    button1.className = `esgst-heading-button`;
+                    button1.title = `Go to the first unread comment of this page.`;
+                    button1.innerHTML = `
+                        <i class="fa fa-comments-o"></i>
+                    `;
+                    mainPageHeadingBefore.appendChild(button1);
+                    button2 = document.createElement(`div`);
+                    button2.className = `esgst-heading-button`;
+                    button2.title = `Mark all comments in this page as read.`;
+                    button2.innerHTML = `
+                        <i class="fa fa-eye"></i>
+                    `;
+                    mainPageHeadingBefore.appendChild(button2);
+                    button3 = document.createElement(`div`);
+                    button3.className = `esgst-heading-button`;
+                    button3.title = `Mark all comments in this page as unread.`;
+                    button3.innerHTML = `
+                        <i class="fa fa-eye-slash"></i>
+                    `;
+                    mainPageHeadingBefore.appendChild(button3);
+                    addCtCommentPanel(button1, button2, button3);
+                }
+            } else if (esgst.inboxPath) {
+                if (esgst.ct && !esgst.ct_s) {
+                    button1 = document.createElement(`div`);
+                    button1.className = `esgst-heading-button`;
+                    button1.title = `Go to the first unread comment of this page.`;
+                    button1.innerHTML = `
+                        <i class="fa fa-comments-o"></i>
+                    `;
+                    mainPageHeadingBefore.appendChild(button1);
+                    button2 = document.createElement(`div`);
+                    button2.className = `esgst-heading-button`;
+                    button2.title = `Mark all comments in this page as read.`;
+                    button2.innerHTML = `
+                        <i class="fa fa-eye"></i>
+                    `;
+                    mainPageHeadingBefore.appendChild(button2);
+                    button3 = document.createElement(`div`);
+                    button3.className = `esgst-heading-button`;
+                    button3.title = `Mark all comments in this page as unread.`;
+                    button3.innerHTML = `
+                        <i class="fa fa-eye-slash"></i>
+                    `;
+                    mainPageHeadingBefore.appendChild(button3);
+                    addCtCommentPanel(button1, button2, button3);
+                }
+            } else if (esgst.winnersPath) {
+                if (esgst.namwc) {
+                    button = document.createElement(`div`);
+                    button.className = `esgst-heading-button`;
+                    button.title = `Check for not activated/multiple wins.`;
+                    button.innerHTML = `
+                        <i class="fa fa-trophy"></i>
+                        <i class="fa fa-question-circle"></i>
+                    `;
+                    mainPageHeadingBefore.appendChild(button);
+                    setNAMWCPopup(button);
+                }
+            } else if (esgst.archivePath) {
+                if (esgst.as) {
+                    button = document.createElement(`div`);
+                    button.className = `esgst-heading-button`;
+                    button.title = `Search archive.`;
+                    button.innerHTML = `
+                        <i class="fa fa-folder"></i>
+                        <i class="fa fa-search"></i>
+                    `;
+                    mainPageHeadingBefore.appendChild(button);
+                    loadAs(button);
+                }
+            } else if (esgst.whitelistPath) {
+                if (esgst.wbs) {
+                    button1 = document.createElement(`div`);
+                    button1.className = `esgst-heading-button`;
+                    button1.title = `Sort by added date from oldest to newest.`;
+                    button1.innerHTML = `
+                        <i class="fa fa-sort-amount-asc"></i>
+                    `;
+                    mainPageHeadingBefore.appendChild(button1);
+                    button2 = document.createElement(`div`);
+                    button2.className = `esgst-heading-button`;
+                    button2.title = `Sort by added date from newest to oldest.`;
+                    button2.innerHTML = `
+                        <i class="fa fa-sort-amount-desc"></i>
+                    `;
+                    mainPageHeadingBefore.appendChild(button2);
+                    addWbsButton(`whitelistedDate`, `whitelist`, `whitelisted`, button1, button2);
+                }
+            } else if (esgst.blacklistPath) {
+                if (esgst.wbs) {
+                    button1 = document.createElement(`div`);
+                    button1.className = `esgst-heading-button`;
+                    button1.title = `Sort by added date from oldest to newest.`;
+                    button1.innerHTML = `
+                        <i class="fa fa-sort-amount-asc"></i>
+                    `;
+                    mainPageHeadingBefore.appendChild(button1);
+                    button2 = document.createElement(`div`);
+                    button2.className = `esgst-heading-button`;
+                    button2.title = `Sort by added date from newest to oldest.`;
+                    button2.innerHTML = `
+                        <i class="fa fa-sort-amount-desc"></i>
+                    `;
+                    mainPageHeadingBefore.appendChild(button2);
+                    addWbsButton(`blacklistedDate`, `blacklist`, `blacklisted`, button1, button2);
+                }
+            } else if (esgst.profilePath) {
+                button = document.getElementsByClassName(`form__sync-default`)[0];
+                if (esgst.er_s) {
+                    button.addEventListener(`click`, openErPopup.bind(null, {
+                        button: button
+                    }));
+                }
+            }
+            if (esgst.newGiveawayPath) {
+                rows = document.getElementsByClassName(`form__rows`)[0];
+                if (rows) {
+                    button = document.createElement(`div`);
+                    button.className = `esgst-gts-button esgst-heading-button`;
+                    button.title = `View/apply templates.`;
+                    button.innerHTML = `
+                        <i class="fa fa-file"></i>
+                    `;
+                    mainPageHeadingBefore.appendChild(button);
+                    addGtsButtonSection(button, rows);
+                }
+            }
+            if (location.href.match(new RegExp(`\\/trades\\/search\\?user=${esgst.steamId}`))) {
+                if (esgst.tb) {
+                    button = document.createElement(`div`);
+                    button.className = `esgst-heading-button`;
+                    button.title = `Bump trades.`;
+                    button.innerHTML = `
+                        <i class="fa fa-chevron-circle-up"></i>
+                    `;
+                    mainPageHeadingBefore.appendChild(button);
+                    button.addEventListener(`click`, getTbTrades.bind(null, button));
+                }
+            }
+            if (esgst.at) {
+                esgst.endlessFeatures.push(getTimestamps);
+                getTimestamps(document);
+            }
+        }
+        esgst.mainPageHeading.insertBefore(mainPageHeadingBefore, esgst.mainPageHeading.firstElementChild);
+        for (var i = 0, n = esgst.toExecute.length; i < n; ++i) {
+            esgst.toExecute[i]();
+        }
+        goToComment(esgst.originalHash);
+        window.addEventListener("beforeunload", function (event) {
+            if (document.getElementsByClassName("esgst-busy")[0]) {
+                event.returnValue = true;
+                return true;
+            }
+        });
+        window.addEventListener("hashchange", function () {
+            goToComment();
+        });
+        GM_addStyle(esgst.style);
     }
 
     function loadFeature(feature) {
@@ -4553,7 +4577,7 @@
 
     /* Popup */
 
-    function createPopup(icon, title, temp) {
+    function createPopup(icon, title, temp, settings) {
         var popup;
         popup = {};
         popup.popup = insertHtml(document.body, `beforeEnd`, `
@@ -4570,15 +4594,18 @@
                     <div class="esgst-popup-scrollable"></div>
                 </div>
                 <div class="popup__actions popup_actions">
-                    <span>Manage</span>
+                    <span class="esgst-hidden">Settings</span>
                     <span class="b-close">Close</span>
                 </div>
             </div>
         `);
         popup.description = popup.popup.firstElementChild.nextElementSibling;
         popup.scrollable = popup.description.firstElementChild;
-        var manage = popup.description.nextElementSibling.firstElementChild;
-        manage.addEventListener(`click`, loadSMMenu);
+        if (!settings) {
+            settings = popup.description.nextElementSibling.firstElementChild;
+            settings.classList.remove(`esgst-hidden`);
+            settings.addEventListener(`click`, loadSMMenu);
+        }
         popup.open = function (callback) {
             popup.popup.classList.remove(`esgst-hidden`);
             popup.opened = $(popup.popup).bPopup({
@@ -5495,72 +5522,6 @@ margin-bottom: 25px;
 float: right;
 }
 
-.sidebar .esgst-adots {
-max-height: 300px;
-max-width: 336px;
-overflow: auto;
-}
-
-.sidebar .esgst-adots {
-margin: 0;
-}
-
-.sidebar .esgst-adots .PUTTags {
-display: none;
-}
-
-.sidebar .esgst-adots .esgst-dh-highlighted {
-padding: 0 !important;
-padding-bottom: 5px !important;
-}
-
-.sidebar .esgst-adots .homepage_table_column_heading {
-display: inline-block;
-max-width: 225px;
-overflow: hidden;
-text-overflow: ellipsis;
-vertical-align: middle;
-white-space: nowrap;
-}
-
-.sidebar .esgst-adots .table__row-outer-wrap {
-padding: 0 !important;
-padding-bottom: 5px !important;
-border: 0;
-box-shadow: none;
-}
-
-.sidebar .esgst-adots .table__row-inner-wrap {
-display: block;
-}
-
-.sidebar .esgst-adots .table__row-inner-wrap >:first-child {
-float: left;
-width: 35px;
-height: 35px;
-}
-
-.sidebar .esgst-adots .table__row-inner-wrap >:first-child >* {
-width: 35px;
-height: 35px;
-}
-
-.sidebar .esgst-adots .table__row-inner-wrap >:last-child {
-margin-left: 40px;
-text-align: left;
-width: auto;
-}
-
-.sidebar .esgst-adots .table__row-inner-wrap >*:not(:last-child) {
-display: inline-block;
-}
-
-.sidebar .esgst-adots .table__column--width-fill {
-margin-left: 5px;
-vertical-align: top;
-width: calc(100% - 50px);
-}
-
 .esgst-rbot .reply_form .btn_cancel {
 display: none;
 }
@@ -6000,6 +5961,9 @@ min-width: 0;
             "}" + /* from SquishedPotato's dark theme */ `
 .APBox .featured__inner-wrap .APLink[href*="group"] {
 	top: -30px;
+            }
+            .esgst-ap-suspended >* {
+                color: #e9202a;
             }
             .esgst-ap-popout {
                 border-radius: 5px;
@@ -7402,6 +7366,7 @@ min-width: 0;
                 giveaways[giveaway.code] = {};
             }
             giveaways[giveaway.code].code = giveaway.code;
+            giveaways[giveaway.code].endTime = giveaway.endTime;
             giveaways[giveaway.code].hidden = true;
             GM_setValue(`giveaways`, JSON.stringify(giveaways));
             deleteLock();
@@ -8860,7 +8825,7 @@ ${avatar.outerHTML}
                         popup.description.appendChild(set.set);
                         popup.open();
                     }
-                } else if (esgst.elgb_r) {
+                } else if (esgst.elgb_r && !esgst.elgb_r_d) {
                     popup = createPopup(`fa-comment`, `<a href="${giveaway.url}"><span>${giveaway.name}</span></a> by <a href="/user/${giveaway.creator}">${giveaway.creator}</a>`, true);
                     box = insertHtml(popup.scrollable, `beforeEnd`, `<textarea></textarea>`);
                     addCFHPanel(box);
@@ -8880,7 +8845,7 @@ ${avatar.outerHTML}
                     });
                 }
             });
-        } else if (esgst.elgb_r) {
+        } else if (esgst.elgb_r && !esgst.elgb_r_d) {
             popup = createPopup(`fa-comment`, `<a href="${giveaway.url}"><span>${giveaway.name}</span></a> by <a href="/user/${giveaway.creator}">${giveaway.creator}</a>`, true);
             box = insertHtml(popup.scrollable, `beforeEnd`, `<textarea></textarea>`);
             addCFHPanel(box);
@@ -11697,7 +11662,239 @@ ${avatar.outerHTML}
         }
     }
 
+    /* [OADD] Old Active Discussions Design */
+
+    function loadOadd() {
+        var deals, dealsRows, dealsSwitch, discussions, discussionsRows, discussionsSwitch, elements, i, n, response1Html, response2Html, rows;
+        request(null, false, `/discussions`, function (response1) {
+            request(null, false, `/discussions/deals`, function (response2) {
+                response1Html = DOM.parse(response1.responseText);
+                response2Html = DOM.parse(response2.responseText);
+                esgst.activeDiscussions.classList.add(`esgst-oadd`);
+                esgst.activeDiscussions.innerHTML = `
+                    <div>
+                        <div class="page__heading">
+                            <div class="esgst-heading-button" title="Switch to Deals.">
+                                <i class="fa fa-retweet"></i>
+                            </div>
+                            <div class="page__heading__breadcrumbs">
+                                <a href="/discussions">Active Discussions</a>
+                            </div>
+                            <a class="page__heading__button page__heading__button--green" href="/discussions">
+                                More<i class="fa fa-angle-right"></i>
+                            </a>
+                        </div>
+                        <div class="table">
+                            <div class="table__heading">
+                                <div class="table__column--width-fill">Summary</div>
+                                <div class="table__column--width-small text-center">Comments</div>
+                                <div class="table__column--width-medium text-right">Last Post</div>
+                            </div>
+                            <div class="table__rows"></div>
+                        </div>
+                    </div>
+                    <div class="esgst-hidden">
+                        <div class="page__heading">
+                            <div class="esgst-heading-button" title="Switch to Discussions.">
+                                <i class="fa fa-retweet"></i>
+                            </div>
+                            <div class="page__heading__breadcrumbs">
+                                <a href="/discussions/deals">Active Deals</a>
+                            </div>
+                            <a class="page__heading__button page__heading__button--green" href="/discussions/deals">
+                                More<i class="fa fa-angle-right"></i>
+                            </a>
+                        </div>
+                        <div class="table">
+                            <div class="table__heading">
+                                <div class="table__column--width-fill">Summary</div>
+                                <div class="table__column--width-small text-center">Comments</div>
+                                <div class="table__column--width-medium text-right">Last Post</div>
+                            </div>
+                            <div class="table__rows"></div>
+                        </div>
+                    </div>
+                `;
+                discussions = esgst.activeDiscussions.firstElementChild;
+                deals = discussions.nextElementSibling;
+                discussionsSwitch = discussions.firstElementChild.firstElementChild;
+                discussionsRows = discussions.lastElementChild.lastElementChild;
+                dealsSwitch = deals.firstElementChild.firstElementChild;
+                dealsRows = deals.lastElementChild.lastElementChild;
+                elements = response1Html.getElementsByClassName(`table__row-outer-wrap`);
+                for (i = 0; i < 5; ++i) {
+                    discussionsRows.appendChild(elements[0]);
+                }
+                elements = response2Html.getElementsByClassName(`table__row-outer-wrap`);
+                for (i = 0; i < 5; ++i) {
+                    dealsRows.appendChild(elements[0]);
+                }
+                discussionsSwitch.addEventListener(`click`, function () {
+                    discussions.classList.add(`esgst-hidden`);
+                    deals.classList.remove(`esgst-hidden`);
+                });
+                dealsSwitch.addEventListener(`click`, function () {
+                    discussions.classList.remove(`esgst-hidden`);
+                    deals.classList.add(`esgst-hidden`);
+                });
+                if (esgst.adots) {
+                    loadAdots();
+                }
+                loadFeatures();
+            });
+        });
+    }
+
     /* [ADOTS] Active Discussions On Top/Sidebar */
+
+    function loadAdots() {
+        var parent, panel, size, tabHeading1, tabHeading2, activeDiscussions, discussions, deals, element, elements, i, icon, n, comments, parent, panel;;
+        esgst.activeDiscussions.classList.remove(`widget-container--margin-top`);
+        esgst.activeDiscussions.classList.add(`esgst-adots`);
+        if (esgst.adots_index === 0) {
+            parent = esgst.activeDiscussions.parentElement;
+            parent.insertBefore(esgst.activeDiscussions, parent.firstElementChild);
+        } else {
+            if (esgst.ib) {
+                size = 45;
+            } else {
+                size = 35;
+            }
+            GM_addStyle(`
+                .sidebar .table__row-outer-wrap {
+                    padding: 5px 0;
+                }
+                .esgst-adots-tab-heading {
+                    background-color: #2f3540;
+                    border-top-left-radius: 5px;
+                    border-top-right-radius: 5px;
+                    color: #fff;
+                    cursor: pointer;
+                    display: inline-block;
+                    opacity: 0.5;
+                    padding: 5px 10px;
+                    text-shadow: none;
+                }
+                .esgst-adots-tab-heading.esgst-selected {
+                    opacity: 1;
+                }
+                .esgst-adots {
+                    margin: 0;
+                    max-height: 300px;
+                    max-width: 336px;
+                    overflow: auto;
+                }
+                .esgst-adots .PUTTags {
+                    display: none;
+                }
+                .esgst-adots .esgst-dh-highlighted {
+                    padding: 0 !important;
+                    padding-bottom: 5px !important;
+                }
+                .esgst-adots .table__column__heading, .esgst-adots .homepage_table_column_heading {
+                    display: inline-block;
+                    max-width: 225px;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    vertical-align: middle;
+                    white-space: nowrap;
+                }
+                .esgst-adots .table__row-outer-wrap {
+                    padding: 0 !important;
+                    padding-bottom: 5px !important;
+                    border: 0;
+                    box-shadow: none;
+                }
+                .esgst-adots .table__row-inner-wrap {
+                    display: block;
+                }
+                .esgst-adots .table__row-inner-wrap >:first-child {
+                    float: left;
+                    width: ${size}px;
+                    height: ${size}px;
+                }
+                .esgst-adots .table__row-inner-wrap >:first-child >* {
+                    width: ${size}px;
+                    height: ${size}px;
+                }
+                .esgst-adots .table__row-inner-wrap >:last-child {
+                    margin-left: ${size + 5}px;
+                    text-align: left;
+                    width: auto;
+                }
+                .esgst-adots .table__row-inner-wrap >*:not(:last-child) {
+                    display: inline-block;
+                }
+                .esgst-adots .table__column--width-fill {
+                    margin-left: 5px;
+                    vertical-align: top;
+                    width: calc(100% - ${size + 15}px);
+                }
+            `);
+            panel = insertHtml(esgst.sidebar, `beforeEnd`, `
+                <h3 class="sidebar__heading">
+                    <span class="esgst-adots-tab-heading esgst-selected">Discussions</span>
+                    <span class="esgst-adots-tab-heading">Deals</span>
+                    <a class="esgst-float-right sidebar__navigation__item__name" href="/discussions">More</a>
+                </h3>
+            `);
+            tabHeading1 = panel.firstElementChild;
+            tabHeading2 = tabHeading1.nextElementSibling;
+            if (esgst.oadd) {
+                discussions = esgst.activeDiscussions.firstElementChild;
+                deals = esgst.activeDiscussions.lastElementChild;
+                discussions.firstElementChild.remove();
+                discussions.firstElementChild.firstElementChild.remove();
+                deals.firstElementChild.remove();
+                deals.firstElementChild.firstElementChild.remove();
+                elements = esgst.activeDiscussions.getElementsByClassName(`table__column--last-comment`);
+                for (i = 0, n = elements.length; i < n; ++i) {
+                    icon = elements[0].getElementsByClassName(`table__last-comment-icon`)[0];
+                    if (icon) {
+                        icon.classList.add(`esgst-float-right`);
+                        elements[0].previousElementSibling.appendChild(icon);
+                    }
+                    elements[0].remove();
+                }
+                discussions = discussions.firstElementChild.firstElementChild;
+                deals = deals.firstElementChild.firstElementChild;
+            } else {
+                discussions = esgst.activeDiscussions.firstElementChild.firstElementChild.lastElementChild;
+                deals = esgst.activeDiscussions.lastElementChild.firstElementChild.lastElementChild;
+                elements = discussions.getElementsByClassName(`table__row-outer-wrap`);
+                for (i = 0, n = elements.length; i < n; ++i) {
+                    element = elements[i];
+                    comments = element.getElementsByClassName(`table__column__secondary-link`)[0];
+                    parent = comments.parentElement;
+                    panel = insertHtml(parent, `afterEnd`, `<p></p><div style="clear: both;"></div>`);
+                    panel.appendChild(comments);
+                    parent.lastElementChild.classList.add(`esgst-float-right`);
+                    panel.appendChild(parent.lastElementChild);
+                    parent.remove();
+                }
+                elements = deals.getElementsByClassName(`table__row-outer-wrap`);
+                for (i = 0, n = elements.length; i < n; ++i) {
+                    element = elements[i];
+                    comments = element.getElementsByClassName(`table__column__secondary-link`)[0];
+                    parent = comments.parentElement;
+                    panel = insertHtml(parent, `afterEnd`, `<p></p><div style="clear: both;"></div>`);
+                    panel.appendChild(comments);
+                    parent.lastElementChild.classList.add(`esgst-float-right`);
+                    panel.appendChild(parent.lastElementChild);
+                    parent.remove();
+                }
+            }
+            deals.classList.add(`esgst-hidden`, `esgst-adots`);
+            discussions.classList.add(`esgst-adots`);
+            activeDiscussions = insertHtml(esgst.sidebar, `beforeEnd`, `<div></div>`);
+            activeDiscussions.appendChild(discussions);
+            activeDiscussions.appendChild(deals);
+            tabHeading1.addEventListener(`click`, changeAdotsTab.bind(null, tabHeading1, tabHeading2, discussions, deals));
+            tabHeading2.addEventListener(`click`, changeAdotsTab.bind(null, tabHeading2, tabHeading1, deals, discussions));
+            esgst.activeDiscussions.remove();
+            esgst.activeDiscussions = activeDiscussions;
+        }
+    }
 
     function changeAdotsTab(button1, button2, first, second) {
         button2.classList.remove(`esgst-selected`);
@@ -20110,7 +20307,6 @@ ${avatar.outerHTML}
 
     function loadCt() {
         if ((esgst.giveawaysPath || esgst.commentsPath || esgst.inboxPath || esgst.discussionsPath) && !document.getElementsByClassName(`table--summary`)[0]) {
-            esgst.commentFeatures.push(getCtComments);
             if (esgst.commentsPath || esgst.inboxPath) {
             } else {
                 esgst.endlessFeatures.push(addCtDiscussionPanels);
@@ -20119,78 +20315,102 @@ ${avatar.outerHTML}
         }
     }
 
-    function getCtComments(comments, goToUnread, markRead, markUnread) {
+    function getCtComments(count, comments, goToUnread, markRead, markUnread, callback) {
         if (goToUnread) {
-            checkCtComments(comments, true);
+            checkCtComments(count, comments, true, false, false, callback);
         } else {
             createLock(`commentLock`, 300, function(deleteLock) {
-                checkCtComments(comments, false, markRead, markUnread);
+                checkCtComments(count, comments, false, markRead, markUnread, callback);
                 deleteLock();
             });
         }
     }
 
-    function checkCtComments(comments, goToUnread, markRead, markUnread) {
-        var button, code, comment, i, n, saved, source, type, unread;
+    function checkCtComments(count, comments, goToUnread, markRead, markUnread, callback) {
+        var button, code, comment, found, i, n, saved, source, type, unread;
         saved = JSON.parse(GM_getValue(`comments`));
         n = comments.length;
         if (n > 0) {
+            found = false;
             for (i = 0; i < n; ++i) {
                 comment = comments[i];
                 if (comment.id || comment.id.match(/^$/)) {
-                if (!saved[comment.type][comment.code]) {
-                    saved[comment.type][comment.code] = {
-                        comments: {}
-                    };
-                } else {
-                    delete saved[comment.type][comment.code].comments.Count;
-                    delete saved[comment.type][comment.code].comments.undefined;
-                }
-                saved[comment.type][comment.code].visited = true;
-                button = comment.comment.getElementsByClassName(`esgst-ct-comment-button`)[0];
-                if (comment.author === esgst.username) {
-                    markCtCommentRead(comment, saved);
-                } else if (!saved[comment.type][comment.code].comments[comment.id] || comment.timestamp !== saved[comment.type][comment.code].comments[comment.id].timestamp) {
-                    if (goToUnread) {
-                        if (esgst.ct_r && ((esgst.discussionPath && !esgst.es_r) || !esgst.discussionPath)) {
-                            unread = comment;
-                        } else {
-                            if (esgst.discussionsPath) {
-                                esgst.ctUnreadFound = true;
-                                if (comment.id) {
-                                    window.open(`/go/comment/${comment.id}`);
-                                } else {
-                                    window.open(`/discussion/${comment.code}/`);
-                                }
-                            } else {
-                                goToComment(comment.id, comment.comment);
-                            }
-                            break;
-                        }
-                    } else if (markRead) {
-                        markCtCommentRead(comment, saved);
-                        addCtUnreadCommentButton(button, comment);
+                    if (!saved[comment.type][comment.code]) {
+                        saved[comment.type][comment.code] = {
+                            comments: {}
+                        };
                     } else {
-                        markCtCommentUnread(comment, saved);
-                        addCtReadCommentButton(button, comment);
+                        delete saved[comment.type][comment.code].comments.Count;
+                        delete saved[comment.type][comment.code].comments.undefined;
                     }
-                } else if (markUnread) {
-                    markCtCommentUnread(comment, saved);
-                    addCtReadCommentButton(button, comment);
-                } else {
-                    markCtCommentRead(comment, saved);
-                    addCtUnreadCommentButton(button, comment);
-                }
+                    if (count > 0) {
+                        saved[comment.type][comment.code].count = count;
+                    }
+                    saved[comment.type][comment.code].visited = true;
+                    if (!esgst.ct_s) {
+                        button = comment.comment.getElementsByClassName(`esgst-ct-comment-button`)[0];
+                        if (comment.author === esgst.username) {
+                            markCtCommentRead(comment, saved);
+                        } else if (!saved[comment.type][comment.code].comments[comment.id] || comment.timestamp !== saved[comment.type][comment.code].comments[comment.id].timestamp) {
+                            if (goToUnread) {
+                                if ((esgst.discussionPath && ((esgst.ct_r && esgst.es_r) || (!esgst.ct_r && !esgst.es_r))) || (!esgst.discussionPath && !esgst.ct_r)) {
+                                    unread = comment;
+                                    found = true;
+                                } else {
+                                    if (esgst.discussionsPath) {
+                                        esgst.ctUnreadFound = true;
+                                        if (esgst.sto) {
+                                            if (comment.id) {
+                                                location.href = `/go/comment/${comment.id}`;
+                                            } else {
+                                                location.href = `/discussion/${comment.code}/`;
+                                            }
+                                        } else {
+                                            if (comment.id) {
+                                                window.open(`/go/comment/${comment.id}`);
+                                            } else {
+                                                window.open(`/discussion/${comment.code}/`);
+                                            }
+                                        }
+                                    } else {
+                                        goToComment(comment.id, comment.comment);
+                                    }
+                                    found = true;
+                                    break;
+                                }
+                            } else if (markRead) {
+                                markCtCommentRead(comment, saved);
+                                addCtUnreadCommentButton(button, comment);
+                            } else {
+                                markCtCommentUnread(comment, saved);
+                                addCtReadCommentButton(button, comment);
+                            }
+                        } else if (markUnread) {
+                            markCtCommentUnread(comment, saved);
+                            addCtReadCommentButton(button, comment);
+                        } else {
+                            markCtCommentRead(comment, saved);
+                            addCtUnreadCommentButton(button, comment);
+                        }
+                    }
                 }
             }
-            if (goToUnread) {
+            if (!esgst.ct_s && goToUnread) {
                 if (unread) {
                     if (esgst.discussionsPath) {
                         esgst.ctUnreadFound = true;
-                        if (unread.id) {
-                            window.open(`/go/comment/${unread.id}`);
+                        if (esgst.sto) {
+                            if (unread.id) {
+                                location.href = `/go/comment/${unread.id}`;
+                            } else {
+                                location.href = `/discussion/${unread.code}/`;
+                            }
                         } else {
-                            window.open(`/discussion/${unread.code}/`);
+                            if (unread.id) {
+                                window.open(`/go/comment/${unread.id}`);
+                            } else {
+                                window.open(`/discussion/${unread.code}/`);
+                            }
                         }
                     } else {
                         goToComment(unread.id, unread.comment);
@@ -20198,6 +20418,9 @@ ${avatar.outerHTML}
                 }
             } else {
                 GM_setValue(`comments`, JSON.stringify(saved));
+            }
+            if (callback) {
+                callback(found);
             }
         } else {
             source = window.location.pathname.match(/(giveaway|discussion|trade|ticket)\/(.+?)(\/.*)?$/);
@@ -20210,7 +20433,13 @@ ${avatar.outerHTML}
                         visited: true
                     };
                 }
+                if (count > 0) {
+                    saved[type][code].count = count;
+                }
                 GM_setValue(`comments`, JSON.stringify(saved));
+            }
+            if (callback) {
+                callback();
             }
         }
     }
@@ -20302,13 +20531,37 @@ ${avatar.outerHTML}
 
     function addCtCommentPanel(goToUnread, markRead, markUnread) {
         goToUnread.addEventListener(`click`, function() {
-            loadCommentFeatures(document, null, true);
+            goToUnread.innerHTML = `
+                <i class="fa fa-circle-o-notch fa-spin"></i>
+            `;
+            getCtComments(0, esgst.currentComments, true, false, false, function (found) {
+                goToUnread.innerHTML = `
+                    <i class="fa fa-comments-o"></i>
+                `;
+                if (!found) {
+                    createAlert(`No unread comments were found.`);
+                }
+            });
         });
         markRead.addEventListener(`click`, function() {
-            loadCommentFeatures(document, null, false, true);
+            markRead.innerHTML = `
+                <i class="fa fa-circle-o-notch fa-spin"></i>
+            `;
+            getCtComments(0, esgst.currentComments, false, true, false, function () {
+                markRead.innerHTML = `
+                    <i class="fa fa-eye"></i>
+                `;
+            });
         });
         markUnread.addEventListener(`click`, function() {
-            loadCommentFeatures(document, null, false, false, true);
+            markUnread.innerHTML = `
+                <i class="fa fa-circle-o-notch fa-spin"></i>
+            `;
+            getCtComments(0, esgst.currentComments, false, false, true, function () {
+                markUnread.innerHTML = `
+                    <i class="fa fa-eye-slash"></i>
+                `;
+            });
         });
     }
 
@@ -20323,7 +20576,7 @@ ${avatar.outerHTML}
         } else {
             key = `discussions`;
         }
-        comments = JSON.parse(GM_getValue(`comments`))[key];
+        comments = JSON.parse(GM_getValue(`comments`));
         matches = context.querySelectorAll(`.table__row-outer-wrap, .row_outer_wrap`);
         for (i = 0, n = matches.length; i < n; ++i) {
             match = matches[i];
@@ -20335,18 +20588,22 @@ ${avatar.outerHTML}
                     code = url.match(new RegExp(`/${key.slice(0, -1)}/(.+?)(/.*)?$`));
                     if (code) {
                         code = code[1];
-                        if (comments[code]) {
-                            read = 0;
-                            for (id in comments[code].comments) {
-                                if (!id.match(/^(Count|undefined|)$/) && comments[code].comments[id].timestamp) {
-                                    ++read;
+                        if (comments[key][code]) {
+                            if (esgst.ct_s) {
+                                read = comments[key][code].count || 0;
+                            } else {
+                                read = 0;
+                                for (id in comments[key][code].comments) {
+                                    if (!id.match(/^(Count|undefined|)$/) && comments[key][code].comments[id].timestamp) {
+                                        ++read;
+                                    }
                                 }
                             }
                             diff = count === read ? 0 : count - read;
                         } else {
                             diff = count;
                         }
-                        addCtDiscussionPanel(code, comments, match, countLink, count, diff, url, key, dh);
+                        addCtDiscussionPanel(code, comments[key], match, countLink, count, diff, url, key, dh);
                     }
                 }
             }
@@ -20355,7 +20612,7 @@ ${avatar.outerHTML}
 
     function addCtDiscussionPanel(code, comments, container, context, count, diff, url, type, dh) {
         var diffContainer, goToUnread, loadingIcon, markRead, markUnread, markVisited, markUnvisited, panel;
-        panel = insertHtml(context, esgst.giveawaysPath ? `afterEnd` : `beforeEnd`, `
+        panel = insertHtml(context, esgst.giveawaysPath && !esgst.oadd ? `afterEnd` : `beforeEnd`, `
             <span>
                 <span class="esgst-ct-count esgst-hidden">(+${diff})</span>
                 <div class="esgst-heading-button esgst-hidden" title="Go to first unread comment of this discussion">
@@ -20384,15 +20641,21 @@ ${avatar.outerHTML}
         markUnvisited = markVisited.nextElementSibling;
         loadingIcon = markUnvisited.nextElementSibling;
         if (esgst.ct && (esgst.giveawaysPath || esgst.discussionsPath || dh)) {
-            if (diff > 0) {
-                diffContainer.classList.remove(`esgst-hidden`);
-                goToUnread.classList.remove(`esgst-hidden`);
-                markRead.classList.remove(`esgst-hidden`);
-                if (diff !== count) {
-                    markUnread.classList.remove(`esgst-hidden`);
+            if (esgst.ct_s) {
+                if (diff > 0) {
+                    diffContainer.classList.remove(`esgst-hidden`);
                 }
             } else {
-                markUnread.classList.remove(`esgst-hidden`);
+                if (diff > 0) {
+                    diffContainer.classList.remove(`esgst-hidden`);
+                    goToUnread.classList.remove(`esgst-hidden`);
+                    markRead.classList.remove(`esgst-hidden`);
+                    if (diff !== count) {
+                        markUnread.classList.remove(`esgst-hidden`);
+                    }
+                } else {
+                    markUnread.classList.remove(`esgst-hidden`);
+                }
             }
         }
         if (esgst.gdttt) {
@@ -20460,11 +20723,15 @@ ${avatar.outerHTML}
                         comments: {}
                     };
                 }
+                if (esgst.ct_s) {
+                    comments[type][code].count = count;
+                    diffContainer.textContent = ``;
+                }
                 comments[type][code].visited = true;
                 GM_setValue(`comments`, JSON.stringify(comments));
                 deleteLock();
                 loadingIcon.classList.add(`esgst-hidden`);
-                if (esgst.ct && (esgst.giveawaysPath || esgst.discussionsPath || dh)) {
+                if (esgst.ct && !esgst.ct_s && (esgst.giveawaysPath || esgst.discussionsPath || dh)) {
                     goToUnread.classList.remove(`esgst-hidden`);
                     markRead.classList.remove(`esgst-hidden`);
                     markUnread.classList.remove(`esgst-hidden`);
@@ -20483,11 +20750,15 @@ ${avatar.outerHTML}
             loadingIcon.classList.remove(`esgst-hidden`);
             createLock(`commentLock`, 300, function(deleteLock) {
                 comments = JSON.parse(GM_getValue(`comments`));
+                if (esgst.ct_s) {
+                    delete comments[type][code].count;
+                    diffContainer.textContent = `(+${count})`;
+                }
                 delete comments[type][code].visited;
                 GM_setValue(`comments`, JSON.stringify(comments));
                 deleteLock();
                 loadingIcon.classList.add(`esgst-hidden`);
-                if (esgst.ct && (esgst.giveawaysPath || esgst.discussionsPath || dh)) {
+                if (esgst.ct && !esgst.ct_s && (esgst.giveawaysPath || esgst.discussionsPath || dh)) {
                     goToUnread.classList.remove(`esgst-hidden`);
                     markRead.classList.remove(`esgst-hidden`);
                     markUnread.classList.remove(`esgst-hidden`);
@@ -20504,7 +20775,7 @@ ${avatar.outerHTML}
         request(null, true, `${url}${nextPage}`, function(response) {
             var context, lastLink, pagination;
             context = DOM.parse(response.responseText);
-            loadCommentFeatures(context, null, goToUnread, markRead, markUnread, context);
+            getCtComments(0, getComments(context), goToUnread, markRead, markUnread);
             if ((goToUnread && !esgst.ctUnreadFound) || !goToUnread) {
                 pagination = context.getElementsByClassName(`pagination__navigation`)[0];
                 ++nextPage;
@@ -24021,7 +24292,7 @@ ${avatar.outerHTML}
         var Selected, Item, SMSyncFrequency, I, Container, SMGeneral, SMGiveaways, SMDiscussions, SMCommenting, SMUsers, SMOthers, SMManageData, SMManageFilteredUsers, SMRecentUsernameChanges,
             SMCommentHistory, SMManageTags, SMGeneralFeatures, SMGiveawayFeatures, SMDiscussionFeatures, SMCommentingFeatures, SMUserGroupGamesFeatures, SMOtherFeatures,
             SMLastSync, LastSync, SMAPIKey, SMLastBundleSync, LastBundleSync;
-        var popup = createPopup(`fa-gear`, `Settings`, true);
+        var popup = createPopup(`fa-gear`, `Settings`, true, true);
         popup.description.classList.add(`esgst-text-left`);
         SMSyncFrequency = "<select class=\"SMSyncFrequency\">";
         for (I = 0; I <= 30; ++I) {
@@ -24097,18 +24368,20 @@ ${avatar.outerHTML}
         };
         var j = 0;
         for (var key in sections) {
-            var title = key.replace(/^./, function (m) {
-                return m.toUpperCase();
-            });
-            sections[key].section = insertHtml(SMMenu, `beforeEnd`, `
-                ${createSMSections(++j, [{
-                    Title: title
-                }])}
-            `);
+            if ((key === `trades` && esgst.settings.esgst_st) || key !== `trades`) {
+                var title = key.replace(/^./, function (m) {
+                    return m.toUpperCase();
+                });
+                sections[key].section = insertHtml(SMMenu, `beforeEnd`, `
+                    ${createSMSections(++j, [{
+                        Title: title
+                    }])}
+                `);
+            }
         }
         for (var i = 0, n = esgst.features.length; i < n; ++i) {
             var feature = esgst.features[i];
-            if (feature.type) {
+            if (feature.type && ((feature.type === `trades` && esgst.settings.esgst_st) || feature.type !== `trades`)) {
                 var ft = getSMFeature(feature, sections[feature.type].index);
                 if (ft) {
                     sections[feature.type].section.lastElementChild.appendChild(ft);
@@ -25653,10 +25926,17 @@ Background: <input type="color" value="${bgColor}">
             hidden = [];
             for (key in esgst.giveaways) {
                 giveaway = esgst.giveaways[key];
-                if (giveaway.hidden && giveaway.code) {
-                    hidden.push(giveaway.code);
+                if (giveaway.hidden && giveaway.code && giveaway.endTime) {
+                    if (Date.now() >= giveaway.endTime) {
+                        giveaway.hidden = false;
+                    } else {
+                        hidden.push(giveaway.code);
+                    }
+                } else {
+                    giveaway.hidden = false;
                 }
             }
+            GM_setValue(`giveaways`, JSON.stringify(esgst.giveaways));
             i = 0;
             n = hidden.length;
             gfGiveaways = insertHtml(popup.scrollable, `beforeEnd`, `<div class="esgst-text-left"></div>`);
@@ -25930,7 +26210,7 @@ Background: <input type="color" value="${bgColor}">
         }
         if (esgst.gf && esgst.gf_h && main) {
             var savedGiveaway = esgst.giveaways[giveaway.code];
-            if (savedGiveaway && savedGiveaway.hidden && savedGiveaway.code) {
+            if (esgst.giveawaysPath && savedGiveaway && savedGiveaway.hidden && savedGiveaway.code) {
                 giveaway.outerWrap.remove();
                 return null;
             }
@@ -26099,23 +26379,32 @@ Background: <input type="color" value="${bgColor}">
         }
     }
 
-    function loadCommentFeatures(context, main, goToUnread, markRead, markUnread, mainContext) {
-        var comments, i, n;
-        if (!mainContext) {
-            mainContext = document;
+    function loadCommentFeatures(context, main) {
+        var count, comments, i, n;
+        comments = getComments(context, main);
+        if (main) {
+            for (i = 0, n = comments.length; i < n; ++i) {
+                esgst.currentComments.push(comments[i]);
+            }
         }
-        comments = getComments(context, mainContext, main);
-        for (i = 0, n = esgst.commentFeatures.length; i < n; ++i) {
-            esgst.commentFeatures[i](comments, goToUnread, markRead, markUnread);
+        if (esgst.ct) {
+            if (esgst.inboxPath) {
+                count = 0;
+            } else if (main) {
+                count = parseInt(context.getElementsByClassName(`page__heading__breadcrumbs`)[1].firstElementChild.textContent.replace(/,/g, ``).match(/\d+/));
+            } else {
+                count = 0;
+            }
+            getCtComments(count, comments);
         }
     }
 
-    function getComments(context, mainContext, main) {
+    function getComments(context, main) {
         var comment, comments, i, matches, n, sourceLink, savedUsers;
         comments = [];
         savedUsers = JSON.parse(GM_getValue(`users`));
         matches = context.querySelectorAll(`:not(.comment--submit) > .comment__parent, .comment__child, .comment_inner`);
-        sourceLink = mainContext.querySelector(`.page__heading__breadcrumbs a[href*="/giveaway/"], .page__heading__breadcrumbs a[href*="/discussion/"], .page__heading__breadcrumbs a[href*="/ticket/"], .page_heading_breadcrumbs a[href*="/trade/"]`);
+        sourceLink = context.querySelector(`.page__heading__breadcrumbs a[href*="/giveaway/"], .page__heading__breadcrumbs a[href*="/discussion/"], .page__heading__breadcrumbs a[href*="/ticket/"], .page_heading_breadcrumbs a[href*="/trade/"]`);
         for (i = matches.length - 1; i >= 0; --i) {
             comment = getCommentInfo(matches[i], sourceLink, savedUsers, main);
             if (comment) {
@@ -26543,6 +26832,15 @@ Background: <input type="color" value="${bgColor}">
                                 columns = table.children;
                                 for (i = 0, n = columns[1].children.length; i < n; ++i) {
                                     columns[0].appendChild(columns[1].firstElementChild);
+                                }
+                                suspension = responseHtml.getElementsByClassName(`sidebar__suspension`)[0];
+                                if (suspension) {
+                                    columns[0].insertAdjacentHTML(`beforeEnd`, `
+                                        <div class="esgst-ap-suspended featured__table__row">
+                                            <div class="featured__table__row__left">${suspension.textContent}</div>
+                                            <div class="featured__table__row__right">${suspension.nextElementSibling.textContent}</div>
+                                        </div>
+                                    `);
                                 }
                                 columns[1].remove();
                                 if (type === `user`) {

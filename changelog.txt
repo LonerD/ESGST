@@ -1,4 +1,27 @@
 /*
+ * July 25, 2017 - v6.Beta.21.0
+ */
+
+* Fixed a bug that was showing the trades section in the settings menu even if the script was disabled for SteamTrades (closes #288).
+* Renamed "Manage" to "Settings" in popups and removed the manage link from the settings popup (closes #289).
+* Fixed a bug in Giveaway Filters that was removing the heading of hidden giveaways inside of them.
+* Hidden giveaways are now automatically removed from the list when ended in Giveaway Filters.
+* Added an option to Enter/Leave Giveaway Button to only pop up a reply box if the giveaway has a description.
+* Optimized Comment Tracker.
+* Added a simplified version of Comment Tracker (Comments.7.1) that simply shows the number of comments added since the last visit.
+* Fixed a bug in Comment Tracker that was going to the wrong comments when using the option to go to the first unread comment.
+* Fixed a bug in Comment Tracker that was not marking all comments as read from the inbox page.
+* Added loading icons to the heading buttons in Comment Tracker, to let you know when the process is finished.
+* If clicking on the button to go to the first unread comment when there isn't an unread comment in the page, a popup will appear saying that no unread comments were found.
+* The option to go to the first unread comment of a discussion from the main discussions page now opens the result in the same tab if Same Tab Opener is enabled.
+* Avatar Popout now shows if the user is suspended/banned.
+
+Added the following features:
+
+* General.1 Image Borders
+* Discussions.1 Active Discussions
+
+/*
  * July 25, 2017 - v6.Beta.20.0
  */
 
