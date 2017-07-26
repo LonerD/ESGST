@@ -6,7 +6,7 @@
 * Renamed "Manage" to "Settings" in popups and removed the manage link from the settings popup (closes #289).
 * Fixed a bug in Giveaway Filters that was removing the heading of hidden giveaways inside of them.
 * Hidden giveaways are now automatically removed from the list when ended in Giveaway Filters.
-* Added an option to Enter/Leave Giveaway Button to only pop up a reply box if the giveaway has a description.
+* Added an option (Giveaways.14.2.1) to Enter/Leave Giveaway Button to only pop up a reply box if the giveaway has a description.
 * Optimized Comment Tracker.
 * Added a simplified version of Comment Tracker (Comments.7.1) that simply shows the number of comments added since the last visit.
 * Fixed a bug in Comment Tracker that was going to the wrong comments when using the option to go to the first unread comment.
