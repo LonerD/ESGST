@@ -3,7 +3,7 @@
 // @namespace ESGST
 // @description Enhances SteamGifts and SteamTrades by adding some cool features to them.
 // @icon https://github.com/revilheart/ESGST/raw/master/Resources/esgstIcon.ico
-// @version 6.Beta.21.1
+// @version 6.Beta.21.2
 // @author revilheart
 // @downloadURL https://github.com/revilheart/ESGST/raw/master/ESGST.user.js
 // @updateURL https://github.com/revilheart/ESGST/raw/master/ESGST.meta.js
@@ -573,9 +573,18 @@
                         steamApiKey: `SteamAPIKey`,
                         lastSync: `LastSync`,
                         syncFrequency: `SyncFrequency`,
-                        lastBundleSync: `LastBundleSync`
+                        lastBundleSync: `LastBundleSync`,
+                        ugs: `UGS`,
+                        ugs_checkRules: `UGS_SANM`,
+                        ugs_checkWhitelist: `UGS_SW`,
+                        ugs_checkMember: `UGS_G`
                     };
                     esgst.defaultValues = {
+                        ugs_checkRules: false,
+                        ugs_checkWhitelist: false,
+                        ugs_checkMember: false,
+                        ugs_checkDifference: false,
+                        ugs_difference: 0,
                         exportBundles: false,
                         enableByDefault: false,
                         showChangelog: true,
@@ -934,9 +943,7 @@
                         lastSync: 0,
                         syncFrequency: 7,
                         lastBundleSync: 0,
-                        Emojis: "",
-                        Rerolls: [],
-                        Winners: {}
+                        Emojis: ""
                     };
                     esgst.users = GM_getValue(`users`);
                     if (typeof esgst.users === `undefined`) {
@@ -1001,12 +1008,49 @@
                     } else {
                         esgst.games = JSON.parse(esgst.games);
                     }
+                    esgst.rerolls = GM_getValue(`rerolls`);
+                    if (typeof esgst.rerolls === `undefined`) {
+                        var oldRerolls = GM_getValue(`Rerolls`);
+                        if (oldRerolls) {
+                            GM_setValue(`rerolls`, JSON.stringify(oldRerolls));
+                            esgst.rerolls = oldRerolls;
+                        } else {
+                            GM_setValue(`rerolls`, `[]`);
+                            esgst.rerolls = [];
+                        }
+                    } else {
+                        esgst.rerolls = JSON.parse(esgst.rerolls);
+                    }
+                    esgst.winners = GM_getValue(`winners`);
+                    if (typeof esgst.winners === `undefined`) {
+                        var oldWinners = GM_getValue(`Winners`);
+                        if (oldWinners) {
+                            GM_setValue(`winners`, JSON.stringify(oldWinners));
+                            esgst.winners = oldWinners;
+                        } else {
+                            GM_setValue(`winners`, `{}`);
+                            esgst.winners = {};
+                        }
+                    } else {
+                        esgst.winners = JSON.parse(esgst.winners);
+                    }
                     esgst.values = {};
                     esgst.features = [
                         {
                             id: `esgst`,
                             name: `Enable ESGST for SteamTrades.`,
                             st: true,
+                            type: `other`
+                        },
+                        {
+                            description: `
+                                <ul>
+                                    <li>With this enabled, you no longer have to sync your whitelist/blacklist every time you add/remove a user to/from those lists.</li>
+                                </ul>
+                            `,
+                            id: `updateWhitelistBlacklist`,
+                            name: `[NEW] Automatically update whitelist/blacklist when adding/removing a user to/from those lists.`,
+                            sg: true,
                             type: `other`
                         },
                         {
@@ -1612,7 +1656,6 @@
                                 <img src="https://camo.githubusercontent.com/2c54c2015bc7bd8c3aa5f79afa3a4065e4d6e94a/687474703a2f2f692e696d6775722e636f6d2f363977626b55502e706e67"/>
                             `,
                             id: `ugs`,
-                            load: loadUgs,
                             name: `Unsent Gifts Sender`,
                             sg: true,
                             type: `giveaways`
@@ -2903,6 +2946,7 @@
                 .esgst-gv-time, .esgst-popup .esgst-ged-source {
                     background-color: #fff;
                     font-weight: bold;
+                    padding: 2px !important;
                 }
 
                 .esgst-gv-time i {
@@ -2913,13 +2957,11 @@
                 .esgst-gv-icons >* {
                     line-height: normal;
                     margin: 0 !important;
-                    padding: 2px;
+                    padding: 1px 3px;
                 }
-                .esgst-gv-icons .giveaway__column--invite-only {
-                    padding: 1px 2px;
-                }
+
                 .esgst-gv-icons .giveaway__column--contributor-level {
-                    padding: 2px 5px;
+                    padding: 2px 5px !important;
                 }
 
                 .esgst-gv-popout {
@@ -3097,7 +3139,16 @@
                         <i class="fa fa-send"></i>
                     `;
                     mainPageHeadingBefore.appendChild(button);
-                    addUGSButton(button);
+                    esgst.style += `
+                        .esgst-ugs-difference {
+                            display: inline-block;
+                            padding: 0 !important;
+                            width: 50px;
+                        }
+                    `;
+                    button.addEventListener(`click`, openUgsPopup.bind(null, {
+                        button: button
+                    }));
                 }
             } else if (esgst.enteredPath) {
                 if (esgst.er) {
@@ -3323,6 +3374,13 @@
                     button.addEventListener(`click`, openErPopup.bind(null, {
                         button: button
                     }));
+                }
+            } else if (esgst.newTicketPath) {
+                if (esgst.ugs) {
+                    button = document.getElementsByClassName(`form__submit-button`)[0];
+                    var category = document.querySelector(`[name="category_id"]`);
+                    var winner = document.querySelector(`[name="reroll_winner_id"]`);
+                    button.addEventListener(`click`, saveUgsReroll.bind(null, category, winner));
                 }
             }
             if (esgst.newGiveawayPath) {
@@ -3716,7 +3774,7 @@
             } else if (user.steamId) {
                 getUsername(list, true, user, callback);
             } else {
-                getSteamId(list, true, user, callback);
+                getSteamId(list, true, null, user, callback);
             }
         }
     }
@@ -3820,12 +3878,14 @@
         }
     }
 
-    function getSteamId(list, save, user, callback) {
+    function getSteamId(list, save, savedUsers, user, callback) {
         var savedUsers, steamId;
         if (save) {
             request(null, false, `https://www.steamgifts.com/user/${user.username}`, lockAndGetSteamId.bind(null, list, save, user, callback));
         } else {
-            savedUsers = JSON.parse(GM_getValue(`users`));
+            if (!savedUsers) {
+                savedUsers = JSON.parse(GM_getValue(`users`));
+            }
             steamId = savedUsers.steamIds[user.username];
             if (steamId) {
                 user.steamId = steamId;
@@ -3934,7 +3994,7 @@
 
     function getUserId(user, callback) {
         if (user.username) {
-            getSteamId(null, false, user, callback);
+            getSteamId(null, false, null, user, callback);
         } else {
             getUsername(null, false, user, callback);
         }
@@ -5058,7 +5118,9 @@
                 ${tooltipHtml}
             </div>
         `);
-        toggleSwitch.input = toggleSwitch.container.firstElementChild.firstElementChild;
+        toggleSwitch.switch = toggleSwitch.container.firstElementChild;
+        toggleSwitch.input = toggleSwitch.switch.firstElementChild;
+        toggleSwitch.name = toggleSwitch.switch.nextElementSibling;
         toggleSwitch.input.checked = value;
         toggleSwitch.input.addEventListener(`change`, function () {
             if (id) {
@@ -5336,7 +5398,7 @@ display: inline-block;
 margin: 5px;
 }
 
-.esgst-button-set .sidebar__entry-delete {
+.esgst-button-set .sidebar__entry-delete, .esgst-button-set .sidebar__error {
     display: inline-block;
 }
 
@@ -5402,8 +5464,8 @@ max-width: 75%;
     text-align: left;
 }
 
-.esgst-popup-progress {
-margin: 10px 0;
+.esgst-popup-description >*, .esgst-popup-scrollable >* {
+margin: 10px 0 0 !important;
 }
 
 .esgst-popup-scrollable {
@@ -5891,7 +5953,7 @@ min-width: 0;
             "    text-align: center;" +
             "}" +
             ".SMManageData, .SMManageFilteredUsers, .SMRecentUsernameChanges, .SMCommentHistory, .SMManageTags, .ESPanel .pagination__navigation >*, .ESPanel .pagination_navigation >*, .ESRefresh, .ESPause," +
-            ".MTButton, .MTAll, .MTNone, .MTInverse, .WBCButton, .NRFButton, .UGDButton, .GTSView, .UGSButton, .GDCBPButton, .CTGoToUnread, .CTMarkRead," +
+            ".MTButton, .MTAll, .MTNone, .MTInverse, .WBCButton, .NRFButton, .UGDButton, .GTSView, .GDCBPButton, .CTGoToUnread, .CTMarkRead," +
             ".CTMarkVisited, .MCBPButton, .MPPButton, .ASButton {" +
             "    cursor: pointer;" +
             "    display: inline-block;" +
@@ -10377,393 +10439,583 @@ ${avatar.outerHTML}
 
     /* [UGS] Unsent Gifts Sender */
 
-    function loadUgs() {
-        if (esgst.newTicketPath) {
-            setUGSObserver();
+    function saveUgsReroll(category, winner) {
+        var rerolls;
+        if (category.value === `1`) {
+            id = winner.value;
+            if (id) {
+                rerolls = JSON.parse(GM_getValue(`rerolls`, `[]`));
+                if (rerolls.indexOf(id) < 0) {
+                    rerolls.push(id);
+                    GM_setValue(`rerolls`, JSON.stringify(rerolls));
+                }
+            }
         }
     }
 
-    function setUGSObserver() {
-        document.getElementsByClassName("form__submit-button")[0].addEventListener("click", function () {
-            var Winner, Rerolls;
-            if (document.querySelector("[name='category_id']").value == 1) {
-                Winner = document.querySelector("[name='reroll_winner_id']").value;
-                Rerolls = GM_getValue("Rerolls", []);
-                if (Rerolls.indexOf(Winner) < 0) {
-                    Rerolls.push(Winner);
-                    GM_setValue("Rerolls", Rerolls);
-                }
+    function openUgsPopup(ugs) {
+        var checkMemberSwitch, checkDifferenceSwitch;
+        if (!ugs.popup) {
+            ugs.popup = createPopup(`fa-gift`, `Send unsent gifts:`);
+            createToggleSwitch(ugs.popup.description, `ugs_checkRules`, false, `Do not send if the winner has any not activated/multiple wins.`, false, false, `The winners will be checked in real time.`, esgst.ugs_checkRules);
+            checkMemberSwitch = createToggleSwitch(ugs.popup.description, `ugs_checkMember`, false, `Do not send if the winner is no longer a member of at least one of the groups for group giveaways.`, false, false, `The winners will be checked in real time.`, esgst.ugs_checkMember);
+            checkDifferenceSwitch = createToggleSwitch(ugs.popup.description, `ugs_checkDifference`, false, `Do not send if the winner has a gift difference lower than <input class="esgst-ugs-difference" step="0.1" type="number" value="${esgst.ugs_difference}"/>.`, false, false, `The winners will be checked in real time.`, esgst.ugs_checkDifference);
+            createToggleSwitch(ugs.popup.description, `ugs_checkWhitelist`, false, `Do not send if the winner is not on your whitelist.`, false, false, `You must sync your whitelist through the settings menu. Whitelisted winners get a pass for broken rules, so if this option is enabled and the winner is whitelisted, the gift will be sent regardless of whether or not the first option is enabled.`, esgst.ugs_checkWhitelist);
+            if (!esgst.ugs_checkMember) {
+                checkDifferenceSwitch.container.classList.add(`esgst-hidden`);
             }
-        });
+            checkDifferenceSwitch.name.firstElementChild.addEventListener(`change`, setUgsDifference);
+            checkMemberSwitch.dependencies.push(checkDifferenceSwitch.container);
+            ugs.results = insertHtml(ugs.popup.scrollable, `beforeEnd`, `
+                <div class="esgst-hidden markdown">
+                    <ul>
+                        <li>
+                            <strong>Successfully sent gifts to <span>0</span> winners:</strong> <span></span>
+                        </li>
+                        <li>
+                            <strong>Failed to send gifts to <span>0</span> winners (check the tooltips to find out the cause of the failures):</strong> <span></span>
+                        </li>
+                    </ul>
+                </div>
+            `);
+            ugs.sent = ugs.results.firstElementChild.firstElementChild;
+            ugs.sentCount = ugs.sent.firstElementChild.firstElementChild;
+            ugs.sentGifts = ugs.sent.lastElementChild;
+            ugs.unsent = ugs.sent.nextElementSibling;
+            ugs.unsentCount = ugs.unsent.firstElementChild.firstElementChild;
+            ugs.unsentGifts = ugs.unsent.lastElementChild;
+            ugs.popup.description.appendChild(createButtonSet(`green`, `red`, `fa-send`, `fa-times-circle`, `Send`, `Cancel`, startUgsSender.bind(null, ugs), cancelUgsSender.bind(null, ugs)).set);
+            ugs.progress = insertHtml(ugs.popup.description, `beforeEnd`, `<div></div>`);
+            ugs.overallProgress = insertHtml(ugs.popup.description, `beforeEnd`, `<div></div>`);
+        }
+        ugs.popup.open();
     }
 
-    function addUGSButton(UGSButton) {
-        var Popup, UGS;
-        Popup = createPopup(`fa-gift`, `Send unsent gifts:`);
-        UGS = {};
-        Popup.Options = insertHtml(Popup.description, `beforeEnd`, `<div></div>`);
-        createOptions(Popup.Options, UGS, [{
-            Check: function () {
-                return true;
-            },
-            Description: "Only send to users with 0 not activated / multiple wins.",
-            Title: "This option will retrieve the results in real time, without using caches.",
-            Name: "SendActivatedNotMultiple",
-            Key: "SANM",
-            ID: "UGS_SANM"
-        }, {
-            Check: function () {
-                return true;
-            },
-            Description: "Only send to users who are whitelisted.",
-            Title: "This option will use your whitelist cache.\nMake sure to sync it through the settings menu if you whitelisted a new user since the last sync.\n" + (
-                "Whitelisted users get a pass for not activated / multiple wins."),
-            Name: "SendWhitelist",
-            Key: "SW",
-            ID: "UGS_SW"
-        }, {
-            Check: function () {
-                return true;
-            },
-            Description: "Only send to users who are still members of at least one of the groups for group giveaways.",
-            Title: "This option will retrieve the results in real time.\n" + (
-                "Group members get a pass for not activated / multiple wins and for not being whitelisted."),
-            Name: "SendGroup",
-            Key: "G",
-            ID: "UGS_G"
-        }]);
-        Popup.description.appendChild(createButtonSet(`green`, `grey`, `fa-send`, `fa-times-circle`, `Send`, `Cancel`, function (Callback) {
-            var Match;
-            UGSButton.classList.add("esgst-busy");
-            UGS.Progress.innerHTML = UGS.OverallProgress.innerHTML = "";
-            UGS.Sent.classList.add("rhHidden");
-            UGS.Unsent.classList.add("rhHidden");
-            UGS.SentCount.textContent = UGS.UnsentCount.textContent = "0";
-            UGS.SentUsers.innerHTML = UGS.UnsentUsers.innerHTML = "";
-            UGS.Canceled = false;
-            UGS.Giveaways = [];
-            UGS.Checked = [];
-            UGS.Winners = GM_getValue("Winners", {});
-            Match = window.location.href.match(/page=(\d+)/);
-            getUGSGiveaways(UGS, 1, Match ? parseInt(Match[1]) : 1, function () {
-                var N;
-                N = UGS.Giveaways.length;
-                if (N > 0) {
-                    if (UGS.G.checked) {
-                        getUgsGiveawayGroups(UGS, 0, N, function () {
-                            getUGSWinners(UGS, 0, N, function () {
-                                UGSButton.classList.remove("esgst-busy");
-                                UGS.Progress.innerHTML = UGS.OverallProgress.innerHTML = "";
-                                GM_setValue("Winners", UGS.Winners);
-                                Callback();
-                            });
-                        });
-                    } else {
-                        getUGSWinners(UGS, 0, N, function () {
-                            UGSButton.classList.remove("esgst-busy");
-                            UGS.Progress.innerHTML = UGS.OverallProgress.innerHTML = "";
-                            GM_setValue("Winners", UGS.Winners);
-                            Callback();
+    function setUgsDifference(event) {
+        setValue(`ugs_difference`, event.currentTarget.value);
+    }
+
+    function startUgsSender(ugs, callback) {
+        var unsent;
+        ugs.button.classList.add(`esgst-busy`);
+        ugs.results.classList.add(`esgst-hidden`);
+        ugs.sentCount.textContent = ugs.unsentCount.textContent = `0`;
+        ugs.sentGifts.innerHTML = ugs.unsentGifts.innerHTML = ``;
+        ugs.progress.innerHTML = ``;
+        ugs.overallProgress.textContent = ``;
+        ugs.giveaways = [];
+        ugs.canceled = false;
+        unsent = esgst.headerElements.createdButton.getElementsByClassName(`nav__notification`)[0];
+        if (unsent) {
+            ugs.count = parseInt(unsent.textContent);
+            getUgsGiveaways(document, ugs, esgst.currentPage, continueUgsSender.bind(null, ugs, callback));
+        } else {
+            ugs.button.classList.remove(`esgst-busy`);
+            ugs.progress.innerHTML = `You do not have any unsent gifts.`;
+            callback();
+            ugs.popup.reposition();
+        }
+    }
+
+    function getUgsGiveaways(context, ugs, nextPage, callback) {
+        var element, elements, giveaways, heading, i, n, unsent, url;
+        if (!ugs.canceled) {
+            ugs.progress.innerHTML = `
+                <i class="fa fa-circle-o-notch fa-spin"></i>
+                <span>Searching for unsent gifts (page ${nextPage})...</span>
+            `;
+            ugs.popup.reposition();
+            if (context) {
+                giveaways = [];
+                elements = context.getElementsByClassName(`table__row-outer-wrap`);
+                for (i = 0, n = elements.length; i < n; ++i) {
+                    element = elements[i];
+                    unsent = element.getElementsByClassName(`fa icon-red fa-warning`)[0];
+                    if (unsent) {
+                        heading = element.getElementsByClassName(`table__column__heading`)[0];
+                        url = heading.getAttribute(`href`);
+                        giveaways.push({
+                            code: url.match(/\/giveaway\/(.+?)\//)[1],
+                            context: unsent,
+                            name: heading.firstChild.textContent.trim().match(/(.+?)(\s\(.+\sCopies\))?$/)[1],
+                            url: url
                         });
                     }
-                } else {
-                    UGSButton.classList.remove("esgst-busy");
-                    UGS.Progress.innerHTML =
-                        "<i class=\"fa fa-check-circle giveaway__column--positive\"></i> " +
-                        "<span>You have no unsent gifts.</span>";
-                    UGS.OverallProgress.innerHTML = "";
-                    Callback();
                 }
-            });
-        }, function () {
-            clearInterval(UGS.Request);
-            clearInterval(UGS.Save);
-            UGS.Canceled = true;
-            setTimeout(function () {
-                UGS.Progress.innerHTML = UGS.OverallProgress.innerHTML = "";
-            }, 500);
-            UGSButton.classList.remove("esgst-busy");
-        }).set);
-        UGS.Progress = insertHtml(Popup.description, `beforeEnd`, `<div></div>`);
-        UGS.OverallProgress = insertHtml(Popup.description, `beforeEnd`, `<div></div>`);
-        Popup.Results = insertHtml(Popup.scrollable, `beforeEnd`, `<div class="markdown"></div>`);
-        createResults(Popup.Results, UGS, [{
-            Icon: "<i class=\"fa fa-check-circle giveaway__column--positive\"></i> ",
-            Description: "Sent gifts to ",
-            Key: "Sent"
-        }, {
-            Icon: "<i class=\"fa fa-times-circle giveaway__column--negative\"></i> ",
-            Description: "Did not send gifts to ",
-            Key: "Unsent"
-        }]);
-        UGSButton.addEventListener("click", function () {
-            Popup.open();
-        });
-    }
-
-    function getUgsGiveawayGroups(ugs, i, n, callback) {
-        if (i < n) {
-            ugs.Giveaways[i].Groups = [];
-            getNextUgsGiveawayGroupsPage(ugs, i, `${ugs.Giveaways[i].URL.replace(/\/winners/, ``)}/groups/search?page=`, 1, function () {
-                window.setTimeout(getUgsGiveawayGroups, 0, ugs, ++i, n, callback);
-            });
-        } else {
-            callback();
+                n = giveaways.length;
+                if (n > 0) {
+                    setUgsGiveaways(giveaways, ugs, 0, n, checkNextUgsPage.bind(null, context, ugs, nextPage, callback));
+                } else {
+                    checkNextUgsPage(context, ugs, nextPage, callback);
+                }
+            } else if (document.getElementById(`esgst-es-page-${nextPage}`)) {
+                setTimeout(getUgsGiveaways, 0, null, ugs, ++nextPage, callback);
+            } else if (!ugs.canceled) {
+                request(null, false, `/giveaways/created/search?page=${nextPage}`, loadNextUgsPage.bind(null, ugs, nextPage, callback));
+            }
         }
     }
 
-    function getNextUgsGiveawayGroupsPage(ugs, I, url, nextPage, callback, context) {
-        if (context) {
-            var matches = context.getElementsByClassName(`table__column__heading`);
-            for (var i = 0, n = matches.length; i < n; ++i) {
-                var title = matches[i].getAttribute(`href`).match(/\/group\/.+\/(.+)/)[1];
-                ugs.Giveaways[I].Groups.push(title);
-            }
-            var paginationNavigation = context.getElementsByClassName(`pagination__navigation`)[0];
-            if (paginationNavigation && !paginationNavigation.lastElementChild.classList.contains(`is-selected`)) {
-                window.setTimeout(getNextUgsGiveawayGroupsPage, 0, ugs, I, url, nextPage, callback);
+    function setUgsGiveaways(giveaways, ugs, i, n, callback) {
+        var giveaway;
+        if (!ugs.canceled) {
+            ugs.overallProgress.textContent = `${i} of ${n} giveaways checked...`;
+            if (i < n) {
+                giveaway = giveaways[i];
+                ugs.giveaways[giveaway.code] = {
+                    code: giveaway.code,
+                    context: giveaway.context,
+                    name: giveaway.name,
+                    url: giveaway.url,
+                    winners: []
+                };
+                getUgsWinners(giveaway.code, ugs, 1, `${giveaway.url}/winners/search?page=`, checkUgsGiveawayGroups.bind(null, giveaway, giveaways, ugs, i, n, callback));
             } else {
                 callback();
             }
-        } else {
-            ugs.Progress.innerHTML =
-                "<i class=\"fa fa-circle-o-notch fa-spin\"></i> " +
-                "<span>Getting " + ugs.Giveaways[I].Name + "'s groups...</span>";
-            queueRequest(ugs, null, `${url}${nextPage}`, function (response) {
-                var context = DOM.parse(response.responseText);
-                window.setTimeout(getNextUgsGiveawayGroupsPage, 0, ugs, I, url, ++nextPage, callback, context);
-            });
         }
     }
 
-    function getUGSGiveaways(UGS, NextPage, CurrentPage, Callback, Context) {
-        var Matches, N, I, Pagination;
-        if (Context) {
-            Matches = Context.getElementsByClassName("fa icon-red fa-warning");
-            N = Matches.length;
-            if (N > 0) {
-                for (I = 0; I < N; ++I) {
-                    UGS.Giveaways.push({
-                        Name: Matches[I].closest(".table__row-inner-wrap").getElementsByClassName("table__column__heading")[0].firstChild.textContent.match(/(.+?)(\s\(.+\sCopies\))?$/)[1],
-                        URL: Matches[I].nextElementSibling.getAttribute("href"),
-                        Context: Matches[I]
+    function getUgsWinners(code, ugs, nextPage, url, callback) {
+        if (!ugs.canceled) {
+            ugs.progress.innerHTML = `
+                <i class="fa fa-circle-o-notch fa-spin"></i>
+                <span>Retrieving winners (page ${nextPage})...</span>
+            `;
+            ugs.popup.reposition();
+            request(null, false, `${url}${nextPage}`, loadNextUgsWinnersPage.bind(null, code, ugs, nextPage, url, callback));
+        }
+    }
+
+    function loadNextUgsWinnersPage(code, ugs, nextPage, url, callback, response) {
+        var elements, i, n, pagination, responseHtml, unsent;
+        if (!ugs.canceled) {
+            responseHtml = DOM.parse(response.responseText);
+            elements = responseHtml.getElementsByClassName(`table__row-outer-wrap`);
+            for (i = 0, n = elements.length; i < n; ++i) {
+                element = elements[i];
+                unsent = element.querySelector(`.table__gift-not-sent:not(.is-hidden)`);
+                if (unsent) {
+                    ugs.giveaways[code].winners.push({
+                        username: element.getElementsByClassName(`table__column__heading`)[0].textContent,
+                        values: {},
+                        winnerId: element.querySelector(`[name="winner_id"]`).value
                     });
+                    ugs.count -= 1;
                 }
-                Pagination = Context.getElementsByClassName("pagination__navigation")[0];
-                if (Pagination && !Pagination.lastElementChild.classList.contains("is-selected")) {
-                    window.setTimeout(getUGSGiveaways, 0, UGS, NextPage, CurrentPage, Callback);
-                } else {
-                    Callback();
-                }
-            } else {
-                Callback();
             }
-        } else if (!UGS.Canceled) {
-            UGS.Progress.innerHTML =
-                "<i class=\"fa fa-circle-o-notch\"></i> " +
-                "<span>Retrieving unsent giveaways (page " + NextPage + ")...</span>";
-            if (CurrentPage != NextPage) {
-                if (!document.getElementById(`esgst-es-page-${NextPage}`)) {
-                    queueRequest(UGS, null, "/giveaways/created/search?page=" + NextPage, function (Response) {
-                        window.setTimeout(getUGSGiveaways, 0, UGS, ++NextPage, CurrentPage, Callback, DOM.parse(Response.responseText));
-                    });
-                } else {
-                    window.setTimeout(getUGSGiveaways, 0, UGS, ++NextPage, CurrentPage, Callback);
-                }
+            pagination = responseHtml.getElementsByClassName(`pagination__navigation`)[0];
+            if (pagination && !pagination.lastElementChild.classList.contains(`is-selected`)) {
+                setTimeout(getUgsWinners, 0, code, ugs, ++nextPage, url, callback);
             } else {
-                window.setTimeout(getUGSGiveaways, 0, UGS, ++NextPage, CurrentPage, Callback, document);
+                if (responseHtml.getElementsByClassName(`featured__column--group`)[0]) {
+                    ugs.giveaways[code].group = true;
+                }
+                if (responseHtml.getElementsByClassName(`featured__column--whitelist`)[0]) {
+                    ugs.giveaways[code].whitelist = true;
+                }
+                callback();
             }
         }
     }
 
-    function checkUgsUserGroups(ugs, i, n, j, steamId64, callback) {
-        if (i < n) {
-            makeRequest(null, `http://steamcommunity.com/groups/${ugs.Giveaways[j].Groups[i]}/memberslistxml/?xml=1`, ugs, function (response) {
-                var responseText = response.responseText;
-                var reg = new RegExp(`<steamID64>${steamId64}</steamID64>`);
-                if (reg.exec(responseText)) {
-                    callback(true);
-                } else {
-                    window.setTimeout(checkUgsUserGroups, 0, ugs, ++i, n, j, steamId64, callback);
-                }
-            });
-        } else {
-            callback(false);
+    function checkUgsGiveawayGroups(giveaway, giveaways, ugs, i, n, callback) {
+        if (!ugs.canceled) {
+            if (esgst.ugs_checkMember && ugs.giveaways[giveaway.code].group) {
+                ugs.giveaways[giveaway.code].groups = [];
+                getUgsGroups(giveaway.code, ugs, 1, `${giveaway.url}/groups/search?page=`, setTimeout.bind(null, setUgsGiveaways, 0, giveaways, ugs, ++i, n, callback));
+            } else {
+                setTimeout(setUgsGiveaways, 0, giveaways, ugs, ++i, n, callback);
+            }
         }
     }
 
-    function getUGSWinners(UGS, I, N, Callback) {
-        if (!UGS.Canceled) {
-            UGS.OverallProgress.textContent = I + " of " + N + " giveaways retrieved...";
-            if (I < N) {
-                UGS.Progress.innerHTML =
-                    "<i class=\"fa fa-circle-o-notch fa-spin\"></i> " +
-                    "<span>Retrieving winners...</span>";
-                queueRequest(UGS, null, UGS.Giveaways[I].URL, function (Response) {
-                    var ResponseHTML, Matches, Winners, J, NumMatches, WinnersKeys;
-                    ResponseHTML = DOM.parse(Response.responseText);
-                    Matches = ResponseHTML.getElementsByClassName("table__row-inner-wrap");
-                    Winners = {};
-                    for (J = 0, NumMatches = Matches.length; J < NumMatches; ++J) {
-                        Winners[Matches[J].getElementsByClassName("table__column__heading")[0].textContent] = Matches[J].querySelector("[name='winner_id']").value;
-                    }
-                    if (NumMatches < 25) {
-                        WinnersKeys = sortArray(Object.keys(Winners));
-                        sendUGSGifts(UGS, 0, WinnersKeys.length, I, WinnersKeys, Winners, function () {
-                            window.setTimeout(getUGSWinners, 0, UGS, ++I, N, Callback);
-                        });
-                    } else {
-                        queueRequest(UGS, null, UGS.Giveaways[I].URL + "/search?page=2", function (Response) {
-                            Matches = DOM.parse(Response.responseText).getElementsByClassName("table__row-inner-wrap");
-                            for (J = 0, NumMatches = Matches.length; J < NumMatches; ++J) {
-                                Winners[Matches[J].getElementsByClassName("table__column__heading")[0].textContent] = Matches[J].querySelector("[name='winner_id']").value;
-                            }
-                            WinnersKeys = sortArray(Object.keys(Winners));
-                            sendUGSGifts(UGS, 0, WinnersKeys.length, I, WinnersKeys, Winners, function () {
-                                window.setTimeout(getUGSWinners, 0, UGS, ++I, N, Callback);
-                            });
-                        });
-                    }
+    function getUgsGroups(code, ugs, nextPage, url, callback) {
+        if (!ugs.canceled) {
+            ugs.progress.innerHTML = `
+                <i class="fa fa-circle-o-notch fa-spin"></i>
+                <span>Retrieving groups (page ${nextPage})...</span>
+            `;
+            ugs.popup.reposition();
+            request(null, false, `${url}${nextPage}`, loadNextUgsGroupsPage.bind(null, code, ugs, nextPage, url, callback));
+        }
+    }
+    
+    function loadNextUgsGroupsPage(code, ugs, nextPage, url, callback, response) {
+        var elements, i, match, n, pagination, responseHtml;
+        if (!ugs.canceled) {
+            responseHtml = DOM.parse(response.responseText);
+            elements = responseHtml.getElementsByClassName(`table__column__heading`);
+            for (i = 0, n = elements.length; i < n; ++i) {
+                match = elements[i].getAttribute(`href`).match(/\/group\/(.+?)\/(.+)/);
+                ugs.giveaways[code].groups.push({
+                    code: match[1],
+                    name: match[2]
                 });
+            }
+            pagination = responseHtml.getElementsByClassName(`pagination__navigation`)[0];
+            if (pagination && !pagination.lastElementChild.classList.contains(`is-selected`)) {
+                setTimeout(getUgsGroups, 0, code, ugs, ++nextPage, url, callback);
             } else {
-                Callback();
+                callback();
             }
         }
     }
 
-    function sendUGSGifts(UGS, I, N, J, Keys, Winners, Callback) {
-        var Reroll, SANM, SW, G;
-        if (!UGS.Canceled) {
-            UGS.OverallProgress.innerHTML = I + " of " + N + " winners checked...";
-            if (I < N) {
-                UGS.Progress.innerHTML =
-                    "<i class=\"fa fa-circle-o-notch fa-spin\"></i> " +
-                    "<span>Sending " + UGS.Giveaways[J].Name + " to " + Keys[I] + "...</span>";
-                Reroll = GM_getValue("Rerolls", []).indexOf(Winners[Keys[I]]) < 0;
-                if (Reroll && (UGS.Checked.indexOf(Keys[I] + UGS.Giveaways[J].Name) < 0)) {
-                    SANM = UGS.SANM.checked;
-                    SW = UGS.SW.checked;
-                    G = UGS.G.checked;
-                    if (SANM || SW || G) {
-                        var user = {
-                            username: Keys[I],
-                            values: {}
-                        };
-                        getSteamId(null, false, user, function() {
-                                if (G && UGS.Giveaways[J].Groups.length) {
-                                    saveUser(null, null, user, function () {
-                                        UGS.Progress.innerHTML =
-                                            "<i class=\"fa fa-circle-o-notch fa-spin\"></i> " +
-                                            "<span>Checking if user is a member of one of the " + UGS.Giveaways[J].Name + " groups...</span>";
-                                        checkUgsUserGroups(UGS, 0, UGS.Giveaways[J].Groups.length, J, user.steamId, function (member) {
-                                            if (member) {
-                                                sendUGSGift(UGS, Winners, Keys, I, J, N, Callback);
-                                            } else {
-                                                UGS.Checked.push(Keys[I] + UGS.Giveaways[J].Name);
-                                                UGS.Unsent.classList.remove("rhHidden");
-                                                UGS.UnsentCount.textContent = parseInt(UGS.UnsentCount.textContent) + 1;
-                                                UGS.UnsentUsers.insertAdjacentHTML(
-                                                    "beforeEnd",
-                                                    "<span><a href=\"/user/" + Keys[I] + "\">" + Keys[I] + "</a> (<a href=\"" + UGS.Giveaways[J].URL + "\">" + UGS.Giveaways[J].Name + "</a>)</span>"
-                                                );
-                                                sendUGSGifts(UGS, ++I, N, J, Keys, Winners, Callback);
-                                            }
-                                        });
-                                    });
-                                } else if (SANM) {
-                                    var savedUser = getUser(null, user);
-                                    if (SW && savedUser && savedUser.whitelisted) {
-                                        sendUGSGift(UGS, Winners, Keys, I, J, N, Callback);
-                                    } else {
-                                        var namwc;
-                                        if (savedUser) {
-                                            namwc = savedUser.namwc;
-                                        }
-                                            if (!namwc) {
-                                                namwc = {
-                                                    results: {}
-                                                };
-                                            }
-                                            checkNAMWCNotActivated(UGS, namwc, user.username, function (namwc) {
-                                                checkNAMWCMultiple(UGS, namwc, user.username, function (namwc) {
-                                                    user.values = {
-                                                        namwc: namwc
-                                                    };
-                                                    saveUser(null, null, user, function () {
-                                                            if (namwc.results.activated && namwc.results.notMultiple) {
-                                                                sendUGSGift(UGS, Winners, Keys, I, J, N, Callback);
-                                                            } else {
-                                                                UGS.Checked.push(Keys[I] + UGS.Giveaways[J].Name);
-                                                                UGS.Unsent.classList.remove("rhHidden");
-                                                                UGS.UnsentCount.textContent = parseInt(UGS.UnsentCount.textContent) + 1;
-                                                                UGS.UnsentUsers.insertAdjacentHTML(
-                                                                    "beforeEnd",
-                                                                    "<span><a href=\"/user/" + Keys[I] + "\">" + Keys[I] + "</a> (<a href=\"" + UGS.Giveaways[J].URL + "\">" +
-                                                                    UGS.Giveaways[J].Name + "</a>)</span>"
-                                                                );
-                                                                sendUGSGifts(UGS, ++I, N, J, Keys, Winners, Callback);
-                                                            }
-                                                        });
-                                                    });
-                                                });
-                                    }
-                                } else if (users.users[steamId].whitelisted) {
-                                    sendUGSGift(UGS, Winners, Keys, I, J, N, Callback);
-                                } else {
-                                    UGS.Checked.push(Keys[I] + UGS.Giveaways[J].Name);
-                                    UGS.Unsent.classList.remove("rhHidden");
-                                    UGS.UnsentCount.textContent = parseInt(UGS.UnsentCount.textContent) + 1;
-                                    UGS.UnsentUsers.insertAdjacentHTML(
-                                        "beforeEnd",
-                                        "<span><a href=\"/user/" + Keys[I] + "\">" + Keys[I] + "</a> (<a href=\"" + UGS.Giveaways[J].URL + "\">" + UGS.Giveaways[J].Name + "</a>)</span>"
-                                    );
-                                    sendUGSGifts(UGS, ++I, N, J, Keys, Winners, Callback);
-                                }
-                        });
+    function checkNextUgsPage(context, ugs, nextPage, callback) {
+        var pagination;
+        if (!ugs.canceled) {
+            if (ugs.count > 0) {
+                pagination = context.getElementsByClassName(`pagination__navigation`)[0];
+                if (pagination && !pagination.lastElementChild.classList.contains(`is-selected`)) {
+                    setTimeout(getUgsGiveaways, 0, null, ugs, nextPage, callback);
+                } else {
+                    callback();
+                }
+            } else {
+                callback();
+            }
+        }
+    }
+
+    function loadNextUgsPage(ugs, nextPage, callback, response) {
+        if (!ugs.canceled) {
+            setTimeout(getUgsGiveaways, 0, DOM.parse(response.responseText), ugs, ++nextPage, callback);
+        }
+    }
+
+    function continueUgsSender(ugs, callback) {
+        var n;
+        if (!ugs.canceled) {
+            codes = Object.keys(ugs.giveaways);
+            n = codes.length;
+            if (n > 0) {
+                ugs.rerolls = JSON.parse(GM_getValue(`rerolls`, `[]`));
+                ugs.sentWinners = {};
+                ugs.winners = {};
+                ugs.results.classList.remove(`esgst-hidden`);
+                checkUgsGifts(codes, ugs, 0, n, completeUgsSender.bind(null, ugs, callback));
+            } else {
+                ugs.button.classList.remove(`esgst-busy`);
+                ugs.progress.innerHTML = `You do not have any unsent gifts.`;
+                callback();
+                ugs.popup.reposition();
+            }
+        }
+    }
+ 
+    function checkUgsGifts(codes, ugs, i, n, callback) {
+        var code, giveaway, j, numWinners, savedUser, winner, winners;
+        if (!ugs.canceled) {
+            if (i < n) {
+                ugs.progress.innerHTML = `
+                    <i class="fa fa-circle-o-notch fa-spin"></i>
+                    <span>Checking winners...</span>
+                `;
+                ugs.popup.reposition();
+                ugs.overallProgress.textContent = `${i} of ${n} giveaways checked...`;
+                code = codes[i];
+                giveaway = ugs.giveaways[code];
+                winners = giveaway.winners;
+                numWinners = winners.length;
+                if (esgst.ugs_checkRules) {
+                    if (esgst.ugs_checkMember && giveaway.group) {
+                        checkUgsRules(code, ugs, 0, numWinners, checkUgsGroups.bind(null, code, ugs, 0, numWinners, sendUgsGifts.bind(null, code, ugs, 0, numWinners, setTimeout.bind(null, checkUgsGifts, 0, codes, ugs, ++i, n, callback))));
                     } else {
-                        sendUGSGift(UGS, Winners, Keys, I, J, N, Callback);
+                        checkUgsRules(code, ugs, 0, numWinners, sendUgsGifts.bind(null, code, ugs, 0, numWinners, setTimeout.bind(null, checkUgsGifts, 0, codes, ugs, ++i, n, callback)));
+                    }
+                } else if (esgst.ugs_checkMember && giveaway.group) {
+                    checkUgsGroups(code, ugs, 0, numWinners, sendUgsGifts.bind(null, code, ugs, 0, numWinners, setTimeout.bind(null, checkUgsGifts, 0, codes, ugs, ++i, n, callback)));
+                } else if (esgst.ugs_checkWhitelist) {
+                    checkUgsWhitelist(code, ugs, 0, numWinners, sendUgsGifts.bind(null, code, ugs, 0, numWinners, setTimeout.bind(null, checkUgsGifts, 0, codes, ugs, ++i, n, callback)));
+                } else {
+                    for (j = 0; j < numWinners; ++j) {
+                        winner = winners[i];
+                        if (ugs.rerolls.indexOf(winner.winnerId) >= 0) {
+                            winner.error = `${winner.username} is currently being rerolled.`;
+                        }
+                    }
+                    sendUgsGifts(code, ugs, 0, numWinners, setTimeout.bind(null, checkUgsGifts, 0, codes, ugs, ++i, n, callback));
+                }
+            } else {
+                callback();
+            }
+        }
+    }
+
+    function checkUgsWhitelist(code, ugs, i, n, callback) {
+        if (!ugs.canceled) {
+            if (i < n) {
+                giveaway = ugs.giveaways[code];
+                winner = giveaway.winners[i];
+                if (ugs.rerolls.indexOf(winner.winnerId) < 0) {
+                    savedUser = getUser(esgst.users, winner);
+                    if (savedUser && !savedUser.whitelisted) {
+                        winner.error = `${winner.username} is not whitelisted.`;
                     }
                 } else {
-                    UGS.Checked.push(Keys[I] + UGS.Giveaways[J].Name);
-                    UGS.Unsent.classList.remove("rhHidden");
-                    UGS.UnsentCount.textContent = parseInt(UGS.UnsentCount.textContent) + 1;
-                    UGS.UnsentUsers.insertAdjacentHTML(
-                        "beforeEnd",
-                        "<span><a href=\"/user/" + Keys[I] + "\">" + Keys[I] + "</a> (" + (!Reroll ? ("Being rerolled for <a href=\"" + UGS.Giveaways[J].URL + "\">" + UGS.Giveaways[J].Name +
-                            "</a>.)") : ("Already won <a href=\"" + UGS.Giveaways[J].URL + "\">" +
-                                UGS.Giveaways[J].Name + "</a> from you.)")) + "</span>"
-                    );
-                    sendUGSGifts(UGS, ++I, N, J, Keys, Winners, Callback);
+                    winner.error = `${winner.username} is currently being rerolled.`;
                 }
+                setTimeout(checkUgsWhitelist, 0, code, ugs, ++i, n, callback);
             } else {
-                Callback();
+                callback();
             }
         }
     }
 
-    function sendUGSGift(UGS, Winners, Keys, I, J, N, Callback) {
-        if (!UGS.Canceled) {
-            queueRequest(UGS, "xsrf_token=" + esgst.xsrfToken + "&do=sent_feedback&action=1&winner_id=" + Winners[Keys[I]], "/ajax.php", function () {
-                var Key;
-                UGS.Checked.push(Keys[I] + UGS.Giveaways[J].Name);
-                UGS.Sent.classList.remove("rhHidden");
-                UGS.SentCount.textContent = parseInt(UGS.SentCount.textContent) + 1;
-                UGS.SentUsers.insertAdjacentHTML(
-                    "beforeEnd",
-                    "<span><a href=\"/user/" + Keys[I] + "\">" + Keys[I] + "</a> (<a href=\"" + UGS.Giveaways[J].URL + "\">" + UGS.Giveaways[J].Name + "</a>)</span>"
-                );
-                UGS.Giveaways[J].Context.className = "fa fa-check-circle icon-green";
-                UGS.Giveaways[J].Context.nextElementSibling.textContent = "Sent";
-                Key = UGS.Giveaways[J].URL.match(/\/giveaway\/(.+?)\//)[1];
-                if (!UGS.Winners[Key]) {
-                    UGS.Winners[Key] = [];
+    function checkUgsRules(code, ugs, i, n, callback) {
+        var giveaway, namwc, winner;
+        if (!ugs.canceled) {
+            if (i < n) {
+                giveaway = ugs.giveaways[code];
+                winner = giveaway.winners[i];
+                ugs.progress.innerHTML = `
+                    <i class="fa fa-circle-o-notch fa-spin"></i>
+                    <span>Checking if ${winner.username} has not activated/multiple wins...</span>
+                `;
+                ugs.popup.reposition();
+                if (ugs.rerolls.indexOf(winner.winnerId) < 0) {
+                    namwc = {
+                        lastCheck: Date.now(),
+                        results: {}
+                    };
+                    checkNAMWCNotActivated(ugs, namwc, winner.username, function (namwc) {
+                        checkNAMWCMultiple(ugs, namwc, winner.username, function (namwc) {
+                            winner.values.namwc = namwc;
+                            if (namwc.results.notActivated || namwc.results.multiple) {
+                                if (esgst.ugs_checkWhitelist) {
+                                    savedUser = getUser(esgst.users, winner);
+                                    if (savedUser && !savedUser.whitelisted) {
+                                        winner.error = `${winner.username} is not whitelisted.`;
+                                    }
+                                } else {
+                                    if (namwc.results.notActivated && namwc.results.multiple) {
+                                        winner.error = `${winner.username} has ${namwc.results.notActivated} not activated wins and ${namwc.results.multiple} multiple wins.`;
+                                    } else if (namwc.results.notActivated) {
+                                        winner.error = `${winner.username} has ${namwc.results.notActivated} not activated wins.`;
+                                    } else {
+                                        winner.error = `${winner.username} has ${namwc.results.multiple} multiple wins.`;
+                                    }
+                                }
+                            }
+                            setTimeout(checkUgsRules, 0, code, ugs, ++i, n, callback);
+                        });
+                    });
+                } else {
+                    winner.error = `${winner.username} is currently being rerolled.`;
                 }
-                if (UGS.Winners[Key].indexOf(Keys[I]) < 0) {
-                    UGS.Winners[Key].push(Keys[I]);
+            } else {
+                callback();
+            }
+        }
+    }
+
+    function checkUgsGroups(code, ugs, i, n, callback) {
+        var giveaway, numGroups, winner;
+        if (!ugs.canceled) {
+            if (i < n) {
+                giveaway = ugs.giveaways[code];
+                numGroups = giveaway.groups.length;
+                winner = giveaway.winners[i];
+                ugs.progress.innerHTML = `
+                    <i class="fa fa-circle-o-notch fa-spin"></i>
+                    <span>Checking if ${winner.username} is a member of one of the groups...</span>
+                `;
+                ugs.popup.reposition();
+                if (ugs.rerolls.indexOf(winner.winnerId) < 0) {
+                    getSteamId(null, false, esgst.users, winner, getUgsGroupMembers.bind(null, giveaway, ugs, 0, numGroups, winner, checkUgsUserGroups.bind(null, giveaway, ugs, winner, setTimeout.bind(null, checkUgsGroups, 0, code, ugs, ++i, n, callback))));
+                } else {
+                    winner.error = `${winner.username} is currently being rerolled.`;
+                    setTimeout(checkUgsGroups, 0, code, ugs, ++i, n, callback);
                 }
-                sendUGSGifts(UGS, ++I, N, J, Keys, Winners, Callback);
+            } else {
+                callback();
+            }
+        }
+    }
+
+    function getUgsGroupMembers(giveaway, ugs, i, n, winner, callback) {
+        if (!ugs.canceled) {
+            if (i < n) {
+                request(null, false, `http://steamcommunity.com/groups/${giveaway.groups[i].name}/memberslistxml/?xml=1`, checkUgsGroupMembers.bind(null, giveaway, ugs, i, n, winner, callback));
+            } else {
+                callback();
+            }
+        }
+    }
+
+    function checkUgsGroupMembers(giveaway, ugs, i, n, winner, callback, response) {
+        var group;
+        if (!ugs.canceled) {
+            if (response.responseText.match(new RegExp(`<steamID64>${winner.steamId}</steamID64>`))) {
+                if (esgst.ugs_checkDifference) {
+                    ugs.progress.innerHTML = `
+                        <i class="fa fa-circle-o-notch fa-spin"></i>
+                        <span>Checking if ${winner.username} has a gift difference higher than the one set...</span>
+                    `;
+                    ugs.popup.reposition();
+                    group = giveaway.groups[i];
+                    request(null, false, `/group/${group.code}/${group.name}/users/search?q=${winner.username}`, checkUgsDifference.bind(null, ugs, winner, callback));
+                } else {
+                    callback(true);
+                }
+            } else {
+                setTimeout(getUgsGroupMembers, 0, giveaway, ugs, ++i, n, winner, callback);
+            }
+        }
+    }
+
+    function checkUgsDifference(ugs, winner, callback, response) {
+        var difference, element, username;
+        if (!ugs.canceled) {
+            element = DOM.parse(response.responseText).getElementsByClassName(`table__row-outer-wrap`)[0];
+            if (element) {
+                username = element.getElementsByClassName(`table__column__heading`)[0].textContent;
+                if (username === winner.username) {
+                    difference = parseFloat(element.getElementsByClassName(`table__column--width-small`)[2].textContent);
+                    if (difference >= esgst.ugs_difference) {
+                        callback(true);
+                    } else {
+                        winner.error = `${winner.username} has a ${difference} gift difference.`;
+                        callback(true);
+                    }
+                } else {
+                    callback();
+                }
+            } else {
+                callback();
+            }
+        }
+    }
+
+    function checkUgsUserGroups(giveaway, ugs, winner, callback, member) {
+        var savedUser;
+        if (!ugs.canceled) {
+            if (member) {
+                callback();
+            } else if (giveaway.whitelist) {
+                savedUser = getUser(esgst.users, winner);
+                if (savedUser && !savedUser.whitelisted) {
+                    winner.error = `${winner.username} is not whitelisted.`;
+                } 
+                callback();
+            } else {
+                winner.error = `${winner.username} is not a member of one of the groups.`;
+                callback();
+            }
+        }
+    }
+
+    function sendUgsGifts(code, ugs, i, n, callback) {
+        var giveaway, winner;
+        if (!ugs.canceled) {
+            if (i < n) {
+                ugs.progress.innerHTML = `
+                    <i class="fa fa-circle-o-notch fa-spin"></i>
+                    <span>Sending gifts...</span>
+                `;
+                ugs.overallProgress.textContent = `${i} of ${n} gifts sent...`;
+                ugs.popup.reposition();
+                giveaway = ugs.giveaways[code];
+                winner = giveaway.winners[i];
+                if (!ugs.winners[winner.username]) {
+                    ugs.winners[winner.username] = [];
+                }
+                if (ugs.winners[winner.username].indexOf(giveaway.name) < 0) {
+                    if (winner.error) {
+                        ugs.unsentCount.textContent = parseInt(ugs.unsentCount.textContent) + 1;
+                        ugs.unsentGifts.insertAdjacentHTML(`beforeEnd`, `
+                            <span>
+                                <a href="/user/${winner.username}">${winner.username}</a> (<a href="/giveaway/${giveaway.code}/">${giveaway.name}</a>)
+                                <i class="fa fa-question-circle" title="${winner.error}"></i>
+                            </span>
+                        `);
+                        setTimeout(sendUgsGifts, 0, code, ugs, ++i, n, callback);
+                    } else if (!ugs.canceled) {
+                        request(`xsrf_token=${esgst.xsrfToken}&do=sent_feedback&action=1&winner_id=${winner.winnerId}`, false, `/ajax.php`, sendUgsGift.bind(null, code, giveaway, ugs, i, n, winner, callback));
+                    }
+                } else {
+                    ugs.unsentCount.textContent = parseInt(ugs.unsentCount.textContent) + 1;
+                    ugs.unsentGifts.insertAdjacentHTML(`beforeEnd`, `
+                        <span>
+                            <a href="/user/${winner.username}">${winner.username}</a> (<a href="/giveaway/${giveaway.code}/">${giveaway.name}</a>)
+                            <i class="fa fa-question-circle" title="${winner.username} already won ${giveaway.name} from another giveaway of yours."></i>
+                        </span>
+                    `);
+                    ugs.popup.reposition();
+                    setTimeout(sendUgsGifts, 0, code, ugs, ++i, n, callback);
+                }
+            } else {
+                callback();
+            }
+        }
+    }
+
+    function sendUgsGift(code, giveaway, ugs, i, n, winner, callback) {
+        if (!ugs.canceled) {
+            if (!ugs.sentWinners[giveaway.code]) {
+                ugs.sentWinners[giveaway.code] = [];
+            }
+            ugs.sentWinners[giveaway.code].push(winner.username);
+            ugs.sentCount.textContent = parseInt(ugs.sentCount.textContent) + 1;
+            ugs.sentGifts.insertAdjacentHTML(`beforeEnd`, `
+                <span>
+                    <a href="/user/${winner.username}">${winner.username}</a> (<a href="/giveaway/${giveaway.code}/">${giveaway.name}</a>)
+                </span>
+            `);
+            ugs.popup.reposition();
+            if (!ugs.winners[winner.username]) {
+                ugs.winners[winner.username] = [];
+            }
+            ugs.winners[winner.username].push(giveaway.name);
+            if (document.body.contains(giveaway.context)) {                
+                giveaway.context.className = `fa fa-check-circle icon-green`;
+                giveaway.context.nextElementSibling.textContent = `Sent`;
+            }
+            setTimeout(sendUgsGifts, 0, code, ugs, ++i, n, callback);
+        }
+    }
+
+    function completeUgsSender(ugs, callback) {
+        var i, key, n, savedUsers, winners;
+        if (!ugs.canceled) {
+            winners = JSON.parse(GM_getValue(`winners`, `{}`));
+            for (key in ugs.sentWinners) {
+                if (!winners[key]) {
+                    winners[key] = [];
+                }
+                for (i = 0, n = ugs.sentWinners[key].length; i < n; ++i) {
+                    winners[key].push(ugs.sentWinners[key][i]);
+                }
+            }
+            GM_setValue(`winners`, JSON.stringify(winners));
+            savedUsers = [];
+            for (key in ugs.giveaways) {
+                for (i = 0, n = ugs.giveaways[key].winners.length; i < n; ++i) {
+                    savedUsers.push(ugs.giveaways[key].winners[i]);
+                }
+            }
+            ugs.progress.innerHTML = `
+                <i class="fa fa-circle-o-notch fa-spin"></i>
+                <span>Saving data...</span>
+            `;
+            ugs.overallProgress.textContent = ``;
+            ugs.popup.reposition();
+            saveUsers(savedUsers, function() {
+                ugs.button.classList.remove(`esgst-busy`);
+                ugs.progress.innerHTML = ``;
+                callback();
+                ugs.popup.reposition();
             });
         }
+    }
+         
+    function cancelUgsSender(ugs) {
+        ugs.canceled = true;
+        ugs.button.classList.remove(`esgst-busy`);
+        ugs.progress.innerHTML = ``;
+        ugs.overallProgress.textContent = ``;
+        ugs.popup.reposition();
     }
 
     /* [ER] Entries Remover */
@@ -10808,11 +11060,17 @@ ${avatar.outerHTML}
                 er.progress.innerHTML = `
                     <strong>0 new games found.</strong>
                 `;
+                er.button.classList.remove(`esgst-busy`);
+                callback();
+                er.popup.reposition();
                 break;
             case 3:
                 er.progress.innerHTML = `
-                    <strong>You are either not logged in on Steam or you do not have a Steam API key set in the settings menu (section 11).</strong>
+                    <strong>You are either not logged in on Steam or you do not have a Steam API key set in the settings menu.</strong>
                 `;
+                er.button.classList.remove(`esgst-busy`);
+                callback();
+                er.popup.reposition();
                 break;
         }
     }
@@ -10894,6 +11152,9 @@ ${avatar.outerHTML}
     function completeErProcess(er, callback) {
         er.button.classList.remove(`esgst-busy`);
         er.progress.innerHTML = ``;
+        if (er.removed.children.length === 1) {
+            er.removed.innerHTML = `<strong>0 entries removed.</strong>`;
+        }
         callback();
     }
 
@@ -20538,7 +20799,7 @@ ${avatar.outerHTML}
     }
 
     function addCtCommentPanel(goToUnread, markRead, markUnread) {
-        var button, key, newButton;
+        var button, key, newButton, url;
         goToUnread.addEventListener(`click`, goToCtUnread.bind(null, goToUnread));
         markRead.addEventListener(`click`, markCtCommentsRead.bind(null, markRead, null));
         markUnread.addEventListener(`click`, markCtCommentsUnread.bind(null, markUnread));
@@ -20552,6 +20813,7 @@ ${avatar.outerHTML}
                         </div>
                     `);
                     key = `read_messages`;
+                    url = `/messages`;
                 } else {
                     newButton = insertHtml(button, `afterEnd`, `
                         <a class="page_heading_btn green">
@@ -20560,9 +20822,10 @@ ${avatar.outerHTML}
                         </a>
                     `);
                     key = `mark_as_read`;
+                    url = `/ajax.php`;
                 }
                 button.remove();
-                newButton.addEventListener(`click`, request.bind(null, `xsrf_token=${esgst.xsrfToken}&do=${key}`, false, `/messages`, markCtCommentsRead.bind(null, markRead, completeCtInboxRead.bind(null, newButton))));
+                newButton.addEventListener(`click`, request.bind(null, `xsrf_token=${esgst.xsrfToken}&do=${key}`, false, url, markCtCommentsRead.bind(null, markRead, completeCtInboxRead.bind(null, newButton))));
             }
         }
     }
@@ -21947,9 +22210,11 @@ ${avatar.outerHTML}
     function checkNAMWCNotActivated(NAMWC, namwc, username, Callback) {
         var N, ResponseText;
         if (!NAMWC.Canceled) {
-            NAMWC.Progress.innerHTML =
-                "<i class=\"fa fa-circle-o-notch fa-spin\"></i> " +
-                "<span>Retrieving " + username + "'s not activated wins...</span>";
+            if (NAMWC.Progress) {
+                NAMWC.Progress.innerHTML =
+                    "<i class=\"fa fa-circle-o-notch fa-spin\"></i> " +
+                    "<span>Retrieving " + username + "'s not activated wins...</span>";
+            }
             queueRequest(NAMWC, null, "http://www.sgtools.info/nonactivated/" + username, function (Response) {
                 ResponseText = Response.responseText;
                 if (ResponseText.match(/has a private profile/)) {
@@ -21971,9 +22236,11 @@ ${avatar.outerHTML}
     function checkNAMWCMultiple(NAMWC, namwc, username, Callback) {
         var N;
         if (!NAMWC.Canceled) {
-            NAMWC.Progress.innerHTML =
-                "<i class=\"fa fa-circle-o-notch fa-spin\"></i> " +
-                "<span>Retrieving " + username + "'s multiple wins...</span>";
+            if (NAMWC.Progress) {
+                NAMWC.Progress.innerHTML =
+                    "<i class=\"fa fa-circle-o-notch fa-spin\"></i> " +
+                    "<span>Retrieving " + username + "'s multiple wins...</span>";
+            }
             queueRequest(NAMWC, null, "http://www.sgtools.info/multiple/" + username, function (Response) {
                 N = DOM.parse(Response.responseText).getElementsByClassName("multiplewins").length;
                 namwc.results.notMultiple = N === 0 ? true : false;
@@ -23136,14 +23403,14 @@ ${avatar.outerHTML}
         Username = Context.closest(".table__row-inner-wrap").getElementsByClassName("table__column__heading")[0].querySelector("a[href*='/user/']").textContent;
         Context.addEventListener("click", function () {
             var Winners;
-            Winners = GM_getValue("Winners", {});
+            Winners = JSON.parse(GM_getValue(`winners`, `{}`));
             if (!Winners[Key]) {
                 Winners[Key] = [];
             }
             if (Winners[Key].indexOf(Username) < 0) {
                 Winners[Key].push(Username);
             }
-            GM_setValue("Winners", Winners);
+            GM_setValue(`winners`, JSON.stringify(Winners));
         });
     }
 
@@ -23152,7 +23419,7 @@ ${avatar.outerHTML}
         Match = Context.firstElementChild.firstElementChild.getAttribute("href").match(/\/giveaway\/(.+?)\//);
         if (Match) {
             Key = Match[1];
-            Winners = GM_getValue("Winners", {});
+            Winners = JSON.parse(GM_getValue(`winners`, `{}`));
             if (Winners[Key]) {
                 Matches = Context.nextElementSibling.children;
                 for (I = 0, N = Matches.length; I < N; ++I) {
@@ -24535,7 +24802,8 @@ ${avatar.outerHTML}
                     groups: "GP",
                     comments: "C",
                     Emojis: "E",
-                    Rerolls: "R",
+                    rerolls: "R",
+                    winners: "W",
                     sgCommentHistory: `CH_SG`,
                     stCommentHistory: `CH_ST`,
                     StickiedGroups: "SG",
@@ -24683,9 +24951,18 @@ ${avatar.outerHTML}
                 },
                 Description: "Rerolls data.",
                 Title: "Includes Unsent Gifts Sender rerolls data.",
-                Name: "Rerolls",
+                Name: "rerolls",
                 Key: "R",
                 ID: "SM_R"
+            }, {
+                Check: function () {
+                    return true;
+                },
+                Description: "Winners data.",
+                Title: "Includes Inbox Winners Highlighter winners data.",
+                Name: "winners",
+                Key: "W",
+                ID: "SM_W"
             }, {
                 Check: function () {
                     return true;
@@ -25216,6 +25493,10 @@ Background: <input type="color" value="${bgColor}">
                                         GM_setValue(Key, saved);
                                     } else if (Key.match(/^(Templates|templates)$/)) {
                                         importTemplatesAndMerge(File, Key, SM);
+                                    } else if (Key.match(/^(Rerolls|rerolls)$/)) {
+                                        importRerollsAndMerge(File, Key, SM);
+                                    } else if (Key.match(/^(Winners|winners)$/)) {
+                                        importWinnersAndMerge(File, Key, SM);
                                     } else if (SM.Names[Key] && SM[SM.Names[Key]] && SM[SM.Names[Key]].checked) {
                                         GM_setValue(Key, File.Data[Key]);
                                     }
@@ -25231,6 +25512,10 @@ Background: <input type="color" value="${bgColor}">
                                     importComments(File, Key, SM);
                                 } else if (Key.match(/^(Templates|templates)$/)) {
                                     importTemplates(File, Key, SM);
+                                } else if (Key.match(/^(Rerolls|rerolls)$/)) {
+                                    importRerolls(File, Key, SM);
+                                } else if (Key.match(/^(Winners|winners)$/)) {
+                                    importWinners(File, Key, SM);
                                 } else if (SM.Names[Key] && SM[SM.Names[Key]] && SM[SM.Names[Key]].checked) {
                                     GM_setValue(Key, File.Data[Key]);
                                 }
@@ -25303,6 +25588,43 @@ Background: <input type="color" value="${bgColor}">
             GM_setValue(`templates`, JSON.stringify(templates));
             deleteLock();
         });
+    }
+
+    function importRerollsAndMerge(File, Key, SM) {
+        var i, n, savedRerolls, rerolls;
+        savedRerolls = JSON.parse(GM_getValue(`rerolls`, `[]`));
+        rerolls = File.Data[Key];
+        for (i = 0, n = rerolls.length; i < n; ++i) {
+            if (savedRerolls.indexOf(rerolls[i]) < 0) {
+                savedRerolls.push(rerolls[i]);
+            }
+        }
+        GM_setValue(`rerolls`, JSON.stringify(savedRerolls));
+    }
+
+    function importRerolls(File, Key, SM) {
+        GM_setValue(`rerolls`, JSON.stringify(File.Data[Key]));
+    }
+
+    function importWinnersAndMerge(File, Key, SM) {
+        var i, key, n, savedWinners, winners;
+        savedWinners = JSON.parse(GM_getValue(`winners`, `{}`));
+        winners = File.Data[Key];
+        for (key in winners) {
+            if (!savedWinners[key]) {
+                savedWinners[key] = [];
+            }
+            for (i = 0, n = winners[key].length; i < n; ++i) {
+                if (savedWinners[key].indexOf(winners[key][i]) < 0) {
+                    savedWinners[key].push(winners[key][i]);
+                }
+            }
+        }
+        GM_setValue(`winners`, JSON.stringify(savedWinners));
+    }
+
+    function importWinners(File, Key, SM) {
+        GM_setValue(`winners`, JSON.stringify(File.Data[Key]));
     }
 
     function importUsersAndMerge(File, Key, SM) {
@@ -25838,7 +26160,7 @@ Background: <input type="color" value="${bgColor}">
                     getSMGames(games, `itadi`, Data.games, `apps`);
                     getSMGames(games, `itadi`, Data.games, `subs`);
                 }
-            } else if (Key.match(/sgCommentHistory|stCommentHistory|comments|giveaways|descryptedGiveaways|templates|settings/) && SM[SM.Names[Key]].checked) {
+            } else if (Key.match(/sgCommentHistory|stCommentHistory|comments|giveaways|descryptedGiveaways|templates|rerolls|winners|settings/) && SM[SM.Names[Key]].checked) {
                 Data[Key] = JSON.parse(GM_getValue(Key, `{}`));
             } else if (SM[SM.Names[Key]].checked) {
                 Data[Key] = GM_getValue(Key);
@@ -26554,7 +26876,7 @@ Background: <input type="color" value="${bgColor}">
     }
 
     function loadProfileFeatures(context) {
-        var element, elements, i, input, key, match, n, profile, savedUsers;
+        var action, element, elements, i, input, key, match, n, profile, savedUsers;
         profile = {};
         if (esgst.sg) {
             profile.heading = context.getElementsByClassName(`featured__heading`)[0];
@@ -26601,10 +26923,39 @@ Background: <input type="color" value="${bgColor}">
                 }
             }
         }
+        profile.whitelistButton = profile.steamButtonContainer.getElementsByClassName(`sidebar__shortcut__whitelist`)[0];
+        profile.blacklistButton = profile.steamButtonContainer.getElementsByClassName(`sidebar__shortcut__blacklist`)[0];
+        if (profile.whitelistButton) {
+            if (esgst.updateWhitelistBlacklist) {
+                profile.whitelistButton.addEventListener(`click`, updateWhitelistBlacklist.bind(null, `whitelisted`, profile));
+            }
+        }
+        if (profile.blacklistButton) {
+            if (esgst.updateWhitelistBlacklist) {
+                profile.blacklistButton.addEventListener(`click`, updateWhitelistBlacklist.bind(null, `blacklisted`, profile));
+            }
+        }
         savedUsers = JSON.parse(GM_getValue(`users`));
         for (i = 0, n = esgst.profileFeatures.length; i < n; ++i) {
             esgst.profileFeatures[i](profile, savedUsers.users[profile.steamId]);
         }
+    }
+
+    function updateWhitelistBlacklist(key, profile, event) {
+        var user;
+        user = {
+            steamId: profile.steamId,
+            id: profile.id,
+            username: profile.username,
+            values: {}
+        };
+        if (event.currentTarget.classList.contains(`is-selected`)) {
+            user.values[key] = false;
+        } else {
+            user.values[key] = true;
+            user.values[`${key}Date`] = Date.now();
+        }
+        saveUser(null, null, user);
     }
 
     /* [UT] User Tags */
