@@ -3,7 +3,7 @@
 // @namespace ESGST
 // @description Enhances SteamGifts and SteamTrades by adding some cool features to them.
 // @icon https://github.com/revilheart/ESGST/raw/master/Resources/esgstIcon.ico
-// @version 6.Beta.21.3
+// @version 6.Beta.21.4
 // @author revilheart
 // @downloadURL https://github.com/revilheart/ESGST/raw/master/ESGST.user.js
 // @updateURL https://github.com/revilheart/ESGST/raw/master/ESGST.meta.js
@@ -580,6 +580,7 @@
                         ugs_checkMember: `UGS_G`
                     };
                     esgst.defaultValues = {
+                        gwc_colors: [],
                         ugs_checkRules: false,
                         ugs_checkWhitelist: false,
                         ugs_checkMember: false,
@@ -1504,6 +1505,18 @@
                                 </ul>
                                 <img src="https://camo.githubusercontent.com/3f161b5a39d4723ac361a93e74b7beedc3cd5cd5/687474703a2f2f692e696d6775722e636f6d2f50696235546f6d2e706e67"/>
                             `,
+                            features: [
+                                {
+                                    description: `
+                                        <ul>
+                                            <li>Uses an advanced formula to calculate the chance based on how long ago the giveaway was created, how many entries it currently has, and how long it is until the giveaway ends.</li>
+                                        </ul>
+                                    `,
+                                    id: `gwc_a`,
+                                    name: `[NEW] Use advanced formula.`,
+                                    sg: true
+                                }
+                            ],
                             id: `gwc`,
                             load: loadGwc,
                             name: `Giveaway Winning Chance`,
@@ -2757,6 +2770,9 @@
                     for (var key in esgst.defaultValues) {
                         esgst[key] = getValue(key);
                     }
+                    for (var key in esgst.defaultValues) {
+                        esgst[key] = getValue(key);
+                    }
                     if (esgst.sg) {
                         checkSync();
                     }
@@ -2942,6 +2958,7 @@
 
                 .esgst-gv-icons {
                     float: right;
+                    height: 18px;
                     margin: -18px 0 0 !important;
                 }
 
@@ -6511,6 +6528,7 @@ min-width: 0;
             elements[i].classList.add(`esgst-ib-game`);
         }
     }
+
     /* [FMPH] Fixed Main Page Heading */
 
     function loadFmph() {
@@ -8741,17 +8759,40 @@ ${avatar.outerHTML}
     }
 
     function addGwcChance(context, giveaway) {
-        var chance, entries, html;
+        var chance, color, colors, entries, html, i, lower, n, upper;
         if (giveaway.entered || giveaway.ended || giveaway.created) {
             entries = giveaway.entries;
         } else {
             entries = giveaway.entries + 1;
         }
-        chance = entries > 0 ? Math.round(giveaway.copies / entries * 10000) / 100 : 100;
+        if (esgst.gwc_a) {
+            if (entries > 0) {
+                chance = Math.round(giveaway.copies / (entries / (Date.now() - giveaway.startTime) * (giveaway.endTime - giveaway.startTime)) * 10000) / 100;
+            } else {
+                chance = 100;
+            }
+        } else {
+            if (entries > 0) {
+                chance = Math.round(giveaway.copies / entries * 10000) / 100;
+            } else {
+                chance = 100;
+            }
+        }
         if (chance > 100) {
             chance = 100;
         }
         giveaway.chance = chance;
+        for (i = 0, n = esgst.gwc_colors.length; i < n; ++i) {
+            colors = esgst.gwc_colors[i];
+            color = colors.color;
+            lower = parseFloat(colors.lower);
+            upper = parseFloat(colors.upper);
+            if (chance >= lower && chance <= upper) {
+                context.style.color = color;
+                context.style.fontWeight = `bold`;
+                i = n;
+            }
+        }
         context.setAttribute(`data-chance`, chance);
         if (esgst.enteredPath) {
             context.style.display = `inline-block`;
@@ -20918,7 +20959,7 @@ ${avatar.outerHTML}
                         code = code[1];
                         if (comments[key][code]) {
                             if (esgst.ct_s) {
-                                read = comments[key][code].count || 0;
+                                read = comments[key][code].count || count;
                             } else {
                                 read = 0;
                                 for (id in comments[key][code].comments) {
@@ -20928,6 +20969,8 @@ ${avatar.outerHTML}
                                 }
                             }
                             diff = count === read ? 0 : count - read;
+                        } else if (esgst.ct_s) {
+                            diff = 0;
                         } else {
                             diff = count;
                         }
@@ -25303,16 +25346,18 @@ ${avatar.outerHTML}
                 SMFeatures.classList.remove(`esgst-hidden`);
             }
         }
-        if (Feature.colors) {
+        if (Feature.id === `gwc`) {
+            addGwcMenuPanel(SMFeatures);
+        } else if (Feature.colors) {
             var color = esgst[`${Feature.id}_color`];
             var bgColor = esgst[`${Feature.id}_bgColor`];
             var html = `
-<div class="esgst-sm-colors">
-Text: <input type="color" value="${color}">
-Background: <input type="color" value="${bgColor}">
-<div class="form__saving-button esgst-sm-colors-default">Use Default</div>
-</div>
-`;
+                <div class="esgst-sm-colors">
+                    Text: <input type="color" value="${color}">
+                    Background: <input type="color" value="${bgColor}">
+                    <div class="form__saving-button esgst-sm-colors-default">Use Default</div>
+                </div>
+            `;
             SMFeatures.insertAdjacentHTML(`beforeEnd`, html);
             var colorContext = SMFeatures.lastElementChild.firstElementChild;
             var bgColorContext = colorContext.nextElementSibling;
@@ -25412,6 +25457,66 @@ Background: <input type="color" value="${bgColor}">
             Menu.lastElementChild.remove();
             return null;
         }
+    }
+
+    function addGwcMenuPanel(context) {
+        var button, colors, i, n, panel;
+        panel = insertHtml(context, `beforeEnd`, `            
+            <div class="esgst-sm-colors">
+                <div class="form__saving-button esgst-sm-colors-default">
+                    <span>Add Color Setting</span>
+                </div>
+                <i class="fa fa-question-circle" title="Allows you to set different colors for different chance ranges."></i>
+            </div>
+        `);
+        button = panel.firstElementChild;
+        for (i = 0, n = esgst.gwc_colors.length; i < n; ++i) {
+            addGwcColorSetting(esgst.gwc_colors[i], panel);
+        }
+        button.addEventListener(`click`, function () {
+            colors = {
+                color: `#ffffff`,
+                lower: `0`,
+                upper: `100`
+            };
+            esgst.gwc_colors.push(colors);
+            addGwcColorSetting(colors, panel);
+        });
+    }
+
+    function addGwcColorSetting(colors, panel) {
+        var color, i, lower, n, remove, setting, upper;
+        setting = insertHtml(panel, `beforeEnd`, `
+            <div>
+                From <input step="0.01" type="number" value="${colors.lower}"/> to <input step="0.01" type="number" value="${colors.upper}"/> chance, color it as <input type="color" value="${colors.color}"/>. <i class="esgst-clickable fa fa-times" title="Delete this setting."></i>
+            </div>
+        `);
+        lower = setting.firstElementChild;
+        upper = lower.nextElementSibling;
+        color = upper.nextElementSibling;
+        remove = color.nextElementSibling;
+        lower.addEventListener(`change`, function () {
+            colors.lower = lower.value;
+            setValue(`gwc_colors`, esgst.gwc_colors);
+        });
+        upper.addEventListener(`change`, function () {
+            colors.upper = upper.value;
+            setValue(`gwc_colors`, esgst.gwc_colors);
+        });
+        color.addEventListener(`change`, function () {
+            colors.color = color.value;
+            setValue(`gwc_colors`, esgst.gwc_colors);
+        });
+        remove.addEventListener(`click`, function () {
+            if (confirm(`Are you sure you want to delete this setting?`)) {
+                for (i = 0, n = esgst.gwc_colors.length; i < n && esgst.gwc_colors[i] !== colors; ++i);
+                if (i < n) {
+                    esgst.gwc_colors.splice(i, 1);
+                    setValue(`gwc_colors`, esgst.gwc_colors);
+                    setting.remove();
+                }
+            }
+        });
     }
 
     function addColorObserver(context, id, key) {

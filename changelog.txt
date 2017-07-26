@@ -1,4 +1,12 @@
 /*
+ * July 26, 2017 - v6.Beta.21.4
+ */
+
+* Added an option (2.12.1) to Giveaway Winning Chance that uses an advanced formula to calculate the chance, involving the start and end times of the giveaway.
+* Added an option (2.12) to Giveaway Winning Chance that allows you to color chances from different ranges.
+* The simplified version of Comment Tracker now counts all comments as read if the discussion hasn't been visited yet.
+
+/*
  * July 26, 2017 - v6.Beta.21.3
  */
 
