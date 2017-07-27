@@ -1,4 +1,19 @@
 /*
+ * July 27, 2017 - v6.Beta.22.0
+ */
+
+* The heading "Chance / Ratio" in the entered page now changes to "Chance" or "Ratio" if one of the features is disabled.
+* Fixed a bug in Giveaway Winning Chance that was unable to calculate the advanced formula in the entered page due to the lack of the start time information (the advanced formula now only works outside of the entered page).
+* Added the advanced formula and color settings from Giveaway Winning Chance also to Giveaway Winning Ratio.
+* Added an option (Trades.1.1) that auto bumps your trades every hour.
+* Fixed a bug in Comment Tracker that was preventing users from making comments in giveaways.
+
+Added the following features:
+
+* Giveaways.22 Entries Tracker
+* Comments.2 Comment Searcher
+
+/*
  * July 27, 2017 - v6.Beta.21.5
  */
 
