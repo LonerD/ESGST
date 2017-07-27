@@ -1,4 +1,16 @@
 /*
+ * July 27, 2017 - v6.Beta.21.5
+ */
+
+* Prevended the advanced formula in Giveaway Winning Chance from loading for ended giveaways.
+* Added an option (Comments.2.20) to Comment Formatting Helper that allows you to save replies for later use (closes #170).
+* Separated the Comment Tracker change from the last update into a new option (Comments.7.1.1).
+
+Upgraded the following features to v6:
+
+* Groups.2 Groups Stats - No major changes, simply removed the request limit.
+
+/*
  * July 26, 2017 - v6.Beta.21.4
  */
 
