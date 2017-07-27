@@ -1963,7 +1963,6 @@
                             description: `
                                 <ul>
                                     <li>Allows you to search a giveaway/discussion/ticket/trade for comments from specific users.</li>
-                                    <li>Results are cached for 30 minutes.</li>
                                 </ul>
                                 <img src="http://i.imgur.com/KpcVxXk.png"/>
                                 <img src="http://i.imgur.com/y0QykIf.png"/>
