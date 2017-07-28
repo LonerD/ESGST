@@ -3,7 +3,7 @@
 // @namespace ESGST
 // @description Enhances SteamGifts and SteamTrades by adding some cool features to them.
 // @icon https://github.com/revilheart/ESGST/raw/master/Resources/esgstIcon.ico
-// @version 6.Beta.22.0
+// @version 6.Beta.22.1
 // @author revilheart
 // @downloadURL https://github.com/revilheart/ESGST/raw/master/ESGST.user.js
 // @updateURL https://github.com/revilheart/ESGST/raw/master/ESGST.meta.js
@@ -78,6 +78,19 @@
                         }
                     }
                     esgst.style = `
+                        .esgst-faded {
+                            opacity: 0.5;
+                        }
+                        .esgst-warning {
+                            color: #e9202a !important;
+                            font-weight: bold;
+                        }
+                        .esgst-description {
+                            color: #6b7a8c;
+                            font-size: 11px;
+                            font-style: italic;
+                            margin-top: 10px;
+                        }
                         .esgst-progress-bar {
                             height: 10px;
                             overflow: hidden;
@@ -582,6 +595,8 @@
                     esgst.defaultValues = {
                         gwc_colors: [],
                         gwr_colors: [],
+                        ut_colors: {},
+                        gt_colors: {},
                         ugs_checkRules: false,
                         ugs_checkWhitelist: false,
                         ugs_checkMember: false,
@@ -1194,6 +1209,18 @@
                             sg: true,
                             type: `general`
                         },
+                        /*{
+                            description: `
+                                <ul>
+                                    <li>Allows you to tag multiple users/games at the same time.</li>
+                                </ul>
+                            `,
+                            id: `mt`,
+                            name: `Multi-Tag`,
+                            sg: true,
+                            st: true,
+                            type: `general`
+                        },*/
                         {
                             description: `
                                 <ul>
@@ -1558,7 +1585,7 @@
                             features: [
                                 {
                                     id: `elgb_d`,
-                                    name: `Pop up the giveaway description before entering, if any.`,
+                                    name: `Pop up the giveaway description when entering, if any.`,
                                     sg: true
                                 },
                                 {
@@ -2845,9 +2872,6 @@
                     for (var key in esgst.defaultValues) {
                         esgst[key] = getValue(key);
                     }
-                    for (var key in esgst.defaultValues) {
-                        esgst[key] = getValue(key);
-                    }
                     if (esgst.sg) {
                         checkSync();
                     }
@@ -2880,7 +2904,7 @@
                             background-image:linear-gradient(rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0) 100%);
                         }
                     `;
-                    esgst.esCheck = (esgst.es_g && esgst.giveawaysPath) || (esgst.es_d && esgst.discussionsTicketsPath) || (esgst.es_t && esgst.tradesPath) || (esgst.es_c && esgst.commentsPath) || (esgst.es_l && !esgst.giveawaysPath && !esgst.discussionsTicketsPath && !esgst.tradesPath && !esgst.commentsPath);
+                    esgst.esCheck = esgst.es && ((esgst.es_g && esgst.giveawaysPath) || (esgst.es_d && esgst.discussionsTicketsPath) || (esgst.es_t && esgst.tradesPath) || (esgst.es_c && esgst.commentsPath) || (esgst.es_l && !esgst.giveawaysPath && !esgst.discussionsTicketsPath && !esgst.tradesPath && !esgst.commentsPath));
                     if (esgst.ib) {
                         esgst.style += `
                             .esgst-ib-user {
@@ -2985,6 +3009,49 @@
                 addWBCButton(true, button);
             }
         }
+        /*if (esgst.mt) {
+            esgst.style += `
+                .esgst-mt-popout {
+                    background-color: #fff;
+                    border: 1px solid #d2d6e0;
+                    border-radius: 4px;
+                    color: #465670;
+                    padding: 10px;
+                }
+                .esgst-mt-user-checkbox {                    
+                    display: inline-block;
+                    margin: 0 5px 0 0;
+                }
+            `;
+            if (esgst.ut) {
+                esgst.mtUserButton = button = document.createElement(`div`);
+                button.className = `esgst-hidden esgst-heading-button`;
+                button.title = `Multi-tag user`;
+                button.innerHTML = `
+                    <i class="fa fa-users"></i>
+                    <i class="fa fa-tags"></i>
+                `;
+                mainPageHeadingBefore.appendChild(button);
+                button.addEventListener(`click`, openMtPopout.bind(null, {
+                    button: button,
+                    type: `user`
+                }));
+            }
+            if (esgst.gt) {
+                esgst.mtGameButton = button = document.createElement(`div`);
+                button.className = `esgst-hidden esgst-heading-button`;
+                button.title = `Multi-tag games`;
+                button.innerHTML = `
+                    <i class="fa fa-gamepad"></i>
+                    <i class="fa fa-tags"></i>
+                `;
+                mainPageHeadingBefore.appendChild(button);
+                button.addEventListener(`click`, openMtPopout.bind(null, {
+                    button: button,
+                    type: `game`
+                }));
+            }
+        }*/
         if (esgst.giveawaysPath || esgst.discussionsPath) {
             esgst.endlessFeatures.push(loadDiscussionFeatures);
             loadDiscussionFeatures(document);
@@ -3143,10 +3210,6 @@
                     margin: 5px 5px ${esgst.ib ? 10 : 5}px;
                     text-align: center;
                     width: ${esgst.ib ? 127 : 132}px;
-                }
-
-                .esgst-gv-popout .esgst-gt-tags, .esgst-gv-popout .PUTTags {
-                    display: none;
                 }
 
                 .esgst-gv-popout .giveaway_image_avatar, .esgst-gv-popout .featured_giveaway_image_avatar {
@@ -4850,9 +4913,12 @@
         var currentContext, popout, timeout;
         popout = {};
         popout.popout = insertHtml(document.body, `beforeEnd`, `<div class="${className} esgst-popout esgst-hidden"></div>`);
-        popout.open = function(context) {
-            currentContext = context;
+        popout.open = function(context, fixed) {
             popout.popout.classList.remove(`esgst-hidden`);
+            if (fixed) {
+                popout.popout.style.position = `fixed`;
+            }
+            currentContext = context;
             popout.reposition(context);
         };
         popout.close = function() {
@@ -5103,13 +5169,13 @@
 
     function createCheckbox_v6(context, defaultValue, threeState) {
         var html = `
-<span class="esgst-checkbox">
-<input class="esgst-hidden" type="checkbox">
-<i class="fa fa-circle-o"></i>
-<i class="fa fa-circle"></i>
-<i class="fa fa-check-circle"></i>
-</span>
-`;
+            <span class="esgst-checkbox">
+                <input class="esgst-hidden" type="checkbox">
+                <i class="fa fa-circle-o"></i>
+                <i class="fa fa-circle"></i>
+                <i class="fa fa-check-circle"></i>
+            </span>
+        `;
         context.insertAdjacentHTML(`afterBegin`, html);
         var checkbox = {
             value: defaultValue,
@@ -5165,26 +5231,26 @@
         checkbox.none.classList.add(`esgst-hidden`);
     }
 
-    function checkCheckbox(checkbox) {
+    function checkCheckbox(checkbox, callback) {
         checkbox.input.checked = true;
-        changeCheckboxState(checkbox);
+        changeCheckboxState(checkbox, callback);
     }
 
-    function uncheckCheckbox(checkbox) {
+    function uncheckCheckbox(checkbox, callback) {
         checkbox.input.checked = false;
-        changeCheckboxState(checkbox);
+        changeCheckboxState(checkbox, callback);
     }
 
-    function toggleCheckbox(checkbox) {
+    function toggleCheckbox(checkbox, callback) {
         if (checkbox.input.checked) {
             checkbox.input.checked = false;
         } else {
             checkbox.input.checked = true;
         }
-        changeCheckboxState(checkbox);
+        changeCheckboxState(checkbox, callback);
     }
 
-    function changeCheckboxState(checkbox, toggle) {
+    function changeCheckboxState(checkbox, toggle, callback) {
         if (!checkbox.threeState) {
             if (toggle) {
                 if (checkbox.input.checked) {
@@ -5200,12 +5266,18 @@
                 checkbox.enabled.classList.remove("esgst-hidden");
                 checkbox.checkbox.removeEventListener("mouseenter", checkbox.showNone);
                 checkbox.checkbox.removeEventListener("mouseleave", checkbox.hideNone);
+                if (checkbox.onEnabled && callback) {
+                    checkbox.onEnabled();
+                }
             } else {
                 checkbox.value = false;
                 checkbox.enabled.classList.add("esgst-hidden");
                 checkbox.disabled.classList.remove("esgst-hidden");
                 checkbox.checkbox.addEventListener("mouseenter", checkbox.showNone);
                 checkbox.checkbox.addEventListener("mouseleave", checkbox.hideNone);
+                if (checkbox.onDisabled && callback) {
+                    checkbox.onDisabled();
+                }
             }
         } else {
             if (checkbox.value == `disabled`) {
@@ -5259,10 +5331,16 @@
                 esgst[id] = toggleSwitch.input.checked;
             }
             if (toggleSwitch.input.checked) {
+                if (toggleSwitch.onEnabled) {
+                    toggleSwitch.onEnabled();
+                }
                 for (i = 0, n = toggleSwitch.dependencies.length; i < n; ++i) {
                     toggleSwitch.dependencies[i].classList.remove(`esgst-hidden`);
                 }
             } else {
+                if (toggleSwitch.onDisabled) {
+                    toggleSwitch.onDisabled();
+                }
                 for (i = 0, n = toggleSwitch.dependencies.length; i < n; ++i) {
                     toggleSwitch.dependencies[i].classList.add(`esgst-hidden`);
                 }
@@ -5318,16 +5396,6 @@
             Element[Key + "Count"] = Element[Key].firstElementChild.nextElementSibling.firstElementChild;
             Element[Key + "Users"] = Element[Key].lastElementChild;
         }
-    }
-
-    function createDescription(Description) {
-        return (
-            "<form>" +
-            "    <div class=\"form__input-description rhDescription\">" +
-            "        <div class=\"input_description\">" + Description + "</div>" +
-            "    </div>" +
-            "</form>"
-        );
     }
 
     function createNavigationSection(Name, Items) {
@@ -5735,10 +5803,6 @@ margin-bottom: 25px;
 display: none;
 }
 
-.esgst-lpv-container >* {
-background-image: none !important;
-}
-
 .esgst-aas-button, .esgst-es-pause-button, .esgst-es-refresh-button {
 cursor: pointer;
 display: inline-block;
@@ -5883,30 +5947,6 @@ display: inline-block;
 
 .MTGameCheckbox ~ .table__row-outer-wrap {
 display: inline-block;
-}
-
-.esgst-gt-panel {
-border: 0! important;
-cursor: pointer;
-display: inline-block;
-line-height: normal;
-text-decoration: none !important;
-}
-
-.esgst-gt-tags >* {
-display: inline-block !important;
-height: auto;
-margin: 0;
-padding: 2px;
-width: auto;
-}
-
-.esgst-gt-tags >:not(:first-child) {
-margin-left: 5px;
-}
-
-.giveaway__row-outer-wrap .esgst-gt-panel, .table__row-outer-wrap .esgst-gt-panel {
-margin-left: 5px;
 }
 
 .esgst-giveaway-links {
@@ -6100,33 +6140,8 @@ min-width: 0;
             ".SGCBox .table__row-inner-wrap {" +
             "    padding: 0 10px;" +
             "}" +
-            ".PUTButton i, .MTUserCheckbox i, .MTGameCheckbox i, .CFHPanel span >:first-child >* {" +
+            ".MTUserCheckbox i, .MTGameCheckbox i, .CFHPanel span >:first-child >* {" +
             "    margin: 0 !important;" +
-            "}" +
-            ".PUTButton {" +
-            "    border: 0! important;" +
-            "    cursor: pointer;" +
-            "    display: inline-block;" +
-            "    line-height: normal;" +
-            "    margin: 0 0 0 5px;" +
-            "    text-decoration: none !important;" +
-            "}" +
-            ".author_name + .PUTButton {" +
-            "    margin: 0 5px 0 0;" +
-            "}" +
-            ".PUTTags {" +
-            "    font-size: 10px;" +
-            "    font-weight: bold;" +
-            "}" +
-            ".PUTTags >* {" +
-            "    display: inline-block !important;" +
-            "    height: auto;" +
-            "    margin: 0;" +
-            "    padding: 1px 2px;" +
-            "    width: auto;" +
-            "}" +
-            ".PUTTags >:not(:first-child), .CTPanel >:not(:first-child) {" +
-            "    margin: 0 0 0 5px;" +
             "}" +
             ".MTTag {" +
             "    display: inline-block;" +
@@ -6882,12 +6897,57 @@ min-width: 0;
         }
     }
 
+    function addStyle(id, style) {
+        var style
+        style = insertHtml(document.body, `beforeBegin`, `
+            <style id="${id}">${style}</style>
+        `);
+        return style;
+    }
+
     function setLpvStyle() {
-        var progress, style;
-        progress = `${esgst.headerElements.levelContainer.getAttribute(`title`).match(/\.(\d+)/)[1]}%`;
-        style = window.getComputedStyle(esgst.headerElements.mainButton.parentElement).backgroundImage;
+        var firstBar, fullBar, progress, secondBar, style;
+        progress = parseInt(esgst.headerElements.levelContainer.getAttribute(`title`).match(/\.(\d+)/)[1] * 1.85);
+        fullBar = `${progress}px`;
+        if (progress >= 156) {
+            secondBar = `${progress - 156 - 0.59}px`;
+        } else {
+            secondBar = `0px`;
+        }
+        style = document.getElementById(`esgst-lpv-style`);
+        if (style) {
+            style.remove();
+        }
+        addStyle(`esgst-lpv-style`, `
+            .esgst-lpv-container {
+                background-image: linear-gradient(to right, #609f60 ${fullBar}, transparent ${fullBar}), linear-gradient(#8a92a1 0px, #757e8f 8px, #4e5666 100%) !important;
+            }
+            .esgst-lpv-container .nav__button--is-dropdown:hover {
+                background-image: linear-gradient(to right, #6dac6d ${fullBar}, transparent ${fullBar}), linear-gradient(#9ba2b0 0px, #8c94a3 8px, #596070 100%) !important;
+            }
+            .esgst-lpv-container .nav__button--is-dropdown-arrow:hover {
+                background-image: linear-gradient(to right, #6dac6d ${secondBar}, transparent ${secondBar}), linear-gradient(#9ba2b0 0px, #8c94a3 8px, #596070 100%) !important;
+            }
+            .esgst-lpv-container .nav__button--is-dropdown-arrow.is-selected {
+                background-image: linear-gradient(to right, #609f60 ${secondBar}, transparent ${secondBar}), linear-gradient(#4e525f 0px, #434857 5px, #2b2e3a 100%) !important;
+            }
+            .esgst-lpv-container.is-selected .nav__button--is-dropdown {
+                background-image: linear-gradient(to right, #6dac6d ${fullBar}, transparent ${fullBar}), linear-gradient(#d0d5de 0px, #c9cdd7 5px, #9097a6 100%) !important;
+            }
+            .esgst-lpv-container.is-selected .nav__button--is-dropdown-arrow {
+                background-image: linear-gradient(to right, #6dac6d ${secondBar}, transparent ${secondBar}), linear-gradient(#d0d5de 0px, #c9cdd7 5px, #9097a6 100%) !important;
+            }
+            .esgst-lpv-container.is-selected .nav__button--is-dropdown:hover {
+                background-image: linear-gradient(to right, #7ab97a ${fullBar}, transparent ${fullBar}), linear-gradient(#f0f1f5 0px, #d1d4de 100%) !important;
+            }
+            .esgst-lpv-container.is-selected .nav__button--is-dropdown-arrow:hover:not(.is-selected) {
+                background-image: linear-gradient(to right, #7ab97a ${secondBar}, transparent ${secondBar}), linear-gradient(#f0f1f5 0px, #d1d4de 100%) !important;
+            }
+            .esgst-lpv-container.is-selected .nav__button--is-dropdown-arrow.is-selected {
+                background-image: linear-gradient(to right, #7ab97a ${secondBar}, transparent ${secondBar}), linear-gradient(#4e525f 0px, #434857 5px, #2b2e3a 100%) !important;
+            }
+        `);
         esgst.headerElements.mainButton.parentElement.classList.add(`esgst-lpv-container`);
-        esgst.headerElements.mainButton.parentElement.setAttribute(`style`, `background-image: linear-gradient(to right, #609f60 ${progress}, transparent ${progress}), ${style};`);
     }
 
     /* [LPL] Last Page Link */
@@ -8051,7 +8111,7 @@ min-width: 0;
     }
 
     function filterGfGiveaways(gf) {
-        var context, count, element, elements, filtered, genres, giveaway, i, j, k, key, maxKey, minKey, n, n2, n3, name;
+        var context, count, element, elements, filtered, genres, giveaway, giveaways, i, j, k, key, maxKey, minKey, n, n2, n3, name;
         if (gf.type === `Popup`) {
             giveaways = esgst.popupGiveaways;
         } else {
@@ -9463,6 +9523,7 @@ ${avatar.outerHTML}
     function addGtsButtonSection(button, rows) {
         var createGiveawayButton, delay, edit, endTime, input, message, preciseEndCheckbox, preciseEndOption, preciseStartCheckbox, preciseStartOption, reviewButton, section, set, startTime, warning;
         if (rows) {
+            gts = {};
             reviewButton = rows.lastElementChild;
             createGiveawayButton = createButtonSet(`green`, `grey`, `fa-plus-circle`, `fa-circle-o-notch fa-spin`, `Create Giveaway`, `Creating...`, function (callback) {
                 var data;
@@ -9488,6 +9549,9 @@ ${avatar.outerHTML}
             button.addEventListener(`click`, function () {
                 var days, details, hours, i, n, popup, savedTemplate, savedTemplates, template, templates, time, weeks;
                 popup = createPopup(`fa-file`, `View/apply templates:`, true);
+                popup.description.insertAdjacentHTML(`afterBegin`, `
+                    <div class="esgst-description">Drag and drop templates to move them.</div>
+                `);
                 templates = insertHtml(popup.scrollable, `beforeEnd`, `
                     <div class="esgst-text-left popup__keys__list"></div>
                 `);
@@ -9544,7 +9608,7 @@ ${avatar.outerHTML}
                     }
                     details += `, level ${savedTemplate.level}+`;
                     template = insertHtml(templates, `beforeEnd`, `
-                        <div>
+                        <div draggable="true">
                             <div class="esgst-clickable" style="float: left;">
                                 <strong>${savedTemplate.name}</strong>
                             </div>
@@ -9552,10 +9616,13 @@ ${avatar.outerHTML}
                                 <i class="fa fa-trash" title="Delete template"></i>
                             </div>
                             <div style="clear: both;"></div>
-                            <div class="form__input-description">${details}</div>
+                            <div class="esgst-description">${details}</div>
                         </div>
                     `);
-                    setGtsTemplate(popup, template, savedTemplates[i]);
+                    template.addEventListener(`dragstart`, setGtsSource.bind(null, gts, savedTemplate.name, template));
+                    template.addEventListener(`dragenter`, getGtsSource.bind(null, gts, template, templates));
+                    template.addEventListener(`dragend`, saveGtsSource.bind(null, gts));
+                    setGtsTemplate(popup, template, savedTemplate);
                 }
                 popup.open();
             });
@@ -9573,13 +9640,13 @@ ${avatar.outerHTML}
                             <span>Use precise end time.</span>
                         </div>
                         <input class="form__input-small" type="text"/>
-                        <span class="esgst-hidden form__input-description">
+                        <span class="esgst-hidden esgst-description">
                             <strong>Saved!</strong>
                         </span>
                         <div class="esgst-hidden form__row__error">
                             <i class="fa fa-exclamation-circle"></i> Please enter a name for the template.
                         </div>
-                        <div class="form__input-description">The name of the template.</div>
+                        <div class="esgst-description">The name of the template.</div>
 					</div>
 				</div>
             `).lastElementChild;
@@ -9795,6 +9862,40 @@ ${avatar.outerHTML}
         }
     }
 
+    function setGtsSource(gts, name, template) {
+        var i, n, savedTemplates;
+        gts.source = template;
+        savedTemplates = JSON.parse(GM_getValue(`templates`, `[]`));
+        for (i = 0, n = savedTemplates.length; i < n && savedTemplates[i].name !== name; ++i);
+        if (i < n) {
+            gts.sourceIndex = i;
+        }
+    }
+
+    function getGtsSource(gts, template, templates) {
+        var current, i;
+        current = gts.source;
+        i = 0;
+        do {
+            current = current.previousElementSibling;
+            if (current && current === template) {
+                gts.sourceNewIndex = i;
+                templates.insertBefore(gts.source, template);
+                return;
+            }
+            ++i;
+        } while (current);
+        gts.sourceNewIndex = i - 1;
+        templates.insertBefore(gts.source, template.nextElementSibling);
+    }
+
+    function saveGtsSource(gts) {
+        var savedTemplates;
+        savedTemplates = JSON.parse(GM_getValue(`templates`, `[]`));
+        savedTemplates.splice(gts.sourceNewIndex, 0, savedTemplates.splice(gts.sourceIndex, 1)[0]);
+        GM_setValue(`templates`, JSON.stringify(savedTemplates));
+    }
+
     /* [MGC] Multiple Giveaways Creator */
 
     function loadMgc() {
@@ -9847,7 +9948,7 @@ ${avatar.outerHTML}
                             <div></div>
                             <div class="esgst-hidden">
                                 <div></div>
-                                <div class="form__input-description markdown">
+                                <div class="esgst-description markdown">
                                 <div>Add the connection style to the description of the giveaway, wherever you want it to appear, using the format [ESGST-P]...[P]...[/P]...[/ESGST-P]...[ESGST-N]...[N]...[/N]...[/ESGST-N] or the simplified format [ESGST-P]...[/ESGST-P]...[ESGST-N]...[/ESGST-N], where [P]...[/P] and [N]...[/N] delimit the clickable link, [ESGST-P]...[/ESGST-P] and [ESGST-N]...[/ESGST-N] delimit the entire text area that includes the clickable link, and the "..." between [/ESGST-P] and [ESGST-N] delimit the separator between the links. If using the simplified format, [P]...[/P] and [N]...[/N] are not required and the entire text inside [ESGST-P]...[/ESGST-P] and [ESGST-N]...[/ESGST-N] will be turned into a link.</div>
                                 <br/>
                                 <div>Some examples:</div>
@@ -9900,7 +10001,7 @@ ${avatar.outerHTML}
                 <div class="pinned-giveaways__outer-wrap">
                     <div class="pinned-giveaways__inner-wrap"></div>
                     <i class="fa fa-trash" title="Drag a giveaway here to remove it."></i>
-                    <div class="form__input-description">
+                    <div class="esgst-description">
                         Giveaways successfully created will turn green, giveaways successfully connected will be strikethrough (for train creations) and giveaways that were not successfully created will turn red.
                     </div>
                 </div>
@@ -9994,7 +10095,7 @@ ${avatar.outerHTML}
         var counter, popup, progress, progressPanel, textArea;
         popup = createPopup(`fa-arrow-up`, `Import Giveaways`, true);
         popup.scrollable.insertAdjacentHTML(`beforeEnd`, `
-            <div class="form__input-description">
+            <div class="esgst-description">
                 <div>Before importing, make sure you have filled the details of the giveaway (time, region, whitelist, group, level and description) or applied a template. Having different details for each giveaway is currently not supported.</div>
                 <br/>
                 <div>Separate giveaways with a new line. For gift giveaways, write the name of the game (exactly like it is on Steam) and the number of copies (only required if bigger than 1) in the format "(X Copies)" without the quotes and separated from the name of the game by a single space. For key giveaways, write the name of the game (exactly like it is on Steam) and put the key after or before the name of the game (depending on whether or not you have reverse position enabled), separated from the name of the game by a single space (Steam and HumbleBundle gift links are supported and work just like the keys, but they must start with "http://" or "https://" to be detected). Here's an example of how the input should be with reverse position disabled:</div>
@@ -10041,8 +10142,16 @@ ${avatar.outerHTML}
     }
 
     function getMgcGiveaways(mgc, popup, progress, textArea, callback) {
-        var giveaways, max, n, value;
-        giveaways = textArea.value.split(/\n/);
+        var giveaways, lines, max, n, value;
+        giveaways = [];
+        lines = textArea.value.trim().split(/\n/);
+        for (i = 0, n = lines.length; i < n; ++i) {
+            line = lines[i].trim();
+            if (line) {
+                giveaways.push(line);
+            }
+        }
+        textArea.value = giveaways.join(`\n`);
         n = giveaways.length;
         if ($(progress.bar).progressbar(`instance`)) {
             max = $(progress.bar).progressbar(`option`, `max`);
@@ -10930,7 +11039,7 @@ ${avatar.outerHTML}
                     checkUgsWhitelist(code, ugs, 0, numWinners, sendUgsGifts.bind(null, code, ugs, 0, numWinners, setTimeout.bind(null, checkUgsGifts, 0, codes, ugs, ++i, n, callback)));
                 } else {
                     for (j = 0; j < numWinners; ++j) {
-                        winner = winners[i];
+                        winner = winners[j];
                         if (ugs.rerolls.indexOf(winner.winnerId) >= 0) {
                             winner.error = `${winner.username} is currently being rerolled.`;
                         }
@@ -12288,9 +12397,6 @@ ${avatar.outerHTML}
                     max-height: 300px;
                     max-width: 336px;
                     overflow: auto;
-                }
-                .esgst-adots .PUTTags {
-                    display: none;
                 }
                 .esgst-adots .esgst-dh-highlighted {
                     padding: 0 !important;
@@ -20342,7 +20448,7 @@ ${avatar.outerHTML}
                         Popup.scrollable.insertAdjacentHTML(
                             "afterBegin",
                             "<div class=\"CFHEmojis\"></div>" +
-                            createDescription("Drag the emojis you want to use and drop them in the box below. Click on an emoji to remove it.") +
+                            `<div class="esgst-description">Drag the emojis you want to use and drop them in the box below. Click on an emoji to remove it.</div>` +
                             "<div class=\"global__image-outer-wrap page_heading_btn CFHEmojis\">" + GM_getValue("Emojis", ``) + "</div>"
                         );
                         Emojis = Popup.scrollable.firstElementChild;
@@ -20582,13 +20688,15 @@ ${avatar.outerHTML}
     function openCfhReplyPopup(cfh, description, name, replies, summary) {
         var descriptionArea, nameArea, panel, popup;
         popup = createPopup(`fa-floppy-o`, summary ? `Edit reply:` : `Save new reply:`, true);
-        popup.scrollable.insertAdjacentHTML(`beforeEnd`, createDescription(`
-            You can save a defined list of replies to be picked at random when using it. To do so, enclose each option with <strong>[ESGST-R][/ESGST-R]</strong>. For example, a defined list that renders a random "thank you" comment when using it would look like this:<br/><br/>
-            [ESGST-R]Thanks![/ESGST-R]<br/>
-            [ESGST-R]Thank you![/ESGST-R]<br/>
-            [ESGST-R]Thank you so much!<br/><br/>            
-            Can't wait to play this game![/ESGST-R]
-        `));
+        popup.scrollable.insertAdjacentHTML(`beforeEnd`, `
+            <div class="esgst-description">
+                You can save a defined list of replies to be picked at random when using it. To do so, enclose each option with <strong>[ESGST-R][/ESGST-R]</strong>. For example, a defined list that renders a random "thank you" comment when using it would look like this:<br/><br/>
+                [ESGST-R]Thanks![/ESGST-R]<br/>
+                [ESGST-R]Thank you![/ESGST-R]<br/>
+                [ESGST-R]Thank you so much!<br/><br/>            
+                Can't wait to play this game![/ESGST-R]
+            </div>
+        `);
         panel = insertHtml(popup.scrollable, `beforeEnd`, `
             <div>
                 <div>
@@ -22647,7 +22755,7 @@ ${avatar.outerHTML}
                 ID: "NAMWC_MC",
                 Dependency: "NotActivatedCheck"
             }]);
-            Popup.Options.insertAdjacentHTML("afterEnd", createDescription("If an user is highlighted, that means they have been either checked for the first time or updated."));
+            Popup.Options.insertAdjacentHTML("afterEnd", `<div class="esgst-description">If an user is highlighted, that means they have been either checked for the first time or updated.</div>`);
             Popup.description.appendChild(createButtonSet(`green`, `grey`, `fa-question-circle`, `fa-times-circle`, `Check`, `Cancel`, function (Callback) {
                 NAMWC.ShowResults = false;
                 NAMWCButton.classList.add("esgst-busy");
@@ -22977,7 +23085,7 @@ ${avatar.outerHTML}
             Key: "FS",
             ID: "NRF_FS"
         }]);
-        Popup.Options.insertAdjacentHTML("afterEnd", createDescription("If you're blacklisted / not whitelisted / not a member of the same Steam groups, not all giveaways will be found."));
+        Popup.Options.insertAdjacentHTML("afterEnd", `<div class="esgst-description">If you're blacklisted / not whitelisted / not a member of the same Steam groups, not all giveaways will be found.`);
         Popup.description.appendChild(createButtonSet(`green`, `grey`, `fa-search`, `fa-times-circle`, `Find`, `Cancel`, function (Callback) {
             NRFButton.classList.add("esgst-busy");
             setNRFSearch(NRF, profile, function () {
@@ -23329,7 +23437,7 @@ ${avatar.outerHTML}
             Key: "CC",
             ID: "WBC_CC"
         }]);
-        Popup.Options.insertAdjacentHTML("afterEnd", createDescription("If an user is highlighted, that means they have been either checked for the first time or updated."));
+        Popup.Options.insertAdjacentHTML("afterEnd", `<div class="esgst-description">If an user is highlighted, that means they have been either checked for the first time or updated.</div>`);
         Popup.description.appendChild(createButtonSet(`green`, `grey`, WBC.Update ? `fa-refresh` : `fa-question-circle`, `fa-times-circle`, WBC.Update ? `Update` : `Check`, `Cancel`, function (Callback) {
             WBC.ShowResults = false;
             WBCButton.classList.add("esgst-busy");
@@ -24273,11 +24381,65 @@ ${avatar.outerHTML}
 
     function loadGt() {
         var savedGames;
-            esgst.gameFeatures.push(function (games, table) {
-                savedGames = JSON.parse(GM_getValue(`games`));
-                getGtGames(games.apps, savedGames.apps, `apps`);
-                getGtGames(games.subs, savedGames.subs, `subs`);
-            });
+        esgst.gameFeatures.push(function (games, table) {
+            savedGames = JSON.parse(GM_getValue(`games`));
+            getGtGames(games.apps, savedGames.apps, `apps`);
+            getGtGames(games.subs, savedGames.subs, `subs`);
+        });
+        esgst.style += `
+            .esgst-gt-preview .esgst-gt-tags {
+                display: inline-block;
+            }
+            .esgst-gt-preview input[type=text] {                
+                display: inline-block;
+                width: 100px;
+                height: 15px;
+            }
+            .esgst-gt-preview input[type=color] {
+                box-sizing: unset;
+                height: 13px;
+                line-height: normal;
+                margin: 0;
+                padding: 0;
+                vertical-align: top;
+                width: 15px;
+            }
+            .esgst-gt-button {
+                border: 0! important;
+                cursor: pointer;
+                display: inline-block;
+                line-height: normal;
+                text-decoration: none !important;
+                transition: opacity 0.2s;
+            }
+            .esgst-gt-button:hover {
+                opacity: 1;
+            }
+            .esgst-gt-button i {
+                margin: 0 !important;
+            }
+            .giveaway__row-outer-wrap .esgst-gt-button, .table__row-outer-wrap .esgst-gt-button {
+                margin-left: 5px;
+            }
+            .esgst-gt-tags {
+                font-size: 10px;
+                font-weight: bold;
+            }
+            .esgst-gt-tags >* {
+                display: inline-block !important;
+                height: auto;
+                margin: 0;
+                padding: 2px;
+                text-shadow: none;
+                width: auto;
+            }
+            .esgst-gt-tags >:not(:first-child) {
+                margin: 0 0 0 5px;
+            }
+            .esgst-gv-popout .esgst-gt-tags {
+                display: none;
+            }
+        `;
     }
 
     function getGtGames(games, savedGames, type) {
@@ -24285,82 +24447,239 @@ ${avatar.outerHTML}
         for (id in games) {
             for (i = 0, n = games[id].length; i < n; ++i) {
                 if ((games[id][i].table && esgst.gt_t) || !games[id][i].table) {
-                    addGtPanel(games[id][i], id, type);
+                    addGtButton(games[id][i], id, type);
                 }
             }
         }
         for (id in savedGames) {
             if (savedGames[id].tags && games[id]) {
-                addGtTags(id, savedGames[id].tags, type, games[id]);
+                addGtTags(games[id], id, savedGames[id].tags, type);
             }
         }
     }
 
-    function addGtPanel(context, id, type) {
-        var games, input, popup, set;
-        if (!context.container.getElementsByClassName(`esgst-gt-panel`)[0]) {
-            insertHtml(context.heading.lastElementChild || context.heading, `afterEnd`, `
-            <a class="esgst-gt-panel" title="Add game tags">
-                <i class="fa fa-tag"></i>
-                <span class="esgst-gt-tags"></span>
-            </a>
-        `).addEventListener(`click`, function () {
-                    popup = createPopup(`fa-tag`, `Edit game tags for <span>${context.name}</span>:`, true);
-                    input = insertHtml(popup.description, `beforeEnd`, `
-                <input type="text"/>
-            `);
-                    popup.description.insertAdjacentHTML(`beforeEnd`, createDescription(`Use commas to separate tags, for example: Tag1, Tag2, ...`));
-                    set = createButtonSet(`green`, `grey`, `fa-check`, `fa-circle-o-notch fa-spin`, `Save`, `Saving...`, saveGtTags.bind(null, id, input, popup, type));
-                    popup.description.appendChild(set.set);
-                    input.addEventListener(`keydown`, function (event) {
-                        if (event.key === `Enter`) {
-                            set.toggle();
-                            saveGtTags(id, input, popup, type, set.toggle);
-                        }
-                    });
-                    popup.open(function () {
-                        input.focus();
-                        games = JSON.parse(GM_getValue(`games`));
-                        if (games[type][id] && games[type][id].tags) {
-                            input.value = (games[type][id].tags.join && games[type][id].tags.join(`, `)) || games[type][id].tags;
-                        }
-                    });
-                });
+    function addGtButton(game, id, type) {
+        if (!game.container.getElementsByClassName(`esgst-gt-button`)[0]) {
+            insertHtml(game.heading.lastElementChild || game.heading, `afterEnd`, `
+                <a class="esgst-faded esgst-gt-button" title="Edit game tags">
+                    <i class="fa fa-tag"></i>
+                    <span class="esgst-gt-tags"></span>
+                </a>
+            `).addEventListener(`click`, openGtPopup.bind(null, game, id, type));
         }
     }
 
-    function saveGtTags(id, input, popup, type) {
-        var games, tags;
-        tags = input.value.replace(/(,\s*)+/g, function (match, p1, offset, string) {
-            return (((offset === 0) || (offset == (string.length - match.length))) ? `` : `, `);
-        }).split(`, `);
-        createLock(`gameLock`, 300, function (closeLock) {
-            games = JSON.parse(GM_getValue(`games`));
-            if (!games[type][id]) {
-                games[type][id] = {};
-            }
-            games[type][id].tags = tags;
-            GM_setValue(`games`, JSON.stringify(games));
-            addGtTags(id, tags, type);
-            popup.opened.close();
-            closeLock();
-        });
+    function openGtPopup(game, id, type) {
+        var popup, set;
+        popup = createPopup(`fa-tag`, `Edit game tags for <span>${game.name}</span>:`);
+        set = createButtonSet(`green`, `grey`, `fa-check`, `fa-circle-o-notch fa-spin`, `Save`, `Saving...`, saveGtTags.bind(null, id, popup, type));
+        popup.description.insertAdjacentHTML(`beforeEnd`, `<div class="esgst-description">Drag the tags to move them.<br/><br/>When editing a tag color, it will also alter the color for all games with that tag (you have to refresh the page for it to take effect).</div>`);
+        popup.tags = insertHtml(popup.description, `beforeEnd`, `<div class="esgst-gt-tags"></div>`);
+        popup.input = insertHtml(popup.description, `beforeEnd`, `<input type="text"/>`);
+        popup.input.addEventListener(`keydown`, triggerSetOnEnter.bind(null, set));
+        popup.input.addEventListener(`input`, createGtTags.bind(null, popup));
+        popup.description.insertAdjacentHTML(`beforeEnd`, `<div class="esgst-description">Use commas to separate tags, for example: Tag1, Tag2, ...</div>`);
+        popup.warning = insertHtml(popup.description, `beforeEnd`, `<div class="esgst-description esgst-warning"></div>`);
+        popup.description.appendChild(set.set);
+        popup.open(loadGtTags.bind(null, id, popup, type));
     }
 
-    function addGtTags(id, tags, type, games) {
-        var html, i, n, prefix, suffix;
-        prefix = `<span class=\"global__image-outer-wrap author_avatar is_icon\">`;
+    function createGtTags(popup) {
+        var i, n, tags;
+        tags = popup.input.value.replace(/(,\s*)+/g, formatTags).split(`, `);
+        if (tags.join(``).length <= 32) {
+            popup.warning.textContent = ``;
+            popup.tags.innerHTML = ``;
+            for (i = 0, n = tags.length; i < n; ++i) {
+                createGtTag(popup, tags[i]);
+            }
+            popup.reposition();
+        } else {
+            popup.warning.textContent = `The maximum character count must be lower or equal to 32.`;
+        }
+    }
+
+    function createGtTag(popup, tag) {
+        var bgColorInput, colorInput, colors, container, deleteButton, editButton, input, tagBox, tagContainer;
+        container = insertHtml(popup.tags, `beforeEnd`, `
+            <div class="esgst-gt-preview" draggable="true">
+                <div class="esgst-gt-tags">
+                    <span class="global__image-outer-wrap author_avatar is_icon">${tag}</span>
+                </div>
+                <input class="esgst-hidden" type="text"/>
+                <input type="color"/>
+                <input type="color"/>
+                <i class="esgst-clickable fa fa-edit" title="Edit tag"></i>
+                <i class="esgst-clickable fa fa-trash" title="Delete tag"></i>
+            </div>
+        `);
+        tagContainer = container.firstElementChild;
+        tagBox = tagContainer.firstElementChild;
+        input = tagContainer.nextElementSibling;
+        colorInput = input.nextElementSibling;
+        bgColorInput = colorInput.nextElementSibling;
+        editButton = bgColorInput.nextElementSibling;
+        deleteButton = editButton.nextElementSibling;
+        colors = esgst.gt_colors[tag];
+        if (colors) {            
+            colorInput.value = tagBox.style.color = colors.color;
+            bgColorInput.value = tagBox.style.backgroundColor = colors.bgColor;
+        }
+        container.addEventListener(`dragstart`, startGtDrag.bind(null, container, popup));
+        container.addEventListener(`dragenter`, continueGtDrag.bind(null, container, popup));
+        container.addEventListener(`dragend`, endGtDrag.bind(null, popup));
+        input.addEventListener(`keydown`, editGtTag.bind(null, bgColorInput, colorInput, input, popup, tagBox, tagContainer));
+        colorInput.addEventListener(`change`, saveGtColor.bind(null, colorInput, `color`, `color`, tagBox));
+        bgColorInput.addEventListener(`change`, saveGtColor.bind(null, bgColorInput, `backgroundColor`, `bgColor`, tagBox));
+        editButton.addEventListener(`click`, showGtEdit.bind(null, input, tagBox, tagContainer));
+        deleteButton.addEventListener(`click`, deleteGtTag.bind(null, container, popup));
+    }
+
+    function startGtDrag(container, popup) {
+        popup.dragged = container;
+    }
+
+    function continueGtDrag(container, popup) {
+        var current;
+        current = popup.dragged;
+        do {
+            current = current.previousElementSibling;
+            if (current && current === container) {
+                popup.tags.insertBefore(popup.dragged, container);
+                return;
+            }
+        } while (current);
+        popup.tags.insertBefore(popup.dragged, container.nextElementSibling);
+    }
+
+    function endGtDrag(popup) {
+        var children, i, n, tags;
+        tags = [];
+        children = popup.tags.children;
+        for (i = 0, n = children.length; i < n; ++i) {
+            tags.push(children[i].firstElementChild.firstElementChild.textContent);
+        }
+        popup.input.value = tags.join(`, `);
+        popup.reposition();
+    }
+
+    function editGtTag(bgColorInput, colorInput, input, popup, tagBox, tagContainer, event) {
+        var colors, name, oldName, tag;
+        if (event.key === `Enter`) {
+            tagContainer.classList.remove(`esgst-hidden`);
+            input.classList.add(`esgst-hidden`);
+            oldName = tagBox.textContent;
+            tag = input.value;
+            tagBox.textContent = tag;
+            colors = esgst.gt_colors[tag];
+            if (colors) {
+                colorInput.value = tagBox.style.color = colors.color;
+                bgColorInput.value = tagBox.style.backgroundColor = colors.bgColor;
+            }
+            endGtDrag(popup);
+        }
+    }
+
+    function saveGtColor(input, key, saveKey, tagBox) {
+        var tag;
+        tag = tagBox.textContent;
+        if (!esgst.gt_colors[tag]) {
+            esgst.gt_colors[tag] = {
+                bgColor: ``,
+                color: ``
+            };
+        }
+        esgst.gt_colors[tag][saveKey] = tagBox.style[key] = input.value;
+    }
+
+    function showGtEdit(input, tagBox, tagContainer) {
+        tagContainer.classList.add(`esgst-hidden`);
+        input.classList.remove(`esgst-hidden`);
+        input.value = tagBox.textContent;
+        input.focus();
+        popup.reposition();
+    }
+
+    function deleteGtTag(container, popup) {
+        container.remove();
+        endGtDrag(popup);
+    }
+    
+    function saveGtTags(id, popup, type, callback) {
+        var savedGames, tags;
+        tags = popup.input.value.replace(/(,\s*)+/g, formatTags).split(`, `);
+        if (tags.join(``).length <= 32) {
+            popup.warning.textContent = ``;
+            createLock(`gameLock`, 300, function (deleteLock) {
+                savedGames = JSON.parse(GM_getValue(`games`));
+                if (!savedGames[type][id]) {
+                    savedGames[type][id] = {};
+                }
+                savedGames[type][id].tags = tags;
+                GM_setValue(`games`, JSON.stringify(savedGames));
+                deleteLock();
+                completeGtSave(id, popup, tags, type, callback);
+            });
+        } else {
+            popup.warning.textContent = `The maximum character count must be lower or equal to 32.`;
+            callback();
+        }
+    }
+
+    function completeGtSave(id, popup, tags, type, callback) {
+        setValue(`gt_colors`, esgst.gt_colors);
+        addGtTags(null, id, tags, type);
+        callback();
+        popup.close();
+    }
+
+    function loadGtTags(id, popup, type) {
+        var game, i, n, savedGames, tags;
+        savedGames = JSON.parse(GM_getValue(`games`));
+        game = savedGames[type][id];
+        popup.input.focus();
+        if (game) {
+            tags = game.tags;
+            if (tags) {
+                popup.tags.innerHTML = ``;
+                for (i = 0, n = tags.length; i < n; ++i) {
+                    createGtTag(popup, tags[i]);
+                }
+                popup.input.value = tags.join(`, `);
+                popup.reposition();
+            }
+        }
+    }
+
+    function addGtTags(games, id, tags, type) {
+        var button, children, colors, game, html, i, j, n, numTags, prefix, suffix, tagsBox, tagsContainer;
+        prefix = `<span class="global__image-outer-wrap author_avatar is_icon">`;
         suffix = `</span>`;
-        html = tags.length ? tags.join(`, `).replace(/^|,\s|$/g, function (match, offset, string) {
-            return ((offset === 0) ? prefix : ((offset == (string.length - match.length)) ? suffix : (`${suffix}${prefix}`)));
-        }) : "";
+        html = tags.length && tags[0] ? `${prefix}${tags.join(`${suffix}${prefix}`)}${suffix}` : ``;
         if (!games) {
             games = getGames(document)[type][id];
         }
         if (games) {
             for (i = 0, n = games.length; i < n; ++i) {
-                if ((games[i].table && esgst.gt_t) || !games[i].table) {
-                    games[i].container.getElementsByClassName(`esgst-gt-tags`)[0].innerHTML = html;
+                game = games[i];
+                if ((game.table && esgst.gt_t) || !game.table) {
+                    button = game.container.getElementsByClassName(`esgst-gt-button`)[0];
+                    if (html) {
+                        button.classList.remove(`esgst-faded`);
+                    } else {
+                        button.classList.add(`esgst-faded`);
+                    }
+                    tagsContainer = button.lastElementChild;
+                    tagsContainer.innerHTML = html;
+                    children = tagsContainer.children;
+                    for (j = 0, numTags = children.length; j < numTags; ++j) {
+                        tagsBox = children[j];
+                        colors = esgst.gt_colors[tagsBox.textContent];
+                        if (colors) {
+                            tagsBox.style.color = colors.color;
+                            tagsBox.style.backgroundColor = colors.bgColor;
+                        }
+                    }
                 }
             }
         }
@@ -24588,34 +24907,38 @@ ${avatar.outerHTML}
         if (response2 && !response2.responseText.match(/<TITLE>Access Denied<\/TITLE>/)) {
             if (response2.finalUrl.match(id)) {
                 responseHtml = DOM.parse(response2.responseText);
-                tags = responseHtml.querySelectorAll(`a.app_tag`);
-                n = tags.length;
-                if (n > 0) {
-                    if (!savedGames[type][id].genres) {
-                        savedGames[type][id].genres = [];
-                    }
-                    for (i = 0; i < n; ++i) {
-                        tag = tags[i].textContent.trim();
-                        if (savedGames[type][id].genres.indexOf(tag) < 0) {
-                            savedGames[type][id].genres.push(tag);
+                if (esgst.gc_g_udt) {
+                    tags = responseHtml.querySelectorAll(`a.app_tag`);
+                    n = tags.length;
+                    if (n > 0) {
+                        if (!savedGames[type][id].genres) {
+                            savedGames[type][id].genres = [];
                         }
-                    }
-                }
-                summaries = responseHtml.getElementsByClassName(`user_reviews_summary_row`);
-                n = summaries.length;
-                if (n > 0) {
-                    summary = summaries[n - 1];
-                    match = summary.getAttribute(`data-store-tooltip`).replace(/,/g, ``).match(/(\d+?)%.*?(\d+)/);
-                    if (match) {
-                        summary = summary.getElementsByClassName(`game_review_summary`)[0];
-                        summary.classList.remove(`game_review_summary`);
-                        savedGames[type][id].rating = {
-                            count: `${match[1]}% (${match[2]} Reviews)`,
-                            type: summary.className || `negative`
-                        };
+                        for (i = 0; i < n; ++i) {
+                            tag = tags[i].textContent.trim();
+                            if (savedGames[type][id].genres.indexOf(tag) < 0) {
+                                savedGames[type][id].genres.push(tag);
+                            }
+                        }
                         savedGames[type][id].genres.sort(function (a, b) {
                             return a.toLowerCase().localeCompare(b.toLowerCase());
                         });
+                    }
+                }
+                if (esgst.gc_r) {
+                    summaries = responseHtml.getElementsByClassName(`user_reviews_summary_row`);
+                    n = summaries.length;
+                    if (n > 0) {
+                        summary = summaries[n - 1];
+                        match = summary.getAttribute(`data-store-tooltip`).replace(/,/g, ``).match(/(\d+?)%.*?(\d+)/);
+                        if (match) {
+                            summary = summary.getElementsByClassName(`game_review_summary`)[0];
+                            summary.classList.remove(`game_review_summary`);
+                            savedGames[type][id].rating = {
+                                count: `${match[1]}% (${match[2]} Reviews)`,
+                                type: summary.className || `negative`
+                            };
+                        }
                     }
                 }
             } else {
@@ -24924,316 +25247,24 @@ ${avatar.outerHTML}
 
     /* [MT] Multi-Tag */
 
-    function loadMultiTag() {
-        if (Object.keys(esgst.currentUsers).length) {
-            addMTContainer(esgst.mainPageHeading);
+    /*function openMtPopout(mt) {
+        var checkboxContext, checkbox, toggleSwitch;
+        if (!mt.popout) {
+            mt.popout = createPopout_v6(`esgst-mt-popout`, true);
+            toggleSwitch = createToggleSwitch(mt.popout.popout, null, false, `Enable`);
+            toggleSwitch.onEnabled = addMtCheckboxes.bind(null, mt, mt.type);
+            toggleSwitch.onDisabled = removeMtCheckboxes.bind(null, mt, mt.type);
+            checkboxContext = insertHtml(mt.popout.popout, `beforeEnd`, `<div></div>`);
+            checkbox = createCheckbox_v6(checkboxContext, false, true);
+            mt.counterContainer = insertHtml(mt.popout.popout, `beforeEnd`, `<div><span>0</span> users selected.</div>`);
+            mt.counter = mt.counterContainer.firstElementChild;
+            mt.tagButton = createButtonSet(`green`, ``, `fa-tag`, ``, `Multi-Tag`, ``, openMtPopup.bind(null, mt)).set;
+            mt.popout.popout.appendChild(mt.tagButton);
+            mt.selected = [];
+            mt[mt.type] = [];
         }
-    }
-
-    function addMTContainer(Context, MT, SM) {
-        var MTContainer, MTButton, MTBox, MTUsers, MTGames, MTAll, MTNone, MTInverse, MTUsersCheckbox, MTGamesCheckbox, Popup;
-        if (!MT) {
-            MT = {};
-        }
-        MT.UserCheckboxes = {};
-        MT.GameCheckboxes = {};
-        MT.UsersSelected = [];
-        MT.GamesSelected = [];
-        Context.insertAdjacentHTML(
-            "afterBegin",
-            "<div class=\"MTContainer" + (SM ? " rhHidden" : "") + "\">" +
-            "    <a class=\"MTButton page_heading_btn\" title=\"Tag multiple users / games at the same times\">" +
-            "        <i class=\"fa fa-tags\"></i>" +
-            "    </a>" +
-            "</div>"
-        );
-        MTContainer = Context.firstElementChild;
-        MTButton = MTContainer.firstElementChild;
-        MTBox = createPopout(MTContainer);
-        MTBox.Popout.classList.add("MTBox");
-        MTBox.customRule = function (Target) {
-            return (!MTContainer.contains(Target) && !Target.closest(".MTUserCheckbox") && !Target.closest(".MTGameCheckbox"));
-        };
-        Context = SM ? SM.Popup.Options : MTBox.Popout;
-        Context.innerHTML =
-            "<div" + ((GM_getValue("PUT") && !SM) ? "" : " class=\"rhHidden\"") + "><span class=\"MTUsers\"></span> Enable selection for user tags.</div>" +
-            "<div" + ((GM_getValue("GT") && !SM) ? "" : " class=\"rhHidden\"") + "><span class=\"MTGames\"></span> Enable selection for game tags.</div>" +
-            "<div><i class=\"fa fa-check-square-o MTAll\"></i> Select all.</div>" +
-            "<div><i class=\"fa fa-square-o\ MTNone\"></i> Select none.</div>" +
-            "<div><i class=\"fa fa-minus-square-o MTInverse\"></i> Select inverse.</div>" +
-            "<div><span class=\"MTCount\">0</span> selected.</div>" +
-            "<div class=\"MTTag\"></div>";
-        MTUsers = Context.getElementsByClassName("MTUsers")[0];
-        MTGames = Context.getElementsByClassName("MTGames")[0];
-        MTAll = Context.getElementsByClassName("MTAll")[0];
-        MTNone = Context.getElementsByClassName("MTNone")[0];
-        MTInverse = Context.getElementsByClassName("MTInverse")[0];
-        MT.Count = Context.getElementsByClassName("MTCount")[0];
-        MT.Tag = Context.getElementsByClassName("MTTag")[0];
-        MTUsersCheckbox = createCheckbox(MTUsers);
-        MTGamesCheckbox = createCheckbox(MTGames);
-        setMTCheckboxes(MTUsers, MTUsersCheckbox.Checkbox, esgst.currentUsers, "User", "beforeBegin", "previousElementSibling", MT);
-        setMTCheckboxes(MTGames, MTGamesCheckbox.Checkbox, esgst.currentGames, "Game", "afterBegin", "firstElementChild", MT);
-        setMTSelect(MTAll, MT, "check");
-        setMTSelect(MTNone, MT, "uncheck");
-        setMTSelect(MTInverse, MT, "toggle");
-        MT.Tag.classList.add("rhHidden");
-        Popup = createPopup();
-        Popup.Icon.classList.add("fa-tags");
-        Popup.TextInput.classList.remove("rhHidden");
-        Popup.TextInput.insertAdjacentHTML(
-            "afterEnd",
-            createDescription(
-                "Use commas to separate tags, for example: Tag1, Tag2, ...<br/><br/>" +
-                "A [*] tag means that the selected users / games have individual tags (not shared between all of them). Removing the [*] tag will delete those individual tags."
-            )
-        );
-        createButton(MT.Tag, "fa-tags", "Multi-Tag", "", "", function (Callback) {
-            var Tags, Shared, I, N, UserID, User, SavedUser, SavedTags, J, NumTags, SavedTag, SavedGames, SavedGame, Game, Key, Individual;
-            Callback();
-            if (!MTButton.classList.contains("esgst-busy")) {
-                Popup.Title.textContent = "Multi-tag " + MT.UsersSelected.length + " users and " + MT.GamesSelected.length + " games:";
-                Tags = {};
-                MT.UserTags = {};
-                Shared = [];
-                for (I = 0, N = MT.UsersSelected.length; I < N; ++I) {
-                    UserID = MT.UsersSelected[I];
-                    User = {};
-                    User[esgst.sg ? "Username" : "SteamID64"] = UserID;
-                    SavedUser = getUser(User);
-                    if (SavedUser && SavedUser.Tags) {
-                        SavedTags = SavedUser.Tags.split(/,\s/);
-                        Tags[UserID] = MT.UserTags[UserID] = SavedTags;
-                        for (J = 0, NumTags = SavedTags.length; J < NumTags; ++J) {
-                            SavedTag = SavedTags[J];
-                            if (Shared.indexOf(SavedTag) < 0) {
-                                Shared.push(SavedTag);
-                            }
-                        }
-                    } else {
-                        Tags[UserID] = MT.UserTags[UserID] = "";
-                    }
-                }
-                SavedGames = GM_getValue("Games");
-                MT.GameTags = {};
-                for (I = 0, N = MT.GamesSelected.length; I < N; ++I) {
-                    Game = MT.GamesSelected[I];
-                    SavedGame = SavedGames[Game];
-                    if (SavedGame && SavedGame.Tags) {
-                        SavedTags = SavedGame.Tags.split(/,\s/);
-                        Tags[Game] = MT.GameTags[Game] = SavedTags;
-                        for (J = 0, NumTags = SavedTags.length; J < NumTags; ++J) {
-                            SavedTag = SavedTags[J];
-                            if (Shared.indexOf(SavedTag) < 0) {
-                                Shared.push(SavedTag);
-                            }
-                        }
-                    } else {
-                        Tags[Game] = MT.GameTags[Game] = "";
-                    }
-                }
-                for (Key in Tags) {
-                    Shared = Shared.filter(function (N) {
-                        if (Tags[Key].indexOf(N) >= 0) {
-                            return true;
-                        } else {
-                            Individual = true;
-                            return false;
-                        }
-                    });
-                }
-                for (Key in Tags) {
-                    for (I = 0, N = Shared.length; I < N; ++I) {
-                        J = Tags[Key].indexOf(Shared[I]);
-                        if (J >= 0) {
-                            Tags[Key].splice(J, 1);
-                        }
-                    }
-                }
-                Popup.TextInput.value = Shared.length ? (Shared.join(", ") + (Individual ? ", [*]" : "")) : (Individual ? "[*]" : "");
-            }
-            Popup.popUp(function () {
-                Popup.TextInput.focus();
-            });
-        });
-        createButton(Popup.Button, "fa-check", "Save", "fa-times-circle", "Cancel", function (Callback) {
-            var Shared, I, Individual, Keys;
-            MT.Canceled = false;
-            MTButton.classList.add("esgst-busy");
-            Shared = Popup.TextInput.value.replace(/(,\s*)+/g, function (Match, P1, Offset, String) {
-                return (((Offset === 0) || (Offset == (String.length - Match.length))) ? "" : ", ");
-            }).split(", ");
-            I = Shared.indexOf("[*]");
-            if (I >= 0) {
-                Shared.splice(I, 1);
-                Individual = true;
-            } else {
-                Individual = false;
-            }
-            Shared = Shared.join(", ");
-            Keys = Object.keys(MT.UserTags);
-            saveMTUserTags(MT, 0, Keys.length, Keys, Individual, Shared, MT.UserTags, function () {
-                Keys = Object.keys(MT.GameTags);
-                saveMTGameTags(MT, 0, Keys.length, Keys, Individual, Shared, MT.GameTags, function () {
-                    MTButton.classList.remove("esgst-busy");
-                    MT.Progress.innerHTML = MT.OverallProgress.innerHTML = "";
-                    Callback();
-                    Popup.Close.click();
-                });
-            });
-        }, function () {
-            clearInterval(MT.Request);
-            clearInterval(MT.Save);
-            MT.Canceled = true;
-            setTimeout(function () {
-                MT.Progress.innerHTML = MT.OverallProgress.innerHTML = "";
-            }, 500);
-            MTButton.classList.remove("esgst-busy");
-        });
-        MT.Progress = Popup.Progress;
-        MT.OverallProgress = Popup.OverallProgress;
-        MTButton.addEventListener("click", function () {
-            if (MTBox.Popout.classList.contains("rhHidden")) {
-                MTBox.popOut(MTContainer);
-            } else {
-                MTBox.Popout.classList.add("rhHidden");
-            }
-        });
-    }
-
-    function setMTCheckboxes(Element, Checkbox, Selection, Type, InsertionPosition, Position, MT) {
-        Element.addEventListener("click", function () {
-            if (Checkbox.checked) {
-                addMTCheckboxes(Selection, Type, InsertionPosition, Position, MT);
-            } else {
-                removeMTCheckboxes(Type, MT);
-            }
-        });
-    }
-
-    function addMTCheckboxes(Selection, Type, InsertionPosition, Position, MT) {
-        var Key, Matches, I, N, Context, MTCheckbox;
-        for (Key in Selection) {
-            Matches = Selection[Key];
-            for (I = 0, N = Matches.length; I < N; ++I) {
-                Context = Matches[I];
-                Context.insertAdjacentHTML(InsertionPosition, "<span class=\"MT" + Type + "Checkbox\"></span>");
-                MTCheckbox = createCheckbox(Context[Position]);
-                if (!MT[Type + "Checkboxes"][Key]) {
-                    MT[Type + "Checkboxes"][Key] = [];
-                }
-                MT[Type + "Checkboxes"][Key].push(MTCheckbox);
-                setMTCheckbox(Type, Context[Position], MT, Key, MTCheckbox.Checkbox, MT.Tag);
-            }
-        }
-    }
-
-    function setMTCheckbox(Type, Context, MT, Key, Checkbox) {
-        Context.addEventListener("click", function () {
-            checkMTCheckbox(MT, Type, Key, Checkbox);
-        });
-    }
-
-    function checkMTCheckbox(MT, Type, Key, Checkbox) {
-        var Count, I, Checkboxes, N;
-        Count = parseInt(MT.Count.textContent);
-        I = MT[Type + "sSelected"].indexOf(Key);
-        if (Checkbox.checked) {
-            MT.Count.textContent = ++Count;
-            if (I < 0) {
-                MT[Type + "sSelected"].push(Key);
-            }
-        } else {
-            MT.Count.textContent = --Count;
-            if (I >= 0) {
-                MT[Type + "sSelected"].splice(I, 1);
-            }
-        }
-        Checkboxes = MT[Type + "Checkboxes"][Key];
-        for (I = 0, N = Checkboxes.length; I < N; ++I) {
-            if (Checkboxes[I].Checkbox != Checkbox) {
-                Checkboxes[I].toggle();
-            }
-        }
-        MT.Tag.classList[(Count > 1) ? "remove" : "add"]("rhHidden");
-    }
-
-    function removeMTCheckboxes(Type, MT) {
-        var Matches, I, N;
-        Matches = document.getElementsByClassName("MT" + Type + "Checkbox");
-        for (I = 0, N = Matches.length; I < N; ++I) {
-            Matches[0].remove();
-        }
-        MT[Type + "Checkboxes"] = {};
-        MT[Type + "sSelected"] = [];
-    }
-
-    function setMTSelect(Element, MT, Call) {
-        Element.addEventListener("click", function () {
-            selectMTCheckboxes(MT.UserCheckboxes, Call, MT, "User");
-            selectMTCheckboxes(MT.GameCheckboxes, Call, MT, "Game");
-        });
-    }
-
-    function selectMTCheckboxes(MTCheckboxes, Call, MT, Type) {
-        var Key, Checkbox, Previous, Current;
-        for (Key in MTCheckboxes) {
-            Checkbox = MTCheckboxes[Key][0];
-            Previous = Checkbox.Checkbox.checked;
-            Checkbox[Call]();
-            Current = Checkbox.Checkbox.checked;
-            if (Previous != Current) {
-                checkMTCheckbox(MT, Type, Key, Checkbox.Checkbox);
-            }
-        }
-    }
-
-    function saveMTUserTags(MT, I, N, Keys, Individual, Shared, Tags, Callback) {
-        var UserID, User;
-        if (!MT.Canceled) {
-            MT.OverallProgress.innerHTML =
-                "<i class=\"fa fa-circle-o-notch fa-spin\"></i> " +
-                "<span>" + I + " of " + N + " users tagged...</span>";
-            if (I < N) {
-                UserID = Keys[I];
-                User = {
-                    Tags: Individual ? (Shared + ", " + Tags[UserID]) : Shared
-                };
-                User[esgst.sg ? "Username" : "SteamID64"] = UserID;
-                queueSave(MT, function () {
-                    saveUser(User, MT, function () {
-                        GM_setValue("LastSave", 0);
-                        addPUTTags(UserID, getUser(User).Tags);
-                        setTimeout(saveMTUserTags, 0, MT, ++I, N, Keys, Individual, Shared, Tags, Callback);
-                    });
-                });
-            } else {
-                Callback();
-            }
-        }
-    }
-
-    function saveMTGameTags(MT, I, N, Keys, Individual, Shared, Tags, Callback) {
-        var Game, SavedGames;
-        if (!MT.Canceled) {
-            MT.OverallProgress.innerHTML =
-                "<i class=\"fa fa-circle-o-notch fa-spin\"></i> " +
-                "<span>" + I + " of " + N + " groups tagged...</span>";
-            if (I < N) {
-                Game = Keys[I];
-                SavedGames = GM_getValue("Games");
-                if (!SavedGames[Game]) {
-                    SavedGames[Game] = {};
-                }
-                SavedGames[Game].Tags = Individual ? (Shared + ", " + Tags[Game]) : Shared;
-                GM_setValue("Games", SavedGames);
-                addGTTags(Game, SavedGames[Game].Tags);
-                setTimeout(saveMTGameTags, 0, MT, ++I, N, Keys, Individual, Shared, Tags, Callback);
-            } else {
-                Callback();
-            }
-        }
-    }
+        mt.popout.open(mt.button, true);
+    }*/
 
     /* */
 
@@ -25346,7 +25377,7 @@ ${avatar.outerHTML}
         SMMenu.insertAdjacentHTML(`beforeEnd`,
             createSMSections(++j, [{
                 Title: "Sync Groups / Whitelist / Blacklist / Wishlist / Owned Games / Ignored Games",
-                HTML: SMSyncFrequency + createDescription("Select from how many days to how many days you want the automatic sync to run (0 to disable it).") + (
+                HTML: SMSyncFrequency + "<div class=\"esgst-description\">Select from how many days to how many days you want the automatic sync to run (0 to disable it).</div>" + (
                     "<div class=\"form__sync\">" +
                     "    <div class=\"form__sync-data\">" +
                     "        <div class=\"notification notification--warning SMLastSync\">" +
@@ -25376,8 +25407,8 @@ ${avatar.outerHTML}
             }, {
                 Title: "Steam API Key",
                 HTML: "<input class=\"SMAPIKey\" type=\"text\"/>" +
-                createDescription("This is optional for Entries Remover (syncs new games faster). " +
-                    "Get a Steam API Key <a class=\"rhBold\" href=\"https://steamcommunity.com/dev/apikey\" target=\"_blank\">here</a>.")
+                "<div class=\"esgst-description\">This is optional for Entries Remover (syncs new games faster). " +
+                    "Get a Steam API Key <a class=\"rhBold\" href=\"https://steamcommunity.com/dev/apikey\" target=\"_blank\">here</a>.</div>"
             }]));
         SMManageData = Container.getElementsByClassName("SMManageData")[0];
         SMRecentUsernameChanges = Container.getElementsByClassName("SMRecentUsernameChanges")[0];
@@ -25722,7 +25753,7 @@ ${avatar.outerHTML}
                 });
                 Popup.TextInput.insertAdjacentHTML(
                     "afterEnd",
-                    createDescription("Filter users by tag (use commas to separate filters, for example: Filter1, Filter2, ...). Filters are not case sensitive.")
+                    "<div class=\"esgst-description\">Filter users by tag (use commas to separate filters, for example: Filter1, Filter2, ...). Filters are not case sensitive.</div>"
                 );
                 SMManageTagsPopup = Popup.popUp(function () {
                     var SavedGames, SavedUsers, MTApps, MTSubs, MTUsers, Tags, I, N, Context, Username, SavedTags, J, NumTags, Key;
@@ -27344,7 +27375,14 @@ ${avatar.outerHTML}
         giveaway.avatar = giveaway.outerWrap.querySelector(`.giveaway_image_avatar, .featured_giveaway_image_avatar`);
         giveaway.image = giveaway.outerWrap.querySelector(`.giveaway_image_thumbnail, .giveaway_image_thumbnail_missing, .global__image-outer-wrap--game-medium`);
         giveaway.summary = giveaway.innerWrap.querySelector(`.giveaway__summary, .featured__summary, .table__column--width-fill`);
-        giveaway.entered = giveaway.innerWrap.classList.contains(`is-faded`);
+        if (esgst.giveawayPath && main) {
+            var button = mainContext.getElementsByClassName(`sidebar__entry-delete`)[0];
+            if (button) {
+                giveaway.entered = !button.classList.contains(`is-hidden`);
+            }
+        } else {
+            giveaway.entered = giveaway.innerWrap.classList.contains(`is-faded`);
+        }
         giveaway.headingName = giveaway.innerWrap.querySelector(`.giveaway__heading__name, .featured__heading__medium, .table__column__heading`);
         giveaway.name = giveaway.headingName.textContent;
         match = giveaway.name.match(/\s\((.+) Copies\)/);
@@ -27807,10 +27845,71 @@ ${avatar.outerHTML}
         saveUser(null, null, user);
     }
 
+    function triggerSetOnEnter(set, event) {
+        if (event.key === `Enter`) { 
+            set.trigger();
+        }
+    }
+
     /* [UT] User Tags */
 
     function loadUt() {
         esgst.userFeatures.push(getUtTags);
+        esgst.style += `
+            .esgst-ut-preview .esgst-ut-tags {
+                display: inline-block;
+            }
+            .esgst-ut-preview input[type=text] {                
+                display: inline-block;
+                width: 100px;
+                height: 15px;
+            }
+            .esgst-ut-preview input[type=color] {
+                box-sizing: unset;
+                height: 13px;
+                line-height: normal;
+                margin: 0;
+                padding: 0;
+                vertical-align: top;
+                width: 15px;
+            }
+            .esgst-ut-button {
+                border: 0! important;
+                cursor: pointer;
+                display: inline-block;
+                line-height: normal;
+                margin: 0 0 0 5px;
+                text-decoration: none !important;
+                transition: opacity 0.2s;
+            }
+            .esgst-ut-button:hover {
+                opacity: 1;
+            }
+            .author_name + .esgst-ut-button {
+                margin: 0 5px 0 0;
+            }
+            .esgst-ut-button i {
+                margin: 0 !important;
+            }
+            .esgst-ut-tags {
+                font-size: 10px;
+                font-weight: bold;
+            }
+            .esgst-ut-tags >* {
+                display: inline-block !important;
+                height: auto;
+                margin: 0;
+                padding: 1px 2px;
+                text-shadow: none;
+                width: auto;
+            }
+            .esgst-ut-tags >:not(:first-child) {
+                margin: 0 0 0 5px;
+            }
+            .esgst-gv-popout .esgst-ut-tags, .esgst-adots .esgst-ut-tags {
+                display: none;
+            }
+        `;
     }
 
     function getUtTags(currentUsers) {
@@ -27819,88 +27918,242 @@ ${avatar.outerHTML}
             steamId = esgst.sg ? esgst.users.steamIds[key] : key;
             username = esgst.sg ? key : esgst.users.users[key] && esgst.users.users[key].username;
             for (i = 0, n = currentUsers[key].length; i < n; ++i) {
-                addPUTButton(currentUsers[key][i], steamId, username, key);
+                addUtButton(currentUsers[key][i], key, steamId, username);
             }
             user = esgst.sg ? steamId && esgst.users.users[steamId] : esgst.users.users[key];
             if (user && user.tags) {
-                addPUTTags(key, user.tags);
+                addUtTags(key, user.tags);
             }
         }
     }
 
-    function addPUTButton(Context, steamId, username, key) {
-        var Container;
-        Container = Context.parentElement;
-        if (Container.classList.contains("comment__username")) {
-            Context = Container;
+    function addUtButton(context, key, steamId, username) {
+        var container;
+        container = context.parentElement;
+        if (container.classList.contains(`comment__username`)) {
+            context = container;
         }
-        Context.insertAdjacentHTML(
-            "afterEnd",
-            "<a class=\"PUTButton\">" +
-            "    <i class=\"fa fa-tag\"></i>" +
-            "    <span class=\"PUTTags\"></span>" +
-            "</a>"
-        );
-        Context.nextElementSibling.addEventListener("click", function () {
-            var Popup, set;
-            Popup = createPopup(`fa-tag`, `Edit user tags for <span>${key}</span>:`);
-            Popup.TextInput = insertHtml(Popup.description, `beforeEnd`, `<input type="text">`);
-            Popup.TextInput.addEventListener(`keydown`, function(e) {
-                if (e.key === `Enter`) {
-                    set.trigger();
-                }
-            });
-            var user = {
-                steamId: steamId,
-                username: username
-            };
-            Popup.TextInput.insertAdjacentHTML("afterEnd", createDescription("Use commas to separate tags, for example: Tag1, Tag2, ..."));
-            set = createButtonSet(`green`, `grey`, `fa-check`, `fa-circle-o-notch fa-spin`, `Save`, `Saving...`, function (Callback) {
-                var tags;
-                tags = Popup.TextInput.value.replace(/(,\s*)+/g, function (Match, P1, Offset, String) {
-                    return (((Offset === 0) || (Offset == (String.length - Match.length))) ? "" : ", ");
-                }).split(`, `);
-                user.values = {
-                    tags: tags
-                };
-                saveUser(null, null, user, function () {
-                    addPUTTags(key, tags);
-                    Callback();
-                    Popup.close();
-                });
-            });
-            Popup.description.appendChild(set.set);
-            Popup.open(function () {
-                var savedUser;
-                savedUser = getUser(null, user);
-                Popup.TextInput.focus();
-                if (savedUser && savedUser.tags) {
-                    Popup.TextInput.value = savedUser.tags.join(`, `);
-                }
-            });
-        });
+        insertHtml(context, `afterEnd`, `
+            <a class="esgst-ut-button esgst-faded" title="Edit user tags">
+                <i class="fa fa-tag"></i>
+                <span class="esgst-ut-tags"></span>
+            </a>
+        `).addEventListener(`click`, openUtPopup.bind(null, key, steamId, username));
     }
 
-    function addPUTTags(UserID, Tags) {
-        var Matches, Prefix, Suffix, HTML, I, N, Context, Container;
-        Matches = esgst.currentUsers[UserID];
-        Prefix = "<span class=\"global__image-outer-wrap author_avatar is_icon\">";
-        Suffix = "</span>";
-        if (Tags.length && Tags[0]) {
-            HTML = Prefix;
-            HTML += Tags.join(Suffix + Prefix);
-            HTML += Suffix;
+    function openUtPopup(key, steamId, username) {
+        var popup, set;
+        user = {
+            steamId: steamId,
+            username: username
+        };
+        popup = createPopup(`fa-tag`, `Edit user tags for <span>${key}</span>:`);
+        set = createButtonSet(`green`, `grey`, `fa-check`, `fa-circle-o-notch fa-spin`, `Save`, `Saving...`, saveUtTags.bind(null, key, popup, user));
+        popup.description.insertAdjacentHTML(`beforeEnd`, `<div class="esgst-description">Drag the tags to move them.<br/><br/>When editing a tag color, it will also alter the color for all users with that tag (you have to refresh the page for it to take effect).</div>`);
+        popup.tags = insertHtml(popup.description, `beforeEnd`, `<div class="esgst-ut-tags"></div>`);
+        popup.input = insertHtml(popup.description, `beforeEnd`, `<input type="text"/>`);
+        popup.input.addEventListener(`keydown`, triggerSetOnEnter.bind(null, set));
+        popup.input.addEventListener(`input`, createUtTags.bind(null, popup));
+        popup.description.insertAdjacentHTML(`beforeEnd`, `<div class="esgst-description">Use commas to separate tags, for example: Tag1, Tag2, ...</div>`);
+        popup.warning = insertHtml(popup.description, `beforeEnd`, `<div class="esgst-description esgst-warning"></div>`);
+        popup.description.appendChild(set.set);
+        popup.open(loadUtTags.bind(null, popup, user));
+    }
+
+    function createUtTags(popup) {
+        var i, n, tags;
+        tags = popup.input.value.replace(/(,\s*)+/g, formatTags).split(`, `);
+        if (tags.join(``).length <= 64) {
+            popup.warning.textContent = ``;
+            popup.tags.innerHTML = ``;
+            for (i = 0, n = tags.length; i < n; ++i) {
+                createUtTag(popup, tags[i]);
+            }
+            popup.reposition();
         } else {
-            HTML = ``;
+            popup.warning.textContent = `The maximum character count must be lower or equal to 64.`;
         }
-        for (I = 0, N = Matches.length; I < N; ++I) {
-            Context = Matches[I];
-            Container = Context.parentElement;
-            if (Container) {
-                if (Container.classList.contains("comment__username")) {
-                    Context = Container;
+    }
+
+    function createUtTag(popup, tag) {
+        var bgColorInput, colorInput, colors, container, deleteButton, editButton, input, tagBox, tagContainer;
+        container = insertHtml(popup.tags, `beforeEnd`, `
+            <div class="esgst-ut-preview" draggable="true">
+                <div class="esgst-ut-tags">
+                    <span class="global__image-outer-wrap author_avatar is_icon">${tag}</span>
+                </div>
+                <input class="esgst-hidden" type="text"/>
+                <input type="color"/>
+                <input type="color"/>
+                <i class="esgst-clickable fa fa-edit" title="Edit tag."></i>
+                <i class="esgst-clickable fa fa-trash" title="Delete tag."></i>
+            </div>
+        `);
+        tagContainer = container.firstElementChild;
+        tagBox = tagContainer.firstElementChild;
+        input = tagContainer.nextElementSibling;
+        colorInput = input.nextElementSibling;
+        bgColorInput = colorInput.nextElementSibling;
+        editButton = bgColorInput.nextElementSibling;
+        deleteButton = editButton.nextElementSibling;
+        colors = esgst.ut_colors[tag];
+        if (colors) {            
+            colorInput.value = tagBox.style.color = colors.color;
+            bgColorInput.value = tagBox.style.backgroundColor = colors.bgColor;
+        }
+        container.addEventListener(`dragstart`, startUtDrag.bind(null, container, popup));
+        container.addEventListener(`dragenter`, continueUtDrag.bind(null, container, popup));
+        container.addEventListener(`dragend`, endUtDrag.bind(null, popup));
+        input.addEventListener(`keydown`, editUtTag.bind(null, bgColorInput, colorInput, input, popup, tagBox, tagContainer));
+        colorInput.addEventListener(`change`, saveUtColor.bind(null, colorInput, `color`, `color`, tagBox));
+        bgColorInput.addEventListener(`change`, saveUtColor.bind(null, bgColorInput, `backgroundColor`, `bgColor`, tagBox));
+        editButton.addEventListener(`click`, showUtEdit.bind(null, input, tagBox, tagContainer));
+        deleteButton.addEventListener(`click`, deleteUtTag.bind(null, container, popup));
+    }
+
+    function startUtDrag(container, popup) {
+        popup.dragged = container;
+    }
+
+    function continueUtDrag(container, popup) {
+        var current;
+        current = popup.dragged;
+        do {
+            current = current.previousElementSibling;
+            if (current && current === container) {
+                popup.tags.insertBefore(popup.dragged, container);
+                return;
+            }
+        } while (current);
+        popup.tags.insertBefore(popup.dragged, container.nextElementSibling);
+    }
+
+    function endUtDrag(popup) {
+        var children, i, n, tags;
+        tags = [];
+        children = popup.tags.children;
+        for (i = 0, n = children.length; i < n; ++i) {
+            tags.push(children[i].firstElementChild.firstElementChild.textContent);
+        }
+        popup.input.value = tags.join(`, `);
+        popup.reposition();
+    }
+
+    function editUtTag(bgColorInput, colorInput, input, popup, tagBox, tagContainer, event) {
+        var colors, name, oldName, tag;
+        if (event.key === `Enter`) {
+            tagContainer.classList.remove(`esgst-hidden`);
+            input.classList.add(`esgst-hidden`);
+            oldName = tagBox.textContent;
+            tag = input.value;
+            tagBox.textContent = tag;
+            colors = esgst.ut_colors[tag];
+            if (colors) {
+                colorInput.value = tagBox.style.color = colors.color;
+                bgColorInput.value = tagBox.style.backgroundColor = colors.bgColor;
+            }
+            endUtDrag(popup);
+        }
+    }
+
+    function saveUtColor(input, key, saveKey, tagBox) {
+        var tag;
+        tag = tagBox.textContent;
+        if (!esgst.ut_colors[tag]) {
+            esgst.ut_colors[tag] = {
+                bgColor: ``,
+                color: ``
+            };
+        }
+        esgst.ut_colors[tag][saveKey] = tagBox.style[key] = input.value;
+    }
+
+    function showUtEdit(input, tagBox, tagContainer) {
+        tagContainer.classList.add(`esgst-hidden`);
+        input.classList.remove(`esgst-hidden`);
+        input.value = tagBox.textContent;
+        input.focus();
+        popup.reposition();
+    }
+
+    function deleteUtTag(container, popup) {
+        container.remove();
+        endUtDrag(popup);
+    }
+
+    function formatTags(fullMatch, match1, offset, string) {
+        return (((offset === 0) || (offset == (string.length - fullMatch.length))) ? `` : `, `);
+    }
+    
+    function saveUtTags(key, popup, user, callback) {
+        var tags;
+        tags = popup.input.value.replace(/(,\s*)+/g, formatTags).split(`, `);
+        if (tags.join(``).length <= 64) {
+            popup.warning.textContent = ``;
+            user.values = {
+                tags: tags
+            };
+            saveUser(null, null, user, completeUtSave.bind(null, key, popup, tags, callback));
+        } else {
+            popup.warning.textContent = `The maximum character count must be lower or equal to 64.`;
+            callback();
+        }
+    }
+
+    function completeUtSave(key, popup, tags, callback) {
+        setValue(`ut_colors`, esgst.ut_colors);
+        addUtTags(key, tags);
+        callback();
+        popup.close();
+    }
+
+    function loadUtTags(popup, user) {
+        var i, n, savedUser, tags;
+        savedUser = getUser(null, user);
+        popup.input.focus();
+        if (savedUser) {
+            tags = savedUser.tags;
+            if (tags) {
+                popup.tags.innerHTML = ``;
+                for (i = 0, n = tags.length; i < n; ++i) {
+                    createUtTag(popup, tags[i]);
                 }
-                Context.parentElement.getElementsByClassName("PUTTags")[0].innerHTML = HTML;
+                popup.input.value = tags.join(`, `);
+                popup.reposition();
+            }
+        }
+    }
+
+    function addUtTags(key, tags) {
+        var button, children, colors, container, context, elements, html, i, n, prefix, suffix, tagsBox, tagsContainer;
+        elements = esgst.currentUsers[key];
+        prefix = `<span class="global__image-outer-wrap author_avatar is_icon">`;
+        suffix = `</span>`;
+        html = tags.length && tags[0] ? `${prefix}${tags.join(`${suffix}${prefix}`)}${suffix}` : ``;
+        for (i = 0, n = elements.length; i < n; ++i) {
+            context = elements[i];
+            container = context.parentElement;
+            if (container) {
+                if (container.classList.contains(`comment__username`)) {
+                    context = container;
+                }
+                button = context.parentElement.getElementsByClassName(`esgst-ut-button`)[0];
+                if (html) {
+                    button.classList.remove(`esgst-faded`);
+                } else {
+                    button.classList.add(`esgst-faded`);
+                }
+                tagsContainer = button.lastElementChild;
+                tagsContainer.innerHTML = html;
+                children = tagsContainer.children;
+                for (j = 0, numTags = children.length; j < numTags; ++j) {
+                    tagsBox = children[j];
+                    colors = esgst.ut_colors[tagsBox.textContent];
+                    if (colors) {
+                        tagsBox.style.color = colors.color;
+                        tagsBox.style.backgroundColor = colors.bgColor;
+                    }
+                }
             }
         }
     }
@@ -27934,8 +28187,13 @@ ${avatar.outerHTML}
         var keys = Object.keys(currentUsers);
         var length = keys.length;
         if (length > 0) {
-            if ((length > 1 || (keys[0] !== `cg` && keys[0] !== esgst.username)) && esgst.wbcButton && context === document) {
-                esgst.wbcButton.classList.remove(`esgst-hidden`);
+            if ((length > 1 || (keys[0] !== `cg` && keys[0] !== esgst.username)) && (esgst.wbcButton || esgst.mtUserButton) && context === document) {
+                if (esgst.wbcButton) {
+                    esgst.wbcButton.classList.remove(`esgst-hidden`);
+                }
+                if (esgst.mtUserButton) {
+                    esgst.mtUserButton.classList.remove(`esgst-hidden`);
+                }
             }
             for (i = 0, n = esgst.userFeatures.length; i < n; ++i) {
                 esgst.userFeatures[i](currentUsers);

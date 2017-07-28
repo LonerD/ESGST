@@ -1,4 +1,20 @@
 /*
+ * July 27, 2017 - v6.Beta.22.1
+ */
+
+* Fixed a typo in Giveaways.14 (closes #294).
+* Fixed a style issue in Level Progress Visualizer (Closes #150).
+* Fixed a bug that was enabling Pagination Navigation On Top even if it was disabled.
+* Fixed a bug in Giveaway Filters that was preventing the script from loading correctly for some users.
+* You can now drag and drop templates in Giveaway Templates (closes #246).
+* Fixed a bug in Giveaway Winning Chance/Ratio that was miscalculation entered giveaways if visiting them (closes #296).
+* Multiple Giveaways Creator now trims the list of games before importing to make sure there are no empty lines or lines with white space at the beginning/end. (closes #298).
+* Fixed a bug in Unsent Gifts Sender that was not sending gifts if none of the options were enabled (closes #301).
+* Added some limits to User/Game Tags: you are now allowed a maximum character count of 64 for user tags and 32 for game tags.
+* User/Game Tags can now be colored individually.
+* Fixed a bug in Game Categories that was adding user-defined tags to the list of genres even if the option was disabled (partial solution to #291).
+
+/*
  * July 27, 2017 - v6.Beta.22.0
  */
 
