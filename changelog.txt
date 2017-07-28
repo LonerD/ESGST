@@ -1,4 +1,10 @@
 /*
+ * July 28, 2017 - v6.Beta.22.2
+ */
+
+* Added some tooltips to the color pickers in User/Game Tags.
+
+/*
  * July 28, 2017 - v6.Beta.22.1
  */
 
@@ -12,6 +18,7 @@
 * Fixed a bug in Unsent Gifts Sender that was not sending gifts if none of the options were enabled (closes #301).
 * Added some limits to User/Game Tags: you are now allowed a maximum character count of 64 for user tags and 32 for game tags.
 * User/Game Tags can now be colored individually.
+* The buttons in User/Game Tags are now faded out if there are no tags saved (useful for places where the tags are not displayed, such as inside Active Discussions On Sidebar or Grid View).
 * Fixed a bug in Game Categories that was adding user-defined tags to the list of genres even if the option was disabled (partial solution to #291).
 
 /*

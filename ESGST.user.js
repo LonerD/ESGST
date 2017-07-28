@@ -3,7 +3,7 @@
 // @namespace ESGST
 // @description Enhances SteamGifts and SteamTrades by adding some cool features to them.
 // @icon https://github.com/revilheart/ESGST/raw/master/Resources/esgstIcon.ico
-// @version 6.Beta.22.1
+// @version 6.Beta.22.2
 // @author revilheart
 // @downloadURL https://github.com/revilheart/ESGST/raw/master/ESGST.user.js
 // @updateURL https://github.com/revilheart/ESGST/raw/master/ESGST.meta.js
@@ -24507,8 +24507,8 @@ ${avatar.outerHTML}
                     <span class="global__image-outer-wrap author_avatar is_icon">${tag}</span>
                 </div>
                 <input class="esgst-hidden" type="text"/>
-                <input type="color"/>
-                <input type="color"/>
+                <input title="Set text color for this tag" type="color"/>
+                <input title="Set background color for this tag" type="color"/>
                 <i class="esgst-clickable fa fa-edit" title="Edit tag"></i>
                 <i class="esgst-clickable fa fa-trash" title="Delete tag"></i>
             </div>
@@ -27983,10 +27983,10 @@ ${avatar.outerHTML}
                     <span class="global__image-outer-wrap author_avatar is_icon">${tag}</span>
                 </div>
                 <input class="esgst-hidden" type="text"/>
-                <input type="color"/>
-                <input type="color"/>
-                <i class="esgst-clickable fa fa-edit" title="Edit tag."></i>
-                <i class="esgst-clickable fa fa-trash" title="Delete tag."></i>
+                <input title="Set text color for this tag" type="color"/>
+                <input title="Set background color for this tag" type="color"/>
+                <i class="esgst-clickable fa fa-edit" title="Edit tag"></i>
+                <i class="esgst-clickable fa fa-trash" title="Delete tag"></i>
             </div>
         `);
         tagContainer = container.firstElementChild;
