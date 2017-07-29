@@ -3,7 +3,7 @@
 // @namespace ESGST
 // @description Enhances SteamGifts and SteamTrades by adding some cool features to them.
 // @icon https://github.com/revilheart/ESGST/raw/master/Resources/esgstIcon.ico
-// @version 6.Beta.22.2
+// @version 6.Beta.22.3
 // @author revilheart
 // @downloadURL https://github.com/revilheart/ESGST/raw/master/ESGST.user.js
 // @updateURL https://github.com/revilheart/ESGST/raw/master/ESGST.meta.js
@@ -6899,7 +6899,7 @@ min-width: 0;
 
     function addStyle(id, style) {
         var style
-        style = insertHtml(document.body, `beforeBegin`, `
+        style = insertHtml(document.head, `beforeEnd`, `
             <style id="${id}">${style}</style>
         `);
         return style;

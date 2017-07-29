@@ -1,4 +1,10 @@
 /*
+ * July 28, 2017 - v6.Beta.22.3
+ */
+
+* Fixed a bug in Level Progress Visualizer.
+
+/*
  * July 28, 2017 - v6.Beta.22.2
  */
 
