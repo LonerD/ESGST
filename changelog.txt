@@ -1,4 +1,21 @@
 /*
+ * July 29, 2017 - v6.Beta.23.0
+ */
+
+* Bundles are now synced from a Google Sheet database that is updated daily. To get more info about the database, check this thread: https://www.steamgifts.com/discussion/qcvQE/
+* All checkers now show how many pages there are left to check (closes #53).
+* Added some CSS variables to Level Progress Visualizer so themes are able to customize it.
+* Expanded Discussions Sorter.
+* The created trades page is now refreshed if open when auto bumping from Trades Bumper.
+* Decrypted giveaways added to posts during editing now appear immediately without having to refresh the page (only works with Multi-Reply or Reply From Inbox) (closes #228).
+* Added an option (Comments.7.1) to Reply From Inbox that keeps the replies in the inbox page when refreshing (closes #179).
+
+Added the following features:
+
+* General.13 Hidden Community Poll
+* Giveaways.4 Giveaways Sorter (closes #198)
+
+/*
  * July 28, 2017 - v6.Beta.22.3
  */
 

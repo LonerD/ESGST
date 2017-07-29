@@ -3,7 +3,7 @@
 // @namespace ESGST
 // @description Enhances SteamGifts and SteamTrades by adding some cool features to them.
 // @icon https://github.com/revilheart/ESGST/raw/master/Resources/esgstIcon.ico
-// @version 6.Beta.22.3
+// @version 6.Beta.23.0
 // @author revilheart
 // @downloadURL https://github.com/revilheart/ESGST/raw/master/ESGST.user.js
 // @updateURL https://github.com/revilheart/ESGST/raw/master/ESGST.meta.js
@@ -532,6 +532,7 @@
                     esgst.apPopouts = {};
                     esgst.currentUsers = {};
                     esgst.currentGames = {};
+                    esgst.lastPage = getLastPage(document, true);
                     esgst.oldValues = {
                         enableByDefault: `sm_ebd`,
                         showChangelog: `sm_c`,
@@ -586,7 +587,6 @@
                         steamApiKey: `SteamAPIKey`,
                         lastSync: `LastSync`,
                         syncFrequency: `SyncFrequency`,
-                        lastBundleSync: `LastBundleSync`,
                         ugs: `UGS`,
                         ugs_checkRules: `UGS_SANM`,
                         ugs_checkWhitelist: `UGS_SW`,
@@ -602,7 +602,6 @@
                         ugs_checkMember: false,
                         ugs_checkDifference: false,
                         ugs_difference: 0,
-                        exportBundles: false,
                         enableByDefault: false,
                         showChangelog: true,
                         syncGroups: true,
@@ -959,7 +958,6 @@
                         steamApiKey: ``,
                         lastSync: 0,
                         syncFrequency: 7,
-                        lastBundleSync: 0,
                         Emojis: ""
                     };
                     esgst.users = GM_getValue(`users`);
@@ -1319,6 +1317,17 @@
                         {
                             description: `
                                 <ul>
+                                    <li>Hides the community poll.</li>
+                                </ul>
+                            `,
+                            id: `hcp`,
+                            name: `[NEW] Hidden Community Poll`,
+                            sg: true,
+                            type: `general`
+                        },
+                        {
+                            description: `
+                                <ul>
                                     <li>Hides blacklist stats in the stats page.</li>
                                 </ul>
                                 <img src="https://camo.githubusercontent.com/96accb906d4bb1554a2f9ddfaeb0abce1b54b808/687474703a2f2f692e696d6775722e636f6d2f794233705153492e706e67"/>
@@ -1382,6 +1391,17 @@
                             `,
                             id: `ags`,
                             name: `Advanced Giveaway Search`,
+                            sg: true,
+                            type: `giveaways`
+                        },
+                        {
+                            description: `
+                                <ul>
+                                    <li>Allows you to sort giveaways.</li>
+                                </ul>
+                            `,
+                            id: `gas`,
+                            name: `[NEW] Giveaways Sorter`,
                             sg: true,
                             type: `giveaways`
                         },
@@ -1566,7 +1586,7 @@
                                         </ul>
                                     `,
                                     id: `gwr_a`,
-                                    name: `[NEW] Use advanced formula.`,
+                                    name: `Use advanced formula.`,
                                     sg: true
                                 }
                             ],
@@ -1722,7 +1742,7 @@
                                 <img src="http://i.imgur.com/d9YgvBp.png"/>
                             `,
                             id: `et`,
-                            name: `[NEW] Entries Tracker`,
+                            name: `Entries Tracker`,
                             sg: true,
                             type: `giveaways`
                         },
@@ -1961,7 +1981,7 @@
                                         </ul>
                                     `,
                                     id: `tb_a`,
-                                    name: `[NEW] Auto bump every hour.`,
+                                    name: `Auto bump every hour.`,
                                     sg: true,
                                     st: true
                                 }
@@ -1995,7 +2015,7 @@
                                 <img src="http://i.imgur.com/y0QykIf.png"/>
                             `,
                             id: `cs`,
-                            name: `[NEW] Comment Searcher`,
+                            name: `Comment Searcher`,
                             sg: true,
                             st: true,
                             type: `comments`
@@ -2191,6 +2211,21 @@
                                     <li>Has Multi-Reply built-in.</li>
                                 </ul>
                             `,
+                            features: [
+                                {
+                                    description: `
+                                        <ul>
+                                            <li>Saves replies made from the inbox so that they are still there when you refresh the page.</li>
+                                            <li>Replies are deleted from the cache after 1 week.</li>
+                                            <li>Editing/deleting/undeleting a saved reply also updates its cache and makes it last 1 week longer.</li>
+                                        </ul>
+                                    `,
+                                    id: `rfi_s`,
+                                    name: `[NEW] Save replies.`,
+                                    sg: true,
+                                    st: true
+                                }
+                            ],
                             id: `rfi`,
                             load: loadRfi,
                             name: `Reply From Inbox`,
@@ -2867,7 +2902,7 @@
                     esgst.currentGiveaways = [];
                     esgst.currentComments = [];
                     esgst.popupGiveaways = [];
-                    esgst.discussions = [];
+                    esgst.currentDiscussions = [];
                     esgst.profileFeatures = [];
                     for (var key in esgst.defaultValues) {
                         esgst[key] = getValue(key);
@@ -2957,6 +2992,9 @@
                         esgst.mainPageHeading.appendChild(esgst.paginationNavigation);
                     }
                     if (esgst.giveawaysPath && esgst.activeDiscussions) {
+                        if (esgst.hcp) {
+                            esgst.activeDiscussions.previousElementSibling.classList.add(`esgst-hidden`);
+                        }
                         if (esgst.oadd) {
                             esgst.style += `
                                 .esgst-oadd >* {
@@ -3271,16 +3309,26 @@
             if (esgst.gf) {
                 addGfContainer();
             }
-            if (esgst.gwc) {
+            if (esgst.gas) {
+                esgst.style += `                
+                    .esgst-gas-popout {
+                        background-color: #fff;
+                        border: 1px solid #d2d6e0;
+                        border-radius: 4px;
+                        color: #465670;
+                        padding: 10px;
+                    }
+                `;
                 button = document.createElement(`div`);
                 button.className = `esgst-heading-button`;
-                button.title = `Sort giveaways by winning chance (highest to lowest).`;
+                button.title = `Sort giveaways`;
                 button.innerHTML = `
-                    <i class="fa fa-area-chart"></i>
-                    <i class="fa fa-sort-numeric-desc"></i>
+                    <i class="fa fa-sort"></i>
                 `;
                 mainPageHeadingBefore.appendChild(button);
-                addGwcSortButton(button);
+                button.addEventListener(`click`, openGasPopout.bind(null, {
+                    button: button
+                }));
             }
         } else {
             if (esgst.groupPath && esgst.gf) {
@@ -3325,16 +3373,26 @@
                         button: button
                     }));
                 }
-                if (esgst.gwc) {
+                if (esgst.gas) {
+                    esgst.style += `                
+                        .esgst-gas-popout {
+                            background-color: #fff;
+                            border: 1px solid #d2d6e0;
+                            border-radius: 4px;
+                            color: #465670;
+                            padding: 10px;
+                        }
+                    `;
                     button = document.createElement(`div`);
                     button.className = `esgst-heading-button`;
-                    button.title = `Sort giveaways by winning chance (highest to lowest).`;
+                    button.title = `Sort giveaways`;
                     button.innerHTML = `
-                        <i class="fa fa-area-chart"></i>
-                        <i class="fa fa-sort-numeric-desc"></i>
+                        <i class="fa fa-sort"></i>
                     `;
                     mainPageHeadingBefore.appendChild(button);
-                    addGwcSortButton(button);
+                    button.addEventListener(`click`, openGasPopout.bind(null, {
+                        button: button
+                    }));
                 }
                 if (esgst.gwc || esgst.gwr) {
                     esgst.endlessFeatures.push(addGwcrHeading);
@@ -3375,14 +3433,25 @@
                 }
             } else if (esgst.discussionsPath) {
                 if (esgst.ds) {
+                    esgst.style += `                
+                        .esgst-ds-popout {
+                            background-color: #fff;
+                            border: 1px solid #d2d6e0;
+                            border-radius: 4px;
+                            color: #465670;
+                            padding: 10px;
+                        }
+                    `;
                     button = document.createElement(`div`);
                     button.className = `esgst-heading-button`;
-                    button.title = `Sort discussions by creation date (newest to oldest).`;
+                    button.title = `Sort discussions`;
                     button.innerHTML = `
-                        <i class="fa fa-sort-amount-asc"></i>
+                        <i class="fa fa-sort"></i>
                     `;
                     mainPageHeadingBefore.appendChild(button);
-                    addDsButton(button);
+                    button.addEventListener(`click`, openDsPopout.bind(null, {
+                        button: button
+                    }));
                 }
             }
             if (esgst.commentsPath) {
@@ -4310,11 +4379,12 @@
         };
         if (mainCallback) {
             popup = createPopup(`fa-refresh`, `Sync`);
-            createToggleSwitch(popup.description, `syncGroups`, false, `Sync Steam groups.`, false, false, null, esgst.syncGroups);
-            createToggleSwitch(popup.description, `syncWhitelist`, false, `Sync whitelist.`, false, false, null, esgst.syncWhitelist);
-            createToggleSwitch(popup.description, `syncBlacklist`, false, `Sync blacklist.`, false, false, null, esgst.syncBlacklist);
-            createToggleSwitch(popup.description, `syncHiddenGames`, false, `Sync hidden games.`, false, false, null, esgst.syncHiddenGames);
-            createToggleSwitch(popup.description, `syncGames`, false, `Sync owned/wishlisted/ignored games.`, false, false, null, esgst.syncGames);
+            createToggleSwitch(popup.description, `syncGroups`, false, `Steam Groups`, false, false, null, esgst.syncGroups);
+            createToggleSwitch(popup.description, `syncWhitelist`, false, `Whitelist`, false, false, null, esgst.syncWhitelist);
+            createToggleSwitch(popup.description, `syncBlacklist`, false, `Blacklist`, false, false, null, esgst.syncBlacklist);
+            createToggleSwitch(popup.description, `syncHiddenGames`, false, `Hidden Games`, false, false, null, esgst.syncHiddenGames);
+            createToggleSwitch(popup.description, `syncGames`, false, `Owned/Wishlisted/Ignored Games`, false, false, null, esgst.syncGames);
+            createToggleSwitch(popup.description, `syncBundles`, false, `Bundles`, false, false, null, esgst.syncBundles);
             syncer.progress = insertHtml(popup.description, `beforeEnd`, `
                 <div class="esgst-hidden esgst-popup-progress"></div>
             `);
@@ -4540,9 +4610,9 @@
     function continueSyncStep4(syncer, callback) {
         if (esgst.settings.syncGames) {
             syncer.progress.lastElementChild.textContent = `Syncing your wishlisted/owned/ignored games...`;
-            syncGames(syncer, callback);
+            syncGames(syncer, continueSyncStep5.bind(null, syncer, callback));
         } else {
-            callback();
+            continueSyncStep5(syncer, callback);
         }
     }
 
@@ -4670,6 +4740,15 @@
         GM_setValue(`games`, JSON.stringify(savedGames));
         deleteLock();
         callback(savedGames, result);
+    }
+
+    function continueSyncStep5(syncer, callback) {
+        if (esgst.settings.syncBundles) {
+            syncer.progress.lastElementChild.textContent = `Syncing bundles...`;
+            request(null, false, `https://script.google.com/macros/s/AKfycbwJK-7RBh5ghaKprEsmx4DQ6CyXc_3_9eYiOCu3yhI6W4B3W4YN/exec`, syncBundles.bind(null, syncer, callback));
+        } else {
+            callback();
+        }
     }
 
     function lockAndSaveGiveaways(giveaways, callback) {
@@ -6124,7 +6203,7 @@ min-width: 0;
             "    margin: 5px 0 15px;" +
             "    padding: 0;" +
             "}" +
-            ".ESPanel >*:not(:last-child), .esgst-ap-popout .featured__table__row__left:not(.esgst-uh-title), .MRReply, .MREdit {" +
+            ".ESPanel >*:not(:last-child), .esgst-ap-popout .featured__table__row__left:not(.esgst-uh-title), .esgst-mr-reply, .esgst-mr-edit, .esgst-mr-delete, .esgst-mr-undelete {" +
             "    margin: 0 10px 0 0;" +
             "}" +
             ".ESStatus {" +
@@ -6425,130 +6504,11 @@ min-width: 0;
         }
     }
 
-    function checkBundleSync(context, syncer) {
-        if (!syncer.popup) {
-            syncer.popup = createPopup(`fa-refresh`, `Sync Bundles`);
-            createToggleSwitch(syncer.popup.description, `exportBundles`, false, `Export bundles to file.`, false, false, `Exports the list of bundles to a file that can be used for syncing without having to scan everything again.`, esgst.exportBundles);
-            syncer.popup.description.appendChild(createButtonSet(`green`, `grey`, `fa-arrow-circle-right`, `fa-times`, `Sync`, `Cancel`, startBundleSync.bind(null, context, syncer), cancelBundleSync.bind(null, syncer)).set);
-            syncer.popup.description.appendChild(createButtonSet(`green`, `grey`, `fa-arrow-circle-right`, `fa-times`, `Sync From File`, `Cancel`, startBundleSyncFromFile.bind(null, context, syncer), cancelBundleSync.bind(null, syncer)).set);
-            syncer.progress = insertHtml(syncer.popup.description, `beforeEnd`, `<div></div>`);
-        }
-        syncer.popup.open();
+    function syncBundles(syncer, callback, response) {
+        lockAndSaveGames(JSON.parse(response.responseText).bundles, callback);
     }
 
-    function cancelBundleSync(syncer) {
-        syncer.canceled = true;
-        syncer.progress.innerHTML = ``;
-    }
-
-    function startBundleSync(context, syncer, callback) {
-        if (Date.now() - esgst.lastBundleSync > 604800000) {
-            setValue(`lastBundleSync`, Date.now());
-            syncer.canceled = false;
-            syncer.games = {
-                apps: {},
-                subs: {}
-            };
-            syncer.progress.innerHTML = ``;
-            syncBundles(null, 1, syncer, `https://www.steamgifts.com/bundle-games/search?page=`, lockAndSaveGames.bind(null, syncer.games, completeBundleSync.bind(null, context, syncer, callback)));
-        } else {
-            callback();
-            createAlert(`You synced the bundles in less than a week ago. You can sync only once per week.`);
-        }
-    }
-
-    function startBundleSyncFromFile(context, syncer, callback) {
-        var file, reader;
-        file = document.createElement(`input`);
-        file.type = `file`;
-        file.click();
-        file.addEventListener(`change`, function () {
-            file = file.files[0];
-            if (file.name.match(/ESGST-Bundles-.+\.json/)) {
-                reader = new FileReader();
-                reader.readAsText(file);
-                reader.onload = function () {
-                    var Key, Setting;
-                    file = JSON.parse(reader.result);
-                    lockAndSaveGames(file.bundles, function () {
-                        context.classList.remove(`notification--warning`);
-                        context.classList.add(`notification--success`);
-                        context.innerHTML = `
-                            <i class="fa fa-check-circle"></i> Last synced ${new Date().toLocaleString()}.
-                        `;
-                        callback();
-                        syncer.progress.innerHTML = ``;
-                        setValue(`lastBundleSync`, Date.now());
-                    });
-                };
-            } else {
-                callback();
-                createAlert(`Wrong file!`);
-            }
-        });
-    }
-
-    function syncBundles(context, nextPage, syncer, url, callback) {
-        var element, elements, i, match, n, pagination;
-        if (!syncer.canceled) {
-            syncer.progress.innerHTML = `
-                <i class="fa fa-circle-o-notch fa-spin"></i>
-                <span>Syncing bundles (page ${nextPage})...</span>
-            `;
-            if (context) {
-                elements = context.getElementsByClassName(`table__column__secondary-link`);
-                for (i = 0, n = elements.length; i < n; ++i) {
-                    element = elements[i];
-                    match = element.textContent.match(/(app|sub)\/(\d+)/);
-                    if (match) {
-                        syncer.games[`${match[1]}s`][match[2]] = {
-                            bundled: element.parentElement.parentElement.nextElementSibling.textContent
-                        };
-                    }
-                }
-                pagination = context.getElementsByClassName(`pagination__navigation`)[0];
-                if (pagination && !pagination.lastElementChild.classList.contains(`is-selected`)) {
-                    setTimeout(syncBundles, 0, null, nextPage, syncer, url, callback);
-                } else {
-                    callback();
-                }
-            } else if (!syncer.canceled) {
-                request(null, false, `${url}${nextPage}`, getNextBundlePage.bind(null, nextPage, syncer, url, callback));
-            }
-        }
-    }
-
-    function getNextBundlePage(nextPage, syncer, url, callback, response) {
-        setTimeout(syncBundles, 0, DOM.parse(response.responseText), ++nextPage, syncer, url, callback);
-    }
-
-    function completeBundleSync(context, syncer, callback) {
-        var data, file, url;
-        context.classList.remove(`notification--warning`);
-        context.classList.add(`notification--success`);
-        context.innerHTML = `
-            <i class="fa fa-check-circle"></i> Last synced ${new Date().toLocaleString()}.
-        `;
-        callback();
-        syncer.progress.innerHTML = ``;
-        setValue(`lastBundleSync`, Date.now());
-        if (esgst.exportBundles) {
-            file = document.createElement(`a`);
-            file.download = `ESGST-Bundles-${(new Date()).toUTCString()}.json`;
-            data = {};
-            data = new Blob([JSON.stringify({
-                bundles: syncer.games
-            })]);
-            url = window.URL.createObjectURL(data);
-            file.href = url;
-            document.body.appendChild(file);
-            file.click();
-            file.remove();
-            window.URL.revokeObjectURL(url);
-        }
-    }
-
-    function lockAndSaveGames(games, callback) {
+     function lockAndSaveGames(games, callback) {
         createLock(`gameLock`, 300, saveGames.bind(null, games, callback));
     }
 
@@ -6906,51 +6866,97 @@ min-width: 0;
     }
 
     function setLpvStyle() {
-        var firstBar, fullBar, progress, secondBar, style;
+        var firstBar, progress, secondBar, style;
         progress = parseInt(esgst.headerElements.levelContainer.getAttribute(`title`).match(/\.(\d+)/)[1] * 1.85);
-        fullBar = `${progress}px`;
-        if (progress >= 156) {
-            secondBar = `${progress - 156 - 0.59}px`;
-        } else {
-            secondBar = `0px`;
-        }
+        firstBar = `${progress}px`;
+        secondBar = progress >= 156 ? `${progress - 156 - 0.59}px` : `0`;
         style = document.getElementById(`esgst-lpv-style`);
         if (style) {
             style.remove();
         }
         addStyle(`esgst-lpv-style`, `
             .esgst-lpv-container {
-                background-image: linear-gradient(to right, #609f60 ${fullBar}, transparent ${fullBar}), linear-gradient(#8a92a1 0px, #757e8f 8px, #4e5666 100%) !important;
+                background-image: linear-gradient(to right, var(--bar, #609f60) ${firstBar}, transparent ${firstBar}), var(--button, linear-gradient(#8a92a1 0px, #757e8f 8px, #4e5666 100%)) !important;
             }
             .esgst-lpv-container .nav__button--is-dropdown:hover {
-                background-image: linear-gradient(to right, #6dac6d ${fullBar}, transparent ${fullBar}), linear-gradient(#9ba2b0 0px, #8c94a3 8px, #596070 100%) !important;
+                background-image: linear-gradient(to right, var(--bar-hover, #6dac6d) ${firstBar}, transparent ${firstBar}), var(--button-hover, linear-gradient(#9ba2b0 0px, #8c94a3 8px, #596070 100%)) !important;
             }
             .esgst-lpv-container .nav__button--is-dropdown-arrow:hover {
-                background-image: linear-gradient(to right, #6dac6d ${secondBar}, transparent ${secondBar}), linear-gradient(#9ba2b0 0px, #8c94a3 8px, #596070 100%) !important;
+                background-image: linear-gradient(to right, var(--bar-hover, #6dac6d) ${secondBar}, transparent ${secondBar}), var(--button-hover, linear-gradient(#9ba2b0 0px, #8c94a3 8px, #596070 100%)) !important;
             }
             .esgst-lpv-container .nav__button--is-dropdown-arrow.is-selected {
-                background-image: linear-gradient(to right, #609f60 ${secondBar}, transparent ${secondBar}), linear-gradient(#4e525f 0px, #434857 5px, #2b2e3a 100%) !important;
+                background-image: linear-gradient(to right, var(--bar, #609f60) ${secondBar}, transparent ${secondBar}), var(--arrow, linear-gradient(#4e525f 0px, #434857 5px, #2b2e3a 100%)) !important;
             }
             .esgst-lpv-container.is-selected .nav__button--is-dropdown {
-                background-image: linear-gradient(to right, #6dac6d ${fullBar}, transparent ${fullBar}), linear-gradient(#d0d5de 0px, #c9cdd7 5px, #9097a6 100%) !important;
+                background-image: linear-gradient(to right, var(--bar-hover, #6dac6d) ${firstBar}, transparent ${firstBar}), var(--button-selected, linear-gradient(#d0d5de 0px, #c9cdd7 5px, #9097a6 100%)) !important;
             }
             .esgst-lpv-container.is-selected .nav__button--is-dropdown-arrow {
-                background-image: linear-gradient(to right, #6dac6d ${secondBar}, transparent ${secondBar}), linear-gradient(#d0d5de 0px, #c9cdd7 5px, #9097a6 100%) !important;
+                background-image: linear-gradient(to right, var(--bar-hover, #6dac6d) ${secondBar}, transparent ${secondBar}), var(--button-selected, linear-gradient(#d0d5de 0px, #c9cdd7 5px, #9097a6 100%)) !important;
             }
             .esgst-lpv-container.is-selected .nav__button--is-dropdown:hover {
-                background-image: linear-gradient(to right, #7ab97a ${fullBar}, transparent ${fullBar}), linear-gradient(#f0f1f5 0px, #d1d4de 100%) !important;
+                background-image: linear-gradient(to right, var(--bar-selected, #7ab97a) ${firstBar}, transparent ${firstBar}), var(--button-selected-hover, linear-gradient(#f0f1f5 0px, #d1d4de 100%)) !important;
             }
             .esgst-lpv-container.is-selected .nav__button--is-dropdown-arrow:hover:not(.is-selected) {
-                background-image: linear-gradient(to right, #7ab97a ${secondBar}, transparent ${secondBar}), linear-gradient(#f0f1f5 0px, #d1d4de 100%) !important;
+                background-image: linear-gradient(to right, var(--bar-selected, #7ab97a) ${secondBar}, transparent ${secondBar}), var(--button-selected-hover, linear-gradient(#f0f1f5 0px, #d1d4de 100%)) !important;
             }
             .esgst-lpv-container.is-selected .nav__button--is-dropdown-arrow.is-selected {
-                background-image: linear-gradient(to right, #7ab97a ${secondBar}, transparent ${secondBar}), linear-gradient(#4e525f 0px, #434857 5px, #2b2e3a 100%) !important;
+                background-image: linear-gradient(to right, var(--bar-selected, #7ab97a) ${secondBar}, transparent ${secondBar}), var(--arrow-selected, linear-gradient(#4e525f 0px, #434857 5px, #2b2e3a 100%)) !important;
             }
         `);
         esgst.headerElements.mainButton.parentElement.classList.add(`esgst-lpv-container`);
     }
 
     /* [LPL] Last Page Link */
+
+    function getLastPage(context, main, discussion, user, userWon, group, groupUsers, groupWishlist) {
+        var element, first, lastPage, pagination, paginationNavigation, paginationResults, second, third;
+        pagination = context.getElementsByClassName(`pagination`)[0];
+        paginationResults = context.getElementsByClassName(`pagination__results`)[0];
+        paginationNavigation = context.getElementsByClassName(`pagination__navigation`)[0];
+        if (paginationNavigation) {
+            element = paginationNavigation.lastElementChild;
+            if (element.textContent.match(/Last/)) {
+                lastPage = parseInt(element.getAttribute(`data-page-number`));
+            } else if ((main && esgst.discussionPath) || discussion) {
+                if (pagination) {
+                    lastPage = Math.ceil(parseInt(pagination.firstElementChild.lastElementChild.textContent.replace(/,/g, ``)) / 25);
+                } else {
+                    lastPage = 999999999;
+                }
+            } else if ((main && esgst.userPath) || user) {
+                if ((main && window.location.pathname.match(/\/giveaways\/won/)) || userWon) {
+                    lastPage = Math.ceil(parseInt(context.querySelector(`.featured__table__row__right a[href*="/giveaways/won"]`).textContent.replace(/,/g, ``)) / 25);
+                } else {
+                    lastPage = Math.ceil(parseInt(context.getElementsByClassName(`sidebar__navigation__item__count`)[0].textContent.replace(/,/g, ``)) / 25);
+                }
+            } else if ((main && esgst.groupPath) || group) {
+                if ((main && window.location.pathname.match(/\/users/)) || groupUsers) {
+                    lastPage = Math.ceil(parseInt(context.getElementsByClassName(`sidebar__navigation__item__count`)[1].textContent.replace(/,/g, ``)) / 25);
+                } else if ((main && esgst.groupWishlistPath) || groupWishlist) {
+                    lastPage = 999999999;
+                } else {
+                    lastPage = Math.ceil(parseInt(context.getElementsByClassName(`sidebar__navigation__item__count`)[0].textContent.replace(/,/g, ``)) / 25);
+                }
+            } else {
+                lastPage = 999999999;
+            }
+        } else {
+            lastPage = 999999999;
+        }
+        if (lastPage === 999999999 && paginationResults) {
+            first = paginationResults.firstElementChild;
+            if (first) {
+                second = first.nextElementSibling;
+                if (second) {
+                    third = second.nextElementSibling;
+                    if (third) {
+                        lastPage = Math.ceil(parseInt(third.textContent.replace(/,/g, ``)) / parseInt(second.textContent.replace(/,/g, ``)));
+                    }
+                }
+            }
+        }
+        return lastPage;
+    }
 
     function loadLpl() {
         if (esgst.paginationNavigation) {
@@ -6966,11 +6972,6 @@ min-width: 0;
 
     function addLplDiscussionLink() {
         var lastLink, url;
-        if (esgst.pagination) {
-            esgst.lastPage = Math.ceil(parseInt(esgst.pagination.firstElementChild.lastElementChild.textContent.replace(/,/g, ``)) / 25);
-        } else {
-            esgst.lastPage = 999999999;
-        }
         url = `${window.location.pathname.replace(`/search`, ``)}/search?page=${esgst.lastPage}`;
         esgst.lastPageLink = `
             <a data-page-number="${esgst.lastPage}" href="${url}">
@@ -6988,10 +6989,8 @@ min-width: 0;
         var lastLink, lastPage, url, username;
         username = window.location.pathname.match(/^\/user\/(.+?)(\/.*?)?$/)[1];
         if (window.location.pathname.match(/\/giveaways\/won/)) {
-            esgst.lastPage = Math.ceil(parseInt(document.querySelector(`.featured__table__row__right a[href*="/giveaways/won"]`).textContent.replace(/,/g, ``)) / 25);
             url = `/user/${username}/giveaways/won/search?page=${esgst.lastPage}`;
         } else {
-            esgst.lastPage = Math.ceil(parseInt(document.getElementsByClassName(`sidebar__navigation__item__count`)[0].textContent.replace(/,/g, ``)) / 25);
             url = `/user/${username}/search?page=${esgst.lastPage}`;
         }
         esgst.lastPageLink = `
@@ -7010,13 +7009,10 @@ min-width: 0;
         var group, lastLink, lastPage, url;
         group = window.location.pathname.match(/^\/group\/(.+?\/.+?)(\/.*?)?$/)[1];
         if (window.location.pathname.match(/\/users/)) {
-            esgst.lastPage = Math.ceil(parseInt(document.getElementsByClassName(`sidebar__navigation__item__count`)[1].textContent.replace(/,/g, ``)) / 25);
             url = `/group/${group}/users/search?page=${esgst.lastPage}`;
         } else if (esgst.groupWishlistPath) {
-            esgst.lastPage = 999999999;
             url = `/group/${group}/wishlist/search?page=${esgst.lastPage}`;
         } else {
-            esgst.lastPage = Math.ceil(parseInt(document.getElementsByClassName(`sidebar__navigation__item__count`)[0].textContent.replace(/,/g, ``)) / 25);
             url = `/group/${group}/search?page=${esgst.lastPage}`;
         }
         esgst.lastPageLink = `
@@ -7451,6 +7447,104 @@ min-width: 0;
                 }
             }
             window.location.href = url;
+        }
+    }
+
+    /* [GAS] Giveaways Sorter */
+
+    function openGasPopout(gas) {
+        var optionsHtml;
+        if (!gas.popout) {
+            gas.popout = createPopout_v6(`esgst-gas-popout`, true);
+            gas.toggle = createToggleSwitch(gas.popout.popout, null, true, `Enable`);
+            optionsHtml = `
+                <select>
+                    <option value="name_asc">Game Name - Ascending</option>
+                    <option value="name_desc">Game Name - Descending</option>
+            `;
+            if (esgst.giveawaysPath) {
+                optionsHtml += `
+                    <option value="points_asc">Points - Ascending</option>
+                    <option value="points_desc">Points - Descending</option>
+                `;
+            }
+            if (esgst.gc && esgst.gc_r && esgst.giveawaysPath) {
+                optionsHtml += `
+                    <option value="rating_asc">Rating - Ascending</option>
+                    <option value="rating_desc">Rating - Descending</option>
+                `;
+            }
+            optionsHtml += `
+                    <option value="endTime_asc">End Time - Ascending</option>
+                    <option value="endTime_desc">End Time - Descending</option>
+            `;
+            if (esgst.giveawaysPath) {
+                optionsHtml += `
+                    <option value="startTime_asc">Start Time - Ascending</option>
+                    <option value="startTime_desc">Start Time - Descending</option>
+                    <option value="creator_asc">Creator - Ascending</option>
+                    <option value="creator_desc">Creator - Descending</option>
+                    <option value="comments_asc">Comments - Ascending</option>
+                    <option value="comments_desc">Comments - Descending</option>
+                `;
+            }
+            optionsHtml += `
+                    <option value="entries_asc">Entries - Ascending</option>
+                    <option value="entries_desc">Entries - Descending</option>
+            `;
+            
+            if (esgst.gwc) {
+                optionsHtml += `
+                    <option value="chance_asc">Chance - Ascending</option>
+                    <option value="chance_desc">Chance - Descending</option>
+                `;
+            }
+            if (esgst.gwr) {
+                optionsHtml += `
+                    <option value="ratio_asc">Ratio - Ascending</option>
+                    <option value="ratio_desc">Ratio - Descending</option>
+                `;
+            }
+            optionsHtml += `
+                </select>
+            `;
+            gas.options = insertHtml(gas.popout.popout, `beforeEnd`, optionsHtml);
+            gas.toggle.onEnabled = sortContent.bind(null, `currentGiveaways`, gas.options);
+            gas.options.addEventListener(`change`, sortContent.bind(null, `currentGiveaways`, gas.options));
+        }
+        if (gas.popout.popout.classList.contains(`esgst-hidden`)) {
+            gas.popout.open(gas.button);
+        } else {
+            gas.popout.close();
+        }
+    }
+
+    function sortContent(mainKey, options) {
+        var after, before, i, key, n, name;
+        name = options.value.split(/_/);
+        key = name[0];
+        if (name[1] === `asc`) {
+            before = -1;
+            after = 1;
+        } else {
+            before = 1;
+            after = -1;
+        }
+        esgst[mainKey].sort(function (a, b) {
+            if (typeof a[key] === `string`) {
+                return (a[key].toLowerCase().localeCompare(b[key].toLowerCase()) * after);
+            } else {
+                if (a[key] < b[key]) {
+                    return before;
+                } else if (a[key] > b[key]) {
+                    return after;
+                } else {
+                    return 0;
+                }
+            }
+        });
+        for (i = 0, n = esgst[mainKey].length; i < n; ++i) {
+            esgst[mainKey][i].outerWrap.parentElement.appendChild(esgst[mainKey][i].outerWrap);
         }
     }
 
@@ -8634,7 +8728,8 @@ ${avatar.outerHTML}
                 }
                 popup.open();
             });
-            esgst.endlessFeatures.push(checkGedGiveaways.bind(null, button, newGiveaways));
+            esgst.checkGedGiveaways = checkGedGiveaways.bind(null, button, newGiveaways);
+            esgst.endlessFeatures.push(esgst.checkGedGiveaways);
             checkGedGiveaways(button, newGiveaways, document);
         });
         GM_addStyle(`
@@ -8906,24 +9001,6 @@ ${avatar.outerHTML}
         esgst.giveawayFeatures.push(addGwcChances);
     }
 
-    function addGwcSortButton(button) {
-        var i, n;
-        button.addEventListener(`click`, function () {
-            esgst.currentGiveaways.sort(function (a, b) {
-                if (a.chance > b.chance) {
-                    return -1;
-                } else if (a.chance < b.chance) {
-                    return 1;
-                } else {
-                    return 0;
-                }
-            });
-            for (i = 0, n = esgst.currentGiveaways.length; i < n; ++i) {
-                esgst.currentGiveaways[i].outerWrap.parentElement.appendChild(esgst.currentGiveaways[i].outerWrap);
-            }
-        });
-    }
-
     function addGwcChances(giveaways, main, source) {
         var giveaway, i, n;
         for (i = 0, n = giveaways.length; i < n; ++i) {
@@ -9034,6 +9111,7 @@ ${avatar.outerHTML}
             }
         }
         context.setAttribute(`data-ratio`, ratio);
+        giveaway.ratio = ratio;
         if (esgst.enteredPath) {
             context.style.display = `inline-block`;
             html = `
@@ -10829,12 +10907,16 @@ ${avatar.outerHTML}
     function getUgsGiveaways(context, ugs, nextPage, callback) {
         var element, elements, giveaways, heading, i, n, unsent, url;
         if (!ugs.canceled) {
-            ugs.progress.innerHTML = `
-                <i class="fa fa-circle-o-notch fa-spin"></i>
-                <span>Searching for unsent gifts (page ${nextPage})...</span>
-            `;
             ugs.popup.reposition();
             if (context) {
+                if (nextPage === esgst.currentPage) {
+                    ugs.lastPage = getLastPage(context);
+                    ugs.lastPage = ugs.lastPage === 999999999 ? `` : ` of ${ugs.lastPage}`;
+                }
+                ugs.progress.innerHTML = `
+                    <i class="fa fa-circle-o-notch fa-spin"></i>
+                    <span>Searching for unsent gifts (page ${nextPage}${ugs.lastPage})...</span>
+                `;
                 giveaways = [];
                 elements = context.getElementsByClassName(`table__row-outer-wrap`);
                 for (i = 0, n = elements.length; i < n; ++i) {
@@ -10887,10 +10969,6 @@ ${avatar.outerHTML}
 
     function getUgsWinners(code, ugs, nextPage, url, callback) {
         if (!ugs.canceled) {
-            ugs.progress.innerHTML = `
-                <i class="fa fa-circle-o-notch fa-spin"></i>
-                <span>Retrieving winners (page ${nextPage})...</span>
-            `;
             ugs.popup.reposition();
             request(null, false, `${url}${nextPage}`, loadNextUgsWinnersPage.bind(null, code, ugs, nextPage, url, callback));
         }
@@ -10900,6 +10978,14 @@ ${avatar.outerHTML}
         var elements, i, n, pagination, responseHtml, unsent;
         if (!ugs.canceled) {
             responseHtml = DOM.parse(response.responseText);
+            if (nextPage === 1) {
+                ugs.lastWinnersPage = getLastPage(responseHtml);
+                ugs.lastWinnersPage = ugs.lastWinnersPage === 999999999 ? `` : ` of ${ugs.lastWinnersPage}`;
+            }
+            ugs.progress.innerHTML = `
+                <i class="fa fa-circle-o-notch fa-spin"></i>
+                <span>Retrieving winners (page ${nextPage}${ugs.lastWinnersPage})...</span>
+            `;
             elements = responseHtml.getElementsByClassName(`table__row-outer-wrap`);
             for (i = 0, n = elements.length; i < n; ++i) {
                 element = elements[i];
@@ -10941,10 +11027,6 @@ ${avatar.outerHTML}
 
     function getUgsGroups(code, ugs, nextPage, url, callback) {
         if (!ugs.canceled) {
-            ugs.progress.innerHTML = `
-                <i class="fa fa-circle-o-notch fa-spin"></i>
-                <span>Retrieving groups (page ${nextPage})...</span>
-            `;
             ugs.popup.reposition();
             request(null, false, `${url}${nextPage}`, loadNextUgsGroupsPage.bind(null, code, ugs, nextPage, url, callback));
         }
@@ -10954,6 +11036,14 @@ ${avatar.outerHTML}
         var elements, i, match, n, pagination, responseHtml;
         if (!ugs.canceled) {
             responseHtml = DOM.parse(response.responseText);
+            if (nextPage === 1) {
+                ugs.lastGroupsPage = getLastPage(responseHtml);
+                ugs.lastGroupsPage = ugs.lastGroupsPage === 999999999 ? `` : ` of ${ugs.lastGroupsPage}`;
+            }
+            ugs.progress.innerHTML = `
+                <i class="fa fa-circle-o-notch fa-spin"></i>
+                <span>Retrieving groups (page ${nextPage}${ugs.lastGroupsPage})...</span>
+            `;
             elements = responseHtml.getElementsByClassName(`table__column__heading`);
             for (i = 0, n = elements.length; i < n; ++i) {
                 match = elements[i].getAttribute(`href`).match(/\/group\/(.+?)\/(.+)/);
@@ -11386,6 +11476,7 @@ ${avatar.outerHTML}
     }
 
     function checkErResult(er, callback, games, result) {
+        result = 1;
         switch (result) {
             case 1:
                 er.games = games;
@@ -11418,11 +11509,15 @@ ${avatar.outerHTML}
     function checkErEntries(context, er, nextPage, url, callback) {
         var elements, n;
         if (!er.canceled) {
-            er.progress.innerHTML = `
-                <i class="fa fa-circle-o-notch fa-spin"></i>
-                <span>Removing entries (page ${nextPage})...</span>
-            `;
             if (context) {
+                if ((esgst.enteredPath && nextPage === 1) || (!esgst.enteredPath && nextPage === 2)) {
+                    er.lastPage = getLastPage(context);
+                    er.lastPage = er.lastPage === 999999999 ? `` : ` of ${er.lastPage}`;
+                }
+                er.progress.innerHTML = `
+                    <i class="fa fa-circle-o-notch fa-spin"></i>
+                    <span>Removing entries (page ${nextPage}${er.lastPage})...</span>
+                `;
                 elements = context.getElementsByClassName(`table__remove-default`);
                 n = elements.length;
                 if (n > 0) {
@@ -12516,22 +12611,32 @@ ${avatar.outerHTML}
 
     /* [DS] Discussions Sorter */
 
-    function addDsButton(button) {
-        var i, n;
-        button.addEventListener(`click`, function () {
-            esgst.discussions.sort(function (a, b) {
-                if (a.createdTime > b.createdTime) {
-                    return -1;
-                } else if (a.createdTime < b.createdTime) {
-                    return 1;
-                } else {
-                    return 0;
-                }
-            });
-            for (i = 0, n = esgst.discussions.length; i < n; ++i) {
-                esgst.discussions[i].outerWrap.parentElement.appendChild(esgst.discussions[i].outerWrap);
-            }
-        });
+     function openDsPopout(ds) {
+        if (!ds.popout) {
+            ds.popout = createPopout_v6(`esgst-ds-popout`, true);
+            ds.toggle = createToggleSwitch(ds.popout.popout, null, true, `Enable`);
+            ds.options = insertHtml(ds.popout.popout, `beforeEnd`, `
+                <select>
+                    <option value="title_asc">Title - Ascending</option>
+                    <option value="title_desc">Title - Descending</option>
+                    <option value="category_asc">Category - Ascending</option>
+                    <option value="category_desc">Category - Descending</option>
+                    <option value="createdTime_asc">Created Time - Ascending</option>
+                    <option value="createdTime_desc">Created Time - Descending</option>
+                    <option value="author_asc">Author - Ascending</option>
+                    <option value="author_desc">Author - Descending</option>
+                    <option value="comments_asc">Comments - Ascending</option>
+                    <option value="comments_desc">Comments - Descending</option>
+                </select>
+            `);
+            ds.toggle.onEnabled = sortContent.bind(null, `currentDiscussions`, ds.options);
+            ds.options.addEventListener(`change`, sortContent.bind(null, `currentDiscussions`, ds.options));
+        }
+        if (ds.popout.popout.classList.contains(`esgst-hidden`)) {
+            ds.popout.open(ds.button);
+        } else {
+            ds.popout.close();
+        }
     }
 
     /* [DH] Discussions Highlighter */
@@ -12886,7 +12991,7 @@ ${avatar.outerHTML}
 
     function autoBumpTbTrades(button) {
         if (location.href.match(new RegExp(`\\/trades\\/search\\?user=${esgst.steamId}`))) {
-            getTbTrades(button, document, setTimeout.bind(null, setTbAutoBump, 3900000, button));
+            getTbTrades(button, document);
         } else {
             request(null, true, `https://www.steamtrades.com/trades/search?user=${esgst.steamId}`, loadTbTrades.bind(null, button));
         }
@@ -21003,10 +21108,6 @@ ${avatar.outerHTML}
 
     function searchCsComments(cs, nextPage, url, callback) {
         if (!cs.canceled) {
-            cs.progress.innerHTML = `
-                <i class="fa fa-circle-o-notch fa-spin"></i>
-                <span>Searching comments (page ${nextPage})...</span>
-            `;
             request(null, false, `${url}${nextPage}`, getNextCsPage.bind(null, cs, nextPage, url, callback));
         }
     }
@@ -21015,6 +21116,14 @@ ${avatar.outerHTML}
         var comments, element, elements, html, i, n, pagination, parent;
         if (!cs.canceled) {
             responseHtml = DOM.parse(response.responseText);
+            if (nextPage === 1) {
+                cs.lastPage = getLastPage(responseHtml, false, esgst.discussionPath);
+                cs.lastPage = cs.lastPage === 999999999 ? `` : ` of ${cs.lastPage}`;
+            }
+            cs.progress.innerHTML = `
+                <i class="fa fa-circle-o-notch fa-spin"></i>
+                <span>Searching comments (page ${nextPage}${cs.lastPage})...</span>
+            `;
             comments = responseHtml.getElementsByClassName(`comments`);
             comments = comments[1] || comments[0];
             elements = comments.querySelectorAll(`.comment:not(.comment--submit), .comment_outer`);
@@ -21135,7 +21244,8 @@ ${avatar.outerHTML}
             MR.Container = MR.Comment.getElementsByClassName(esgst.sg ? "comment__summary" : "comment_inner")[0];
             MR.Timestamp = MR.Context.firstElementChild;
             ReplyButton = MR.Context.getElementsByClassName(esgst.sg ? "js__comment-reply" : "js_comment_reply")[0];
-            Permalink = MR.Context.lastElementChild;
+            Permalink = MR.Context.querySelectorAll(`[href*="/go/comment/"]`);
+            Permalink = Permalink[Permalink.length - 1];
             if (ReplyButton || window.location.pathname.match(/^\/messages/)) {
                 if (ReplyButton) {
                     ReplyButton.remove();
@@ -21144,7 +21254,7 @@ ${avatar.outerHTML}
                         MR.URL = Permalink.getAttribute("href");
                     }
                 } else {
-                    MR.URL = Permalink.getAttribute("href");
+                    MR.URL = Permalink.getAttribute("href");                    
                     MR.Comment.insertAdjacentHTML("beforeEnd", "<div class=\"comment__children comment_children\"></div>");
                 }
                 if (esgst.sg) {
@@ -21155,7 +21265,7 @@ ${avatar.outerHTML}
                     }
                     MR.Username = MR.Comment.getElementsByClassName("author_name")[0].textContent;
                 }
-                MR.Timestamp.insertAdjacentHTML("afterEnd", "<a class=\"comment__actions__button MRReply\">Reply</a>");
+                MR.Timestamp.insertAdjacentHTML("afterEnd", "<a class=\"comment__actions__button esgst-mr-reply\">Reply</a>");
                 MR.Timestamp.nextElementSibling.addEventListener("click", function () {
                     if (!MR.Box) {
                         addMRBox(MR);
@@ -21166,6 +21276,8 @@ ${avatar.outerHTML}
             }
             MR.Children = MR.Comment.getElementsByClassName(esgst.sg ? "comment__children" : "comment_children")[0];
             setMREdit(MR);
+            setMrDelete(MR);
+            setMrUndelete(MR);
         }
     }
 
@@ -21216,6 +21328,9 @@ ${avatar.outerHTML}
                 if (ReplyID) {
                     MR.Box.remove();
                     Reply = DOM.parse(Response.responseText).getElementById(ReplyID[1]).closest(".comment");
+                    if (esgst.rfi && esgst.rfi_s && esgst.inboxPath) {
+                        saveRfiReply(ReplyID[1], Reply.outerHTML, MR.URL);
+                    }
                     addRMLLink(MR.Container, [Reply]);
                     loadEndlessFeatures(Reply);
                     MR.Children.appendChild(Reply);
@@ -21230,6 +21345,9 @@ ${avatar.outerHTML}
                 if (ResponseJSON.success) {
                     MR.Box.remove();
                     Reply = DOM.parse(ResponseJSON.html).getElementsByClassName("comment_outer")[0];
+                    if (esgst.rfi && esgst.rfi_s && esgst.inboxPath) {
+                        saveRfiReply(Reply.id, Reply.outerHTML, MR.URL);
+                    }
                     addRMLLink(MR.Container, [Reply]);
                     loadEndlessFeatures(Reply);
                     MR.Children.appendChild(Reply);
@@ -21247,16 +21365,75 @@ ${avatar.outerHTML}
         });
     }
 
+    function saveRfiReply(id, reply, url, edit) {
+        var i, n, source, saved;
+        if (url) {
+            source = url.match(/\/comment\/(.+)/)[1];
+        }
+        saved = JSON.parse(GM_getValue(`rfi_replies_${esgst.name}`, `{}`));
+        if (edit) {
+            for (key in saved) {
+                for (i = 0, n = saved[key].length; i < n && saved[key][i].id !== id; ++i);
+                if (i < n) {
+                    saved[key][i].reply = reply;
+                    saved[key][i].timestamp = Date.now();
+                }
+            }
+        } else {
+            if (!saved[source]) {
+                saved[source] = [];
+            }
+            saved[source].push({
+                id: id,
+                reply: reply,
+                timestamp: Date.now()
+            });
+        }
+        GM_setValue(`rfi_replies_${esgst.name}`, JSON.stringify(saved));
+    }
+
+    function getRfiReplies(comments, main) {
+        var children, comment, i, id, ids, j, key, n, numReplies, saved, toDelte;
+        ids = [];
+        saved = JSON.parse(GM_getValue(`rfi_replies_${esgst.name}`, `{}`));
+        for (i = 0, n = comments.length; i < n; ++i) {
+            comment = comments[i];
+            id = comment.id;
+            if (id && saved[id]) {
+                children = comment.comment.closest(`.comment, .comment_outer`).querySelector(`.comment__children, .comment_children`);
+                for (j = 0, numReplies = saved[id].length; j < numReplies; ++j) {
+                    children.insertAdjacentHTML(`beforeEnd`, saved[id][j].reply);
+                }
+                if (main) {
+                    loadEndlessFeatures(children);
+                }
+            }
+        }
+        for (key in saved) {
+            for (i = 0, n = saved[key].length; i < n; ++i) {
+                if (Date.now() - saved[key][i].timestamp > 604800000) {
+                    saved[key].splice(i, 1);
+                    i -= 1;
+                    n -= 1;
+                }
+            }
+            if (!saved[key].length) {
+                delete saved[key];
+            }
+        }
+        GM_setValue(`rfi_replies_${esgst.name}`, JSON.stringify(saved));
+    }
+
     function setMREdit(MR) {
         var DisplayState, EditState, EditSave, ID, AllowReplies, Description;
         MR.Edit = MR.Context.getElementsByClassName(esgst.sg ? "js__comment-edit" : "js_comment_edit")[0];
         if (MR.Edit) {
-            MR.Edit.insertAdjacentHTML("afterEnd", "<a class=\"comment__actions__button MREdit\">Edit</a>");
+            MR.Edit.insertAdjacentHTML("afterEnd", "<a class=\"comment__actions__button esgst-mr-edit\">Edit</a>");
             MR.Edit = MR.Edit.nextElementSibling;
             MR.Edit.previousElementSibling.remove();
             DisplayState = MR.Comment.getElementsByClassName(esgst.sg ? "comment__display-state" : "comment_body_default")[0];
             EditState = MR.Comment.getElementsByClassName(esgst.sg ? "comment__edit-state" : "edit_form")[0];
-            EditSave = EditState.getElementsByClassName(esgst.sg ? "js__comment-edit-save" : "js_submit")[0];
+            EditSave = EditState.querySelector(`.js__comment-edit-save, .js_submit, .EditSave`);
             EditSave.insertAdjacentHTML(
                 "afterEnd",
                 "<a class=\"comment__submit-button btn_action white EditSave\">" +
@@ -21290,11 +21467,29 @@ ${avatar.outerHTML}
                         ResponseJSON = JSON.parse(Response.responseText);
                         if (ResponseJSON.type == "success" || ResponseJSON.success) {
                             ResponseHTML = DOM.parse(ResponseJSON[esgst.sg ? "comment" : "html"]);
+                            if (esgst.rfi && esgst.rfi_s && esgst.inboxPath) {
+                                var reply = MR.Comment.cloneNode(true);
+                                if (esgst.sg) {
+                                    reply.innerHTML = `
+                                        <div class="ajax comment__child">${ResponseHTML.body.innerHTML}</div>
+                                        <div class="comment__children"></div>
+                                    `;
+                                } else {
+                                    reply.innerHTML = `
+                                        ${ResponseHTML.body.innerHTML}
+                                        <div class="comment_children"></div>
+                                    `;
+                                }
+                                saveRfiReply(MR.URL.match(/\/comment\/(.+)/)[1], reply.outerHTML, null, true);
+                            }
                             DisplayState.innerHTML = ResponseHTML.getElementsByClassName(esgst.sg ? "comment__display-state" : "comment_body_default")[0].innerHTML;
                             EditState.classList.add(esgst.sg ? "is-hidden" : "is_hidden");
                             MR.Timestamp.innerHTML = ResponseHTML.getElementsByClassName(esgst.sg ? "comment__actions" : "action_list")[0].firstElementChild.innerHTML;
                             if (esgst.at) {
                                 getTimestamps(MR.Timestamp);
+                            }
+                            if (esgst.ged) {
+                                esgst.checkGedGiveaways(MR.Container);
                             }
                             if (esgst.sg) {
                                 DisplayState.classList.remove("is-hidden");
@@ -21305,6 +21500,71 @@ ${avatar.outerHTML}
                         }
                     });
             });
+        }
+    }
+
+    function setMrDelete(mr) {
+        var allowReplies, data, id;
+        mr.delete = mr.Context.getElementsByClassName(esgst.sg ? `js__comment-delete` : `js_comment_delete`)[0];
+        if (mr.delete) {
+            if (esgst.sg) {
+                allowReplies = mr.delete.parentElement.querySelector("[name='allow_replies']").value;
+                id = mr.delete.parentElement.querySelector("[name='comment_id']").value;
+                data = `xsrf_token=${esgst.xsrfToken}&do=comment_delete&allow_replies=${allowReplies}&comment_id=${id}`;
+            } else {
+                data = mr.delete.getAttribute(`data-form`);
+            }
+            mr.delete.insertAdjacentHTML("afterEnd", "<a class=\"comment__actions__button esgst-mr-delete\">Delete</a>");
+            mr.delete = mr.delete.nextElementSibling;
+            mr.delete.previousElementSibling.remove();
+            mr.delete.addEventListener(`click`, request.bind(null, data, false, `/ajax.php`, editMrReply.bind(null, mr)));
+        }
+    }
+
+    function setMrUndelete(mr) {
+        var allowReplies, data, id;
+        mr.undelete = mr.Context.getElementsByClassName(esgst.sg ? `js__comment-undelete` : `js_comment_undelete`)[0];
+        if (mr.undelete) {
+            if (esgst.sg) {
+                allowReplies = mr.undelete.parentElement.querySelector("[name='allow_replies']").value;
+                id = mr.undelete.parentElement.querySelector("[name='comment_id']").value;
+                data = `xsrf_token=${esgst.xsrfToken}&do=comment_undelete&allow_replies=${allowReplies}&comment_id=${id}`;
+            } else {
+                data = mr.undelete.getAttribute(`data-form`);
+            }
+            mr.undelete.insertAdjacentHTML("afterEnd", "<a class=\"comment__actions__button esgst-mr-undelete\">Undelete</a>");
+            mr.undelete = mr.undelete.nextElementSibling;
+            mr.undelete.previousElementSibling.remove();
+            mr.undelete.addEventListener(`click`, request.bind(null, data, false, `/ajax.php`, editMrReply.bind(null, mr)));
+        }
+    }
+    
+    function editMrReply(mr, response) {
+        var responseHtml, responseJson;
+        responseJson = JSON.parse(response.responseText);
+        if (responseJson.type === `success` || responseJson.success) {
+            responseHtml = DOM.parse(responseJson[esgst.sg ? `comment` : `html`]);
+            if (esgst.sg) {
+                mr.Container.innerHTML = responseHtml.getElementsByClassName(`comment__summary`)[0].innerHTML;
+            } else {
+                mr.Container.innerHTML = responseHtml.getElementsByClassName(`comment_inner`)[0].innerHTML;
+            }
+            if (esgst.rfi && esgst.rfi_s && esgst.inboxPath) {
+                var reply = mr.Comment.cloneNode(true);
+                if (esgst.sg) {
+                    reply.innerHTML = `
+                        <div class="ajax comment__child">${responseHtml.body.innerHTML}</div>
+                        <div class="comment__children"></div>
+                    `;
+                } else {
+                    reply.innerHTML = `
+                        ${responseHtml.body.innerHTML}
+                        <div class="comment_children"></div>
+                    `;
+                }
+                saveRfiReply(mr.URL.match(/\/comment\/(.+)/)[1], reply.outerHTML, null, true);
+            }
+            loadEndlessFeatures(mr.Container);
         }
     }
 
@@ -22662,41 +22922,47 @@ ${avatar.outerHTML}
 
     function getUGDGiveaways(UGD, ugd, NextPage, CurrentPage, CurrentContext, URL, Callback, Context) {
         var Giveaways, I, NumGiveaways, Giveaway, Found, Pagination;
-        if (Context) {
-            Giveaways = Context.getElementsByClassName("giveaway__row-outer-wrap");
-            for (I = 0, NumGiveaways = Giveaways.length; I < NumGiveaways; ++I) {
-                Giveaway = getGiveawayInfo(Giveaways[I], document, null, null, true).data;
-                if (Giveaway.endTime < (new Date().getTime())) {
-                    if (!UGD.Timestamp) {
-                        UGD.Timestamp = Giveaway.endTime;
-                    }
-                    if (Giveaway.endTime > ugd[UGD.Key + "Timestamp"]) {
-                        if (Giveaway.gameSteamId) {
-                            if (!ugd[UGD.Key][Giveaway.gameType][Giveaway.gameSteamId]) {
-                                ugd[UGD.Key][Giveaway.gameType][Giveaway.gameSteamId] = [];
-                            }
-                            ugd[UGD.Key][Giveaway.gameType][Giveaway.gameSteamId].push(Giveaway);
+        if (!UGD.Canceled) {
+            if (Context) {
+                if (NextPage === 2) {
+                    UGD.lastPage = getLastPage(Context, false, false, true, UGD.Key === `won`);
+                    UGD.lastPage = UGD.lastPage === 999999999 ? `` : ` of ${UGD.lastPage}`;
+                }
+                UGD.Progress.innerHTML =
+                    "<i class=\"fa fa-circle-o-notch fa-spin\"></i> " +
+                    "<span>Retrieving giveaways (page " + NextPage + UGD.lastPage + ")...</span>";
+                Giveaways = Context.getElementsByClassName("giveaway__row-outer-wrap");
+                for (I = 0, NumGiveaways = Giveaways.length; I < NumGiveaways; ++I) {
+                    Giveaway = getGiveawayInfo(Giveaways[I], document, null, null, true).data;
+                    if (Giveaway.endTime < (new Date().getTime())) {
+                        if (!UGD.Timestamp) {
+                            UGD.Timestamp = Giveaway.endTime;
                         }
-                    } else {
-                        Found = true;
-                        break;
+                        if (Giveaway.endTime > ugd[UGD.Key + "Timestamp"]) {
+                            if (Giveaway.gameSteamId) {
+                                if (!ugd[UGD.Key][Giveaway.gameType][Giveaway.gameSteamId]) {
+                                    ugd[UGD.Key][Giveaway.gameType][Giveaway.gameSteamId] = [];
+                                }
+                                ugd[UGD.Key][Giveaway.gameType][Giveaway.gameSteamId].push(Giveaway);
+                            }
+                        } else {
+                            Found = true;
+                            break;
+                        }
                     }
                 }
+                Pagination = Context.getElementsByClassName("pagination__navigation")[0];
+                if (!Found && Pagination && !Pagination.lastElementChild.classList.contains("is-selected")) {
+                    window.setTimeout(getUGDGiveaways, 0, UGD, ugd, NextPage, CurrentPage, CurrentContext, URL, Callback);
+                } else {
+                    ugd[UGD.Key + "Timestamp"] = UGD.Timestamp;
+                    Callback(ugd);
+                }
+            } else if (!UGD.Canceled) {
+                queueRequest(UGD, null, URL + NextPage, function (Response) {
+                    window.setTimeout(getUGDGiveaways, 0, UGD, ugd, ++NextPage, CurrentPage, CurrentContext, URL, Callback, DOM.parse(Response.responseText));
+                });
             }
-            Pagination = Context.getElementsByClassName("pagination__navigation")[0];
-            if (!Found && Pagination && !Pagination.lastElementChild.classList.contains("is-selected")) {
-                window.setTimeout(getUGDGiveaways, 0, UGD, ugd, NextPage, CurrentPage, CurrentContext, URL, Callback);
-            } else {
-                ugd[UGD.Key + "Timestamp"] = UGD.Timestamp;
-                Callback(ugd);
-            }
-        } else if (!UGD.Canceled) {
-            UGD.Progress.innerHTML =
-                "<i class=\"fa fa-circle-o-notch fa-spin\"></i> " +
-                "<span>Retrieving giveaways (page " + NextPage + ")...</span>";
-            queueRequest(UGD, null, URL + NextPage, function (Response) {
-                window.setTimeout(getUGDGiveaways, 0, UGD, ugd, ++NextPage, CurrentPage, CurrentContext, URL, Callback, DOM.parse(Response.responseText));
-            });
         }
     }
 
@@ -23158,42 +23424,48 @@ ${avatar.outerHTML}
 
     function searchNRFUser(NRF, username, NextPage, CurrentPage, URL, Callback, Context) {
         var Matches, I, N, Match, Pagination;
-        if (Context) {
-            Matches = Context.querySelectorAll("div.giveaway__column--negative");
-            for (I = 0, N = Matches.length; I < N; ++I) {
-                NRF.I += Matches[I].querySelectorAll("a[href*='/user/']").length;
-                NRF.Results.appendChild(Matches[I].closest(".giveaway__row-outer-wrap").cloneNode(true));
-                NRF.Popup.reposition();
-            }
-            NRF.OverallProgress.innerHTML = NRF.I + " of " + NRF.N + " not received giveaways found...";
-            if (NRF.I < NRF.N) {
-                if (NRF.FS.checked) {
-                    Matches = Context.getElementsByClassName("giveaway__heading__thin");
-                    for (I = 0, N = Matches.length; I < N; ++I) {
-                        Match = Matches[I].textContent.match(/\((.+) Copies\)/);
-                        if (Match && (parseInt(Match[1]) > 3)) {
-                            NRF.Multiple.push(Matches[I].closest(".giveaway__row-outer-wrap").cloneNode(true));
+        if (!NRF.Canceled) {
+            if (Context) {
+                if (NextPage === 2) {
+                    NRF.lastPage = getLastPage(Context, false, false, true);
+                    NRF.lastPage = NRF.lastPage === 999999999 ? `` : ` of ${NRF.lastPage}`;
+                }
+                NRF.Progress.innerHTML =
+                    "<i class=\"fa fa-circle-o-notch fa-spin\"></i> " +
+                    "<span>Searching " + username + "'s giveaways (page " + NextPage + NRF.lastPage + ")...</span>";
+                Matches = Context.querySelectorAll("div.giveaway__column--negative");
+                for (I = 0, N = Matches.length; I < N; ++I) {
+                    NRF.I += Matches[I].querySelectorAll("a[href*='/user/']").length;
+                    NRF.Results.appendChild(Matches[I].closest(".giveaway__row-outer-wrap").cloneNode(true));
+                    NRF.Popup.reposition();
+                }
+                NRF.OverallProgress.innerHTML = NRF.I + " of " + NRF.N + " not received giveaways found...";
+                if (NRF.I < NRF.N) {
+                    if (NRF.FS.checked) {
+                        Matches = Context.getElementsByClassName("giveaway__heading__thin");
+                        for (I = 0, N = Matches.length; I < N; ++I) {
+                            Match = Matches[I].textContent.match(/\((.+) Copies\)/);
+                            if (Match && (parseInt(Match[1]) > 3)) {
+                                NRF.Multiple.push(Matches[I].closest(".giveaway__row-outer-wrap").cloneNode(true));
+                            }
                         }
                     }
-                }
-                Pagination = Context.getElementsByClassName("pagination__navigation")[0];
-                if (Pagination && !Pagination.lastElementChild.classList.contains("is-selected")) {
-                    window.setTimeout(searchNRFUser, 0, NRF, username, NextPage, CurrentPage, URL, Callback);
-                } else if (NRF.FS.checked && NRF.Multiple.length) {
-                    window.setTimeout(searchNRFMultiple, 0, NRF, 0, NRF.Multiple.length, Callback);
+                    Pagination = Context.getElementsByClassName("pagination__navigation")[0];
+                    if (Pagination && !Pagination.lastElementChild.classList.contains("is-selected")) {
+                        window.setTimeout(searchNRFUser, 0, NRF, username, NextPage, CurrentPage, URL, Callback);
+                    } else if (NRF.FS.checked && NRF.Multiple.length) {
+                        window.setTimeout(searchNRFMultiple, 0, NRF, 0, NRF.Multiple.length, Callback);
+                    } else {
+                        Callback();
+                    }
                 } else {
                     Callback();
                 }
-            } else {
-                Callback();
+            } else if (!NRF.Canceled) {
+                queueRequest(NRF, null, URL + NextPage, function (Response) {
+                    window.setTimeout(searchNRFUser, 0, NRF, username, ++NextPage, CurrentPage, URL, Callback, DOM.parse(Response.responseText));
+                });
             }
-        } else if (!NRF.Canceled) {
-            NRF.Progress.innerHTML =
-                "<i class=\"fa fa-circle-o-notch fa-spin\"></i> " +
-                "<span>Searching " + username + "'s giveaways (page " + NextPage + ")...</span>";
-            queueRequest(NRF, null, URL + NextPage, function (Response) {
-                window.setTimeout(searchNRFUser, 0, NRF, username, ++NextPage, CurrentPage, URL, Callback, DOM.parse(Response.responseText));
-            });
         }
     }
 
@@ -23744,95 +24016,101 @@ ${avatar.outerHTML}
 
     function getWBCGiveaways(WBC, wbc, username, NextPage, CurrentPage, URL, Callback, Context) {
         var Giveaway, Pagination;
-        if (Context) {
-            if (!wbc.giveaway) {
-                Giveaway = Context.querySelector("[class='giveaway__heading__name'][href*='/giveaway/']");
-                wbc.giveaway = Giveaway ? Giveaway.getAttribute("href") : null;
-            }
-            Pagination = Context.getElementsByClassName("pagination__navigation")[0];
-            Giveaway = Context.getElementsByClassName("giveaway__summary")[0];
-            if (Giveaway && (WBC.Timestamp === 0)) {
-                WBC.Timestamp = parseInt(Giveaway.querySelector("[data-timestamp]").getAttribute("data-timestamp"));
-                if (WBC.Timestamp >= (new Date().getTime())) {
-                    WBC.Timestamp = 0;
+        if (!WBC.Canceled) {
+            if (Context) {
+                if (NextPage === 2) {
+                    WBC.lastPage = getLastPage(Context, false, false, true);
+                    WBC.lastPage = WBC.lastPage === 999999999 ? `` : ` of ${WBC.lastPage}`;
                 }
-            }
-            if (wbc.giveaway) {
-                checkWBCGiveaway(WBC, wbc, function (wbc, stop) {
-                    var WhitelistGiveaways, I, N, GroupGiveaway;
-                    if ((wbc.result === `notBlacklisted`) && !stop && (WBC.FC.checked || !WBC.B)) {
-                        WhitelistGiveaways = Context.getElementsByClassName("giveaway__column--whitelist");
-                        for (I = 0, N = WhitelistGiveaways.length; (I < N) && !wbc.whitelistGiveaway; ++I) {
-                            GroupGiveaway = WhitelistGiveaways[I].parentElement.getElementsByClassName("giveaway__column--group")[0];
-                            if (GroupGiveaway) {
-                                WBC.GroupGiveaways.push(GroupGiveaway.getAttribute("href"));
-                            } else {
-                                wbc.whitelistGiveaway = WhitelistGiveaways[I].closest(".giveaway__summary").getElementsByClassName("giveaway__heading__name")[0].getAttribute("href");
-                            }
-                        }
-                        if (wbc.whitelistGiveaway) {
-                            checkWBCGiveaway(WBC, wbc, Callback);
-                        } else if (((WBC.Timestamp >= wbc.timestamp) || (WBC.Timestamp === 0)) && Pagination && !Pagination.lastElementChild.classList.contains("is-selected")) {
-                            window.setTimeout(getWBCGiveaways, 0, WBC, wbc, username, NextPage, CurrentPage, URL, Callback);
-                        } else if ((wbc.groupGiveaways && wbc.groupGiveaways.length) || WBC.GroupGiveaways.length) {
-                            getWBCGroupGiveaways(WBC, 0, WBC.GroupGiveaways.length, wbc, username, function (wbc, Result) {
-                                var Groups, GroupGiveaways, Found, J, NumGroups;
-                                if (Result) {
-                                    Callback(wbc);
+                WBC.Progress.innerHTML =
+                    "<i class=\"fa fa-circle-o-notch fa-spin\"></i> " +
+                    "<span>Retrieving " + username + "'s giveaways (page " + NextPage + WBC.lastPage + ")...</span>";
+                if (!wbc.giveaway) {
+                    Giveaway = Context.querySelector("[class='giveaway__heading__name'][href*='/giveaway/']");
+                    wbc.giveaway = Giveaway ? Giveaway.getAttribute("href") : null;
+                }
+                Pagination = Context.getElementsByClassName("pagination__navigation")[0];
+                Giveaway = Context.getElementsByClassName("giveaway__summary")[0];
+                if (Giveaway && (WBC.Timestamp === 0)) {
+                    WBC.Timestamp = parseInt(Giveaway.querySelector("[data-timestamp]").getAttribute("data-timestamp"));
+                    if (WBC.Timestamp >= (new Date().getTime())) {
+                        WBC.Timestamp = 0;
+                    }
+                }
+                if (wbc.giveaway) {
+                    checkWBCGiveaway(WBC, wbc, function (wbc, stop) {
+                        var WhitelistGiveaways, I, N, GroupGiveaway;
+                        if ((wbc.result === `notBlacklisted`) && !stop && (WBC.FC.checked || !WBC.B)) {
+                            WhitelistGiveaways = Context.getElementsByClassName("giveaway__column--whitelist");
+                            for (I = 0, N = WhitelistGiveaways.length; (I < N) && !wbc.whitelistGiveaway; ++I) {
+                                GroupGiveaway = WhitelistGiveaways[I].parentElement.getElementsByClassName("giveaway__column--group")[0];
+                                if (GroupGiveaway) {
+                                    WBC.GroupGiveaways.push(GroupGiveaway.getAttribute("href"));
                                 } else {
-                                    Groups = JSON.parse(GM_getValue(`groups`, `{}`));
-                                    for (GroupGiveaway in wbc.groupGiveaways) {
-                                        Found = false;
-                                        GroupGiveaways = wbc.groupGiveaways[GroupGiveaway];
-                                        for (I = 0, N = GroupGiveaways.length; (I < N) && !Found; ++I) {
-                                            if (Groups[GroupGiveaways[I]] && Groups[GroupGiveaways[I]].member) {
-                                                Found = true;
-                                            }
-                                        }
-                                        if (!Found) {
-                                            break;
-                                        }
-                                    }
-                                    if (Found) {
+                                    wbc.whitelistGiveaway = WhitelistGiveaways[I].closest(".giveaway__summary").getElementsByClassName("giveaway__heading__name")[0].getAttribute("href");
+                                }
+                            }
+                            if (wbc.whitelistGiveaway) {
+                                checkWBCGiveaway(WBC, wbc, Callback);
+                            } else if (((WBC.Timestamp >= wbc.timestamp) || (WBC.Timestamp === 0)) && Pagination && !Pagination.lastElementChild.classList.contains("is-selected")) {
+                                window.setTimeout(getWBCGiveaways, 0, WBC, wbc, username, NextPage, CurrentPage, URL, Callback);
+                            } else if ((wbc.groupGiveaways && wbc.groupGiveaways.length) || WBC.GroupGiveaways.length) {
+                                getWBCGroupGiveaways(WBC, 0, WBC.GroupGiveaways.length, wbc, username, function (wbc, Result) {
+                                    var Groups, GroupGiveaways, Found, J, NumGroups;
+                                    if (Result) {
                                         Callback(wbc);
                                     } else {
-                                        wbc.result = "whitelisted";
-                                        Callback(wbc);
+                                        Groups = JSON.parse(GM_getValue(`groups`, `{}`));
+                                        for (GroupGiveaway in wbc.groupGiveaways) {
+                                            Found = false;
+                                            GroupGiveaways = wbc.groupGiveaways[GroupGiveaway];
+                                            for (I = 0, N = GroupGiveaways.length; (I < N) && !Found; ++I) {
+                                                if (Groups[GroupGiveaways[I]] && Groups[GroupGiveaways[I]].member) {
+                                                    Found = true;
+                                                }
+                                            }
+                                            if (!Found) {
+                                                break;
+                                            }
+                                        }
+                                        if (Found) {
+                                            Callback(wbc);
+                                        } else {
+                                            wbc.result = "whitelisted";
+                                            Callback(wbc);
+                                        }
                                     }
-                                }
-                            });
+                                });
+                            } else {
+                                Callback(wbc);
+                            }
                         } else {
                             Callback(wbc);
                         }
-                    } else {
-                        Callback(wbc);
-                    }
-                });
-            } else if (((WBC.Timestamp >= wbc.timestamp) || (WBC.Timestamp === 0)) && Pagination && !Pagination.lastElementChild.classList.contains("is-selected")) {
-                window.setTimeout(getWBCGiveaways, 0, WBC, wbc, username, NextPage, CurrentPage, URL, Callback);
-            } else {
-                wbc.result = "unknown";
-                wbc.lastCheck = Date.now();
-                wbc.timestamp = WBC.Timestamp;
-                Callback(wbc);
-            }
-        } else if (!WBC.Canceled) {
-            WBC.Progress.innerHTML =
-                "<i class=\"fa fa-circle-o-notch fa-spin\"></i> " +
-                "<span>Retrieving " + username + "'s giveaways (page " + NextPage + ")...</span>";
-            if (CurrentPage != NextPage) {
-                queueRequest(WBC, null, URL + NextPage, function (Response) {
-                    if (Response.finalUrl.match(/\/user\//)) {
-                        window.setTimeout(getWBCGiveaways, 0, WBC, wbc, username, ++NextPage, CurrentPage, URL, Callback, DOM.parse(Response.responseText));
-                    } else {
-                        wbc.result = "unknown";
-                        wbc.lastCheck = Date.now();
-                        wbc.timestamp = WBC.Timestamp;
-                        Callback(wbc);
-                    }
-                });
-            } else {
-                window.setTimeout(getWBCGiveaways, 0, WBC, wbc, username, ++NextPage, CurrentPage, URL, Callback, document);
+                    });
+                } else if (((WBC.Timestamp >= wbc.timestamp) || (WBC.Timestamp === 0)) && Pagination && !Pagination.lastElementChild.classList.contains("is-selected")) {
+                    window.setTimeout(getWBCGiveaways, 0, WBC, wbc, username, NextPage, CurrentPage, URL, Callback);
+                } else {
+                    wbc.result = "unknown";
+                    wbc.lastCheck = Date.now();
+                    wbc.timestamp = WBC.Timestamp;
+                    Callback(wbc);
+                }
+            } else if (!WBC.Canceled) {
+                if (CurrentPage != NextPage) {
+                    queueRequest(WBC, null, URL + NextPage, function (Response) {
+                        if (Response.finalUrl.match(/\/user\//)) {
+                            window.setTimeout(getWBCGiveaways, 0, WBC, wbc, username, ++NextPage, CurrentPage, URL, Callback, DOM.parse(Response.responseText));
+                        } else {
+                            wbc.result = "unknown";
+                            wbc.lastCheck = Date.now();
+                            wbc.timestamp = WBC.Timestamp;
+                            Callback(wbc);
+                        }
+                    });
+                } else {
+                    window.setTimeout(getWBCGiveaways, 0, WBC, wbc, username, ++NextPage, CurrentPage, URL, Callback, document);
+                }
             }
         }
     }
@@ -23899,33 +24177,39 @@ ${avatar.outerHTML}
 
     function getWBCUsers(WBC, NextPage, CurrentPage, URL, Callback, Context) {
         var Matches, I, N, Match, Username, Pagination;
-        if (Context) {
-            Matches = Context.querySelectorAll("a[href*='/user/']");
-            for (I = 0, N = Matches.length; I < N; ++I) {
-                Match = Matches[I].getAttribute("href").match(/\/user\/(.+)/);
-                if (Match) {
-                    Username = Match[1];
-                    if ((WBC.Users.indexOf(Username) < 0) && (Username != WBC.Username) && (Username == Matches[I].textContent) && !Matches[I].closest(".markdown")) {
-                        WBC.Users.push(Username);
+        if (!WBC.Canceled) {
+            if (Context) {
+                if (NextPage === 2) {
+                    WBC.lastPage = getLastPage(Context, true);
+                    WBC.lastPage = WBC.lastPage === 999999999 ? `` : ` of ${WBC.lastPage}`;
+                }
+                WBC.Progress.innerHTML =
+                    "<i class=\"fa fa-circle-o-notch fa-spin\"></i> " +
+                    "<span>Retrieving users (page " + NextPage + WBC.lastPage + ")...</span>";
+                Matches = Context.querySelectorAll("a[href*='/user/']");
+                for (I = 0, N = Matches.length; I < N; ++I) {
+                    Match = Matches[I].getAttribute("href").match(/\/user\/(.+)/);
+                    if (Match) {
+                        Username = Match[1];
+                        if ((WBC.Users.indexOf(Username) < 0) && (Username != WBC.Username) && (Username == Matches[I].textContent) && !Matches[I].closest(".markdown")) {
+                            WBC.Users.push(Username);
+                        }
                     }
                 }
-            }
-            Pagination = Context.getElementsByClassName("pagination__navigation")[0];
-            if (Pagination && !Pagination.lastElementChild.classList.contains("is-selected")) {
-                window.setTimeout(getWBCUsers, 0, WBC, NextPage, CurrentPage, URL, Callback);
-            } else {
-                Callback();
-            }
-        } else if (!WBC.Canceled) {
-            WBC.Progress.innerHTML =
-                "<i class=\"fa fa-circle-o-notch fa-spin\"></i> " +
-                "<span>Retrieving users (page " + NextPage + ")...</span>";
-            if (CurrentPage != NextPage) {
-                queueRequest(WBC, null, URL + NextPage, function (Response) {
-                    window.setTimeout(getWBCUsers, 0, WBC, ++NextPage, CurrentPage, URL, Callback, DOM.parse(Response.responseText));
-                });
-            } else {
-                window.setTimeout(getWBCUsers, 0, WBC, ++NextPage, CurrentPage, URL, Callback, document);
+                Pagination = Context.getElementsByClassName("pagination__navigation")[0];
+                if (Pagination && !Pagination.lastElementChild.classList.contains("is-selected")) {
+                    window.setTimeout(getWBCUsers, 0, WBC, NextPage, CurrentPage, URL, Callback);
+                } else {
+                    Callback();
+                }
+            } else if (!WBC.Canceled) {
+                if (CurrentPage != NextPage) {
+                    queueRequest(WBC, null, URL + NextPage, function (Response) {
+                        window.setTimeout(getWBCUsers, 0, WBC, ++NextPage, CurrentPage, URL, Callback, DOM.parse(Response.responseText));
+                    });
+                } else {
+                    window.setTimeout(getWBCUsers, 0, WBC, ++NextPage, CurrentPage, URL, Callback, document);
+                }
             }
         }
     }
@@ -24689,7 +24973,7 @@ ${avatar.outerHTML}
 
     function loadGc() {
             if (esgst.newGiveawayPath) {
-                if (esgst.gc_b && esgst.lastBundleSync) {
+                if (esgst.gc_b) {
                     var table = document.getElementsByClassName(`js__autocomplete-data`)[0];
                     if (table) {
                         var backup = table.innerHTML;
@@ -25271,7 +25555,7 @@ ${avatar.outerHTML}
     function loadSMMenu(context) {
         var Selected, Item, SMSyncFrequency, I, Container, SMGeneral, SMGiveaways, SMDiscussions, SMCommenting, SMUsers, SMOthers, SMManageData, SMManageFilteredUsers, SMRecentUsernameChanges,
             SMCommentHistory, SMManageTags, SMGeneralFeatures, SMGiveawayFeatures, SMDiscussionFeatures, SMCommentingFeatures, SMUserGroupGamesFeatures, SMOtherFeatures,
-            SMLastSync, LastSync, SMAPIKey, SMLastBundleSync, LastBundleSync;
+            SMLastSync, LastSync, SMAPIKey;
         var popup = createPopup(`fa-gear`, `Settings`, true, true);
         popup.description.classList.add(`esgst-text-left`);
         SMSyncFrequency = "<select class=\"SMSyncFrequency\">";
@@ -25376,7 +25660,7 @@ ${avatar.outerHTML}
         }
         SMMenu.insertAdjacentHTML(`beforeEnd`,
             createSMSections(++j, [{
-                Title: "Sync Groups / Whitelist / Blacklist / Wishlist / Owned Games / Ignored Games",
+                Title: "Sync",
                 HTML: SMSyncFrequency + "<div class=\"esgst-description\">Select from how many days to how many days you want the automatic sync to run (0 to disable it).</div>" + (
                     "<div class=\"form__sync\">" +
                     "    <div class=\"form__sync-data\">" +
@@ -25385,21 +25669,6 @@ ${avatar.outerHTML}
                     "        </div>" +
                     "    </div>" +
                     "    <div class=\"form__submit-button SMSync\">" +
-                    "        <i class=\"fa fa-refresh\"></i> Sync" +
-                    "    </div>" +
-                    "</div>"
-                )
-            },
-            {
-                Title: "Sync Bundle List",
-                HTML: (
-                    "<div class=\"form__sync\">" +
-                    "    <div class=\"form__sync-data\">" +
-                    "        <div class=\"notification notification--warning SMLastBundleSync\">" +
-                    "            <i class=\"fa fa-question-circle\"></i> Never synced." +
-                    "        </div>" +
-                    "    </div>" +
-                    "    <div class=\"form__submit-button SMBundleSync\">" +
                     "        <i class=\"fa fa-refresh\"></i> Sync" +
                     "    </div>" +
                     "</div>"
@@ -25426,7 +25695,6 @@ ${avatar.outerHTML}
         }
         SMLastSync = Container.getElementsByClassName("SMLastSync")[0];
         var SMSync = Container.getElementsByClassName("SMSync")[0];
-        SMLastBundleSync = Container.getElementsByClassName("SMLastBundleSync")[0];
         SMAPIKey = Container.getElementsByClassName("SMAPIKey")[0];
         SMSyncFrequency.selectedIndex = esgst.syncFrequency;
         LastSync = esgst.lastSync;
@@ -25447,12 +25715,6 @@ ${avatar.outerHTML}
                 }
             });
         });
-        if (esgst.lastBundleSync) {
-            SMLastBundleSync.classList.remove("notification--warning");
-            SMLastBundleSync.classList.add("notification--success");
-            SMLastBundleSync.innerHTML = "<i class=\"fa fa-check-circle\"></i> Last synced " + (new Date(esgst.lastBundleSync).toLocaleString()) + ".";
-        }
-        document.getElementsByClassName("SMBundleSync")[0].addEventListener("click", checkBundleSync.bind(null, SMLastBundleSync, {}));
         key = esgst.steamApiKey;
         if (key) {
             SMAPIKey.value = key;
@@ -27552,7 +27814,7 @@ ${avatar.outerHTML}
         var i, n, discussions;
         discussions = getDiscussions(document);
         for (i = 0, n = discussions.length; i < n; ++i) {
-            esgst.discussions.push(discussions[i]);
+            esgst.currentDiscussions.push(discussions[i]);
         }
         if (esgst.dh) {
             getDhDiscussions(discussions);
@@ -27591,12 +27853,18 @@ ${avatar.outerHTML}
                 match = discussion.url.match(/discussion\/(.+?)\//);
                 if (match) {
                     discussion.code = match[1];
-                    discussion.created = discussion.info.firstElementChild.nextElementSibling;
+                    discussion.categoryContainer = discussion.info.firstElementChild;
+                    discussion.category = discussion.categoryContainer.textContent;
+                    discussion.created = discussion.categoryContainer.nextElementSibling;
                     discussion.createdTime = parseInt(discussion.created.getAttribute(`data-timestamp`)) * 1e3;
                     if (esgst.giveawaysPath) {
                         discussion.author = discussion.avatar.getAttribute(`href`).match(/\/user\/(.+)/)[1];
                     } else {
                         discussion.author = discussion.created.nextElementSibling.textContent;
+                    }
+                    if (esgst.discussionsPath) {
+                        discussion.commentsColumn = discussion.headingColumn.nextElementSibling;
+                        discussion.comments = parseInt(discussion.commentsColumn.firstElementChild.textContent.replace(/,/g, ``));
                     }
                     if (esgst.uf && savedUsers) {
                         savedUser = getUser(savedUsers, {
@@ -27658,6 +27926,9 @@ ${avatar.outerHTML}
                 }
             }
             getCtComments(count, comments);
+        }
+        if (esgst.rfi && esgst.rfi_s && esgst.inboxPath) {
+            getRfiReplies(comments, main);
         }
     }
 
