@@ -1,4 +1,10 @@
 /*
+ * July 29, 2017 - v6.Beta.23.2
+ */
+
+* Renamed the CSS variables in Level Progress Visualizer to make them unique.
+
+/*
  * July 29, 2017 - v6.Beta.23.1
  */
 

@@ -3,7 +3,7 @@
 // @namespace ESGST
 // @description Enhances SteamGifts and SteamTrades by adding some cool features to them.
 // @icon https://github.com/revilheart/ESGST/raw/master/Resources/esgstIcon.ico
-// @version 6.Beta.23.1
+// @version 6.Beta.23.2
 // @author revilheart
 // @downloadURL https://github.com/revilheart/ESGST/raw/master/ESGST.user.js
 // @updateURL https://github.com/revilheart/ESGST/raw/master/ESGST.meta.js
@@ -6876,31 +6876,31 @@ min-width: 0;
         }
         addStyle(`esgst-lpv-style`, `
             .esgst-lpv-container {
-                background-image: linear-gradient(to right, var(--bar, #609f60) ${firstBar}, transparent ${firstBar}), var(--button, linear-gradient(#8a92a1 0px, #757e8f 8px, #4e5666 100%)) !important;
+                background-image: linear-gradient(to right, var(--esgst-lpv-bar, #609f60) ${firstBar}, transparent ${firstBar}), var(--esgst-lpv-button, linear-gradient(#8a92a1 0px, #757e8f 8px, #4e5666 100%)) !important;
             }
             .esgst-lpv-container .nav__button--is-dropdown:hover {
-                background-image: linear-gradient(to right, var(--bar-hover, #6dac6d) ${firstBar}, transparent ${firstBar}), var(--button-hover, linear-gradient(#9ba2b0 0px, #8c94a3 8px, #596070 100%)) !important;
+                background-image: linear-gradient(to right, var(--esgst-lpv-bar-hover, #6dac6d) ${firstBar}, transparent ${firstBar}), var(--esgst-lpv-button-hover, linear-gradient(#9ba2b0 0px, #8c94a3 8px, #596070 100%)) !important;
             }
             .esgst-lpv-container .nav__button--is-dropdown-arrow:hover {
-                background-image: linear-gradient(to right, var(--bar-hover, #6dac6d) ${secondBar}, transparent ${secondBar}), var(--button-hover, linear-gradient(#9ba2b0 0px, #8c94a3 8px, #596070 100%)) !important;
+                background-image: linear-gradient(to right, var(--esgst-lpv-bar-hover, #6dac6d) ${secondBar}, transparent ${secondBar}), var(--esgst-lpv-button-hover, linear-gradient(#9ba2b0 0px, #8c94a3 8px, #596070 100%)) !important;
             }
             .esgst-lpv-container .nav__button--is-dropdown-arrow.is-selected {
-                background-image: linear-gradient(to right, var(--bar, #609f60) ${secondBar}, transparent ${secondBar}), var(--arrow, linear-gradient(#4e525f 0px, #434857 5px, #2b2e3a 100%)) !important;
+                background-image: linear-gradient(to right, var(--esgst-lpv-bar, #609f60) ${secondBar}, transparent ${secondBar}), var(--esgst-lpv-arrow, linear-gradient(#4e525f 0px, #434857 5px, #2b2e3a 100%)) !important;
             }
             .esgst-lpv-container.is-selected .nav__button--is-dropdown {
-                background-image: linear-gradient(to right, var(--bar-hover, #6dac6d) ${firstBar}, transparent ${firstBar}), var(--button-selected, linear-gradient(#d0d5de 0px, #c9cdd7 5px, #9097a6 100%)) !important;
+                background-image: linear-gradient(to right, var(--esgst-lpv-bar-hover, #6dac6d) ${firstBar}, transparent ${firstBar}), var(--esgst-lpv-button-selected, linear-gradient(#d0d5de 0px, #c9cdd7 5px, #9097a6 100%)) !important;
             }
             .esgst-lpv-container.is-selected .nav__button--is-dropdown-arrow {
-                background-image: linear-gradient(to right, var(--bar-hover, #6dac6d) ${secondBar}, transparent ${secondBar}), var(--button-selected, linear-gradient(#d0d5de 0px, #c9cdd7 5px, #9097a6 100%)) !important;
+                background-image: linear-gradient(to right, var(--esgst-lpv-bar-hover, #6dac6d) ${secondBar}, transparent ${secondBar}), var(--esgst-lpv-button-selected, linear-gradient(#d0d5de 0px, #c9cdd7 5px, #9097a6 100%)) !important;
             }
             .esgst-lpv-container.is-selected .nav__button--is-dropdown:hover {
-                background-image: linear-gradient(to right, var(--bar-selected, #7ab97a) ${firstBar}, transparent ${firstBar}), var(--button-selected-hover, linear-gradient(#f0f1f5 0px, #d1d4de 100%)) !important;
+                background-image: linear-gradient(to right, var(--esgst-lpv-bar-selected, #7ab97a) ${firstBar}, transparent ${firstBar}), var(--esgst-lpv-button-selected-hover, linear-gradient(#f0f1f5 0px, #d1d4de 100%)) !important;
             }
             .esgst-lpv-container.is-selected .nav__button--is-dropdown-arrow:hover:not(.is-selected) {
-                background-image: linear-gradient(to right, var(--bar-selected, #7ab97a) ${secondBar}, transparent ${secondBar}), var(--button-selected-hover, linear-gradient(#f0f1f5 0px, #d1d4de 100%)) !important;
+                background-image: linear-gradient(to right, var(--esgst-lpv-bar-selected, #7ab97a) ${secondBar}, transparent ${secondBar}), var(--esgst-lpv-button-selected-hover, linear-gradient(#f0f1f5 0px, #d1d4de 100%)) !important;
             }
             .esgst-lpv-container.is-selected .nav__button--is-dropdown-arrow.is-selected {
-                background-image: linear-gradient(to right, var(--bar-selected, #7ab97a) ${secondBar}, transparent ${secondBar}), var(--arrow-selected, linear-gradient(#4e525f 0px, #434857 5px, #2b2e3a 100%)) !important;
+                background-image: linear-gradient(to right, var(--esgst-lpv-bar-selected, #7ab97a) ${secondBar}, transparent ${secondBar}), var(--esgst-lpv-arrow-selected, linear-gradient(#4e525f 0px, #434857 5px, #2b2e3a 100%)) !important;
             }
         `);
         esgst.headerElements.mainButton.parentElement.classList.add(`esgst-lpv-container`);
