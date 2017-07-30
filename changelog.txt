@@ -1,4 +1,10 @@
 /*
+ * July 29, 2017 - v6.Beta.23.1
+ */
+
+* Fixed a bug that was corrupting the user data when importing without "Merge" enabled.
+
+/*
  * July 29, 2017 - v6.Beta.23.0
  */
 
