@@ -3,7 +3,7 @@
 // @namespace ESGST
 // @description Enhances SteamGifts and SteamTrades by adding some cool features to them.
 // @icon https://github.com/revilheart/ESGST/raw/master/Resources/esgstIcon.ico
-// @version 6.Beta.23.2
+// @version 6.Beta.23.3
 // @author revilheart
 // @downloadURL https://github.com/revilheart/ESGST/raw/master/ESGST.user.js
 // @updateURL https://github.com/revilheart/ESGST/raw/master/ESGST.meta.js
@@ -554,12 +554,6 @@
                         es_c: `es_dttc`,
                         es_l: `es_r`,
                         es_r: `es_rs`,
-                        gf_genreList: `gf_genresList`,
-                        gf_genreListWishlist: `gf_genresListWishlist`,
-                        gf_genreListRecommended: `gf_genresListRecommended`,
-                        gf_genreListGroup: `gf_genresListGroup`,
-                        gf_genreListNew: `gf_genresListNew`,
-                        gf_genreListGroups: `gf_genresListGroups`,
                         ags_maxLevel: `agsMaxLevel`,
                         ags_minLevel: `agsMinLevel`,
                         ags_maxEntries: `agsMaxEntries`,
@@ -593,6 +587,24 @@
                         ugs_checkMember: `UGS_G`
                     };
                     esgst.defaultValues = {
+                        gas_auto: false,
+                        gas_option: `name_asc`,
+                        gas_autoWishlist: false,
+                        gas_optionWishlist: `name_asc`,
+                        gas_autoRecommended: false,
+                        gas_optionRecommended: `name_asc`,
+                        gas_autoGroup: false,
+                        gas_optionGroup: `name_asc`,
+                        gas_autoNew: false,
+                        gas_optionNew: `name_asc`,
+                        gas_autoEntered: false,
+                        gas_optionEntered: `name_asc`,
+                        gas_autoUser: false,
+                        gas_optionUser: `name_asc`,
+                        gas_autoGroups: false,
+                        gas_optionGroups: `name_asc`,
+                        ds_auto: false,
+                        ds_option: `title_asc`,
                         gwc_colors: [],
                         gwr_colors: [],
                         ut_colors: {},
@@ -611,286 +623,20 @@
                         syncGames: true,
                         ged: true,
                         elgb_d: true,
-                        gf_minLevel: 0,
-                        gf_maxLevel: 10,
-                        gf_minEntries: 0,
-                        gf_maxEntries: 999999999,
-                        gf_minCopies: 1,
-                        gf_maxCopies: 999999999,
-                        gf_minPoints: 0,
-                        gf_maxPoints: 100,
-                        gf_minChance: 0,
-                        gf_maxChance: 100,
-                        gf_minRating: 0,
-                        gf_maxRating: 100,
-                        gf_pinned: `enabled`,
-                        gf_group: `enabled`,
-                        gf_whitelist: `enabled`,
-                        gf_regionRestricted: `enabled`,
-                        gf_created: `enabled`,
-                        gf_entered: `enabled`,
-                        gf_hidden: `enabled`,
-                        gf_bundled: `enabled`,
-                        gf_owned: `enabled`,
-                        gf_wishlisted: `enabled`,
-                        gf_ignored: `enabled`,
-                        gf_removed: `enabled`,
-                        gf_tradingCards: `enabled`,
-                        gf_achievements: `enabled`,
-                        gf_multiplayer: `enabled`,
-                        gf_steamCloud: `enabled`,
-                        gf_linux: `enabled`,
-                        gf_mac: `enabled`,
-                        gf_dlc: `enabled`,
-                        gf_genres: false,
-                        gf_genreList: ``,
-                        gf_exceptionPinned: false,
-                        gf_exceptionWishlist: false,
-                        gf_exceptionGroup: false,
-                        gf_exceptionWhitelist: false,
-                        gf_exceptionRegionRestricted: false,
-                        gf_exceptionMultiple: false,
-                        gf_exceptionMultipleCopies: 1,
-                        gf_minLevelWishlist: 0,
-                        gf_maxLevelWishlist: 10,
-                        gf_minEntriesWishlist: 0,
-                        gf_maxEntriesWishlist: 999999999,
-                        gf_minCopiesWishlist: 1,
-                        gf_maxCopiesWishlist: 999999999,
-                        gf_minPointsWishlist: 0,
-                        gf_maxPointsWishlist: 100,
-                        gf_minChanceWishlist: 0,
-                        gf_maxChanceWishlist: 100,
-                        gf_minRatingWishlist: 0,
-                        gf_maxRatingWishlist: 100,
-                        gf_pinnedWishlist: `enabled`,
-                        gf_groupWishlist: `enabled`,
-                        gf_whitelistWishlist: `enabled`,
-                        gf_regionRestrictedWishlist: `enabled`,
-                        gf_createdWishlist: `enabled`,
-                        gf_enteredWishlist: `enabled`,
-                        gf_hiddenWishlist: `enabled`,
-                        gf_bundledWishlist: `enabled`,
-                        gf_ownedWishlist: `enabled`,
-                        gf_wishlistedWishlist: `enabled`,
-                        gf_ignoredWishlist: `enabled`,
-                        gf_removedWishlist: `enabled`,
-                        gf_tradingCardsWishlist: `enabled`,
-                        gf_achievementsWishlist: `enabled`,
-                        gf_multiplayerWishlist: `enabled`,
-                        gf_steamCloudWishlist: `enabled`,
-                        gf_linuxWishlist: `enabled`,
-                        gf_macWishlist: `enabled`,
-                        gf_dlcWishlist: `enabled`,
-                        gf_genresWishlist: false,
-                        gf_genreListWishlist: ``,
-                        gf_exceptionPinnedWishlist: false,
-                        gf_exceptionWishlistWishlist: false,
-                        gf_exceptionGroupWishlist: false,
-                        gf_exceptionWhitelistWishlist: false,
-                        gf_exceptionRegionRestrictedWishlist: false,
-                        gf_exceptionMultipleWishlist: false,
-                        gf_exceptionMultipleCopiesWishlist: 1,
-                        gf_minLevelRecommended: 0,
-                        gf_maxLevelRecommended: 10,
-                        gf_minEntriesRecommended: 0,
-                        gf_maxEntriesRecommended: 999999999,
-                        gf_minCopiesRecommended: 1,
-                        gf_maxCopiesRecommended: 999999999,
-                        gf_minPointsRecommended: 0,
-                        gf_maxPointsRecommended: 100,
-                        gf_minChanceRecommended: 0,
-                        gf_maxChanceRecommended: 100,
-                        gf_minRatingRecommended: 0,
-                        gf_maxRatingRecommended: 100,
-                        gf_pinnedRecommended: `enabled`,
-                        gf_groupRecommended: `enabled`,
-                        gf_whitelistRecommended: `enabled`,
-                        gf_regionRestrictedRecommended: `enabled`,
-                        gf_createdRecommended: `enabled`,
-                        gf_enteredRecommended: `enabled`,
-                        gf_hiddenRecommended: `enabled`,
-                        gf_bundledRecommended: `enabled`,
-                        gf_ownedRecommended: `enabled`,
-                        gf_wishlistedRecommended: `enabled`,
-                        gf_ignoredRecommended: `enabled`,
-                        gf_removedRecommended: `enabled`,
-                        gf_tradingCardsRecommended: `enabled`,
-                        gf_achievementsRecommended: `enabled`,
-                        gf_multiplayerRecommended: `enabled`,
-                        gf_steamCloudRecommended: `enabled`,
-                        gf_linuxRecommended: `enabled`,
-                        gf_macRecommended: `enabled`,
-                        gf_dlcRecommended: `enabled`,
-                        gf_genresRecommended: false,
-                        gf_genreListRecommended: ``,
-                        gf_exceptionPinnedRecommended: false,
-                        gf_exceptionWishlistRecommended: false,
-                        gf_exceptionGroupRecommended: false,
-                        gf_exceptionWhitelistRecommended: false,
-                        gf_exceptionRegionRestrictedRecommended: false,
-                        gf_exceptionMultipleRecommended: false,
-                        gf_exceptionMultipleCopiesRecommended: 1,
-                        gf_minLevelNew: 0,
-                        gf_maxLevelNew: 10,
-                        gf_minEntriesNew: 0,
-                        gf_maxEntriesNew: 999999999,
-                        gf_minCopiesNew: 1,
-                        gf_maxCopiesNew: 999999999,
-                        gf_minPointsNew: 0,
-                        gf_maxPointsNew: 100,
-                        gf_minChanceNew: 0,
-                        gf_maxChanceNew: 100,
-                        gf_minRatingNew: 0,
-                        gf_maxRatingNew: 100,
-                        gf_pinnedNew: `enabled`,
-                        gf_groupNew: `enabled`,
-                        gf_whitelistNew: `enabled`,
-                        gf_regionRestrictedNew: `enabled`,
-                        gf_createdNew: `enabled`,
-                        gf_enteredNew: `enabled`,
-                        gf_hiddenNew: `enabled`,
-                        gf_bundledNew: `enabled`,
-                        gf_ownedNew: `enabled`,
-                        gf_wishlistedNew: `enabled`,
-                        gf_ignoredNew: `enabled`,
-                        gf_removedNew: `enabled`,
-                        gf_tradingCardsNew: `enabled`,
-                        gf_achievementsNew: `enabled`,
-                        gf_multiplayerNew: `enabled`,
-                        gf_steamCloudNew: `enabled`,
-                        gf_linuxNew: `enabled`,
-                        gf_macNew: `enabled`,
-                        gf_dlcNew: `enabled`,
-                        gf_genresNew: false,
-                        gf_genreListNew: ``,
-                        gf_exceptionPinnedNew: false,
-                        gf_exceptionWishlistNew: false,
-                        gf_exceptionGroupNew: false,
-                        gf_exceptionWhitelistNew: false,
-                        gf_exceptionRegionRestrictedNew: false,
-                        gf_exceptionMultipleNew: false,
-                        gf_exceptionMultipleCopiesNew: 1,
-                        gf_minLevelGroup: 0,
-                        gf_maxLevelGroup: 10,
-                        gf_minEntriesGroup: 0,
-                        gf_maxEntriesGroup: 999999999,
-                        gf_minCopiesGroup: 1,
-                        gf_maxCopiesGroup: 999999999,
-                        gf_minPointsGroup: 0,
-                        gf_maxPointsGroup: 300,
-                        gf_minChanceGroup: 0,
-                        gf_maxChanceGroup: 100,
-                        gf_minRatingGroup: 0,
-                        gf_maxRatingGroup: 100,
-                        gf_pinnedGroup: `enabled`,
-                        gf_groupGroup: `enabled`,
-                        gf_whitelistGroup: `enabled`,
-                        gf_regionRestrictedGroup: `enabled`,
-                        gf_createdGroup: `enabled`,
-                        gf_enteredGroup: `enabled`,
-                        gf_hiddenGroup: `enabled`,
-                        gf_bundledGroup: `enabled`,
-                        gf_ownedGroup: `enabled`,
-                        gf_wishlistedGroup: `enabled`,
-                        gf_ignoredGroup: `enabled`,
-                        gf_removedGroup: `enabled`,
-                        gf_tradingCardsGroup: `enabled`,
-                        gf_achievementsGroup: `enabled`,
-                        gf_multiplayerGroup: `enabled`,
-                        gf_steamCloudGroup: `enabled`,
-                        gf_linuxGroup: `enabled`,
-                        gf_macGroup: `enabled`,
-                        gf_dlcGroup: `enabled`,
-                        gf_genresGroup: false,
-                        gf_genreListGroup: ``,
-                        gf_exceptionPinnedGroup: false,
-                        gf_exceptionWishlistGroup: false,
-                        gf_exceptionGroupGroup: false,
-                        gf_exceptionWhitelistGroup: false,
-                        gf_exceptionRegionRestrictedGroup: false,
-                        gf_exceptionMultipleGroup: false,
-                        gf_exceptionMultipleCopiesGroup: 1,
-                        gf_minLevelGroups: 0,
-                        gf_maxLevelGroups: 10,
-                        gf_minEntriesGroups: 0,
-                        gf_maxEntriesGroups: 999999999,
-                        gf_minCopiesGroups: 1,
-                        gf_maxCopiesGroups: 999999999,
-                        gf_minPointsGroups: 0,
-                        gf_maxPointsGroups: 100,
-                        gf_minChanceGroups: 0,
-                        gf_maxChanceGroups: 100,
-                        gf_minRatingGroups: 0,
-                        gf_maxRatingGroups: 100,
-                        gf_pinnedGroups: `enabled`,
-                        gf_groupGroups: `enabled`,
-                        gf_whitelistGroups: `enabled`,
-                        gf_regionRestrictedGroups: `enabled`,
-                        gf_createdGroups: `enabled`,
-                        gf_enteredGroups: `enabled`,
-                        gf_hiddenGroups: `enabled`,
-                        gf_bundledGroups: `enabled`,
-                        gf_ownedGroups: `enabled`,
-                        gf_wishlistedGroups: `enabled`,
-                        gf_ignoredGroups: `enabled`,
-                        gf_removedGroups: `enabled`,
-                        gf_tradingCardsGroups: `enabled`,
-                        gf_achievementsGroups: `enabled`,
-                        gf_multiplayerGroups: `enabled`,
-                        gf_steamCloudGroups: `enabled`,
-                        gf_linuxGroups: `enabled`,
-                        gf_macGroups: `enabled`,
-                        gf_dlcGroups: `enabled`,
-                        gf_genresGroups: false,
-                        gf_genreListGroups: ``,
-                        gf_exceptionPinnedGroups: false,
-                        gf_exceptionWishlistGroups: false,
-                        gf_exceptionGroupGroups: false,
-                        gf_exceptionWhitelistGroups: false,
-                        gf_exceptionRegionRestrictedGroups: false,
-                        gf_exceptionMultipleGroups: false,
-                        gf_exceptionMultipleCopiesGroups: 1,
-                        gf_minLevelPopup: 0,
-                        gf_maxLevelPopup: 10,
-                        gf_minEntriesPopup: 0,
-                        gf_maxEntriesPopup: 999999999,
-                        gf_minCopiesPopup: 1,
-                        gf_maxCopiesPopup: 999999999,
-                        gf_minPointsPopup: 0,
-                        gf_maxPointsPopup: 100,
-                        gf_minChancePopup: 0,
-                        gf_maxChancePopup: 100,
-                        gf_minRatingPopup: 0,
-                        gf_maxRatingPopup: 100,
-                        gf_pinnedPopup: `enabled`,
-                        gf_groupPopup: `enabled`,
-                        gf_whitelistPopup: `enabled`,
-                        gf_regionRestrictedPopup: `enabled`,
-                        gf_createdPopup: `enabled`,
-                        gf_enteredPopup: `enabled`,
-                        gf_hiddenPopup: `enabled`,
-                        gf_bundledPopup: `enabled`,
-                        gf_ownedPopup: `enabled`,
-                        gf_wishlistedPopup: `enabled`,
-                        gf_ignoredPopup: `enabled`,
-                        gf_removedPopup: `enabled`,
-                        gf_tradingCardsPopup: `enabled`,
-                        gf_achievementsPopup: `enabled`,
-                        gf_multiplayerPopup: `enabled`,
-                        gf_steamCloudPopup: `enabled`,
-                        gf_linuxPopup: `enabled`,
-                        gf_macPopup: `enabled`,
-                        gf_dlcPopup: `enabled`,
-                        gf_genresPopup: false,
-                        gf_genreListPopup: ``,
-                        gf_exceptionPinnedPopup: false,
-                        gf_exceptionWishlistPopup: false,
-                        gf_exceptionGroupPopup: false,
-                        gf_exceptionWhitelistPopup: false,
-                        gf_exceptionRegionRestrictedPopup: false,
-                        gf_exceptionMultiplePopup: false,
-                        gf_exceptionMultipleCopiesPopup: 1,
+                        gf_enable: true,
+                        gf_enableWishlist: true,
+                        gf_enableRecommended: true,
+                        gf_enableNew: true,
+                        gf_enableGroup: true,
+                        gf_enableGroups: true,
+                        gf_enablePopup: true,
+                        gf_preset: null,
+                        gf_presetWishlist: null,
+                        gf_presetRecommended: null,
+                        gf_presetNew: null,
+                        gf_presetGroup: null,
+                        gf_presetGroups: null,
+                        gf_presetPopup: null,
                         ags_maxLevel: ``,
                         ags_minLevel: ``,
                         ags_maxEntries: ``,
@@ -3310,29 +3056,21 @@
                 addGfContainer();
             }
             if (esgst.gas) {
-                esgst.style += `                
-                    .esgst-gas-popout {
-                        background-color: #fff;
-                        border: 1px solid #d2d6e0;
-                        border-radius: 4px;
-                        color: #465670;
-                        padding: 10px;
-                    }
-                `;
-                button = document.createElement(`div`);
-                button.className = `esgst-heading-button`;
-                button.title = `Sort giveaways`;
-                button.innerHTML = `
-                    <i class="fa fa-sort"></i>
-                `;
-                mainPageHeadingBefore.appendChild(button);
-                button.addEventListener(`click`, openGasPopout.bind(null, {
-                    button: button
-                }));
+                mainPageHeadingBefore.appendChild(loadGas());
             }
         } else {
-            if (esgst.groupPath && esgst.gf) {
-                addGfContainer();
+            if (esgst.userPath) {
+                if (esgst.gas) {
+                    mainPageHeadingBefore.appendChild(loadGas());
+                }
+            }
+            if (esgst.groupPath) {
+                if (esgst.gf) {
+                    addGfContainer();
+                }
+                if (esgst.gas) {
+                    mainPageHeadingBefore.appendChild(loadGas());
+                }
             }
             if (esgst.createdPath) {
                 if (esgst.ugs) {
@@ -3374,25 +3112,7 @@
                     }));
                 }
                 if (esgst.gas) {
-                    esgst.style += `                
-                        .esgst-gas-popout {
-                            background-color: #fff;
-                            border: 1px solid #d2d6e0;
-                            border-radius: 4px;
-                            color: #465670;
-                            padding: 10px;
-                        }
-                    `;
-                    button = document.createElement(`div`);
-                    button.className = `esgst-heading-button`;
-                    button.title = `Sort giveaways`;
-                    button.innerHTML = `
-                        <i class="fa fa-sort"></i>
-                    `;
-                    mainPageHeadingBefore.appendChild(button);
-                    button.addEventListener(`click`, openGasPopout.bind(null, {
-                        button: button
-                    }));
+                    mainPageHeadingBefore.appendChild(loadGas());
                 }
                 if (esgst.gwc || esgst.gwr) {
                     esgst.endlessFeatures.push(addGwcrHeading);
@@ -3433,25 +3153,7 @@
                 }
             } else if (esgst.discussionsPath) {
                 if (esgst.ds) {
-                    esgst.style += `                
-                        .esgst-ds-popout {
-                            background-color: #fff;
-                            border: 1px solid #d2d6e0;
-                            border-radius: 4px;
-                            color: #465670;
-                            padding: 10px;
-                        }
-                    `;
-                    button = document.createElement(`div`);
-                    button.className = `esgst-heading-button`;
-                    button.title = `Sort discussions`;
-                    button.innerHTML = `
-                        <i class="fa fa-sort"></i>
-                    `;
-                    mainPageHeadingBefore.appendChild(button);
-                    button.addEventListener(`click`, openDsPopout.bind(null, {
-                        button: button
-                    }));
+                    mainPageHeadingBefore.appendChild(loadDs());
                 }
             }
             if (esgst.commentsPath) {
@@ -5297,6 +4999,7 @@
         checkbox.check = checkCheckbox.bind(null, checkbox);
         checkbox.uncheck = uncheckCheckbox.bind(null, checkbox);
         checkbox.toggle = toggleCheckbox.bind(null, checkbox);
+        checkbox.change = changeCheckboxState.bind(null, checkbox, false, null);
         return checkbox;
     }
 
@@ -5329,7 +5032,7 @@
         changeCheckboxState(checkbox, callback);
     }
 
-    function changeCheckboxState(checkbox, toggle, callback) {
+    function changeCheckboxState(checkbox, toggle, callback, value) {
         if (!checkbox.threeState) {
             if (toggle) {
                 if (checkbox.input.checked) {
@@ -5359,16 +5062,19 @@
                 }
             }
         } else {
-            if (checkbox.value == `disabled`) {
+            if ((checkbox.value == `disabled` && !value) || (value === `none`)) {
+                checkbox.enabled.classList.add(`esgst-hidden`);
                 checkbox.disabled.classList.add(`esgst-hidden`);
                 checkbox.none.classList.remove(`esgst-hidden`);
                 checkbox.value = `none`;
-            } else if (checkbox.value == `none`) {
+            } else if ((checkbox.value == `none` && !value) || (value === `enabled`)) {
                 checkbox.none.classList.add(`esgst-hidden`);
+                checkbox.disabled.classList.add(`esgst-hidden`);
                 checkbox.enabled.classList.remove(`esgst-hidden`);
                 checkbox.value = `enabled`;
-            } else {
+            } else if (!value || (value === `disabled`)) {
                 checkbox.enabled.classList.add(`esgst-hidden`);
+                checkbox.none.classList.add(`esgst-hidden`);
                 checkbox.disabled.classList.remove(`esgst-hidden`);
                 checkbox.value = `disabled`;
             }
@@ -5812,11 +5518,17 @@ display: inline-block;
     display: inline-block;
 }
 
+.page__heading .esgst-toggle-switch-container.inline {
+    margin: 0 2px;
+    line-height: normal;
+    vertical-align: middle;
+}
+
 .esgst-toggle-switch {
-  position: relative;
-  display: inline-block;
-  width: 26px;
-  height: 14px;
+    position: relative;
+    display: inline-block;
+    width: 26px;
+    height: 14px;
     vertical-align: top;
 }
 
@@ -7452,23 +7164,62 @@ min-width: 0;
 
     /* [GAS] Giveaways Sorter */
 
+    function loadGas() {
+        var gas, type;
+        gas = {};
+        esgst.gas = {};
+        type = window.location.search.match(/type=(wishlist|recommended|group|new)/);
+        if (type) {
+            type = type[1].replace(/^(.)/, function (m, p1) {
+                return p1.toUpperCase();
+            });
+        } else if (esgst.enteredPath) {
+            type = `Entered`;
+        } else if (esgst.userPath) {
+            type = `User`;
+        } else if (esgst.groupPath) {
+            type = `Groups`;
+        } else {
+            type = ``;
+        }
+        esgst.gas.autoKey = `gas_auto${type}`;
+        esgst.gas.optionKey = `gas_option${type}`;
+        gas.button = document.createElement(`div`);
+        gas.button.className = `esgst-heading-button`;
+        gas.button.title = `Sort giveaways`;
+        gas.button.innerHTML = `
+            <i class="fa fa-sort"></i>
+        `;
+        gas.button.addEventListener(`click`, openGasPopout.bind(null, gas));
+        esgst.style += `                
+            .esgst-gas-popout {
+                background-color: #fff;
+                border: 1px solid #d2d6e0;
+                border-radius: 4px;
+                color: #465670;
+                padding: 10px;
+            }
+        `;
+        return gas.button;
+    }
+
     function openGasPopout(gas) {
-        var optionsHtml;
+        var optionsHtml, type;
         if (!gas.popout) {
             gas.popout = createPopout_v6(`esgst-gas-popout`, true);
-            gas.toggle = createToggleSwitch(gas.popout.popout, null, true, `Enable`);
+            gas.toggle = createToggleSwitch(gas.popout.popout, esgst.gas.autoKey, false, `Auto Sort`, false, false, `Automatically sorts the giveaways by the selected option when loading the page.`, esgst[esgst.gas.autoKey]);
             optionsHtml = `
                 <select>
                     <option value="name_asc">Game Name - Ascending</option>
                     <option value="name_desc">Game Name - Descending</option>
             `;
-            if (esgst.giveawaysPath) {
+            if (!esgst.enteredPath) {
                 optionsHtml += `
                     <option value="points_asc">Points - Ascending</option>
                     <option value="points_desc">Points - Descending</option>
                 `;
             }
-            if (esgst.gc && esgst.gc_r && esgst.giveawaysPath) {
+            if (esgst.gc && esgst.gc_r && !esgst.enteredPath) {
                 optionsHtml += `
                     <option value="rating_asc">Rating - Ascending</option>
                     <option value="rating_desc">Rating - Descending</option>
@@ -7478,7 +7229,7 @@ min-width: 0;
                     <option value="endTime_asc">End Time - Ascending</option>
                     <option value="endTime_desc">End Time - Descending</option>
             `;
-            if (esgst.giveawaysPath) {
+            if (!esgst.enteredPath) {
                 optionsHtml += `
                     <option value="startTime_asc">Start Time - Ascending</option>
                     <option value="startTime_desc">Start Time - Descending</option>
@@ -7509,8 +7260,9 @@ min-width: 0;
                 </select>
             `;
             gas.options = insertHtml(gas.popout.popout, `beforeEnd`, optionsHtml);
-            gas.toggle.onEnabled = sortContent.bind(null, `currentGiveaways`, gas.options);
-            gas.options.addEventListener(`change`, sortContent.bind(null, `currentGiveaways`, gas.options));
+            gas.options.value = esgst[esgst.gas.optionKey];
+            gas.options.addEventListener(`change`, saveAndSortContent.bind(null, esgst.gas.optionKey, `currentGiveaways`, gas.options, null));
+            gas.popout.popout.appendChild(createButtonSet(`green`, ``, `fa-arrow-circle-right`, ``, `Sort`, ``, saveAndSortContent.bind(null, esgst.gas.optionKey, `currentGiveaways`, gas.options)).set);
         }
         if (gas.popout.popout.classList.contains(`esgst-hidden`)) {
             gas.popout.open(gas.button);
@@ -7519,9 +7271,17 @@ min-width: 0;
         }
     }
 
-    function sortContent(mainKey, options) {
+    function saveAndSortContent(key, mainKey, options, callback) {
+        if (callback) {
+            callback();
+        }
+        sortContent(esgst[mainKey], options.value);
+        setValue(key, options.value);
+    }
+
+    function sortContent(array, option) {
         var after, before, i, key, n, name;
-        name = options.value.split(/_/);
+        name = option.split(/_/);
         key = name[0];
         if (name[1] === `asc`) {
             before = -1;
@@ -7530,7 +7290,7 @@ min-width: 0;
             before = 1;
             after = -1;
         }
-        esgst[mainKey].sort(function (a, b) {
+        array.sort(function (a, b) {
             if (typeof a[key] === `string`) {
                 return (a[key].toLowerCase().localeCompare(b[key].toLowerCase()) * after);
             } else {
@@ -7543,8 +7303,8 @@ min-width: 0;
                 }
             }
         });
-        for (i = 0, n = esgst[mainKey].length; i < n; ++i) {
-            esgst[mainKey][i].outerWrap.parentElement.appendChild(esgst[mainKey][i].outerWrap);
+        for (i = 0, n = array.length; i < n; ++i) {
+            array[i].outerWrap.parentElement.appendChild(array[i].outerWrap);
         }
     }
 
@@ -7783,8 +7543,340 @@ min-width: 0;
         });
     }
 
+    function addGfPresetButton(gf, heading, input) {
+        var button;
+        button = insertHtml(heading, `beforeEnd`, `
+            <div class="esgst-heading-button" title="View/apply presets">
+                <i class="fa fa-sliders"></i>
+            </div>
+        `);
+        button.addEventListener(`click`, openGfPresetPopup.bind(null, gf, input));
+    }
+    
+    function openGfPresetPopup(gf, input) {
+        var details, i, j, key, keys, n, numKeys, popup, preset, presets, savedPreset, savedPreset, toException, toHide, toOnly;
+        popup = createPopup(`fa-sliders`, `View/apply presets:`, true);
+        popup.description.insertAdjacentHTML(`afterBegin`, `
+            <div class="esgst-description">To edit a preset, apply it and save it with the same name. Drag and drop presets to move them.</div>
+        `);
+        presets = insertHtml(popup.scrollable, `beforeEnd`, `
+            <div class="esgst-text-left popup__keys__list"></div>
+        `);
+        savedPresets = JSON.parse(GM_getValue(`filterPresets`, `[]`));
+        for (i = 0, n = savedPresets.length; i < n; ++i) {
+            savedPreset = savedPresets[i];
+            details = `${savedPreset.minLevel}-${savedPreset.maxLevel} level, ${savedPreset.minEntries}-${savedPreset.maxEntries} entries, ${savedPreset.minCopies}-${savedPreset.maxCopies} copies, ${savedPreset.minPoints}-${savedPreset.maxPoints} points`;
+            if (savedPreset.maxChance) {
+                details += `, ${savedPreset.minChance}-${savedPreset.maxChance} chance`;
+            }
+            if (savedPreset.maxRating) {
+                details += `, ${savedPreset.minRating}-${savedPreset.maxRating} rating`;
+            }
+            keys = [
+                {
+                    key: `pinned`,
+                    name: `pinned`
+                },
+                {
+                    key: `group`,
+                    name: `group`
+                },
+                {
+                    key: `whitelist`,
+                    name: `whitelist`
+                },
+                {
+                    key: `regionRestricted`,
+                    name: `region restricted`
+                },
+                {
+                    key: `created`,
+                    name: `created`
+                },
+                {
+                    key: `entered`,
+                    name: `entered`
+                },
+                {
+                    key: `owned`,
+                    name: `owned`
+                },
+                {
+                    key: `wishlisted`,
+                    name: `wishlisted`
+                },
+                {
+                    key: `hidden`,
+                    name: `hidden`
+                },
+                {
+                    key: `ignored`,
+                    name: `ignored`
+                },
+                {
+                    key: `bundled`,
+                    name: `bundled`
+                },
+                {
+                    key: `removed`,
+                    name: `removed`
+                },
+                {
+                    key: `tradingCards`,
+                    name: `trading cards`
+                },
+                {
+                    key: `achievements`,
+                    name: `achievements`
+                },
+                {
+                    key: `multiplayer`,
+                    name: `multiplayer`
+                },
+                {
+                    key: `steamCloud`,
+                    name: `steam cloud`
+                },
+                {
+                    key: `linux`,
+                    name: `linux`
+                },
+                {
+                    key: `mac`,
+                    name: `mac`
+                },
+                {
+                    key: `dlc`,
+                    name: `dlc`
+                },
+                {
+                    key: `package`,
+                    name: `package`
+                },
+                {
+                    key: `genres`,
+                    name: `genres`
+                }
+            ]
+            toHide = [];
+            toOnly = [];
+            for (j = 0, numKeys = keys.length; j < numKeys; ++j) {
+                key = keys[j];
+                if (savedPreset[key.key] === `disabled`) {
+                    toHide.push(key.name);
+                } else if (savedPreset[key.key] === `none`) {
+                    toOnly.push(key.name);
+                } else if (key.key === `genres` && savedPreset.genreList) {
+                    toOnly.push(`genres (${savedPreset.genreList.toLowerCase()})`);
+                }
+            }
+            if (toHide.length) {
+                details += `, hide: ${toHide.join(` & `)}`;
+            }
+            if (toOnly.length) {
+                details += `, only show: ${toOnly.join(` & `)}`;
+            }
+            keys = [
+                {
+                    key: `exceptionPinned`,
+                    name: `pinned`
+                },
+                {
+                    key: `exceptionWishlist`,
+                    name: `wishlist`
+                },
+                {
+                    key: `exceptionGroup`,
+                    name: `group`
+                },
+                {
+                    key: `exceptionWhitelist`,
+                    name: `whitelist`
+                },
+                {
+                    key: `exceptionRegionRestricted`,
+                    name: `region restricted`
+                },
+                {
+                    key: `exceptionMultiple`,
+                    name: `copies above`
+                },
+            ];
+            toException = [];
+            for (j = 0, numKeys = keys.length; j < numKeys; ++j) {
+                key = keys[j];
+                if (savedPreset[key.key]) {
+                    if (key.key === `exceptionMultiple`) {
+                        toException.push(`copies above ${savedPreset.exceptionMultipleCopies}`);
+                    } else {
+                        toException.push(key.name);
+                    }
+                }
+            }
+            if (toException.length) {
+                details += `, do not apply to: ${toException.join(` & `)}`;
+            }
+            preset = insertHtml(presets, `beforeEnd`, `
+                <div draggable="true">
+                    <div class="esgst-clickable" style="float: left;">
+                        <strong>${savedPreset.name}</strong>
+                    </div>
+                    <div class="esgst-clickable" style="float: right;">
+                        <i class="fa fa-trash" title="Delete preset"></i>
+                    </div>
+                    <div style="clear: both;"></div>
+                    <div class="esgst-description">${details}</div>
+                </div>
+            `);
+            preset.addEventListener(`dragstart`, setGfSource.bind(null, gf, savedPreset.name, preset));
+            preset.addEventListener(`dragenter`, getGfSource.bind(null, gf, preset, presets));
+            preset.addEventListener(`dragend`, saveGfSource.bind(null, gf));
+            setGfPreset(gf, input, popup, preset, savedPreset);
+        }
+        popup.open();
+    }
+
+    function setGfPreset(gf, input, popup, preset, savedPreset) {
+        var applyButton, checkbox, deleteButton, i, inpt, key, keys, n, savedPresets;
+        applyButton = preset.firstElementChild;
+        deleteButton = applyButton.nextElementSibling;
+        applyButton.addEventListener(`click`, function () {
+            keys = [`maxLevel`, `minLevel`, `maxEntries`, `minEntries`, `maxCopies`, `minCopies`, `maxPoints`, `minPoints`, `maxChance`, `minChance`, `maxRating`, `minRating`, `pinned`, `group`, `whitelist`, `regionRestricted`, `created`, `entered`, `hidden`, `bundled`, `owned`, `wishlisted`, `ignored`, `removed`, `tradingCards`, `achievements`, `multiplayer`, `steamCloud`, `linux`, `mac`, `dlc`, `package`, `genres`, `genreList`, `exceptionPinned`, `exceptionWishlist`, `exceptionGroup`, `exceptionWhitelist`, `exceptionRegionRestricted`, `exceptionMultiple`, `exceptionMultipleCopies`];
+            for (i = 0, n = keys.length; i < n; ++i) {
+                key = keys[i];
+                checkbox = gf[`${key}Checkbox`];
+                if (checkbox) {
+                    if (checkbox.threeState) {
+                        gf[key] = checkbox.value = savedPreset[key];
+                        checkbox.change(gf[key]);
+                    } else {
+                        if (savedPreset[key]) {
+                            gf[key] = true;
+                            checkbox.check();
+                        } else {
+                            gf[key] = false;
+                            checkbox.uncheck();
+                        }
+                    }
+                } else {
+                    inpt = gf[`${key}Input`];
+                    if (inpt) {
+                        gf[key] = inpt.value = savedPreset[key];
+                        inpt.dispatchEvent(new Event(`change`));
+                    }
+                }
+            }
+            input.value = savedPreset.name;
+            setValue(`gf_preset${gf.type}`, savedPreset.name);
+            gf.edit = true;
+            popup.close();
+        });
+        deleteButton.addEventListener(`click`, function () {
+            if (window.confirm(`Are you sure you want to delete this preset?`)) {
+                deleteButton.innerHTML = `
+                    <i class="fa fa-circle-o-notch fa-spin"></i>
+                `;
+                savedPresets = JSON.parse(GM_getValue(`filterPresets`, `[]`));
+                for (i = 0, n = savedPresets.length; i < n && savedPresets[i].name !== savedPreset.name; ++i);
+                savedPresets.splice(i, 1);
+                GM_setValue(`filterPresets`, JSON.stringify(savedPresets));
+                preset.remove();
+                gf.edit = false;
+            }
+        });
+    }
+
+    function setGfSource(gf, name, preset) {
+        var i, n, savedPresets;
+        gf.source = preset;
+        savedPresets = JSON.parse(GM_getValue(`filterPresets`, `[]`));
+        for (i = 0, n = savedPresets.length; i < n && savedPresets[i].name !== name; ++i);
+        if (i < n) {
+            gf.sourceIndex = i;
+        }
+    }
+
+    function getGfSource(gf, preset, presets) {
+        var current, i;
+        current = gf.source;
+        i = 0;
+        do {
+            current = current.previousElementSibling;
+            if (current && current === preset) {
+                gf.sourceNewIndex = i;
+                presets.insertBefore(gf.source, preset);
+                return;
+            }
+            ++i;
+        } while (current);
+        gf.sourceNewIndex = i - 1;
+        presets.insertBefore(gf.source, preset.nextElementSibling);
+    }
+
+    function saveGfSource(gf) {
+        var savedPresets;
+        savedPresets = JSON.parse(GM_getValue(`filterPresets`, `[]`));
+        savedPresets.splice(gf.sourceNewIndex, 0, savedPresets.splice(gf.sourceIndex, 1)[0]);
+        GM_setValue(`filterPresets`, JSON.stringify(savedPresets));
+    }
+
+    function addGfSavePresetButton(gf, heading, presets) {
+        var input, message, warning;
+        input = presets.firstElementChild.nextElementSibling;
+        message = input.nextElementSibling;
+        warning = message.nextElementSibling;
+        presets.appendChild(createButtonSet(`green`, `grey`, `fa-check`, `fa-circle-o-notch fa-spin`, `Save Preset`, `Saving...`, saveGfPreset.bind(null, gf, input, message, warning)).set);
+        addGfPresetButton(gf, heading, input);
+    }
+    
+    function saveGfPreset(gf, input, message, warning, callback) {
+        var i, key, keys, n, preset, savedPresets;
+        if (input.value) {
+            warning.classList.add(`esgst-hidden`);
+            keys = [`maxLevel`, `minLevel`, `maxEntries`, `minEntries`, `maxCopies`, `minCopies`, `maxPoints`, `minPoints`, `maxChance`, `minChance`, `maxRating`, `minRating`, `pinned`, `group`, `whitelist`, `regionRestricted`, `created`, `entered`, `hidden`, `bundled`, `owned`, `wishlisted`, `ignored`, `removed`, `tradingCards`, `achievements`, `multiplayer`, `steamCloud`, `linux`, `mac`, `dlc`, `package`, `genres`, `genreList`, `exceptionPinned`, `exceptionWishlist`, `exceptionGroup`, `exceptionWhitelist`, `exceptionRegionRestricted`, `exceptionMultiple`, `exceptionMultipleCopies`];
+            preset = {
+                name: input.value
+            };
+            for (i = 0, n = keys.length; i < n; ++i) {
+                key = keys[i];
+                if (typeof gf[key] !== `undefined`) {
+                    preset[key] = gf[key];
+                }
+            }
+            savedPresets = JSON.parse(GM_getValue(`filterPresets`, `[]`));
+            for (i = 0, n = savedPresets.length; i < n && savedPresets[i].name !== preset.name; ++i);
+            if (i < n) {
+                if (gf.edit) {
+                    savedPresets[i] = preset;
+                    message.classList.remove(`esgst-hidden`);
+                    window.setTimeout(function () {
+                        message.classList.add(`esgst-hidden`);
+                    }, 2000);
+                } else if (window.confirm(`There already exists a preset with this name. Do you want to overwrite it?`)) {
+                    savedPresets[i] = preset;
+                    message.classList.remove(`esgst-hidden`);
+                    window.setTimeout(function () {
+                        message.classList.add(`esgst-hidden`);
+                    }, 2000);
+                }
+            } else {
+                savedPresets.push(preset);
+                message.classList.remove(`esgst-hidden`);
+                window.setTimeout(function () {
+                    message.classList.add(`esgst-hidden`);
+                }, 2000);
+            }
+            GM_setValue(`filterPresets`, JSON.stringify(savedPresets));
+            setValue(`gf_preset${gf.type}`, preset.name);
+            callback();
+        } else {
+            warning.classList.remove(`esgst-hidden`);
+            callback();
+        }
+    }
+
     function addGfContainer(context) {
-        var gf, basicFilter, basicFilters, box, button, categoryFilter, categoryFilters, checkbox, collapse, container, exceptionFilter, exceptionFilters, expand, filter, filters, genres, i, id, input, key, maxKey, minKey, maxSaveKey, maxSavedValue, minSaveKey, minSavedValue, maxValue, minValue, multiple, n, name, oldKey, oldSaveKey, saveKey, step, type, typeFilter, typeFilters, value, values;
+        var gf, basicFilter, basicFilters, box, button, categoryFilter, categoryFilters, checkbox, collapse, container, exceptionFilter, exceptionFilters, expand, filter, filters, genres, i, id, input, key, maxKey, minKey,  maxSavedValue, minSavedValue, maxValue, minValue, multiple, n, name, oldKey, step, type, typeFilter, typeFilters, value, values;
         if (context) {
             type = `Popup`;
         } else {
@@ -7861,18 +7953,6 @@ min-width: 0;
                 {
                     name: `Entered`,
                     key: `entered`
-                }
-            ],
-            categoryFilters: [
-                {
-                    id: `gc_h`,
-                    name: `Hidden`,
-                    key: `hidden`
-                },
-                {
-                    id: `gc_b`,
-                    name: esgst.gc_b_r ? `Not Bundled` : `Bundled`,
-                    key: `bundled`
                 },
                 {
                     id: `gc_o`,
@@ -7885,10 +7965,22 @@ min-width: 0;
                     key: `wishlisted`
                 },
                 {
+                    id: `gc_h`,
+                    name: `Hidden`,
+                    key: `hidden`
+                },
+                {
                     id: `gc_i`,
                     name: `Ignored`,
                     key: `ignored`
                 },
+                {
+                    id: `gc_b`,
+                    name: esgst.gc_b_r ? `Not Bundled` : `Bundled`,
+                    key: `bundled`
+                }
+            ],
+            categoryFilters: [
                 {
                     id: `gc_rm`,
                     name: `Removed`,
@@ -7972,6 +8064,15 @@ min-width: 0;
         } else {
             esgst.gf = gf;
         }
+        var heading = insertHtml(context || esgst.pinnedGiveaways || esgst.mainPageHeading, `beforeBegin`, `
+            <div class="page__heading">
+                <div class="page__heading__breadcrumbs"><span></span><span> Giveaway Filters (<span>0</span> Filtered)</span></div>
+            </div>
+        `);
+        gf.filteredCount = heading.firstElementChild.lastElementChild.lastElementChild;
+        var gfSwitch = createToggleSwitch(heading.firstElementChild.firstElementChild, `gf_enable${gf.type}`, true, ``, false, false, null, esgst[`gf_enable${gf.type}`]);
+        gfSwitch.onDisabled = filterGfGiveaways.bind(null, gf, true);
+        gfSwitch.onEnabled = filterGfGiveaways.bind(null, gf);
         container = insertHtml(context || esgst.pinnedGiveaways || esgst.mainPageHeading, `beforeBegin`, `
             <div class="pinned-giveaways__outer-wrap esgst-gf-container">
                 <div class="pinned-giveaways__inner-wrap esgst-gf-box">
@@ -8007,11 +8108,24 @@ min-width: 0;
                             <div class="esgst-gf-legend"><i class="fa fa-circle"></i> - Show only.</div>
                             <div class="esgst-gf-legend"><i class="fa fa-check-circle"></i> - Show all.</div>
                         </div>
+                        <div>
+                            <div>
+                                <strong>Preset:</strong>
+                            </div>
+                            <input class="form__input-small" type="text"/>
+                            <span class="esgst-hidden esgst-description">
+                                <strong>Saved!</strong>
+                            </span>
+                            <div class="esgst-hidden form__row__error">
+                                <i class="fa fa-exclamation-circle"></i> Please enter a name for the preset.
+                            </div>
+                            <div class="esgst-description">The name of the preset.</div>
+                        </div>
                     </div>
                 </div>
                 <div class="esgst-gf-button">
                     <span>Expand</span>
-                    <span class="esgst-hidden">Collapse</span> giveaway filters (<span>0</span> giveaways currently being filtered).
+                    <span class="esgst-hidden">Collapse</span> filters
                 </div>
             </div>
         `);
@@ -8021,10 +8135,41 @@ min-width: 0;
         typeFilters = basicFilters.nextElementSibling;
         categoryFilters = typeFilters.nextElementSibling;
         exceptionFilters = categoryFilters.nextElementSibling;
+        var presets = exceptionFilters.nextElementSibling.nextElementSibling;
+        var presetInput = presets.firstElementChild.nextElementSibling;
+        addGfSavePresetButton(gf, heading, presets);
         button = box.nextElementSibling;
         expand = button.firstElementChild;
         collapse = expand.nextElementSibling;
-        gf.filteredCount = collapse.nextElementSibling;
+        var preset = esgst[`gf_preset${gf.type}`];
+        var savedPresets;
+        if (preset) {
+            savedPresets = JSON.parse(GM_getValue(`filterPresets`, `[]`));
+            for (i = 0, n = savedPresets.length; i < n && savedPresets[i].name !== preset; ++i);
+            if (i < n) {
+                preset = savedPresets[i];
+                gf.edit = true;
+                presetInput.value = preset.name;
+            } else {
+                preset = null;
+            }
+        }
+        if (!preset) {
+            var keys = [`maxLevel`, `minLevel`, `maxEntries`, `minEntries`, `maxCopies`, `minCopies`, `maxPoints`, `minPoints`, `maxChance`, `minChance`, `maxRating`, `minRating`, `pinned`, `group`, `whitelist`, `regionRestricted`, `created`, `entered`, `hidden`, `bundled`, `owned`, `wishlisted`, `ignored`, `removed`, `tradingCards`, `achievements`, `multiplayer`, `steamCloud`, `linux`, `mac`, `dlc`, `package`, `genres`, `genreList`, `exceptionPinned`, `exceptionWishlist`, `exceptionGroup`, `exceptionWhitelist`, `exceptionRegionRestricted`, `exceptionMultiple`, `exceptionMultipleCopies`];
+            preset = {
+                name: `Default${gf.type}`
+            };
+            for (i = 0, n = keys.length; i < n; ++i) {
+                key = keys[i];
+                preset[key] = esgst.settings[`gf_${key}${gf.type}`];
+            }
+            savedPresets = JSON.parse(GM_getValue(`filterPresets`, `[]`));
+            savedPresets.push(preset);
+            GM_setValue(`filterPresets`, JSON.stringify(savedPresets));
+            setValue(`gf_preset${gf.type}`, `Default${gf.type}`);
+            gf.edit = true;
+            presetInput.value = `Default${gf.type}`;
+        }
         if (!gf.advancedSearch) {
             basicFilters.classList.remove(`esgst-hidden`);
             for (i = 0, n = gf.basicFilters.length; i < n; ++i) {
@@ -8041,11 +8186,10 @@ min-width: 0;
                         <span>${name}</span>
                     </div>
                 `);
-                saveKey = `gf_${key}${gf.type}`;
-                value = esgst[saveKey];
+                value = preset[key] || `enabled`;
                 gf[key] = value;
-                checkbox = createCheckbox_v6(typeFilter, value, true);
-                checkbox.checkbox.addEventListener(`click`, saveGfValue.bind(null, gf, key, saveKey, checkbox));
+                gf[`${key}Checkbox`] = createCheckbox_v6(typeFilter, value, true);
+                gf[`${key}Checkbox`].checkbox.addEventListener(`click`, changeGfValue.bind(null, gf[`${key}Checkbox`], key, gf));
             }
         }
         if (esgst.gc) {
@@ -8062,18 +8206,15 @@ min-width: 0;
                             <span>${name} ${genres ? `<i class="fa fa-question-circle" title="If disabled, no games will be filtered by genre; if enabled, only games with the listed genres will appear"></i> <input placeholder="Genre1, Genre2" type="text">` : ``}</span>
                         </div>
                     `);
-                    saveKey = `gf_${key}${gf.type}`;
-                    value = esgst[saveKey];
+                    value = typeof preset[key] !== `undefined` ? preset[key] : (genres ? false : `enabled`);
                     gf[key] = value;
-                    checkbox = createCheckbox_v6(categoryFilter, value, genres ? false : true);
-                    checkbox.checkbox.addEventListener(`click`, saveGfValue.bind(null, gf, key, saveKey, checkbox));
+                    gf[`${key}Checkbox`] = createCheckbox_v6(categoryFilter, value, genres ? false : true);
+                    gf[`${key}Checkbox`].checkbox.addEventListener(`click`, changeGfValue.bind(null, gf[`${key}Checkbox`], key, gf));
                     if (genres) {
-                        input = categoryFilter.lastElementChild.lastElementChild;
-                        key = `genreList`;
-                        saveKey = `gf_${key}${gf.type}`;
-                        value = esgst[saveKey].replace(/,(?!\s)/g, `, `);
-                        gf[key] = input.value = value;
-                        input.addEventListener(`change`, saveGfValue.bind(null, gf, key, saveKey, input));
+                        gf.genreListInput = categoryFilter.lastElementChild.lastElementChild;
+                        value = (preset.genreList && preset.genreList.replace(/,(?!\s)/g, `, `)) || ``;
+                        gf.genreList = gf.genreListInput.value = value;
+                        gf.genreListInput.addEventListener(`change`, changeGfValue.bind(null, gf.genreListInput, `genreList`, gf));
                     }
                 }
             }
@@ -8089,26 +8230,22 @@ min-width: 0;
                         <span>${name} ${multiple ? `<input type="number" min="1">` : ``}</span>
                     </div>
                 `);
-                saveKey = `gf_${key}${gf.type}`;
-                value = esgst[saveKey];
+                value = typeof preset[key] !== `undefined` ? preset[key] : false;
                 gf[key] = value;
-                checkbox = createCheckbox_v6(exceptionFilter, value);
-                checkbox.checkbox.addEventListener(`click`, saveGfValue.bind(null, gf, key, saveKey, checkbox));
+                gf[`${key}Checkbox`] = createCheckbox_v6(exceptionFilter, value);
+                gf[`${key}Checkbox`].checkbox.addEventListener(`click`, changeGfValue.bind(null, gf[`${key}Checkbox`], key, gf));
                 if (multiple) {
-                    input = exceptionFilter.lastElementChild.firstElementChild;
-                    key = `exceptionMultipleCopies`;
-                    saveKey = `gf_${key}${gf.type}`;
-                    value = esgst[saveKey];
-                    gf[key] = input.value = value;
-                    input.addEventListener(`change`, saveGfValue.bind(null, gf, key, saveKey, null));
+                    gf.exceptionMultipleInput = exceptionFilter.lastElementChild.firstElementChild;
+                    value = preset.exceptionMultipleCopies || 1;
+                    gf.exceptionMultipleCopies = gf.exceptionMultipleInput.value = value;
+                    gf.exceptionMultipleInput.addEventListener(`change`, changeGfValue.bind(null, gf.exceptionMultipleInput, `exceptionMultipleCopies`, gf));
                 }
             }
         }
         button.addEventListener(`click`, toggleGfContainer.bind(null, collapse, expand, filters));
-        esgst.giveawayFeatures.push(filterGfGiveaways.bind(null, gf));
 
         function createGfBasicFilter(filter) {
-            var display, displayMax, displayMin, max, min, element, infinite, maxKey, minKey, maxSaveKey, minSaveKey, maxSavedValue, minSavedValue, maxValue, minValue, name, slider, step, value;
+            var display, displayMax, displayMin, max, min, element, infinite, maxKey, minKey, maxSavedValue, minSavedValue, maxValue, minValue, name, slider, step, value;
             name = filter.name;
             if ((name === `Rating` && esgst.gc) || name !== `Rating`) {
                 minValue = filter.minValue;
@@ -8117,10 +8254,8 @@ min-width: 0;
                 infinite = filter.infinite;
                 maxKey = `max${name}`;
                 minKey = `min${name}`;
-                maxSaveKey = `gf_${maxKey}${gf.type}`;
-                minSaveKey = `gf_${minKey}${gf.type}`;
-                maxSavedValue = esgst[maxSaveKey];
-                minSavedValue = esgst[minSaveKey];
+                maxSavedValue = preset[maxKey] || maxValue;
+                minSavedValue = preset[minKey] || minValue;
                 if (!infinite && maxSavedValue > maxValue) {
                     maxSavedValue = maxValue;
                 }
@@ -8133,8 +8268,8 @@ min-width: 0;
                     </div>
                 `);
                 display = element.firstElementChild;
-                displayMin = display.firstElementChild.firstElementChild;
-                displayMax = displayMin.nextElementSibling;
+                gf[`${minKey}Input`] = displayMin = display.firstElementChild.firstElementChild;
+                gf[`${maxKey}Input`] = displayMax = displayMin.nextElementSibling;
                 displayMin.addEventListener(`change`, function () {
                     min = $(slider).slider(`values`, 0);
                     max = $(slider).slider(`values`, 1);
@@ -8171,10 +8306,6 @@ min-width: 0;
                         gf[maxKey] = ui.values[1];
                         gf[minKey] = ui.values[0];
                         filterGfGiveaways(gf);
-                        setValue(maxSaveKey, ui.values[1]);
-                        esgst[maxSaveKey] = ui.values[1];
-                        setValue(minSaveKey, ui.values[0]);
-                        esgst[minSaveKey] = ui.values[0];
                     },
                     min: minValue,
                     max: maxValue,
@@ -8190,11 +8321,8 @@ min-width: 0;
         }
     }
 
-    function saveGfValue(gf, key, saveKey, checkbox, event) {
-        var value;
-        gf[key] = value = checkbox ? checkbox.value : parseFloat(event.currentTarget.value);
-        setValue(saveKey, value);
-        esgst[saveKey] = value;
+    function changeGfValue(context, key, gf) {
+        gf[key] = context.value;
         filterGfGiveaways(gf);
     }
 
@@ -8204,7 +8332,7 @@ min-width: 0;
         filters.classList.toggle(`esgst-hidden`);
     }
 
-    function filterGfGiveaways(gf) {
+    function filterGfGiveaways(gf, unfilter) {
         var context, count, element, elements, filtered, genres, giveaway, giveaways, i, j, k, key, maxKey, minKey, n, n2, n3, name;
         if (gf.type === `Popup`) {
             giveaways = esgst.popupGiveaways;
@@ -8212,59 +8340,67 @@ min-width: 0;
             giveaways = esgst.currentGiveaways;
         }
         for (i = 0, n = giveaways.length; i < n; ++i) {
-            filtered = false;
             giveaway = giveaways[i];
-            if (document.body.contains(giveaway.outerWrap)) {
-                if (!gf.advancedSearch && ((giveaway.pinned && !gf.exceptionPinned) || (giveaway.regionRestricted && ((gf.exceptionRegionRestricted && gf.advancedSearch) || !gf.exceptionRegionRestricted)) || (giveaway.group && !gf.exceptionGroup) || (giveaway.whitelist && !gf.exceptionWhitelist) || (giveaway.wishlisted && !gf.exceptionWishlist) || ((giveaway.copies > gf.exceptionMultipleCopies) && !gf.exceptionMultiple) || (!giveaway.pinned && !giveaway.regionRestricted && !giveaway.group && !giveaway.whitelist && !giveaway.wishlisted && (giveaway.copies <= gf.exceptionMultipleCopies)))) {
-                    for (j = 0, n2 = gf.basicFilters.length; !filtered && j < n2; ++j) {
-                        name = gf.basicFilters[j].name;
-                        if ((name === `Rating` && esgst.gc && giveaway.gcReady) || name !== `Rating`) {
-                            minKey = `min${name}`;
-                            maxKey = `max${name}`;
-                            key = name.toLowerCase();
-                            if ((giveaway[key] < gf[minKey]) || (giveaway[key] > gf[maxKey])) {
-                                filtered = true;
-                            }
-                        }
-                    }
-                }
-                for (j = 0, n2 = gf.typeFilters.length; !filtered && j < n2; ++j) {
-                    key = gf.typeFilters[j].key;
-                    if ((key === `regionRestricted` && !gf.advancedSearch) || key !== `regionRestricted`) {
-                        if (((gf[key] === `disabled`) && giveaway[key]) || ((gf[key] === `none`) && !giveaway[key])) {
-                            filtered = true;
-                        }
-                    }
-                }
-                if (esgst.gc && giveaway.gcReady) {
-                    for (j = 0, n2 = gf.categoryFilters.length; !filtered && j < n2; ++j) {
-                        key = gf.categoryFilters[j].key;
-                        if ((key === `dlc` && !gf.advancedSearch) || key !== `dlc`) {
-                            if (key === `genres` && gf.genres) {
-                                if (giveaway.genres) {
-                                    genres = gf.genreList.toLowerCase().split(/,\s/);
-                                    for (k = 0, n3 = genres.length; k < n3 && giveaway.genres.indexOf(genres[k]) < 0; ++k);
-                                    if (k >= n3) {
-                                        filtered = true;
-                                    }
-                                } else {
-                                    filtered = true;
-                                }
-                            } else if (((gf[key] === `disabled`) && giveaway[key]) || ((gf[key] === `none`) && !giveaway[key])) {
-                                filtered = true;
-                            }
-                        }
-                    }
-                }
-                count = parseInt(gf.filteredCount.textContent);
-                if (filtered) {
-                    if (!giveaway.outerWrap.classList.contains(`esgst-hidden`)) {
-                        gf.filteredCount.textContent = count + 1;
-                        giveaway.outerWrap.classList.add(`esgst-hidden`);
-                    }
-                } else if (giveaway.outerWrap.classList.contains(`esgst-hidden`)) {
+            if (unfilter) {
+                if (giveaway.outerWrap.classList.contains(`esgst-hidden`)) {
+                    count = parseInt(gf.filteredCount.textContent);
                     gf.filteredCount.textContent = count - 1;
                     giveaway.outerWrap.classList.remove(`esgst-hidden`);
+                }
+            } else {
+                filtered = false;
+                if (document.body.contains(giveaway.outerWrap)) {
+                    if (!gf.advancedSearch && ((giveaway.pinned && !gf.exceptionPinned) || (giveaway.regionRestricted && ((gf.exceptionRegionRestricted && gf.advancedSearch) || !gf.exceptionRegionRestricted)) || (giveaway.group && !gf.exceptionGroup) || (giveaway.whitelist && !gf.exceptionWhitelist) || (giveaway.wishlisted && !gf.exceptionWishlist) || ((giveaway.copies > gf.exceptionMultipleCopies) && !gf.exceptionMultiple) || (!giveaway.pinned && !giveaway.regionRestricted && !giveaway.group && !giveaway.whitelist && !giveaway.wishlisted && (giveaway.copies <= gf.exceptionMultipleCopies)))) {
+                        for (j = 0, n2 = gf.basicFilters.length; !filtered && j < n2; ++j) {
+                            name = gf.basicFilters[j].name;
+                            if ((name === `Rating` && esgst.gc && giveaway.gcReady) || name !== `Rating`) {
+                                minKey = `min${name}`;
+                                maxKey = `max${name}`;
+                                key = name.toLowerCase();
+                                if ((giveaway[key] < gf[minKey]) || (giveaway[key] > gf[maxKey])) {
+                                    filtered = true;
+                                }
+                            }
+                        }
+                    }
+                    for (j = 0, n2 = gf.typeFilters.length; !filtered && j < n2; ++j) {
+                        key = gf.typeFilters[j].key;
+                        if ((key === `regionRestricted` && !gf.advancedSearch) || key !== `regionRestricted`) {
+                            if (((gf[key] === `disabled`) && giveaway[key]) || ((gf[key] === `none`) && !giveaway[key])) {
+                                filtered = true;
+                            }
+                        }
+                    }
+                    if (esgst.gc && giveaway.gcReady) {
+                        for (j = 0, n2 = gf.categoryFilters.length; !filtered && j < n2; ++j) {
+                            key = gf.categoryFilters[j].key;
+                            if ((key === `dlc` && !gf.advancedSearch) || key !== `dlc`) {
+                                if (key === `genres` && gf.genres) {
+                                    if (giveaway.genres) {
+                                        genres = gf.genreList.toLowerCase().split(/,\s/);
+                                        for (k = 0, n3 = genres.length; k < n3 && giveaway.genres.indexOf(genres[k]) < 0; ++k);
+                                        if (k >= n3) {
+                                            filtered = true;
+                                        }
+                                    } else {
+                                        filtered = true;
+                                    }
+                                } else if (((gf[key] === `disabled`) && giveaway[key]) || ((gf[key] === `none`) && !giveaway[key])) {
+                                    filtered = true;
+                                }
+                            }
+                        }
+                    }
+                    count = parseInt(gf.filteredCount.textContent);
+                    if (filtered) {
+                        if (!giveaway.outerWrap.classList.contains(`esgst-hidden`)) {
+                            gf.filteredCount.textContent = count + 1;
+                            giveaway.outerWrap.classList.add(`esgst-hidden`);
+                        }
+                    } else if (giveaway.outerWrap.classList.contains(`esgst-hidden`)) {
+                        gf.filteredCount.textContent = count - 1;
+                        giveaway.outerWrap.classList.remove(`esgst-hidden`);
+                    }
                 }
             }
         }
@@ -9298,10 +9434,10 @@ ${avatar.outerHTML}
                         });
                     }
                 }
-                if (esgst.gf && esgst.gf.filteredCount) {
+                if (esgst.gf && esgst.gf.filteredCount && esgst[`gf_enable${esgst.gf.type}`]) {
                     filterGfGiveaways(esgst.gf);
                 }
-                if (esgst.gfPopup) {
+                if (esgst.gfPopup && esgst.gfPopup.filteredCount && esgst.gf_enablePopup) {
                     filterGfGiveaways(esgst.gfPopup);
                 }
                 callback();
@@ -9333,10 +9469,10 @@ ${avatar.outerHTML}
                     GM_setValue(`sgRefreshedHeaderElements`, JSON.stringify(getHeaderElements()));
                 }
                 updateElgbButtons();
-                if (esgst.gf && esgst.gf.filteredCount) {
+                if (esgst.gf && esgst.gf.filteredCount && esgst[`gf_enable${esgst.gf.type}`]) {
                     filterGfGiveaways(esgst.gf);
                 }
-                if (esgst.gfPopup) {
+                if (esgst.gfPopup && esgst.gfPopup.filteredCount && esgst.gf_enablePopup) {
                     filterGfGiveaways(esgst.gfPopup);
                 }
                 callback();
@@ -11691,7 +11827,7 @@ ${avatar.outerHTML}
         var table;
         table = context.getElementsByClassName(`table__heading`)[0];
         if (table && !table.getElementsByClassName(`esgst-cewgd-heading`)[0]) {
-            ((esgst.gwc || esgst.gwr) ? table.firstElementChild.nextElementSibling : table.firstElementChild).insertAdjacentHTML(`afterEnd`, `
+            ((esgst.gwc || esgst.gwr) && esgst.enteredPath ? table.firstElementChild.nextElementSibling : table.firstElementChild).insertAdjacentHTML(`afterEnd`, `
                 <div class="table__column--width-small text-center esgst-cewgd-heading">Type</div>
                 <div class="table__column--width-small text-center esgst-cewgd-heading">Level</div>
             `);
@@ -12611,10 +12747,32 @@ ${avatar.outerHTML}
 
     /* [DS] Discussions Sorter */
 
-     function openDsPopout(ds) {
+    function loadDs() {
+        var ds;
+        ds = {};
+        ds.button = document.createElement(`div`);
+        ds.button.className = `esgst-heading-button`;
+        ds.button.title = `Sort discussions`;
+        ds.button.innerHTML = `
+            <i class="fa fa-sort"></i>
+        `;
+        ds.button.addEventListener(`click`, openDsPopout.bind(null, ds));
+        esgst.style += `                
+            .esgst-ds-popout {
+                background-color: #fff;
+                border: 1px solid #d2d6e0;
+                border-radius: 4px;
+                color: #465670;
+                padding: 10px;
+            }
+        `;
+        return ds.button;
+    }
+
+    function openDsPopout(ds) {
         if (!ds.popout) {
             ds.popout = createPopout_v6(`esgst-ds-popout`, true);
-            ds.toggle = createToggleSwitch(ds.popout.popout, null, true, `Enable`);
+            ds.toggle = createToggleSwitch(ds.popout.popout, `ds_auto`, false, `Auto Sort`, false, false, `Automatically sorts the discussions by the selected option when loading the page.`, esgst.ds_auto);
             ds.options = insertHtml(ds.popout.popout, `beforeEnd`, `
                 <select>
                     <option value="title_asc">Title - Ascending</option>
@@ -12629,8 +12787,9 @@ ${avatar.outerHTML}
                     <option value="comments_desc">Comments - Descending</option>
                 </select>
             `);
-            ds.toggle.onEnabled = sortContent.bind(null, `currentDiscussions`, ds.options);
-            ds.options.addEventListener(`change`, sortContent.bind(null, `currentDiscussions`, ds.options));
+            ds.options.value = esgst.ds_option;
+            ds.options.addEventListener(`change`, saveAndSortContent.bind(null, `ds_option`, `currentDiscussions`, ds.options, null));
+            ds.popout.popout.appendChild(createButtonSet(`green`, ``, `fa-arrow-circle-right`, ``, `Sort`, ``, saveAndSortContent.bind(null, `ds_option`, `currentDiscussions`, ds.options)).set);
         }
         if (ds.popout.popout.classList.contains(`esgst-hidden`)) {
             ds.popout.open(ds.button);
@@ -21253,8 +21412,9 @@ ${avatar.outerHTML}
                     if (window.location.pathname.match(/^\/messages/)) {
                         MR.URL = Permalink.getAttribute("href");
                     }
+                    MR.url = Permalink.getAttribute("href");
                 } else {
-                    MR.URL = Permalink.getAttribute("href");                    
+                    MR.url = MR.URL = Permalink.getAttribute("href");                    
                     MR.Comment.insertAdjacentHTML("beforeEnd", "<div class=\"comment__children comment_children\"></div>");
                 }
                 if (esgst.sg) {
@@ -21328,8 +21488,8 @@ ${avatar.outerHTML}
                 if (ReplyID) {
                     MR.Box.remove();
                     Reply = DOM.parse(Response.responseText).getElementById(ReplyID[1]).closest(".comment");
-                    if (esgst.rfi && esgst.rfi_s && esgst.inboxPath) {
-                        saveRfiReply(ReplyID[1], Reply.outerHTML, MR.URL);
+                    if (esgst.rfi && esgst.rfi_s) {
+                        saveRfiReply(ReplyID[1], Reply.outerHTML, MR.url);
                     }
                     addRMLLink(MR.Container, [Reply]);
                     loadEndlessFeatures(Reply);
@@ -21345,8 +21505,8 @@ ${avatar.outerHTML}
                 if (ResponseJSON.success) {
                     MR.Box.remove();
                     Reply = DOM.parse(ResponseJSON.html).getElementsByClassName("comment_outer")[0];
-                    if (esgst.rfi && esgst.rfi_s && esgst.inboxPath) {
-                        saveRfiReply(Reply.id, Reply.outerHTML, MR.URL);
+                    if (esgst.rfi && esgst.rfi_s) {
+                        saveRfiReply(Reply.id, Reply.outerHTML, MR.url);
                     }
                     addRMLLink(MR.Container, [Reply]);
                     loadEndlessFeatures(Reply);
@@ -21467,7 +21627,7 @@ ${avatar.outerHTML}
                         ResponseJSON = JSON.parse(Response.responseText);
                         if (ResponseJSON.type == "success" || ResponseJSON.success) {
                             ResponseHTML = DOM.parse(ResponseJSON[esgst.sg ? "comment" : "html"]);
-                            if (esgst.rfi && esgst.rfi_s && esgst.inboxPath) {
+                            if (esgst.rfi && esgst.rfi_s) {
                                 var reply = MR.Comment.cloneNode(true);
                                 if (esgst.sg) {
                                     reply.innerHTML = `
@@ -21480,7 +21640,7 @@ ${avatar.outerHTML}
                                         <div class="comment_children"></div>
                                     `;
                                 }
-                                saveRfiReply(MR.URL.match(/\/comment\/(.+)/)[1], reply.outerHTML, null, true);
+                                saveRfiReply(MR.url.match(/\/comment\/(.+)/)[1], reply.outerHTML, null, true);
                             }
                             DisplayState.innerHTML = ResponseHTML.getElementsByClassName(esgst.sg ? "comment__display-state" : "comment_body_default")[0].innerHTML;
                             EditState.classList.add(esgst.sg ? "is-hidden" : "is_hidden");
@@ -21549,7 +21709,7 @@ ${avatar.outerHTML}
             } else {
                 mr.Container.innerHTML = responseHtml.getElementsByClassName(`comment_inner`)[0].innerHTML;
             }
-            if (esgst.rfi && esgst.rfi_s && esgst.inboxPath) {
+            if (esgst.rfi && esgst.rfi_s) {
                 var reply = mr.Comment.cloneNode(true);
                 if (esgst.sg) {
                     reply.innerHTML = `
@@ -21562,7 +21722,7 @@ ${avatar.outerHTML}
                         <div class="comment_children"></div>
                     `;
                 }
-                saveRfiReply(mr.URL.match(/\/comment\/(.+)/)[1], reply.outerHTML, null, true);
+                saveRfiReply(mr.url.match(/\/comment\/(.+)/)[1], reply.outerHTML, null, true);
             }
             loadEndlessFeatures(mr.Container);
         }
@@ -25033,10 +25193,10 @@ ${avatar.outerHTML}
         window.setTimeout(checkGcComplete.bind(null, gc, savedGames, n), 1000);
     }
 
-    function checkGcComplete(gc, savedGames, total) {
+     function checkGcComplete(gc, savedGames, total) {
         var category, categories, giveaway, i, id, j, n, numCategories;
         if (gc.count === total) {
-            categories = [`hidden`, `bundled`, `owned`, `wishlisted`, `ignored`, `removed`, `tradingCards`, `achievements`, `multiplayer`, `steamCloud`, `linux`, `mac`, `dlc`, `package`, `genres`, `rating`];
+            categories = [`removed`, `tradingCards`, `achievements`, `multiplayer`, `steamCloud`, `linux`, `mac`, `dlc`, `package`, `genres`, `rating`];
             for (i = 0, n = esgst.currentGiveaways.length; i < n; ++i) {
                 giveaway = esgst.currentGiveaways[i];
                 if (!giveaway.gcReady) {
@@ -25079,10 +25239,10 @@ ${avatar.outerHTML}
                     }
                 }
             }
-            if (esgst.gf && esgst.gf.filteredCount) {
+            if (esgst.gf && esgst.gf.filteredCount && esgst[`gf_enable${esgst.gf.type}`]) {
                 filterGfGiveaways(esgst.gf);
             }
-            if (esgst.gfPopup) {
+            if (esgst.gfPopup && esgst.gfPopup.filteredCount && esgst.gf_enablePopup) {
                 filterGfGiveaways(esgst.gfPopup);
             }
             lockAndSaveGames(savedGames);
@@ -25391,7 +25551,7 @@ ${avatar.outerHTML}
         html = ``;
         for (i = 0, n = categories.length - 1; i <= n; ++i) {
             category = categories[i];
-            if (esgst[category.id] && ((category.id == `gc_b` && esgst.newGiveawayPath) || !esgst.newGiveawayPath) && ((category.id == `gc_b` && !esgst.gc_b_r) || (category.id != `gc_b`))) {
+            if (esgst[category.id] && ((category.id == `gc_b` && esgst.newGiveawayPath) || !esgst.newGiveawayPath) && ((category.id == `gc_b` && !esgst.gc_b_r) || (category.id != `gc_b`)) && ((category.id === `gc_b` && !location.pathname.match(/^\/bundle-games/)) || category.id !== `gc_b`)) {
                 if (category.id === `gc_p`) {
                     if (type === `subs`) {
                         value = true;
@@ -27593,6 +27753,15 @@ ${avatar.outerHTML}
         for (i = 0, n = esgst.giveawayFeatures.length; i < n; ++i) {
             esgst.giveawayFeatures[i](giveaways, main, source);
         }
+        if (esgst.gas && esgst[esgst.gas.autoKey]) {
+            sortContent(giveaways, esgst[esgst.gas.optionKey]);
+        }
+        if (esgst.gf && esgst.gf.filteredCount && esgst[`gf_enable${esgst.gf.type}`]) {
+            filterGfGiveaways(esgst.gf);
+        }
+        if (esgst.gfPopup && esgst.gfPopup.filteredCount && esgst.gf_enablePopup) {
+            filterGfGiveaways(esgst.gfPopup);
+        }
     }
 
     function getGiveaways(context, main, mainUrl) {
@@ -27623,7 +27792,7 @@ ${avatar.outerHTML}
     }
 
     function getGiveawayInfo(context, mainContext, games, savedUsers, ugd, main, mainUrl, ged) {
-        var category, categories, chance, element, giveaway, i, id, info, match, n, savedUser, uf, thinHeadings;
+        var category, categories, chance, element, giveaway, i, id, info, key, keys, match, n, savedUser, uf, thinHeadings;
         giveaway = {};
         giveaway.outerWrap = context;
         giveaway.gameId = giveaway.outerWrap.getAttribute(`data-game-id`);
@@ -27631,8 +27800,14 @@ ${avatar.outerHTML}
         if (info) {
             giveaway.id = info.id;
             giveaway.type = info.type;
-            if (games && games[giveaway.type][giveaway.id] && games[giveaway.type][giveaway.id].wishlisted) {
-                giveaway.wishlisted = true;
+            if (games && games[giveaway.type][giveaway.id]) {
+                keys = [`owned`, `wishlisted`, `hidden`, `ignored`, `bundled`];
+                for (i = 0, n = keys.length; i < n; ++i) {
+                    key = keys[i];
+                    if (games[giveaway.type][giveaway.id][key]) {
+                        giveaway[key] = true;
+                    }
+                }
             }
         }
         if (giveaway.outerWrap.classList.contains(`table__row-outer-wrap`) && esgst.giveawayPath) {
@@ -27823,6 +27998,9 @@ ${avatar.outerHTML}
         }
         if (esgst.dh) {
             getDhDiscussions(discussions);
+        }
+        if (esgst.ds && esgst.ds_auto) {
+            sortContent(discussions, esgst.ds_option);
         }
     }
 

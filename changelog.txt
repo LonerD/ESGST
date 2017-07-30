@@ -1,4 +1,16 @@
 /*
+ * July 30, 2017 - v6.Beta.23.3
+ */
+
+* Giveaways Sorter and Discussions Sorted now remember the last selected option and have an option to auto sort the pages when loading them.
+* Extended Giveaways Sorter to user and group pages.
+* Added a button to Giveaway Filters that allows you to enable/disable all filters for the current page (closes #292).
+* "Owned", "Wishlisted", "Hidden", "Ignored" and "Bundled" filters have been moved from category filters to type filters and now work with Game Categories disabled.
+* Giveaway Filters now works with presets (closes #192) and no longer saves automatically when altering filters (you have to click "Save" to update the current preset).
+* Fixed a bug in Created/Entered/Won Giveaway Details that was switching headers in the created/won pages.
+* Prevented "Bundled" category in Game Categories from loading in the bundle list page.
+
+/*
  * July 29, 2017 - v6.Beta.23.2
  */
 
