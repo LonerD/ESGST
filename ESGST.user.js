@@ -3,7 +3,7 @@
 // @namespace ESGST
 // @description Enhances SteamGifts and SteamTrades by adding some cool features to them.
 // @icon https://github.com/revilheart/ESGST/raw/master/Resources/esgstIcon.ico
-// @version 6.Beta.23.3
+// @version 6.Beta.23.4
 // @author revilheart
 // @downloadURL https://github.com/revilheart/ESGST/raw/master/ESGST.user.js
 // @updateURL https://github.com/revilheart/ESGST/raw/master/ESGST.meta.js
@@ -2681,6 +2681,9 @@
                             text-align: center;
                             border-radius: 0 0 4px 4px;
                         }
+                        .esgst-gf-button {
+                            margin-bottom: 0 !important;
+                        }
                         .esgst-pgb-button:hover, .esgst-gf-button:hover {
                             background-image:linear-gradient(rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0) 100%);
                         }
@@ -2878,7 +2881,7 @@
                     margin: 0 !important;
                 }
 
-                .esgst-gv-box.is-faded:hover {
+                .esgst-gv-box.is-faded:hover, .esgst-gv-box.esgst-faded:hover {
                     opacity: 1;
                 }
 
@@ -3053,7 +3056,7 @@
                 `;
             }
             if (esgst.gf) {
-                addGfContainer();
+                mainPageHeadingBefore.appendChild(loadGf(esgst.mainPageHeading));
             }
             if (esgst.gas) {
                 mainPageHeadingBefore.appendChild(loadGas());
@@ -3066,7 +3069,7 @@
             }
             if (esgst.groupPath) {
                 if (esgst.gf) {
-                    addGfContainer();
+                    mainPageHeadingBefore.appendChild(loadGf(esgst.mainPageHeading));
                 }
                 if (esgst.gas) {
                     mainPageHeadingBefore.appendChild(loadGas());
@@ -5131,6 +5134,24 @@
                 }
             }
         });
+        toggleSwitch.enable = function () {
+            toggleSwitch.input.checked = true;
+            if (toggleSwitch.onEnabled) {
+                toggleSwitch.onEnabled();
+            }
+            for (i = 0, n = toggleSwitch.dependencies.length; i < n; ++i) {
+                toggleSwitch.dependencies[i].classList.remove(`esgst-hidden`);
+            }
+        };
+        toggleSwitch.disable = function () {
+            toggleSwitch.input.checked = false;
+            if (toggleSwitch.onDisabled) {
+                toggleSwitch.onDisabled();
+            }
+            for (i = 0, n = toggleSwitch.dependencies.length; i < n; ++i) {
+                toggleSwitch.dependencies[i].classList.add(`esgst-hidden`);
+            }
+        };
         return toggleSwitch;
     }
 
@@ -5519,6 +5540,7 @@ display: inline-block;
 }
 
 .page__heading .esgst-toggle-switch-container.inline {
+    height: 16px;
     margin: 0 2px;
     line-height: normal;
     vertical-align: middle;
@@ -5652,6 +5674,10 @@ background-color: #b9a074;
     white-space: nowrap;
 }
 
+.esgst-gf-container {
+background-color:#E8EAEF;border-radius:4px;
+}
+
 .esgst-gf-container input {
 display: inline-block;
 height: 20px;
@@ -5714,7 +5740,13 @@ padding: 5px 15px;
 margin: 0 0 0 10px;
 }
 
-.PGBContainer, .esgst-gf-box {
+.PGBContainer {
+border-radius: 0 !important;
+margin: 0! important;
+}
+
+.esgst-gf-box {
+    border:1px solid #d2d6e0;background-color:#E8EAEF;padding:0 15px;
 border-radius: 0 !important;
 margin: 0! important;
 }
@@ -6339,7 +6371,7 @@ min-width: 0;
     /* [FMPH] Fixed Main Page Heading */
 
     function loadFmph() {
-        var height, html, width;
+        var height, html, newHeight, width;
         if (esgst.mainPageHeading) {
             html = `
                 <div class="esgst-fmph-placeholder esgst-hidden"></div>
@@ -6351,6 +6383,7 @@ min-width: 0;
             document.addEventListener(`scroll`, fixMainPageHeading);
             fixMainPageHeading();
             height = esgst.mainPageHeading.offsetHeight;
+            newHeight = (esgst.gf && (esgst.giveawaysPath || esgst.groupsPath)) ? height + 23 : height;
             GM_addStyle(`
                 .esgst-fmph {
                     position: fixed;
@@ -6358,14 +6391,19 @@ min-width: 0;
                     z-index: 998;
                 }
                 .esgst-fmph-placeholder {
-                    height: ${height}px;
+                    height: ${newHeight}px;
                 }
                 .esgst-fmph-background {
-                    height: ${esgst.pageTop + height + 5}px;
+                    height: ${esgst.pageTop + newHeight + 5}px;
                     padding: 0;
                     position: fixed;
                     top: 0;
                     z-index: 997;
+                }
+                .esgst-gf-container-fixed {
+                    position: fixed;
+                    top: ${esgst.pageTop + 34}px;
+                    z-index: 998;
                 }
             `);
             esgst.commentsTop += height + 30;
@@ -6380,6 +6418,10 @@ min-width: 0;
                 width = `${window.getComputedStyle(esgst.mainPageHeading.parentElement).getPropertyValue(`width`)}`;
                 esgst.mainPageHeading.style.width = width;
                 esgst.mainPageHeadingBackground.style.width = width;
+                if (esgst.gf && esgst.gf.container) {
+                    esgst.gf.container.classList.add(`esgst-gf-container-fixed`);
+                    esgst.gf.container.style.width = width;
+                }
                 document.addEventListener(`scroll`, unfixMainPageHeading);
             }
         }
@@ -6393,6 +6435,9 @@ min-width: 0;
                 width = ``;
                 esgst.mainPageHeading.style.width = width;
                 esgst.mainPageHeadingBackground.style.width = width;
+                if (esgst.gf && esgst.gf.container) {
+                    esgst.gf.container.classList.remove(`esgst-gf-container-fixed`);
+                }
                 document.addEventListener(`scroll`, fixMainPageHeading);
             }
         }
@@ -7542,17 +7587,7 @@ min-width: 0;
             }
         });
     }
-
-    function addGfPresetButton(gf, heading, input) {
-        var button;
-        button = insertHtml(heading, `beforeEnd`, `
-            <div class="esgst-heading-button" title="View/apply presets">
-                <i class="fa fa-sliders"></i>
-            </div>
-        `);
-        button.addEventListener(`click`, openGfPresetPopup.bind(null, gf, input));
-    }
-    
+  
     function openGfPresetPopup(gf, input) {
         var details, i, j, key, keys, n, numKeys, popup, preset, presets, savedPreset, savedPreset, toException, toHide, toOnly;
         popup = createPopup(`fa-sliders`, `View/apply presets:`, true);
@@ -7820,13 +7855,13 @@ min-width: 0;
         GM_setValue(`filterPresets`, JSON.stringify(savedPresets));
     }
 
-    function addGfSavePresetButton(gf, heading, presets) {
+    function addGfSavePresetButton(gf, presetButton, presets) {
         var input, message, warning;
         input = presets.firstElementChild.nextElementSibling;
         message = input.nextElementSibling;
         warning = message.nextElementSibling;
         presets.appendChild(createButtonSet(`green`, `grey`, `fa-check`, `fa-circle-o-notch fa-spin`, `Save Preset`, `Saving...`, saveGfPreset.bind(null, gf, input, message, warning)).set);
-        addGfPresetButton(gf, heading, input);
+        presetButton.addEventListener(`click`, openGfPresetPopup.bind(null, gf, input));
     }
     
     function saveGfPreset(gf, input, message, warning, callback) {
@@ -7875,9 +7910,9 @@ min-width: 0;
         }
     }
 
-    function addGfContainer(context) {
+    function loadGf(heading, popup) {
         var gf, basicFilter, basicFilters, box, button, categoryFilter, categoryFilters, checkbox, collapse, container, exceptionFilter, exceptionFilters, expand, filter, filters, genres, i, id, input, key, maxKey, minKey,  maxSavedValue, minSavedValue, maxValue, minValue, multiple, n, name, oldKey, step, type, typeFilter, typeFilters, value, values;
-        if (context) {
+        if (popup) {
             type = `Popup`;
         } else {
             type = window.location.search.match(/type=(wishlist|recommended|group|new)/);
@@ -8064,18 +8099,17 @@ min-width: 0;
         } else {
             esgst.gf = gf;
         }
-        var heading = insertHtml(context || esgst.pinnedGiveaways || esgst.mainPageHeading, `beforeBegin`, `
-            <div class="page__heading">
-                <div class="page__heading__breadcrumbs"><span></span><span> Giveaway Filters (<span>0</span> Filtered)</span></div>
-            </div>
-        `);
-        gf.filteredCount = heading.firstElementChild.lastElementChild.lastElementChild;
-        var gfSwitch = createToggleSwitch(heading.firstElementChild.firstElementChild, `gf_enable${gf.type}`, true, ``, false, false, null, esgst[`gf_enable${gf.type}`]);
-        gfSwitch.onDisabled = filterGfGiveaways.bind(null, gf, true);
-        gfSwitch.onEnabled = filterGfGiveaways.bind(null, gf);
-        container = insertHtml(context || esgst.pinnedGiveaways || esgst.mainPageHeading, `beforeBegin`, `
-            <div class="pinned-giveaways__outer-wrap esgst-gf-container">
-                <div class="pinned-giveaways__inner-wrap esgst-gf-box">
+        var gfButton = document.createElement(`div`);
+        gfButton.className = `esgst-heading-button`;
+        gfButton.innerHTML = `
+            <span></span>
+            <i class="fa fa-sliders" title="View/apply presets"></i>
+        `;
+        var gfSwitch = createToggleSwitch(gfButton.firstElementChild, `gf_enable${gf.type}`, true, ``, false, false, null, esgst[`gf_enable${gf.type}`]);
+        var presetButton = gfButton.lastElementChild;
+        gf.container = container = insertHtml(heading, `afterEnd`, `
+            <div class="esgst-gf-container">
+                <div class="esgst-gf-box">
                     <div class="esgst-gf-filters esgst-hidden">
                         <div class="esgst-gf-basic-filters esgst-hidden">
                             <div>
@@ -8125,10 +8159,15 @@ min-width: 0;
                 </div>
                 <div class="esgst-gf-button">
                     <span>Expand</span>
-                    <span class="esgst-hidden">Collapse</span> filters
+                    <span class="esgst-hidden">Collapse</span> filters (<span>0</span> filtered)
                 </div>
             </div>
         `);
+        if (esgst[`gf_enable${gf.type}`]) {
+            container.classList.remove(`esgst-hidden`);
+        }
+        gfSwitch.onDisabled = filterGfGiveaways.bind(null, gf, true);
+        gfSwitch.onEnabled = filterGfGiveaways.bind(null, gf);
         box = container.firstElementChild;
         filters = box.firstElementChild;
         basicFilters = filters.firstElementChild;
@@ -8137,10 +8176,11 @@ min-width: 0;
         exceptionFilters = categoryFilters.nextElementSibling;
         var presets = exceptionFilters.nextElementSibling.nextElementSibling;
         var presetInput = presets.firstElementChild.nextElementSibling;
-        addGfSavePresetButton(gf, heading, presets);
+        addGfSavePresetButton(gf, presetButton, presets);
         button = box.nextElementSibling;
         expand = button.firstElementChild;
         collapse = expand.nextElementSibling;
+        gf.filteredCount = collapse.nextElementSibling;
         var preset = esgst[`gf_preset${gf.type}`];
         var savedPresets;
         if (preset) {
@@ -8319,6 +8359,8 @@ min-width: 0;
                 });
             }
         }
+
+        return gfButton;
     }
 
     function changeGfValue(context, key, gf) {
@@ -8829,10 +8871,14 @@ ${avatar.outerHTML}
                 });
             }
             button.addEventListener(`click`, function () {
+                var heading;
                 popup = createPopup(`fa-star`, `Decrypted Giveaways`, true);
                 results = insertHtml(popup.scrollable, `beforeEnd`, `<div class="esgst-text-left"></div>`);
                 if (esgst.gf) {
-                    addGfContainer(popup.scrollable);
+                    heading = insertHtml(popup.scrollable, `afterBegin`, `
+                        <div class="page__heading"></div>
+                    `);
+                    heading.appendChild(loadGf(heading, true));
                 }
                 i = 0;
                 set = createButtonSet(`green`, `grey`, `fa-plus`, `fa-circle-o-notch fa-spin`, `Load More`, `Loading more...`, function (callback) {
@@ -8892,7 +8938,7 @@ ${avatar.outerHTML}
                         builtGiveaway = buildGiveaway(responseHtml, response.finalUrl);
                         if (builtGiveaway && builtGiveaway.started) {
                             results.insertAdjacentHTML(`beforeEnd`, builtGiveaway.html);
-                            var giveawayy = getGiveawayInfo(results.lastElementChild.lastElementChild, document, null, null, false, false, null, true);
+                            var giveawayy = getGiveawayInfo(results.lastElementChild.lastElementChild, document, esgst.games, null, false, false, null, true);
                             esgst.popupGiveaways.push(giveawayy.giveaway);
                             currentGiveaways[giveawayy.data.code] = giveawayy.data;
                             loadEndlessFeatures(results.lastElementChild, false, `ged`);
@@ -9099,35 +9145,70 @@ ${avatar.outerHTML}
         esgst.giveawayFeatures.push(setOchgbButtons);
     }
 
-    function setOchgbButtons(giveaways) {
-        var i, n;
+    function setOchgbButtons(giveaways, main) {
+        var button, giveaway, i, n;
         for (i = 0, n = giveaways.length; i < n; ++i) {
-            setOchgbButton(giveaways[i]);
+            giveaway = giveaways[i];
+            button = giveaway.innerWrap.querySelector(`.giveaway__hide, .featured__giveaway__hide`);
+            if (button) {
+                if (esgst.giveawayPath && main) {
+                    button = button.parentElement;
+                }
+                giveaway.ochgbButton = insertHtml(button, `afterEnd`, `<a></a>`);
+                button.remove();
+                giveaway.fade = fadeOchgbGiveaway.bind(null, giveaway, main);
+                giveaway.unfade = unfadeOchgbGiveaway.bind(null, giveaway, main);
+                addOchgbHideButton(giveaway, main);
+            }
         }
     }
 
-    function setOchgbButton(giveaway) {
+    function addOchgbHideButton(giveaway, main) {
         var button, i, matches, n, newButton;
-        button = giveaway.innerWrap.querySelector(`.giveaway__hide, .featured__giveaway__hide`);
-        if (button) {
-            if (esgst.giveawayPath) {
-                button = button.parentElement;
+        giveaway.ochgbButton.innerHTML = `
+            <i class="${esgst.giveawayPath && main ? `` : `giveaway__icon`} fa fa-eye-slash" title="Hide giveaway"></i>        
+        `;
+        giveaway.ochgbButton.firstElementChild.addEventListener(`click`, hideOchgbGiveaway.bind(null, giveaway));
+    }
+
+    function addOchgbUnhideButton(giveaway, main) {
+        var button, i, matches, n, newButton;
+        giveaway.ochgbButton.innerHTML = `
+            <i class="${esgst.giveawayPath && main ? `` : `giveaway__icon`} fa fa-eye" title="Unhide giveaway"></i>        
+        `;
+        giveaway.ochgbButton.firstElementChild.addEventListener(`click`, unhideOchgbGiveaway.bind(null, giveaway));
+    }
+
+    function fadeOchgbGiveaway(giveaway, main) {
+        if ((esgst.giveawayPath && !main) || !esgst.giveawayPath) {
+            giveaway.innerWrap.classList.add(`esgst-faded`);
+        }
+        addOchgbUnhideButton(giveaway);
+    }
+
+    function unfadeOchgbGiveaway(giveaway, main) {
+        if ((esgst.giveawayPath && !main) || !esgst.giveawayPath) {
+            giveaway.innerWrap.classList.remove(`esgst-faded`);
+        }
+        addOchgbHideButton(giveaway);
+    }
+
+    function hideOchgbGiveaway(giveaway, event) {
+        event.currentTarget.className = `giveaway__icon fa fa-circle-o-notch fa-spin`;
+        request(`xsrf_token=${esgst.xsrfToken}&do=hide_giveaways_by_game_id&game_id=${giveaway.gameId}`, false, `/ajax.php`, completeOchgbProcess.bind(null, giveaway, `fade`));
+    }
+
+    function unhideOchgbGiveaway(giveaway, event) {
+        event.currentTarget.className = `giveaway__icon fa fa-circle-o-notch fa-spin`;
+        request(`xsrf_token=${esgst.xsrfToken}&do=remove_filter&game_id=${giveaway.gameId}`, false, `/ajax.php`, completeOchgbProcess.bind(null, giveaway, `unfade`));
+    }
+
+    function completeOchgbProcess(giveaway, key) {
+        var i, n;
+        for (i = 0, n = esgst.currentGiveaways.length; i < n; ++i) {
+            if (esgst.currentGiveaways[i].gameId === giveaway.gameId) {
+                esgst.currentGiveaways[i][key]();
             }
-            newButton = insertHtml(button, `afterEnd`, `<a><i class="${esgst.giveawayPath ? `` : `giveaway__icon`} fa fa-eye-slash"></i></a>`);
-            button.remove();
-            newButton.addEventListener(`click`, function() {
-                newButton.firstElementChild.className = `giveaway__icon fa fa-circle-o-notch fa-spin`;
-                request(`xsrf_token=${esgst.xsrfToken}&do=hide_giveaways_by_game_id&game_id=${giveaway.gameId}`, false, `/ajax.php`, function() {
-                    newButton.remove();
-                    if (!esgst.giveawayPath) {
-                        giveaway.outerWrap.remove();
-                        matches = document.querySelectorAll(`.giveaway__row-outer-wrap[data-game-id="${giveaway.gameId}"]`);
-                        for (i = 0, n = matches.length; i < n; ++i) {
-                            matches[i].remove();
-                        }
-                    }
-                });
-            });
         }
     }
 
@@ -12223,11 +12304,15 @@ ${avatar.outerHTML}
     /* [TGE] Train Giveaways Extractor */
 
     function extractTgeGiveaways(tge) {
+        var heading;
         if (!tge.popup) {
             tge.popup = createPopup(`fa-train`, `Choo choo!`);
             tge.results = insertHtml(tge.popup.scrollable, `beforeEnd`, `<div class="esgst-text-left"></div>`);
             if (esgst.gf) {
-                addGfContainer(tge.popup.scrollable);
+                heading = insertHtml(tge.popup.scrollable, `afterBegin`, `
+                    <div class="page__heading"></div>
+                `);
+                heading.appendChild(loadGf(heading, true));
             }
             tge.full = esgst.gc_gi || esgst.gc_r || esgst.gc_rm || esgst.gc_ea || esgst.gc_tc || esgst.gc_a || esgst.gc_mp || esgst.gc_sc || esgst.gc_l || esgst.gc_m || esgst.gc_dlc || esgst.gc_g;
             tge.count = 0;
@@ -12296,7 +12381,7 @@ ${avatar.outerHTML}
                 tge.progress.lastElementChild.textContent = tge.total;
                 giveaway = buildGiveaway(context, url);
                 if (giveaway) {
-                    esgst.popupGiveaways.push(getGiveawayInfo(insertHtml(tge.results.lastElementChild, `beforeEnd`, giveaway.html).firstElementChild, document).giveaway);
+                    esgst.popupGiveaways.push(getGiveawayInfo(insertHtml(tge.results.lastElementChild, `beforeEnd`, giveaway.html).firstElementChild, document, esgst.games).giveaway);
                 }
                 tge.popup.reposition();
             }
@@ -25729,7 +25814,12 @@ ${avatar.outerHTML}
             "</div>" +
             "<div class=\"form__rows SMMenu\"></div>";
         var heading = Container.getElementsByClassName(`page__heading`)[0];
-        createSMButtons(heading, [{
+        createSMButtons(heading, [/*{
+            Check: true,
+            Icons: ["fa-arrow-circle-up", "fa-cog"],
+            Name: "esgst-heading-button",
+            Title: "Import data"
+        }, */{
             Check: true,
             Icons: ["fa-arrow-circle-up", "fa-arrow-circle-down", "fa-trash"],
             Name: "SMManageData",
@@ -25882,6 +25972,24 @@ ${avatar.outerHTML}
         SMSyncFrequency.addEventListener("change", function () {
             setValue(`syncFrequency`, SMSyncFrequency.selectedIndex);
         });
+        var options = [
+            {
+                key: `users`,
+                id: `Users`,
+                name: `Users`                
+            },
+            {
+                key: `games`,
+                id: `Games`,
+                name: `Games`
+            },
+            {
+                key: `giveaways`,
+                id: `Giveaways`,
+                name: `Giveaways`
+            }
+        ];
+        //heading.firstElementChild.addEventListener(`click`, openImportPopup.bind(null, options));
         SMManageData.addEventListener("click", function () {
             var Popup, SM, SMImport, SMExport, SMDelete;
             Popup = createPopup(`fa-cog`, `Manage data:`, true);
@@ -29444,6 +29552,134 @@ ${avatar.outerHTML}
         var popup;
         popup = createPopup(`fa-exclamation`, message, true);
         popup.open();
+    }
+
+    /*
+     * Helper Functions
+     */
+
+    function createConfirmation(message, onYes, onNo) {
+        var popup;
+        popup = createPopup(`fa-question`, message, true);
+        popup.description.appendChild(createButtonSet(`green`, ``, `fa-check`, ``, `Yes`, ``, completeConfirmation.bind(null, onYes)));
+        popup.description.appendChild(createButtonSet(`red`, ``, `fa-times`, ``, `No`, ``, completeConfirmation.bind(null, onNo)));
+        popup.onClose = completeConfirmation.bind(null, onNo);
+        popup.open();
+    }
+
+    function completeConfirmation(callback) {
+        if (callback) {
+            callback();
+        }   
+    }
+
+    /* Import Tool */
+
+    function openImportPopup(options) {
+        var i, id, input, n, options, popup, switches, warning;
+        switches = {};
+        popup = createPopup(`fa-arrow-up`, `Import Data`, true, true);
+        for (i = 0, n = options.length; i < n; ++i) {
+            option = options[i];
+            id = `import${option.id}`;
+            switches[option.key] = createToggleSwitch(popup.scrollable, id, false, option.name, false, false, option.tooltip, esgst[id]);
+        }
+        input = insertHtml(popup.description, `beforeEnd`, `<input type="file"/>`);
+        warning = insertHtml(popup.description, `beforeEnd`, `<div class="esgst-description esgst-red"></div>`);
+        popup.description.appendChild(createButtonSet(`green`, `grey`, `fa-arrow-circle-up`, `fa-circle-o-notch fa-spin`, `Select All`, ``, selectSwitches.bind(null, true, switches)).set);
+        popup.description.appendChild(createButtonSet(`green`, `grey`, `fa-arrow-circle-up`, `fa-circle-o-notch fa-spin`, `Select None`, ``, selectSwitches.bind(null, false, switches)).set);
+        popup.description.appendChild(createButtonSet(`green`, `grey`, `fa-arrow-circle-up`, `fa-circle-o-notch fa-spin`, `Import`, `Importing...`, loadImportFile.bind(null, input, warning)).set);
+        popup.open();
+    }
+
+    function loadImportFile(input, warning, callback) {
+        var file, reader;
+        file = input.files[0];
+        if (file) {
+            if (file.name.match(/esgst-data.*?\.json/)) {
+                reader = new FileReader();
+                reader.readAsText(file);
+                reader.onload = readImportFile.bind(null, reader, warning, callback);
+            } else {
+                warning.textContent = `Invalid file!`;
+                callback();
+            }
+        } else {
+            warning.textContent = `No file was loaded!`;
+            callback();
+        }
+    }
+
+    function readImportFile(reader, warning, callback) {
+        var file;
+        file = JSON.parse(reader.result);
+        if (file.data) {
+            createConfirmation(`Are you sure you want to import this data? A copy of your current data will be downloaded as a precaution.`, importData.bind(null, file.data), callback);
+        } else {
+            warning.textContent = `Invalid file!`;
+            callback();
+        }
+    }
+
+    function importData(data) {
+
+    }
+
+    /* Export Tool */
+
+    function openExportPopup(options) {
+        var i, id, n, popup, switches, warning;
+        switches = {};
+        popup = createPopup(`fa-arrow-down`, `Export Data`, true);
+        for (i = 0, n = options.length; i < n; ++i) {
+            id = `export${option.id}`;
+            switches[option.key] = createToggleSwitch(popup.scrollable, id, false, option.name, false, false, option.tooltip, esgst[id]);
+        }
+        warning = insertHtml(popup.description, `beforeEnd`, `<div class="esgst-description esgst-red"></div>`);
+        popup.description.appendChild(createButtonSet(`green`, `grey`, `fa-arrow-circle-up`, `fa-circle-o-notch fa-spin`, `Select All`, ``, selectSwitches.bind(null, true, switches)).set);
+        popup.description.appendChild(createButtonSet(`green`, `grey`, `fa-arrow-circle-up`, `fa-circle-o-notch fa-spin`, `Select None`, ``, selectSwitches.bind(null, false, switches)).set);
+        popup.description.appendChild(createButtonSet(`green`, `grey`, `fa-arrow-circle-up`, `fa-circle-o-notch fa-spin`, `Export`, `Exporting...`, exportData.bind(null, input, warning)).set);
+    }
+
+    function exportData() {
+
+    }
+
+    /* Delete Tool */
+
+    function openDeletePopup(options) {
+        var i, id, n, popup, switches, warning;
+        switches = {};
+        popup = createPopup(`fa-trash`, `Delete Data`, true);
+        for (i = 0, n = options.length; i < n; ++i) {
+            id = `export${option.id}`;
+            switches[option.key] = createToggleSwitch(popup.scrollable, id, false, option.name, false, false, option.tooltip, esgst[id]);
+        }
+        warning = insertHtml(popup.description, `beforeEnd`, `<div class="esgst-description esgst-red"></div>`);
+        popup.description.appendChild(createButtonSet(`green`, `grey`, `fa-arrow-circle-up`, `fa-circle-o-notch fa-spin`, `Select All`, ``, selectSwitches.bind(null, true, switches)).set);
+        popup.description.appendChild(createButtonSet(`green`, `grey`, `fa-arrow-circle-up`, `fa-circle-o-notch fa-spin`, `Select None`, ``, selectSwitches.bind(null, false, switches)).set);
+        popup.description.appendChild(createButtonSet(`green`, `grey`, `fa-arrow-circle-up`, `fa-circle-o-notch fa-spin`, `Delete`, `Deleting...`, deleteData.bind(null, input, warning)).set);
+    }
+
+    function deleteData() {
+
+    }
+
+    /* */
+
+    function selectSwitches(select, switches, callback) {
+        if (select) {
+            for (key in switches) {
+                switches[key].enable();
+            }
+        } else {
+            for (key in switches) {
+                switches[key].disable();                
+            }
+        }
+        if (callback) {
+            callback();
+        }
     }
 
 })();

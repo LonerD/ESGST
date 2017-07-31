@@ -1,4 +1,12 @@
 /*
+ * July 31, 2017 - v6.Beta.23.4
+ */
+
+* Fixed a bug in Giveaway Filters that was not detecting "Owned", "Wishlisted", "Hidden", "Ignored" and "Bundled" filters in popup filters.
+* Moved Giveaway Filters to the main page heading, so that it scrolls with the page.
+* One-Click Hide Giveaway Button no longer immediately removes the giveaways (closes #271), but simply fades them, in case of accidental clicks, and also adds a button to unhide the giveaway.
+
+/*
  * July 30, 2017 - v6.Beta.23.3
  */
 
