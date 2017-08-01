@@ -1,4 +1,13 @@
 /*
+ * August 1, 2017 - v6.Beta.23.5
+ */
+
+* Separated the functionality of fading giveaways in One-Click Hide Giveaway Button into an option (Giveaways.11.1).
+* Fixed a bug that was showing chance/ratio in the review giveaway page (closes #201).
+* Fixed a bug that was not showing chance/ratio for ended invite only giveaways.
+* Next/Previous Train Hotkeys now uses the browser history to go to the previous wagon if there isn't a previous link (closes #300).
+
+/*
  * July 31, 2017 - v6.Beta.23.4
  */
 

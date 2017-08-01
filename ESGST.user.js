@@ -3,7 +3,7 @@
 // @namespace ESGST
 // @description Enhances SteamGifts and SteamTrades by adding some cool features to them.
 // @icon https://github.com/revilheart/ESGST/raw/master/Resources/esgstIcon.ico
-// @version 6.Beta.23.4
+// @version 6.Beta.23.5
 // @author revilheart
 // @downloadURL https://github.com/revilheart/ESGST/raw/master/ESGST.user.js
 // @updateURL https://github.com/revilheart/ESGST/raw/master/ESGST.meta.js
@@ -1274,6 +1274,13 @@
                                     <li>Allows you to hide giveaways with one click.</li>
                                 </ul>
                             `,
+                            features: [
+                                {
+                                    id: `ochgb_f`,
+                                    name: `Fade hidden giveaways instead of removing them.`,
+                                    sg: true
+                                }
+                            ],
                             id: `ochgb`,
                             load: loadOchgb,
                             name: `One-Click Hide Giveaway Button`,
@@ -9205,9 +9212,17 @@ ${avatar.outerHTML}
 
     function completeOchgbProcess(giveaway, key) {
         var i, n;
-        for (i = 0, n = esgst.currentGiveaways.length; i < n; ++i) {
-            if (esgst.currentGiveaways[i].gameId === giveaway.gameId) {
-                esgst.currentGiveaways[i][key]();
+        if (esgst.ochgb_f) {
+            for (i = 0, n = esgst.currentGiveaways.length; i < n; ++i) {
+                if (esgst.currentGiveaways[i].gameId === giveaway.gameId) {
+                    esgst.currentGiveaways[i][key]();
+                }
+            }
+        } else {
+            for (i = 0, n = esgst.currentGiveaways.length; i < n; ++i) {
+                if (esgst.currentGiveaways[i].gameId === giveaway.gameId) {
+                    esgst.currentGiveaways[i].outerWrap.remove();
+                }
             }
         }
     }
@@ -9220,13 +9235,15 @@ ${avatar.outerHTML}
 
     function addGwcChances(giveaways, main, source) {
         var giveaway, i, n;
-        for (i = 0, n = giveaways.length; i < n; ++i) {
-            giveaway = giveaways[i];
-            if ((((esgst.createdPath || esgst.wonPath) && !main) || (!esgst.createdPath && !esgst.wonPath)) && ((giveaway.inviteOnly && giveaway.url) || !giveaway.inviteOnly) && !giveaway.innerWrap.getElementsByClassName(`esgst-gwc`)[0]) {
-                if (giveaway.started) {
-                    addGwcChance(insertHtml(giveaway.panel, (esgst.gv && ((main && esgst.giveawaysPath) || (source === `gb` && esgst.gv_gb) || (source === `ged` && esgst.gv_ged) || (source === `tge` && esgst.gv_tge))) ? `afterBegin` : `beforeEnd`, `<div class="${esgst.giveawayPath ? `featured__column` : ``} esgst-gwc" title="Giveaway Winning Chance">`), giveaway);
-                } else {
-                    giveaway.chance = 100;
+        if (((esgst.createdPath || esgst.wonPath || esgst.newGiveawayPath) && !main) || (!esgst.createdPath && !esgst.wonPath && !esgst.newGiveawayPath)) {
+            for (i = 0, n = giveaways.length; i < n; ++i) {
+                giveaway = giveaways[i];
+                if (((giveaway.inviteOnly && giveaway.ended) || !giveaway.inviteOnly) && !giveaway.innerWrap.getElementsByClassName(`esgst-gwc`)[0]) {
+                    if (giveaway.started) {
+                        addGwcChance(insertHtml(giveaway.panel, (esgst.gv && ((main && esgst.giveawaysPath) || (source === `gb` && esgst.gv_gb) || (source === `ged` && esgst.gv_ged) || (source === `tge` && esgst.gv_tge))) ? `afterBegin` : `beforeEnd`, `<div class="${esgst.giveawayPath ? `featured__column` : ``} esgst-gwc" title="Giveaway Winning Chance">`), giveaway);
+                    } else {
+                        giveaway.chance = 100;
+                    }
                 }
             }
         }
@@ -9296,10 +9313,12 @@ ${avatar.outerHTML}
 
     function addGwrRatios(giveaways, main, source) {
         var giveaway, i, n;
-        for (i = 0, n = giveaways.length; i < n; ++i) {
-            giveaway = giveaways[i];
-            if ((((esgst.createdPath || esgst.wonPath) && !main) || (!esgst.createdPath && !esgst.wonPath)) && giveaway.started && ((giveaway.inviteOnly && giveaway.url) || !giveaway.inviteOnly) && !giveaway.innerWrap.getElementsByClassName(`esgst-gwr`)[0]) {
-                addGwcRatio(insertHtml(giveaway.panel, (esgst.gv && ((main && esgst.giveawaysPath) || (source === `gb` && esgst.gv_gb) || (source === `ged` && esgst.gv_ged) || (source === `tge` && esgst.gv_tge))) ? `afterBegin` : `beforeEnd`, `<div class="${esgst.giveawayPath ? `featured__column` : ``} esgst-gwr" title="Giveaway Winning Ratio">`), giveaway);
+        if (((esgst.createdPath || esgst.wonPath || esgst.newGiveawayPath) && !main) || (!esgst.createdPath && !esgst.wonPath && !esgst.newGiveawayPath)) {
+            for (i = 0, n = giveaways.length; i < n; ++i) {
+                giveaway = giveaways[i];
+                if (giveaway.started && ((giveaway.inviteOnly && giveaway.ended) || !giveaway.inviteOnly) && !giveaway.innerWrap.getElementsByClassName(`esgst-gwr`)[0]) {
+                    addGwcRatio(insertHtml(giveaway.panel, (esgst.gv && ((main && esgst.giveawaysPath) || (source === `gb` && esgst.gv_gb) || (source === `ged` && esgst.gv_ged) || (source === `tge` && esgst.gv_tge))) ? `afterBegin` : `beforeEnd`, `<div class="${esgst.giveawayPath ? `featured__column` : ``} esgst-gwr" title="Giveaway Winning Ratio">`), giveaway);
+                }
             }
         }
     }
@@ -12276,6 +12295,7 @@ ${avatar.outerHTML}
     }
 
     function loadNpthGiveaway(next, previous, event) {
+        var referrer;
         if (!event.target.closest(`input, textarea`)) {
             if (event.key === esgst.npth_previousKey) {
                 if (previous) {
@@ -12285,7 +12305,16 @@ ${avatar.outerHTML}
                         window.location.href = previous.getAttribute(`href`);
                     }
                 } else {
-                    createAlert(`No previous link found.`);
+                    referrer = document.referrer;
+                    if (referrer.match(/\/giveaway\//) && ((next && referrer !== next.getAttribute(`href`)) || !next)) {
+                        if (event.ctrlKey) {
+                            window.open(referrer);
+                        } else {
+                            window.location.href = referrer;
+                        }
+                    } else {
+                        createAlert(`No previous link found.`);
+                    }
                 }
             } else if (event.key === esgst.npth_nextKey) {
                 if (next) {
@@ -29641,8 +29670,12 @@ ${avatar.outerHTML}
         popup.description.appendChild(createButtonSet(`green`, `grey`, `fa-arrow-circle-up`, `fa-circle-o-notch fa-spin`, `Export`, `Exporting...`, exportData.bind(null, input, warning)).set);
     }
 
-    function exportData() {
-
+    function exportData(options) {
+        for (i = 0, n = options.length; i < n; ++i) {
+            if (esgst[option.id]) {
+                data[key] = GM_getValue(key);
+            }
+        }        
     }
 
     /* Delete Tool */
