@@ -1,4 +1,14 @@
 /*
+ * August 2, 2017 - v6.Beta.23.6
+ */
+
+* Fixed a bug in Fixed Sidebar that was fixing the sidebar immediately without scrolling the page.
+* When syncing, the script will now show a list of missing/new groups/games (closes #268).
+* Unsent Gifts Sender no longer shows the sent/unsent items if 0 gifts were sent/unsent (closes #290).
+* Moved the area where the results appear in Unsent Gifts Sender to below the button.
+* Fixed a bug in Entries Remover that was not going through the pages correctly.
+
+/*
  * August 1, 2017 - v6.Beta.23.5
  */
 

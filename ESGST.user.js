@@ -3,7 +3,7 @@
 // @namespace ESGST
 // @description Enhances SteamGifts and SteamTrades by adding some cool features to them.
 // @icon https://github.com/revilheart/ESGST/raw/master/Resources/esgstIcon.ico
-// @version 6.Beta.23.5
+// @version 6.Beta.23.6
 // @author revilheart
 // @downloadURL https://github.com/revilheart/ESGST/raw/master/ESGST.user.js
 // @updateURL https://github.com/revilheart/ESGST/raw/master/ESGST.meta.js
@@ -4100,15 +4100,21 @@
             syncer.progress = insertHtml(popup.description, `beforeEnd`, `
                 <div class="esgst-hidden esgst-popup-progress"></div>
             `);
+            syncer.scrollable = popup.scrollable;
             popup.description.appendChild(createButtonSet(`green`, `grey`, `fa-refresh`, `fa-times`, `Sync`, `Cancel`, sync.bind(null, syncer, mainCallback), cancelSync.bind(null, syncer, mainCallback)).set);
             popup.onClose = mainCallback;
             popup.open();
         } else {
             document.body.innerHTML = ``;
-            syncer.progress = insertHtml(document.body, `beforeEnd`, `
-                <div class="description esgst-hidden esgst-popup-progress"></div>
+            var description = insertHtml(document.body, `beforeEnd`, `
+                <div class="description esgst-hidden esgst-popup-progress">
+                    <div></div>
+                    <div></div>
+                </div>
             `);
-            sync(syncer, null, window.close);
+            syncer.scrollable = description.firstElementChild;
+            syncer.progress = description.lastElementChild;
+            sync(syncer);
         }
     }
 
@@ -4137,7 +4143,9 @@
         syncer.progress.innerHTML = `Synced!`;
         currentDate = new Date();
         setValue(`lastSync`, currentDate.getTime());
-        callback();
+        if (callback) {
+            callback();
+        }
         if (mainCallback) {
             mainCallback(currentDate);
         }
@@ -4149,9 +4157,17 @@
     }
 
     function continueSyncStep1(syncer, callback) {
+        var key;
         if (esgst.settings.syncGroups) {
             syncer.progress.lastElementChild.textContent = `Syncing your Steam groups...`;
             syncer.groups = {};
+            savedGroups = JSON.parse(GM_getValue(`groups`));
+            syncer.currentGroups = [];
+            for (key in savedGroups) {
+                if (savedGroups[key].member) {
+                    syncer.currentGroups.push(key);
+                }
+            }
             syncGroups(1, syncer, `https://www.steamgifts.com/account/steam/groups/search?page=`, continueSyncStep2.bind(null, syncer, callback));
         } else {
             continueSyncStep2(syncer, callback);
@@ -4165,7 +4181,7 @@
     }
 
     function getGroupsAndContinueSync(nextPage, syncer, url, callback, response) {
-        var element, elements, heading, i, match, n, pagination, responseHtml;
+        var element, elements, heading, i, match, n, pagination, responseHtml, missing, neww, id, html;
         responseHtml = DOM.parse(response.responseText);
         elements = responseHtml.getElementsByClassName(`table__row-outer-wrap`);
         for (i = 0, n = elements.length; i < n; ++i) {
@@ -4183,7 +4199,38 @@
         if (pagination && !pagination.lastElementChild.classList.contains(`is-selected`)) {
             window.setTimeout(syncGroups, 0, ++nextPage, syncer, url, callback);
         } else if (!syncer.canceled) {
-            lockAndSaveGroups(syncer.groups, true, callback);
+            lockAndSaveGroups(syncer.groups, true, function () {
+                missing = [];
+                neww = [];
+                for (i = 0, n = syncer.currentGroups.length; i < n; ++i) {
+                    id = syncer.currentGroups[i];
+                    if (!syncer.groups[id]) {
+                        missing.push(`<a href="http://steamcommunity.com/groups/${id}">${id}</a>`);
+                    }
+                }
+                for (key in syncer.groups) {
+                    if (syncer.currentGroups.indexOf(key) < 0) {
+                        neww.push(`<a href="http://steamcommunity.com/groups/${key}">${key}</a>`);
+                    }
+                }
+                html = ``;
+                if (missing.length) {
+                    html += `
+                        <div>
+                            <strong>Missing groups:</strong> ${missing.join(`, `)}
+                        </div>
+                    `;
+                }
+                if (neww.length) {
+                    html += `
+                        <div>
+                            <strong>New groups:</strong> ${neww.join(`, `)}
+                        </div>
+                    `;
+                }
+                syncer.scrollable.insertAdjacentHTML(`beforeEnd`, html);
+                callback();
+            });
         }
     }
 
@@ -4345,10 +4392,21 @@
     }
 
     function continueGameSync(syncer, callback, response1, response2, deleteLock) {
-        var i, id, j, key, mainKey, n, numOwned, numValues, oldValue, owned, ownedGames, responseJson, responseText, result, savedGames, type, types, values;
+        var currentOwned, newOwned, i, id, j, key, mainKey, n, numOwned, numValues, oldValue, owned, ownedGames, responseJson, responseText, result, savedGames, type, types, values;
         owned = 0;
         savedGames = JSON.parse(GM_getValue(`games`));
+        currentOwned = {
+            apps: [],
+            subs: []
+        };
+        newOwned = {
+            apps: [],
+            subs: []
+        };
         for (key in savedGames.apps) {
+            if (savedGames.apps[key].owned) {
+                currentOwned.apps.push(key);
+            }
             delete savedGames.apps[key].wishlist;
             delete savedGames.apps[key].wishlisted;
             delete savedGames.apps[key].owned;
@@ -4358,6 +4416,9 @@
             }
         }
         for (key in savedGames.subs) {
+            if (savedGames.subs[key].owned) {
+                currentOwned.subs.push(key);
+            }
             delete savedGames.subs[key].wishlist;
             delete savedGames.subs[key].wishlisted;
             delete savedGames.subs[key].owned;
@@ -4377,6 +4438,7 @@
                     }
                     savedGames.apps[id].owned = true;
                     ++owned;
+                    newOwned.apps.push(id.toString());
                 }
             }
         }
@@ -4425,6 +4487,7 @@
                         savedGames[mainKey][id][key] = true;
                         if (key === `owned` && !oldValue) {
                             ++owned;
+                            newOwned[mainKey].push(id.toString());
                         }
                         if (key === `wishlisted` && savedGames[mainKey][id].subs) {
                             for (var k = 0, numPackages = savedGames[mainKey][id].subs.length; k < numPackages; ++k) {
@@ -4451,10 +4514,74 @@
         }
         GM_setValue(`games`, JSON.stringify(savedGames));
         deleteLock();
-        callback(savedGames, result);
+        var missing = {
+            apps: [],
+            subs: []
+        };
+        var neww = {
+            apps: [],
+            subs: []
+        };
+        for (i = 0, n = currentOwned.apps.length; i < n; ++i) {
+            id = currentOwned.apps[i];
+            if (newOwned.apps.indexOf(id) < 0) {
+                missing.apps.push(`<a href="http://store.steampowered.com/app/${id}">${id}</a>`);
+            }
+        }
+        for (i = 0, n = currentOwned.subs.length; i < n; ++i) {
+            id = currentOwned.subs[i];
+            if (newOwned.subs.indexOf(id) < 0) {
+                missing.subs.push(`<a href="http://store.steampowered.com/sub/${id}">${id}</a>`);
+            }
+        }
+        for (i = 0, n = newOwned.apps.length; i < n; ++i) {
+            id = newOwned.apps[i];
+            if (currentOwned.apps.indexOf(id) < 0) {
+                neww.apps.push(`<a href="http://store.steampowered.com/app/${id}">${id}</a>`);
+            }
+        }
+        for (i = 0, n = newOwned.subs.length; i < n; ++i) {
+            id = newOwned.subs[i];
+            if (currentOwned.subs.indexOf(id) < 0) {
+                neww.subs.push(`<a href="http://store.steampowered.com/sub/${id}">${id}</a>`);
+            }
+        }
+        var html = ``;
+        if (missing.apps.length) {
+            html += `
+                <div>
+                    <strong>Missing apps:</strong> ${missing.apps.join(`, `)}
+                </div>
+            `;
+        }
+        if (missing.subs.length) {
+            html += `
+                <div>
+                    <strong>Missing packages:</strong> ${missing.subs.join(`, `)}
+                </div>
+            `;
+        }
+        if (neww.apps.length) {
+            html += `
+                <div>
+                    <strong>New apps:</strong> ${neww.apps.join(`, `)}
+                </div>
+            `;
+        }
+        if (neww.subs.length) {
+            html += `
+                <div>
+                    <strong>New packages:</strong> ${neww.subs.join(`, `)}
+                </div>
+            `;
+        }
+        callback(savedGames, html, result);
     }
 
-    function continueSyncStep5(syncer, callback) {
+    function continueSyncStep5(syncer, callback, games, html) {
+        if (html) {
+            syncer.scrollable.insertAdjacentHTML(`beforeEnd`, html);
+        }
         if (esgst.settings.syncBundles) {
             syncer.progress.lastElementChild.textContent = `Syncing bundles...`;
             request(null, false, `https://script.google.com/macros/s/AKfycbwJK-7RBh5ghaKprEsmx4DQ6CyXc_3_9eYiOCu3yhI6W4B3W4YN/exec`, syncBundles.bind(null, syncer, callback));
@@ -6336,7 +6463,11 @@ min-width: 0;
         }
 
         function fixSidebar() {
-            top = esgst.sidebar.offsetTop - esgst.pageTop;
+            if (esgst.sidebar.offsetTop >= esgst.pageTop) {
+                top = esgst.sidebar.offsetTop - esgst.pageTop;
+            } else {
+                top = esgst.sidebar.offsetTop;
+            }
             if (window.scrollY > top && document.documentElement.offsetHeight > window.innerHeight * 2) {
                 document.removeEventListener(`scroll`, fixSidebar);
                 esgst.sidebar.classList.add(`esgst-fs`);
@@ -11110,6 +11241,7 @@ ${avatar.outerHTML}
             ugs.popup.description.appendChild(createButtonSet(`green`, `red`, `fa-send`, `fa-times-circle`, `Send`, `Cancel`, startUgsSender.bind(null, ugs), cancelUgsSender.bind(null, ugs)).set);
             ugs.progress = insertHtml(ugs.popup.description, `beforeEnd`, `<div></div>`);
             ugs.overallProgress = insertHtml(ugs.popup.description, `beforeEnd`, `<div></div>`);
+            ugs.popup.description.appendChild(ugs.popup.scrollable);
         }
         ugs.popup.open();
     }
@@ -11122,6 +11254,8 @@ ${avatar.outerHTML}
         var unsent;
         ugs.button.classList.add(`esgst-busy`);
         ugs.results.classList.add(`esgst-hidden`);
+        ugs.sent.classList.add(`esgst-hidden`);
+        ugs.unsent.classList.add(`esgst-hidden`);
         ugs.sentCount.textContent = ugs.unsentCount.textContent = `0`;
         ugs.sentGifts.innerHTML = ugs.unsentGifts.innerHTML = ``;
         ugs.progress.innerHTML = ``;
@@ -11558,6 +11692,7 @@ ${avatar.outerHTML}
                 }
                 if (ugs.winners[winner.username].indexOf(giveaway.name) < 0) {
                     if (winner.error) {
+                        ugs.unsent.classList.remove(`esgst-hidden`);
                         ugs.unsentCount.textContent = parseInt(ugs.unsentCount.textContent) + 1;
                         ugs.unsentGifts.insertAdjacentHTML(`beforeEnd`, `
                             <span>
@@ -11570,6 +11705,7 @@ ${avatar.outerHTML}
                         request(`xsrf_token=${esgst.xsrfToken}&do=sent_feedback&action=1&winner_id=${winner.winnerId}`, false, `/ajax.php`, sendUgsGift.bind(null, code, giveaway, ugs, i, n, winner, callback));
                     }
                 } else {
+                    ugs.unsent.classList.remove(`esgst-hidden`);
                     ugs.unsentCount.textContent = parseInt(ugs.unsentCount.textContent) + 1;
                     ugs.unsentGifts.insertAdjacentHTML(`beforeEnd`, `
                         <span>
@@ -11591,6 +11727,7 @@ ${avatar.outerHTML}
             if (!ugs.sentWinners[giveaway.code]) {
                 ugs.sentWinners[giveaway.code] = [];
             }
+            ugs.sent.classList.remove(`esgst-hidden`);
             ugs.sentWinners[giveaway.code].push(winner.username);
             ugs.sentCount.textContent = parseInt(ugs.sentCount.textContent) + 1;
             ugs.sentGifts.insertAdjacentHTML(`beforeEnd`, `
@@ -11711,16 +11848,17 @@ ${avatar.outerHTML}
         syncGames(er, checkErResult.bind(null, er, callback));
     }
 
-    function checkErResult(er, callback, games, result) {
+    function checkErResult(er, callback, games, html, result) {
         result = 1;
         switch (result) {
             case 1:
+                er.popup.scrollable.insertAdjacentHTML(`beforeEnd`, html);
                 er.games = games;
                 er.removed.innerHTML = `<strong>Removed Entries:</strong>`;
                 if (esgst.profilePath) {
-                    checkErEntries(null, er, 1, `/giveaways/entered/search?page=`, completeErProcess.bind(null, er, callback));
+                    checkErEntries(null, 0, er, 1, `/giveaways/entered/search?page=`, completeErProcess.bind(null, er, callback));
                 } else {
-                    checkErEntries(document, er, 1, `/giveaways/entered/search?page=`, completeErProcess.bind(null, er, callback));
+                    checkErEntries(null, esgst.currentPage, er, 1, `/giveaways/entered/search?page=`, completeErProcess.bind(null, er, callback));
                 }
                 break;
             case 2:
@@ -11742,9 +11880,16 @@ ${avatar.outerHTML}
         }
     }
 
-    function checkErEntries(context, er, nextPage, url, callback) {
+    function checkErEntries(context, currentPage, er, nextPage, url, callback) {
         var elements, n;
         if (!er.canceled) {
+            if (currentPage === nextPage) {
+                context = document;
+                ++nextPage;
+            }
+            while (document.getElementById(`esgst-es-page-${nextPage}`)) {
+                ++nextPage;
+            }
             if (context) {
                 if ((esgst.enteredPath && nextPage === 1) || (!esgst.enteredPath && nextPage === 2)) {
                     er.lastPage = getLastPage(context);
@@ -11757,14 +11902,12 @@ ${avatar.outerHTML}
                 elements = context.getElementsByClassName(`table__remove-default`);
                 n = elements.length;
                 if (n > 0) {
-                    removeErEntries(elements, er, 0, n, checkNextErPage.bind(null, context, er, nextPage, url, callback));
+                    removeErEntries(elements, er, 0, n, checkNextErPage.bind(null, context, currentPage, er, nextPage, url, callback));
                 } else {
                     callback();
                 }
-            } else if (document.getElementById(`esgst-es-page-${nextPage}`)) {
-                setTimeout(checkErEntries, 0, null, er, ++nextPage, url, callback);
             } else if (!er.canceled) {
-                request(null, false, `${url}${nextPage}`, getNextErPage.bind(null, er, nextPage, url, callback));
+                request(null, false, `${url}${nextPage}`, getNextErPage.bind(null, currentPage, er, nextPage, url, callback));
             }
         }
     }
@@ -11811,18 +11954,18 @@ ${avatar.outerHTML}
     }
 
 
-    function checkNextErPage(context, er, nextPage, url, callback) {
+    function checkNextErPage(context, currentPage, er, nextPage, url, callback) {
         var pagination;
         pagination = context.getElementsByClassName(`pagination__navigation`)[0];
         if (pagination && !pagination.lastElementChild.classList.contains(`is-selected`)) {
-            setTimeout(checkErEntries, 0, null, er, ++nextPage, url, callback);
+            setTimeout(checkErEntries, 0, null, currentPage, er, nextPage, url, callback);
         } else {
             callback();
         }
     }
 
-    function getNextErPage(er, nextPage, url, callback, response) {
-        setTimeout(checkErEntries, 0, DOM.parse(response.responseText), er, ++nextPage, url, callback);
+    function getNextErPage(currentPage, er, nextPage, url, callback, response) {
+        setTimeout(checkErEntries, 0, DOM.parse(response.responseText), currentPage, er, ++nextPage, url, callback);
     }
 
     function completeErProcess(er, callback) {
