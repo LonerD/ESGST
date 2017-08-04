@@ -3,7 +3,7 @@
 // @namespace ESGST
 // @description Enhances SteamGifts and SteamTrades by adding some cool features to them.
 // @icon https://github.com/revilheart/ESGST/raw/master/Resources/esgstIcon.ico
-// @version 6.Beta.23.6
+// @version 6.Beta.23.7
 // @author revilheart
 // @downloadURL https://github.com/revilheart/ESGST/raw/master/ESGST.user.js
 // @updateURL https://github.com/revilheart/ESGST/raw/master/ESGST.meta.js
@@ -543,7 +543,6 @@
                         gts: `gt`,
                         cfh_g: `cfh_ge`,
                         un_p: `un_wb`,
-                        rwscvl_a: `rwscvl_al`,
                         rwscvl_r: `rwscvl_ro`,
                         wbh_w: `wbh_cw`,
                         wbh_b: `wbh_cb`,
@@ -2145,11 +2144,6 @@
                                 </ul>
                             `,
                             features: [
-                                {
-                                    id: `rwscvl_a`,
-                                    name: `Automatically load the CV when opening a user's profile.`,
-                                    sg: true
-                                },
                                 {
                                     id: `rwscvl_r`,
                                     name: `Link SGTool's reverse page (from newest to oldest).`,
@@ -22991,59 +22985,9 @@ ${avatar.outerHTML}
         profile.sentRowLeft.innerHTML = `
             <a class="esgst-rwscvl-link" href="${sentUrl}" target="_blank">Gifts Sent</a>
         `;
-        if (esgst.rwscvl_a) {
-            loadRwscvlCV(profile, savedUser, sentUrl, wonUrl);
-        }
     }
 
-    function loadRwscvlCV(profile, savedUser, sentUrl, wonUrl) {
-        var rwscvl, sentCV, user, wonCV;
-        wonCV = insertHtml(profile.wonRowRight, `beforeEnd`, `
-            <span>
-                <i class="fa fa-circle-o-notch fa-spin"></i>
-            </span>
-        `);
-        sentCV = insertHtml(profile.sentRowRight, `beforeEnd`, `
-            <span>
-                <i class="fa fa-circle-o-notch fa-spin"></i>
-            </span>
-        `);
-        if (savedUser) {
-            rwscvl = savedUser.rwscvl;
-        }
-        if (!rwscvl) {
-            rwscvl = {
-                lastCheck: 0,
-                sent: 0,
-                won: 0
-            };
-        }
-        if (Date.now() - rwscvl.lastCheck > 604800000) {
-            request(null, false, wonUrl, function (response) {
-                rwscvl.won = DOM.parse(response.responseText).getElementById(`data`).textContent.replace(/\s\$/, ``);
-                request(null, false, sentUrl, function (response) {
-                    rwscvl.sent = DOM.parse(response.responseText).getElementById(`data`).textContent.replace(/\s\$/, ``);
-                    rwscvl.lastCheck = Date.now();
-                    user = {
-                        steamId: profile.steamId,
-                        id: profile.id,
-                        username: profile.username,
-                        values: {
-                            rwscvl: rwscvl
-                        }
-                    };
-                    wonCV.innerHTML = `(\$${rwscvl.won} Real CV)`;
-                    sentCV.innerHTML = `(\$${rwscvl.sent} Real CV)`;
-                    saveUser(null, null, user);
-                });
-            });
-        } else {
-            wonCV.innerHTML = `(\$${rwscvl.won} Real CV)`;
-            sentCV.innerHTML = `(\$${rwscvl.sent} Real CV)`;
-        }
-    }
-
-    /* [UGD] User Giveaways Data */
+     /* [UGD] User Giveaways Data */
 
     function loadUgd() {
         if (esgst.userPath || esgst.ap) {
@@ -23739,7 +23683,7 @@ ${avatar.outerHTML}
     function addNrfButton(profile, savedUser) {
         var NRF;
         NRF = {
-            N: parseInt(profile.sentRowRight.firstElementChild.getAttribute("title").match(/, (.+) Not Received/)[1])
+            N: profile.notSent
         };
         if (NRF.N > 0) {
             NRF.I = 0;
@@ -23943,18 +23887,101 @@ ${avatar.outerHTML}
     }
 
     function addSwrRatio(profile) {
-        var ratio, sent, won;
-        won = parseInt(profile.wonRowRight.firstElementChild.textContent.replace(/,/, ``));
-        sent = parseInt(profile.sentRowRight.firstElementChild.firstElementChild.textContent.replace(/,/, ``));
-        if (won > 0) {
-            ratio = Math.round(sent / won * 100) / 100;
-        } else {
-            ratio = 0;
-        }
+        var ratio, fullRatio, reducedRatio, zeroRatio, cvRatio, realCVRatio;
+        ratio = profile.wonCount > 0 ? Math.round(profile.sentCount / profile.wonCount * 100) / 100 : 0;
+        fullRatio = profile.wonFull > 0 ? Math.round(profile.sentFull / profile.wonFull * 100) / 100 : 0;
+        reducedRatio = profile.wonReduced > 0 ? Math.round(profile.sentReduced / profile.wonReduced * 100) / 100 : 0;
+        zeroRatio = profile.wonZero > 0 ? Math.round(profile.sentZero / profile.wonZero * 100) / 100 : 0;
+        cvRatio = profile.wonCV > 0 ? Math.round(profile.sentCV / profile.wonCV * 100) / 100 : 0;
+        realCVRatio = profile.realWonCV > 0 ? Math.round(profile.realSentCV / profile.realWonCV * 100) / 100 : 0;
+        var ratioTooltip = {
+            rows: [
+                {
+                    columns: [
+                        {
+                            name: `Ratio`
+                        },
+                        {
+                            color: `#8f96a6`,
+                            name: ratio
+                        }
+                    ],
+                    icon: [
+                        {
+                            class: `fa-pie-chart`,
+                            color: `#77899a`
+                        }
+                    ]
+                },
+                {
+                    columns: [
+                        {
+                            color: `#8f96a6`,
+                            name: `Full Value`
+                        },
+                        {
+                            color: `#8f96a6`,
+                            name: fullRatio
+                        }
+                    ],
+                    indent: `80px`
+                },
+                {
+                    columns: [
+                        {
+                            color: `#8f96a6`,
+                            name: `Reduced Value`
+                        },
+                        {
+                            color: `#8f96a6`,
+                            name: reducedRatio
+                        }
+                    ],
+                    indent: `80px`
+                },
+                {
+                    columns: [
+                        {
+                            color: `#8f96a6`,
+                            name: `No Value`
+                        },
+                        {
+                            color: `#8f96a6`,
+                            name: zeroRatio
+                        }
+                    ],
+                    indent: `80px;`
+                }
+            ]
+        };
+        var cvTooltip = {
+            rows: [
+                {
+                    columns: [
+                        {
+                            name: `Real Value`
+                        },
+                        {
+                            color: `#8f96a6`,
+                            name: `\$${realCVRatio}`
+                        }
+                    ],
+                    icon : [
+                        {
+                            class: `fa-dollar`,
+                            color: `#84cfda`
+                        }
+                    ]
+                }
+            ]
+        };
         profile.sentRow.insertAdjacentHTML(`afterEnd`, `
             <div class="esgst-swr-ratio featured__table__row">
                 <div class="featured__table__row__left">Ratio</div>
-                <div class="featured__table__row__right" title="${profile.username} has sent ${ratio} gifts for every gift won.">${ratio}</div>
+                <div class="featured__table__row__right">
+                    <span data-ui-tooltip='${JSON.stringify(ratioTooltip)}'>${ratio}</span>
+                    (<span data-ui-tooltip='${JSON.stringify(cvTooltip)}'>\$${cvRatio}</span>)
+                </div>
             </div>
         `);
     }
@@ -23968,14 +23995,13 @@ ${avatar.outerHTML}
     }
 
     function calculateLuvValue(profile) {
-        var base, level, lower, upper, value, values;
-        level = parseFloat(profile.levelRowRight.firstElementChild.getAttribute(`title`));
-        base = parseInt(level);
+        var base, lower, upper, value, values;
+        base = parseInt(profile.level);
         if (base < 10) {
             values = [0, 0.01, 25.01, 50.01, 100.01, 250.01, 500.01, 1000.01, 2000.01, 3000.01, 5000.01];
             lower = values[base];
             upper = values[base + 1];
-            value = Math.round((upper - (lower + ((upper - lower) * (level - base)))) * 100) / 100;
+            value = Math.round((upper - (lower + ((upper - lower) * (profile.level - base)))) * 100) / 100;
             profile.levelRowRight.insertAdjacentHTML(`beforeEnd`, `<span class="esgst-luc-value">(~\$${value} real CV to level ${base + 1})</span>`);
         }
     }
@@ -25988,10 +26014,15 @@ ${avatar.outerHTML}
         var heading = Container.getElementsByClassName(`page__heading`)[0];
         createSMButtons(heading, [/*{
             Check: true,
-            Icons: ["fa-arrow-circle-up", "fa-cog"],
+            Icons: ["fa-arrow-circle-up"],
             Name: "esgst-heading-button",
             Title: "Import data"
-        }, */{
+        }, {
+            Check: true,
+            Icons: ["fa-arrow-circle-down"],
+            Name: "esgst-heading-button",
+            Title: "Export data"
+        },*/ {
             Check: true,
             Icons: ["fa-arrow-circle-up", "fa-arrow-circle-down", "fa-trash"],
             Name: "SMManageData",
@@ -26147,21 +26178,151 @@ ${avatar.outerHTML}
         var options = [
             {
                 key: `users`,
-                id: `Users`,
-                name: `Users`                
+                name: `Users`,
+                options: [
+                    {
+                        key: `notes`,
+                        name: `User Notes`,
+                        settingKey: `UN`
+                    },
+                    {
+                        key: `tags`,
+                        name: `User Tags`,
+                        settingKey: `UT`
+                    },
+                    {
+                        key: `ugd`,
+                        name: `User Giveaways Data`,
+                        settingKey: `UGD`
+                    },
+                    {
+                        key: `namwc`,
+                        name: `Not Activated/Multiple Wins Checker`,
+                        settingKey: `NAMWC`
+                    },
+                    {
+                        key: `nrf`,
+                        name: `Not Received Finder`,
+                        settingKey: `NRF`
+                    },
+                    {
+                        key: `wbc`,
+                        name: `Whitelist/Blacklist Checker`,
+                        settingKey: `WBC`
+                    },
+                    {
+                        key: `rwscvl`,
+                        name: `Real Won/Sent CV Links`,
+                        settingKey: `RWSCVL`
+                    },
+                    {
+                        key: `uf`,
+                        name: `User Filters`,
+                        settingKey: `UF`
+                    }
+                ],
+                settingKey: `Users`
             },
             {
                 key: `games`,
-                id: `Games`,
-                name: `Games`
+                name: `Games`,
+                options: [
+                    {
+                        key: `gt`,
+                        name: `Game Tags`,
+                        settingKey: `GT`
+                    },
+                    {
+                        key: `egh`,
+                        name: `Entered Games Highlighter`,
+                        settingKey: `EGH`
+                    },
+                    {
+                        key: `gc`,
+                        name: `Game Categories`,
+                        settingKey: `GC`
+                    },
+                    {
+                        key: `itadi`,
+                        name: `Is There Any Deal? Info`,
+                        settingKey: `ITADI`
+                    }
+                ],
+                settingKey: `Games`
             },
             {
                 key: `giveaways`,
-                id: `Giveaways`,
-                name: `Giveaways`
+                name: `Giveaways`,
+                settingKey: `Giveaways`
+            },
+            {
+                key: `entries`,
+                name: `Entries Tracker`,
+                settingKey: `ET`
+            },
+            {
+                key: `groups`,
+                name: `Groups`,
+                settingKey: `Groups`
+            },
+            {
+                key: `comments`,
+                name: `Comments`,
+                settingKey: `Comments`
+            },
+            {
+                key: `emojis`,
+                name: `Emojis`,
+                settingKey: `Emojis`
+            },
+            {
+                key: `savedReplies`,
+                name: `Saved Replies`,
+                settingKey: `SavedReplies`
+            },
+            {
+                key: `rerolls`,
+                name: `Rerolls`,
+                settingKey: `Rerolls`
+            },
+            {
+                key: `winners`,
+                name: `Winners`,
+                settingKey: `Winners`
+            },
+            {
+                key: `sgCommentHistory`,
+                name: `SG Comment History`,
+                settingKey: `SgCommentHistory`
+            },
+            {
+                key: `stCommentHistory`,
+                name: `ST Comment History`,
+                settingKey: `StCommentHistory`
+            },
+            {
+                key: `stickiedGroups`,
+                name: `Stickied Giveaway Groups`,
+                settingKey: `SGG`
+            },
+            {
+                key: `templates`,
+                name: `Templates`,
+                settingKey: `Templates`
+            },
+            {
+                key: `decryptedGiveaways`,
+                name: `Decrypted Giveaways`,
+                settingKey: `DecryptedGiveaways`
+            },
+            {
+                key: `settings`,
+                name: `Settings`,
+                settingKey: `Settings`
             }
         ];
         //heading.firstElementChild.addEventListener(`click`, openImportPopup.bind(null, options));
+        //heading.firstElementChild.nextElementSibling.addEventListener(`click`, openExportPopup.bind(null, options));
         SMManageData.addEventListener("click", function () {
             var Popup, SM, SMImport, SMExport, SMDelete;
             Popup = createPopup(`fa-cog`, `Manage data:`, true);
@@ -28497,7 +28658,7 @@ ${avatar.outerHTML}
     }
 
     function loadProfileFeatures(context) {
-        var action, element, elements, i, input, key, match, n, profile, savedUsers;
+        var action, cvrow, element, elements, i, input, key, match, n, profile, rows, savedUsers;
         profile = {};
         if (esgst.sg) {
             profile.heading = context.getElementsByClassName(`featured__heading`)[0];
@@ -28532,15 +28693,36 @@ ${avatar.outerHTML}
                         profile.wonRow = element.parentElement;
                         profile.wonRowLeft = element;
                         profile.wonRowRight = element.nextElementSibling;
+                        rows = JSON.parse(profile.wonRowRight.firstElementChild.firstElementChild.getAttribute(`data-ui-tooltip`)).rows;
+                        profile.wonCount = parseInt(rows[0].columns[1].name.replace(/,/g, ``));
+                        profile.wonFull = parseInt(rows[1].columns[1].name.replace(/,/g, ``));
+                        profile.wonReduced = parseInt(rows[2].columns[1].name.replace(/,/g, ``));
+                        profile.wonZero = parseInt(rows[3].columns[1].name.replace(/,/g, ``));
+                        cvrow = profile.wonRowRight.firstElementChild.lastElementChild;
+                        rows = JSON.parse(cvrow.getAttribute(`data-ui-tooltip`)).rows;
+                        profile.wonCV = parseFloat(cvrow.textContent.replace(/\$|,/g, ``));
+                        profile.realWonCV = parseFloat(rows[0].columns[1].name.replace(/\$|,/g, ``));
                     } else {
                         profile.sentRow = element.parentElement;
                         profile.sentRowLeft = element;
                         profile.sentRowRight = element.nextElementSibling;
+                        rows = JSON.parse(profile.sentRowRight.firstElementChild.firstElementChild.getAttribute(`data-ui-tooltip`)).rows;
+                        profile.sentCount = parseInt(rows[0].columns[1].name.replace(/,/g, ``));
+                        profile.sentFull = parseInt(rows[1].columns[1].name.replace(/,/g, ``));
+                        profile.sentReduced = parseInt(rows[2].columns[1].name.replace(/,/g, ``));
+                        profile.sentZero = parseInt(rows[3].columns[1].name.replace(/,/g, ``));
+                        profile.notSent = parseInt(rows[4].columns[1].name.replace(/,/g, ``));
+                        cvrow = profile.sentRowRight.firstElementChild.lastElementChild;console.log(cvrow);
+                        rows = JSON.parse(cvrow.getAttribute(`data-ui-tooltip`)).rows;
+                        profile.sentCV = parseFloat(cvrow.textContent.replace(/\$|,/g, ``));
+                        profile.realSentCV = parseFloat(rows[0].columns[1].name.replace(/\$|,/g, ``));
                     }
                 } else {
                     profile.levelRow = element.parentElement;
                     profile.levelRowLeft = element;
                     profile.levelRowRight = element.nextElementSibling;
+                    rows = JSON.parse(profile.levelRowRight.firstElementChild.getAttribute(`data-ui-tooltip`)).rows;
+                    profile.level = parseFloat(rows[0].columns[1].name);
                 }
             }
         }
@@ -29799,26 +29981,141 @@ ${avatar.outerHTML}
 
     /* Export Tool */
 
+    function createSwitches(option, popup, switches) {
+        var i, key, n, sw;
+        key = `export${option.settingKey}`;
+        switches[option.key] = createToggleSwitch(popup.scrollable, key, false, option.name, false, false, option.tooltip, esgst[key]);
+        if (option.options) {
+            for (i = 0, n = option.options.length; i < n; ++i) {
+                sw = createSwitches(option.options[i], popup, switches);
+                if (!esgst[key]) {
+                    sw.container.classList.add(`esgst-hidden`);
+                }
+                switches[option.key].dependencies.push(sw.container);
+            }
+        }
+        return switches[option.key];
+    }
+
     function openExportPopup(options) {
         var i, id, n, popup, switches, warning;
         switches = {};
         popup = createPopup(`fa-arrow-down`, `Export Data`, true);
         for (i = 0, n = options.length; i < n; ++i) {
-            id = `export${option.id}`;
-            switches[option.key] = createToggleSwitch(popup.scrollable, id, false, option.name, false, false, option.tooltip, esgst[id]);
+            createSwitches(options[i], popup, switches);
         }
-        warning = insertHtml(popup.description, `beforeEnd`, `<div class="esgst-description esgst-red"></div>`);
         popup.description.appendChild(createButtonSet(`green`, `grey`, `fa-arrow-circle-up`, `fa-circle-o-notch fa-spin`, `Select All`, ``, selectSwitches.bind(null, true, switches)).set);
         popup.description.appendChild(createButtonSet(`green`, `grey`, `fa-arrow-circle-up`, `fa-circle-o-notch fa-spin`, `Select None`, ``, selectSwitches.bind(null, false, switches)).set);
-        popup.description.appendChild(createButtonSet(`green`, `grey`, `fa-arrow-circle-up`, `fa-circle-o-notch fa-spin`, `Export`, `Exporting...`, exportData.bind(null, input, warning)).set);
+        popup.description.appendChild(createButtonSet(`green`, `grey`, `fa-arrow-circle-up`, `fa-circle-o-notch fa-spin`, `Export`, `Exporting...`, exportData.bind(null, options)).set);
+        popup.open();
     }
 
     function exportData(options) {
+        /*file = document.createElement(`a`);
+        file.download = `ESGST.json`;
+        data = {};
         for (i = 0, n = options.length; i < n; ++i) {
-            if (esgst[option.id]) {
+            option = options[i];
+            key = option.key;
+            if (key === `users`) {
+                data.users = {
+                    users: {}
+                };
+                savedUsers = JSON.parse(GM_getValue(`users`));
+                for (key in savedUsers.users) {
+                    savedUser = savedUsers.users[key];
+                    data.users[key] = {
+                        id: savedUser.id,
+                        steamId: key,
+                        username: savedUser.username
+                    };
+                    for (j = 0, numOp = option.options.length; j < numOp; ++j) {
+                        if (esgst[]) {
+                            data.users[key][op] = savedUser[op];
+                        }
+                    }
+                    if (Object.keys(data.users[key]).length > 0) {
+                        data.users[key] = {
+
+                        };
+                    }
+                }
+            } else if (key === `games`) {
+            } else {
                 data[key] = GM_getValue(key);
             }
-        }        
+        }
+        for (Key in SM.Names) {
+            if (Key === `users`) {
+                Data.users = {};
+                var keys = {
+                    notes: `UN`,
+                    tags: `UT`,
+                    ugd: `UGD`,
+                    namwc: `NAMWC`,
+                    nrf: `NRF`,
+                    rwscvl: `RWSCVL`,
+                    wbc: `WBC`,
+                    uf: `UF`
+                };
+                var users = JSON.parse(GM_getValue(`users`));
+                Data.users.users = {};
+                for (var key in users.users) {
+                    Data.users.users[key] = {
+                        id: users.users[key].id,
+                        username: users.users[key].username
+                    };
+                    var added = false;
+                    for (var subKey in keys) {
+                        if (SM[keys[subKey]].checked && users.users[key][subKey]) {
+                            Data.users.users[key][subKey] = users.users[key][subKey];
+                            added = true;
+                        }
+                    }
+                    if (!added) {
+                        delete Data.users.users[key];
+                    }
+                }
+            } else if (Key === `games`) {
+                Data.games = {
+                    apps: {},
+                    subs: {}
+                };
+                var games = JSON.parse(GM_getValue(`games`));
+                if (SM.GT.checked) {
+                    getSMGames(games, `tags`, Data.games, `apps`);
+                    getSMGames(games, `tags`, Data.games, `subs`);
+                }
+                if (SM.EGH.checked) {
+                    getSMGames(games, `entered`, Data.games, `apps`);
+                    getSMGames(games, `entered`, Data.games, `subs`);
+                }
+                if (SM.GC.checked) {
+                    getSMGames(games, `lastCheck`, Data.games, `apps`);
+                    getSMGames(games, `lastCheck`, Data.games, `subs`);
+                }
+                if (SM.ITADI.checked) {
+                    getSMGames(games, `itadi`, Data.games, `apps`);
+                    getSMGames(games, `itadi`, Data.games, `subs`);
+                }
+            } else if (Key.match(/entries|savedReplies|sgCommentHistory|stCommentHistory|comments|giveaways|descryptedGiveaways|templates|rerolls|winners|settings/) && SM[SM.Names[Key]].checked) {
+                Data[Key] = JSON.parse(GM_getValue(Key, `{}`));
+            } else if (SM[SM.Names[Key]].checked) {
+                Data[Key] = GM_getValue(Key);
+            }
+        }
+        Data = new Blob([JSON.stringify({
+            ESGST: "Data",
+            Data: Data
+        })]);
+        URL = window.URL.createObjectURL(Data);
+        File.href = URL;
+        document.body.appendChild(File);
+        File.click();
+        File.remove();
+        window.URL.revokeObjectURL(URL);
+        window.alert("Exported!");  
+        */   
     }
 
     /* Delete Tool */
