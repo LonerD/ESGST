@@ -719,6 +719,17 @@
                         };
                     } else {
                         esgst.users = JSON.parse(esgst.users);
+                        var changed = false;
+                        for (key in esgst.users.users) {
+                            var wbc = esgst.users.users[key].wbc;
+                            if (wbc && wbc.result && wbc.result !== `whitelisted` && wbc.result !== `blacklisted`) {
+                                delete esgst.users.users[key].wbc;
+                                changed = true;
+                            }
+                        }
+                        if (changed) {
+                            GM_setValue(`users`, JSON.stringify(esgst.users));
+                        }
                     }
                     esgst.groups = GM_getValue(`groups`);
                     if (typeof esgst.groups === `undefined`) {
@@ -1926,6 +1937,17 @@
                             name: `Reply Box On Top`,
                             sg: true,
                             st: true,
+                            type: `comments`
+                        },
+                        {
+                            description: `
+                                <ul>
+                                    <li>Pops up a reply box when marking a giveaway as received.</li>
+                                </ul>
+                            `,
+                            id: `rrbp`,
+                            name: `Received Reply Box Popup`,
+                            sg: true,
                             type: `comments`
                         },
                         {
@@ -8122,6 +8144,14 @@ min-width: 0;
                     key: `entered`
                 },
                 {
+                    name: `Started`,
+                    key: `started`
+                },
+                {
+                    name: `Ended`,
+                    key: `ended`
+                },
+                {
                     id: `gc_o`,
                     name: `Owned`,
                     key: `owned`
@@ -9112,7 +9142,7 @@ ${avatar.outerHTML}
     }
 
     function checkGedGiveaways(button, newGiveaways, context) {
-        var code, comment, element, elements, encryptedCode, i, n, newGiveaway, savedGiveaways, source;
+        var code, comment, element, elements, elementss, encryptedCode, i, n, n2, newGiveaway, savedGiveaways, source;
         elements = context.querySelectorAll(`[href^="ESGST-"]`);
         n = elements.length;
         savedGiveaways = GM_getValue(`decryptedGiveaways`, GM_getValue(`exclusiveGiveaways`, {}));
@@ -9121,6 +9151,10 @@ ${avatar.outerHTML}
         }
         if (n > 0) {
             newGiveaway = false;
+            elementss = context.getElementsByClassName(`esgst-ged-icon`);
+            for (i = 0, n2 = elementss.length; i < n2; ++i) {
+                elementss[0].remove();
+            }
             for (i = 0; i < n; ++i) {
                 element = elements[i];
                 encryptedCode = element.getAttribute(`href`).match(/ESGST-(.+)/)[1];
@@ -9151,6 +9185,11 @@ ${avatar.outerHTML}
             if (newGiveaway) {
                 button.classList.remove(`esgst-hidden`);
                 button.classList.add(`positive`);
+            }
+        } else {
+            elements = context.getElementsByClassName(`esgst-ged-icon`);
+            for (i = 0, n = elements.length; i < n; ++i) {
+                elements[0].remove();
             }
         }
     }
@@ -9363,7 +9402,7 @@ ${avatar.outerHTML}
         if (((esgst.createdPath || esgst.wonPath || esgst.newGiveawayPath) && !main) || (!esgst.createdPath && !esgst.wonPath && !esgst.newGiveawayPath)) {
             for (i = 0, n = giveaways.length; i < n; ++i) {
                 giveaway = giveaways[i];
-                if (((giveaway.inviteOnly && giveaway.ended) || !giveaway.inviteOnly) && !giveaway.innerWrap.getElementsByClassName(`esgst-gwc`)[0]) {
+                if (((giveaway.inviteOnly && ((main && esgst.giveawayPath) || giveaway.ended)) || !giveaway.inviteOnly) && !giveaway.innerWrap.getElementsByClassName(`esgst-gwc`)[0]) {
                     if (giveaway.started) {
                         addGwcChance(insertHtml(giveaway.panel, (esgst.gv && ((main && esgst.giveawaysPath) || (source === `gb` && esgst.gv_gb) || (source === `ged` && esgst.gv_ged) || (source === `tge` && esgst.gv_tge))) ? `afterBegin` : `beforeEnd`, `<div class="${esgst.giveawayPath ? `featured__column` : ``} esgst-gwc" title="Giveaway Winning Chance">`), giveaway);
                     } else {
@@ -9441,7 +9480,7 @@ ${avatar.outerHTML}
         if (((esgst.createdPath || esgst.wonPath || esgst.newGiveawayPath) && !main) || (!esgst.createdPath && !esgst.wonPath && !esgst.newGiveawayPath)) {
             for (i = 0, n = giveaways.length; i < n; ++i) {
                 giveaway = giveaways[i];
-                if (giveaway.started && ((giveaway.inviteOnly && giveaway.ended) || !giveaway.inviteOnly) && !giveaway.innerWrap.getElementsByClassName(`esgst-gwr`)[0]) {
+                if (giveaway.started && ((giveaway.inviteOnly && ((main && esgst.giveawayPath) || giveaway.ended)) || !giveaway.inviteOnly) && !giveaway.innerWrap.getElementsByClassName(`esgst-gwr`)[0]) {
                     addGwcRatio(insertHtml(giveaway.panel, (esgst.gv && ((main && esgst.giveawaysPath) || (source === `gb` && esgst.gv_gb) || (source === `ged` && esgst.gv_ged) || (source === `tge` && esgst.gv_tge))) ? `afterBegin` : `beforeEnd`, `<div class="${esgst.giveawayPath ? `featured__column` : ``} esgst-gwr" title="Giveaway Winning Ratio">`), giveaway);
                 }
             }
@@ -21597,6 +21636,27 @@ ${avatar.outerHTML}
         loadEndlessFeatures(cs.results);
     }
 
+    /* [RRBP] Received Reply Box Popup */
+
+    function openRrbp(giveaway) {
+        var popup, progress, textArea;
+        popup = createPopup(`fa-comment`, `Add a comment:`);
+        textArea = insertHtml(popup.scrollable, `beforeEnd`, `<textarea></textarea>`);
+        if (esgst.cfh) {
+            addCFHPanel(textArea);
+        }
+        popup.description.appendChild(createButtonSet(`green`, `grey`, `fa-check`, `fa-circle-o-notch fa-spin`, `Save`, `Saving...`, function (callback) {
+            progress.innerHTML = ``;
+            saveComment(``, ``, textArea.value, giveaway.url, progress, callback, function () {
+                popup.close();
+            });
+        }).set);
+        progress = insertHtml(popup.description, `beforeEnd`, `<div></div>`);
+        popup.open(function () {
+            textArea.focus();
+        });
+    }
+
     /* [RBP] Reply Box Popup */
 
     function loadRbp(button) {
@@ -24135,15 +24195,6 @@ ${avatar.outerHTML}
             ID: "WBC_RB"
         }, {
             Check: function () {
-                return WBC.Update;
-            },
-            Description: "Only update whitelists / blacklists.",
-            Title: "If enabled, only users who have whitelisted / blacklisted you will be updated (faster).",
-            Name: "SimpleUpdate",
-            Key: "SU",
-            ID: "WBC_SU"
-        }, {
-            Check: function () {
                 return true;
             },
             Description: "Clear caches.",
@@ -24228,7 +24279,7 @@ ${avatar.outerHTML}
         if (WBC.Update) {
             SavedUsers = JSON.parse(GM_getValue(`users`));
             for (I in SavedUsers.users) {
-                if (SavedUsers.users[I].wbc && SavedUsers.users[I].wbc.result && (WBC.ShowResults || (!WBC.ShowResults && ((WBC.SU.checked && SavedUsers.users[I].wbc.result.match(/^(whitelisted|blacklisted)$/)) || !WBC.SU.checked)))) {
+                if (SavedUsers.users[I].wbc && SavedUsers.users[I].wbc.result) {
                     WBC.Users.push(SavedUsers.users[I].username);
                 }
             }
@@ -24265,6 +24316,78 @@ ${avatar.outerHTML}
             }
         }
     }
+
+    /*function splitWbcUsers(wbc) {
+        array = wbc.Users;
+        wbc.users = [];
+        i = 0;
+        do {
+            rest = array.splice(25);
+            wbc.users[i] = array;
+            array = rest;
+        } while (array.length > 0);
+        checkWbcUsers(wbc, 0, wbc.users.length, callback);
+    }
+
+    function checkWbcUsers(wbc, i, n, callback) {
+        var j, numUsers, users, savedUser, savedUsers;
+        if (i < n) {
+            wbc.currentUsers = {};
+            savedUsers = JSON.parse(GM_getValue(`users`));
+            users = wbc.users[i];
+            for (j = 0, numUsers = users.length; j < numUsers; ++j) {
+                username = users[j];
+                savedUser = getUser(savedUsers, {
+                    username: username
+                });
+                if (savedUser) {
+                    wbc.currentUsers[username] = {
+                        id: savedUser.id,
+                        steamId: savedUser.steamId,
+                        username: username
+                    };
+                } else {
+                    wbc.currentUsers[username] = {
+                        username: username
+                    };
+                }
+            }
+            request(null, false, `https://script.google.com/macros/s/AKfycbx68n1eexpfniGY-QqWbTRv3kwHjX-u_uTn-cb_0WhakvJyvAMr/exec?users=${JSON.stringify(wbc.currentUsers)}`, function (response) {
+                var missing, responseJson;
+                responseJson = JSON.parse(response.responseText);
+                missing = responseJson.missing;
+                if (missing) {
+                    getUserIds(0, missing.length, missing, wbc, function () {
+                        request(null, false, `https://script.google.com/macros/s/AKfycbx68n1eexpfniGY-QqWbTRv3kwHjX-u_uTn-cb_0WhakvJyvAMr/exec?users=${JSON.stringify(wbc.currentUsers)}`, function (response) {
+                            checkWbcUser();
+                        });
+                    });
+                } else {
+                    checkWbcUser();
+                }
+            });
+        } else {
+            callback();
+        }
+    }
+
+    function checkWbcUser(i, n, wbc, callback) {
+        if (i < n) {
+            checkWBCGiveaway(wbc, wbc.currentUsers[username], function () {
+                setWBCResult
+            });
+        } else {
+            callback();
+        }
+    }
+
+    function getUserIds(i, n, users, wbc, callback) {
+        if (i < n) {
+            getSteamId(null, false, savedUsers, wbc.currentUsers[users[i]], setTimeout.bind(null, getUserIds, 0, ++i, n, users, wbc, callback));
+        } else {
+            callback();
+        }     
+    }*/
 
     function checkWBCUsers(WBC, I, N, Callback) {
         var User, Result;
@@ -24348,13 +24471,15 @@ ${avatar.outerHTML}
                             });
                         });
                     }
-                } else {
+                } else if (wbc.result === `whitelisted` || wbc.result === `blacklisted`) {
                     user.values = {
                         wbc: wbc
                     };
                     saveUser(null, null, user, function() {
                         window.setTimeout(checkWBCUsers, 0, WBC, ++I, N, Callback);
                     });
+                } else {
+                    setTimeout(checkWBCUsers, 0, WBC, ++I, N, Callback);
                 }
             }
         }
@@ -28405,6 +28530,10 @@ ${avatar.outerHTML}
         giveaway.pinned = giveaway.outerWrap.closest(`.pinned-giveaways__outer-wrap`);
         chance = context.getElementsByClassName(`esgst-gwc`)[0];
         giveaway.chance = chance ? parseFloat(chance.getAttribute(`data-chance`)) : 0;
+        var feedback = giveaway.outerWrap.getElementsByClassName(`table__gift-feedback-awaiting-reply`)[0];
+        if (esgst.rrbp && feedback) {
+            feedback.addEventListener(`click`, openRrbp.bind(null, giveaway));
+        }
         return {
             giveaway: giveaway,
             data: {

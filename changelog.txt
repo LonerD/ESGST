@@ -1,4 +1,17 @@
 /*
+ * August 6, 2017 - v6.Beta.24.0
+ */
+
+* Fixed a bug in Givewaways Encrypter/Decrypter that was duplicating decrypted giveaways when editing a comment (closes #304).
+* Fixed a bug that was not calculating ratio/chance inside of invite only giveaways.
+* Added "Started" and "Ended" filters to Giveaway Filters.
+* Whitelist/Blacklist Checker now only stores data if the result is either whitelisted or blacklisted. Any other data will be wiped from the storage.
+
+Added the following features:
+
+* [4.5 (SG) / 5.5 (ST)] Received Reply Box Popup (closes #305)
+
+/*
  * August 4, 2017 - v6.Beta.23.7
  */
 
