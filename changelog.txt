@@ -1,4 +1,13 @@
 /*
+ * August 6, 2017 - v6.Beta.24.2
+ */
+
+* Fixed a bug in Header Refresher that was no longer indicating the unread messages in the tab icon.
+* The name of the preset currently being used is now displayed next to the filtered count in Giveaway Filters (closes #314).
+* Fixed a bug in Active Discussions On Top/Sidebar that was using classes from the sidebar option in the top option.
+* Fixed a bug in Game Categories that was coloring all categories red.
+
+/*
  * August 6, 2017 - v6.Beta.24.1
  */
 

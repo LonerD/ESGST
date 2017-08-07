@@ -3,7 +3,7 @@
 // @namespace ESGST
 // @description Enhances SteamGifts and SteamTrades by adding some cool features to them.
 // @icon https://github.com/revilheart/ESGST/raw/master/Resources/esgstIcon.ico
-// @version 6.Beta.24.1
+// @version 6.Beta.24.2
 // @author revilheart
 // @downloadURL https://github.com/revilheart/ESGST/raw/master/ESGST.user.js
 // @updateURL https://github.com/revilheart/ESGST/raw/master/ESGST.meta.js
@@ -63,7 +63,6 @@
                     if (esgst.menuPath) {
                         document.head.insertAdjacentHTML(`beforeEnd`, `<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.1/css/font-awesome.min.css"><link rel="stylesheet" type="text/css" href="https://cdn.steamgifts.com/css/minified_v27.css">`);
                     }
-                    addStyle();
                     updateTemplateStorageToV6();
                     updateUserStorageToV6();
                     updateGameStorageToV6();
@@ -2352,6 +2351,7 @@
                     delete esgst.settings.giveaways;
                     delete esgst.settings.groups;
                     GM_setValue(`settings`, JSON.stringify(esgst.settings));
+                    addStyle();
                     var sibling, height;
                     if (esgst.menuPath) {
                         loadSMMenu(true);
@@ -2390,7 +2390,10 @@
                         }
                         if (esgst.giveawaysPath && esgst.activeDiscussions) {
                             if (esgst.hcp) {
-                                esgst.activeDiscussions.previousElementSibling.classList.add(`esgst-hidden`);
+                                var poll = esgst.activeDiscussions.previousElementSibling;
+                                if (poll.classList.contains(`widget-container`)) {
+                                    poll.classList.add(`esgst-hidden`);
+                                }
                             }
                             if (esgst.oadd) {
                                 loadOadd();
@@ -5210,9 +5213,10 @@
                 context.fillText(messageCount, 9, 14);
                 esgst.favicon.href = canvas.toDataURL(`image/png`);
             };
-            image.src = esgst.name === `sg` ? `https://cdn.steamgifts.com/img/favicon.ico` : `https://cdn.steamtrades.com/img/favicon.ico`;
+            image.crossOrigin = `dl.dropboxusercontent.com`;
+            image.src = esgst.name === `sg` ? `https://dl.dropboxusercontent.com/s/mah4e6dpv8v771n/sgIcon.ico?raw=1` : `https://dl.dropboxusercontent.com/s/z0c93iie2siioi6/stIcon.ico?raw=1`;
         } else {
-            esgst.favicon.href = esgst.name === `sg` ? `https://cdn.steamgifts.com/img/favicon.ico` : `https://cdn.steamtrades.com/img/favicon.ico`;
+            esgst.favicon.href = esgst.name === `sg` ? `https://dl.dropboxusercontent.com/s/mah4e6dpv8v771n/sgIcon.ico?raw=1` : `https://dl.dropboxusercontent.com/s/z0c93iie2siioi6/stIcon.ico?raw=1`;
         }
     }
 
@@ -6403,6 +6407,7 @@
                 }
             }
             input.value = savedPreset.name;
+            gf.presetDisplay.textContent = savedPreset.name;
             setValue(`gf_preset${gf.type}`, savedPreset.name);
             gf.edit = true;
             popup.close();
@@ -6768,7 +6773,7 @@
                 </div>
                 <div class="esgst-gf-button">
                     <span>Expand</span>
-                    <span class="esgst-hidden">Collapse</span> filters (<span>0</span> filtered)
+                    <span class="esgst-hidden">Collapse</span> filters (<span>0</span> filtered - <span></span>)
                 </div>
             </div>
         `);
@@ -6790,6 +6795,7 @@
         expand = button.firstElementChild;
         collapse = expand.nextElementSibling;
         gf.filteredCount = collapse.nextElementSibling;
+        gf.presetDisplay = gf.filteredCount.nextElementSibling;
         var preset = esgst[`gf_preset${gf.type}`];
         var savedPresets;
         if (preset) {
@@ -6799,6 +6805,7 @@
                 preset = savedPresets[i];
                 gf.edit = true;
                 presetInput.value = preset.name;
+                gf.presetDisplay.textContent = preset.name;
             } else {
                 preset = null;
             }
@@ -6818,6 +6825,7 @@
             setValue(`gf_preset${gf.type}`, `Default${gf.type}`);
             gf.edit = true;
             presetInput.value = `Default${gf.type}`;
+            gf.presetDisplay.textContent = `Default${gf.type}`;
         }
         if (!gf.advancedSearch) {
             basicFilters.classList.remove(`esgst-hidden`);
@@ -11103,7 +11111,7 @@ ${avatar.outerHTML}
                         </div>
                         <div class="table__column--width-fill">
                             <a href="https://www.steamgifts.com/giveaways/search?q=` + Term + `" target="_blank">
-                                <i class="fa"><img src="https://cdn.steamgifts.com/img/favicon.ico"></i>
+                                <i class="fa"><img src="https://dl.dropboxusercontent.com/s/mah4e6dpv8v771n/sgIcon.ico?raw=1"></i>
                             </a>&nbsp;
                             <a href="https://steamdb.info/search/?a=app&amp;q=` + Term + `" target="_blank">
                                 <i class="fa"><img src="https://steamdb.info/static/logos/favicon-16x16.png"></i>
@@ -22408,7 +22416,7 @@ ${avatar.outerHTML}
             <div class="esgst-sgpb-container">
                 <a class="esgst-sgpb-button" href="https://www.steamgifts.com/go/user/${profile.steamId}" rel="nofollow" target="_blank">
                     <i class="fa">
-                        <img src="https://cdn.steamgifts.com/img/favicon.ico">
+                        <img src="https://dl.dropboxusercontent.com/s/mah4e6dpv8v771n/sgIcon.ico?raw=1">
                     </i>
                     <span>Visit SteamGifts Profile</span>
                 </a>
@@ -22430,7 +22438,7 @@ ${avatar.outerHTML}
         button = insertHtml(profile.steamButtonContainer.firstElementChild, `beforeEnd`, `
             <a class="esgst-stpb-button" href="https://www.steamtrades.com/user/${profile.steamId}" rel="nofollow" target="_blank">
                 <i class="fa fa-fw">
-                    <img src="https://cdn.steamtrades.com/img/favicon.ico">
+                    <img src="https://dl.dropboxusercontent.com/s/z0c93iie2siioi6/stIcon.ico?raw=1">
                 </i>
             </a>
         `);
@@ -29785,19 +29793,19 @@ ${avatar.outerHTML}
                 opacity: 1;
             }
 
-            .esgst-adots {
+            .sidebar .esgst-adots {
                 margin: 0;
                 max-height: 300px;
                 max-width: 336px;
                 overflow: auto;
             }
 
-            .esgst-adots .esgst-dh-highlighted {
+            .sidebar .esgst-adots .esgst-dh-highlighted {
                 padding: 0 !important;
                 padding-bottom: 5px !important;
             }
 
-            .esgst-adots .table__column__heading, .esgst-adots .homepage_table_column_heading {
+            .sidebar .esgst-adots .table__column__heading, .esgst-adots .homepage_table_column_heading {
                 display: inline-block;
                 max-width: 225px;
                 overflow: hidden;
@@ -29806,18 +29814,18 @@ ${avatar.outerHTML}
                 white-space: nowrap;
             }
 
-            .esgst-adots .table__row-outer-wrap {
+            .sidebar .esgst-adots .table__row-outer-wrap {
                 padding: 0 !important;
                 padding-bottom: 5px !important;
                 border: 0;
                 box-shadow: none;
             }
 
-            .esgst-adots .table__row-inner-wrap {
+            .sidebar .esgst-adots .table__row-inner-wrap {
                 display: block;
             }
 
-            .esgst-adots .table__row-inner-wrap >*:not(:last-child) {
+            .sidebar .esgst-adots .table__row-inner-wrap >*:not(:last-child) {
                 display: inline-block;
             }     
 
