@@ -3,7 +3,7 @@
 // @namespace ESGST
 // @description Enhances SteamGifts and SteamTrades by adding some cool features to them.
 // @icon https://github.com/revilheart/ESGST/raw/master/Resources/esgstIcon.ico
-// @version 6.Beta.24.2
+// @version 6.Beta.25.0
 // @author revilheart
 // @downloadURL https://github.com/revilheart/ESGST/raw/master/ESGST.user.js
 // @updateURL https://github.com/revilheart/ESGST/raw/master/ESGST.meta.js
@@ -387,9 +387,9 @@
                             GM_setValue(`users`, JSON.stringify(esgst.users));
                         }
                     }
-                    esgst.groups = GM_getValue(`groups`);
+                    esgst.groups = localStorage.esgst_groups;
                     if (typeof esgst.groups === `undefined`) {
-                        GM_setValue(`groups`, `{}`);
+                        localStorage.esgst_groups = GM_getValue(`groups`, `{}`);
                         esgst.groups = {};
                     } else {
                         esgst.groups = JSON.parse(esgst.groups);
@@ -413,9 +413,12 @@
                     } else {
                         esgst.comments = JSON.parse(esgst.comments);
                     }
-                    esgst.giveaways = GM_getValue(`giveaways`);
+                    if (!localStorage.esgst_entries) {
+                        localStorage.esgst_entries = GM_getValue(`entries`, `[]`);
+                    }
+                    esgst.giveaways = localStorage.esgst_giveaways;
                     if (typeof esgst.giveaways === `undefined`) {
-                        GM_setValue(`giveaways`, `{}`);
+                        localStorage.esgst_giveaways = GM_getValue(`giveaways`) || `{}`;
                         esgst.giveaways = {};
                     } else {
                         esgst.giveaways = JSON.parse(esgst.giveaways);
@@ -435,27 +438,27 @@
                     } else {
                         esgst.games = JSON.parse(esgst.games);
                     }
-                    esgst.rerolls = GM_getValue(`rerolls`);
+                    esgst.rerolls = localStorage.esgst_rerolls;;
                     if (typeof esgst.rerolls === `undefined`) {
-                        var oldRerolls = GM_getValue(`Rerolls`);
+                        var oldRerolls = GM_getValue(`rerolls`, GM_getValue(`Rerolls`));
                         if (oldRerolls) {
-                            GM_setValue(`rerolls`, JSON.stringify(oldRerolls));
+                            localStorage.esgst_rerolls = JSON.stringify(oldRerolls);
                             esgst.rerolls = oldRerolls;
                         } else {
-                            GM_setValue(`rerolls`, `[]`);
+                            localStorage.esgst_rerolls = `[]`;
                             esgst.rerolls = [];
                         }
                     } else {
                         esgst.rerolls = JSON.parse(esgst.rerolls);
                     }
-                    esgst.winners = GM_getValue(`winners`);
+                    esgst.winners = localStorage.esgst_winners;
                     if (typeof esgst.winners === `undefined`) {
-                        var oldWinners = GM_getValue(`Winners`);
+                        var oldWinners = GM_getValue(`winners`, GM_getValue(`Winners`));
                         if (oldWinners) {
-                            GM_setValue(`winners`, JSON.stringify(oldWinners));
+                            localStorage.esgst_winners = JSON.stringify(oldWinners);
                             esgst.winners = oldWinners;
                         } else {
-                            GM_setValue(`winners`, `{}`);
+                            localStorage.esgst_winners = `{}`;
                             esgst.winners = {};
                         }
                     } else {
@@ -638,6 +641,17 @@
                             st: true,
                             type: `general`
                         },*/
+                        {
+                            description: `
+                                <ul>
+                                    <li>Transforms every magnifying glass in search fields into buttons.</li>
+                                </ul>
+                            `,
+                            id: `smgb`,
+                            name: `Search Magnifying Glass Button`,
+                            sg: true,
+                            type: `general`
+                        },
                         {
                             description: `
                                 <ul>
@@ -2354,6 +2368,8 @@
                     addStyle();
                     var sibling, height;
                     if (esgst.menuPath) {
+                        document.title = `ESGST Settings`;
+                        esgst.favicon.href = `https://github.com/revilheart/ESGST/raw/master/Resources/esgstIcon.ico`;
                         loadSMMenu(true);
                     } else {
                         addHeaderMenu();
@@ -2387,6 +2403,9 @@
                         if ((esgst.pnot || esgst.esCheck) && esgst.paginationNavigation && esgst.mainPageHeading) {
                             esgst.paginationNavigation.classList.add(`page_heading_btn`);
                             esgst.mainPageHeading.appendChild(esgst.paginationNavigation);
+                        }
+                        if (esgst.smgb) {
+                            loadSmgb();
                         }
                         if (esgst.giveawaysPath && esgst.activeDiscussions) {
                             if (esgst.hcp) {
@@ -2846,7 +2865,7 @@
         }
         goToComment(esgst.originalHash);
         window.addEventListener("beforeunload", function (event) {
-            if (document.getElementsByClassName("esgst-busy")[0]) {
+            if (document.getElementsByClassName("esgst-busy")[0] || esgst.busy) {
                 event.returnValue = true;
                 return true;
             }
@@ -3617,10 +3636,10 @@
 
     function continueSyncStep1(syncer, callback) {
         var key;
-        if (esgst.settings.syncGroups) {
+        if (esgst.sg && esgst.settings.syncGroups) {
             syncer.progress.lastElementChild.textContent = `Syncing your Steam groups...`;
             syncer.groups = {};
-            savedGroups = JSON.parse(GM_getValue(`groups`));
+            savedGroups = JSON.parse(localStorage.esgst_groups);
             syncer.currentGroups = [];
             for (key in savedGroups) {
                 if (savedGroups[key].member) {
@@ -4055,7 +4074,7 @@
 
     function saveGiveaways(giveaways, callback, deleteLock) {
         var key, savedGiveaways, subKey;
-        savedGiveaways = JSON.parse(GM_getValue(`giveaways`, `{}`));
+        savedGiveaways = JSON.parse(localStorage.esgst_giveaways || `{}`);
         for (key in giveaways) {
             if (savedGiveaways[key]) {
                 for (subKey in giveaways[key]) {
@@ -4065,7 +4084,7 @@
                 savedGiveaways[key] = giveaways[key];
             }
         }
-        GM_setValue(`giveaways`, JSON.stringify(savedGiveaways));
+        localStorage.esgst_giveaways = JSON.stringify(savedGiveaways);
         deleteLock();
         if (callback) {
             callback();
@@ -4078,7 +4097,7 @@
 
     function saveGroups(groups, sync, callback, deleteLock) {
         var key, savedGroups, subKey;
-        savedGroups = JSON.parse(GM_getValue(`groups`, `{}`));
+        savedGroups = JSON.parse(localStorage.esgst_groups || `{}`);
         if (sync) {
             for (key in savedGroups) {
                 delete savedGroups[key].member;
@@ -4093,7 +4112,7 @@
                 savedGroups[key] = groups[key];
             }
         }
-        GM_setValue(`groups`, JSON.stringify(savedGroups));
+        localStorage.esgst_groups = JSON.stringify(savedGroups);
         deleteLock();
         if (callback) {
             callback();
@@ -5277,6 +5296,24 @@
         esgst.headerElements.mainButton.parentElement.classList.add(`esgst-lpv-container`);
     }
 
+    /* [SMGB] Search Magnifying Glass Button */
+
+    function loadSmgb() {
+        var elements = document.querySelectorAll(`.sidebar__search-container .fa-search`);
+        for (var i = 0, n = elements.length; i < n; ++i) {
+            setSmgbButton(elements[i]);
+        }
+    }
+
+    function setSmgbButton(button) {
+        button.classList.add(`esgst-clickable`);
+        button.addEventListener(`click`, function () {
+            var event = new Event(`keypress`);
+            event.which = 13;
+            button.previousElementSibling.dispatchEvent(event);  
+        });
+    }
+
     /* [LPL] Last Page Link */
 
     function getLastPage(context, main, discussion, user, userWon, group, groupUsers, groupWishlist) {
@@ -6113,7 +6150,7 @@
 
     function getGfGiveaways(giveaways, main, source) {
         var giveaway, i, n, savedGiveaways;
-        savedGiveaways = JSON.parse(GM_getValue(`giveaways`, `{}`));
+        savedGiveaways = JSON.parse(localStorage.esgst_giveaways || `{}`);
         for (i = 0, n = giveaways.length; i < n; ++i) {
             giveaway = giveaways[i];
             if (giveaway.creator !== esgst.username && !giveaway.ended && !giveaway.entered && giveaway.url) {
@@ -6148,14 +6185,14 @@
     function hideGfGiveaway(giveaway, callback) {
         createLock(`giveawayLock`, 300, function(deleteLock) {
             var giveaways;
-            giveaways = JSON.parse(GM_getValue(`giveaways`, `{}`));
+            giveaways = JSON.parse(localStorage.esgst_giveaways || `{}`);
             if (!giveaways[giveaway.code]) {
                 giveaways[giveaway.code] = {};
             }
             giveaways[giveaway.code].code = giveaway.code;
             giveaways[giveaway.code].endTime = giveaway.endTime;
             giveaways[giveaway.code].hidden = true;
-            GM_setValue(`giveaways`, JSON.stringify(giveaways));
+            localStorage.esgst_giveaways = JSON.stringify(giveaways);
             deleteLock();
             if (callback) {
                 callback();
@@ -6181,10 +6218,10 @@
     function unhideGfGiveaway(giveaway, callback) {
         createLock(`giveawayLock`, 300, function(deleteLock) {
             var giveaways;
-            giveaways = JSON.parse(GM_getValue(`giveaways`, `{}`));
+            giveaways = JSON.parse(localStorage.esgst_giveaways || `{}`);
             if (giveaways[giveaway.code]) {
                 giveaways[giveaway.code].hidden = false;
-                GM_setValue(`giveaways`, JSON.stringify(giveaways));
+                localStorage.esgst_giveaways = JSON.stringify(giveaways);
             }
             deleteLock();
             if (callback) {
@@ -6357,7 +6394,7 @@
                 details += `, do not apply to: ${toException.join(` & `)}`;
             }
             preset = insertHtml(presets, `beforeEnd`, `
-                <div draggable="true">
+                <div ${input.value === savedPreset.name ? `class="esgst-green-highlight"` : ``} draggable="true">
                     <div class="esgst-clickable" style="float: left;">
                         <strong>${savedPreset.name}</strong>
                     </div>
@@ -7155,7 +7192,7 @@
         button = insertHtml(context, `beforeEnd`, html);
         var bookmarked = [], endingSoon = 1, started = 0, ending = 0;
         createLock(`giveawayLock`, 300, function(deleteLock) {
-            var giveaways = JSON.parse(GM_getValue(`giveaways`, `{}`));
+            var giveaways = JSON.parse(localStorage.esgst_giveaways || `{}`);
             if (esgst.gb_h) {
                 button.classList.add(`esgst-gb-highlighted`);
             }
@@ -7215,7 +7252,7 @@
                     button.classList.add(`ending`);
                 }
             }
-            GM_setValue(`giveaways`, JSON.stringify(giveaways));
+            localStorage.esgst_giveaways = JSON.stringify(giveaways);
             deleteLock();
         });
         button.addEventListener(`click`, function() {
@@ -7318,10 +7355,10 @@ ${avatar.outerHTML}
                                 popup.reposition();
                                 if (endTime > 0) {
                                     createLock(`giveawayLock`, 300, function (deleteLock) {
-                                        var giveaways = JSON.parse(GM_getValue(`giveaways`));
+                                        var giveaways = JSON.parse(localStorage.esgst_giveaways);
                                         giveaways[bookmarked[i].code].started = true;
                                         giveaways[bookmarked[i].code].endTime = endTime;
-                                        GM_setValue(`giveaways`, JSON.stringify(giveaways));
+                                        localStorage.esgst_giveaways = JSON.stringify(giveaways);
                                         deleteLock();
                                         window.setTimeout(loadGbGiveaways, 0, ++i, n, bookmarked, gbGiveaways, popup, callback);
                                     });
@@ -7342,7 +7379,7 @@ ${avatar.outerHTML}
 
     function getGbGiveaways(giveaways, main) {
         if ((esgst.wonPath && !main) || (!esgst.wonPath)) {
-        var savedGiveaways = JSON.parse(GM_getValue(`giveaways`, `{}`));
+        var savedGiveaways = JSON.parse(localStorage.esgst_giveaways || `{}`);
         for (var i = 0, n = giveaways.length; i < n; ++i) {
             var giveaway = giveaways[i];
             if (((esgst.archivePath && !main) || !esgst.archivePath) && giveaway.creator !== esgst.username && !giveaway.ended && !giveaway.entered && giveaway.url && !giveaway.innerWrap.getElementsByClassName(`esgst-gb-button`)[0]) {
@@ -7375,7 +7412,7 @@ ${avatar.outerHTML}
     function bookmarkGbGiveaway(giveaway, callback) {
         createLock(`giveawayLock`, 300, function(deleteLock) {
             var giveaways;
-            giveaways = JSON.parse(GM_getValue(`giveaways`, `{}`));
+            giveaways = JSON.parse(localStorage.esgst_giveaways || `{}`);
             if (!giveaways[giveaway.code]) {
                 giveaways[giveaway.code] = {};
             }
@@ -7383,7 +7420,7 @@ ${avatar.outerHTML}
             giveaways[giveaway.code].endTime = giveaway.endTime;
             giveaways[giveaway.code].started = giveaway.started;
             giveaways[giveaway.code].bookmarked = true;
-            GM_setValue(`giveaways`, JSON.stringify(giveaways));
+            localStorage.esgst_giveaways = JSON.stringify(giveaways);
             deleteLock();
             if (callback) {
                 callback();
@@ -7410,11 +7447,11 @@ ${avatar.outerHTML}
     function unbookmarkGbGiveaway(giveaway, callback) {
             createLock(`giveawayLock`, 300, function(deleteLock) {
                 var giveaways;
-                giveaways = JSON.parse(GM_getValue(`giveaways`, `{}`));
+                giveaways = JSON.parse(localStorage.esgst_giveaways || `{}`);
                 if (giveaways[giveaway.code]) {
                     delete giveaways[giveaway.code].bookmarked;
                 }
-                GM_setValue(`giveaways`, JSON.stringify(giveaways));
+                localStorage.esgst_giveaways = JSON.stringify(giveaways);
                 deleteLock();
                 if (callback) {
                     callback();
@@ -7879,6 +7916,8 @@ ${avatar.outerHTML}
         }
         if (chance > 100) {
             chance = 100;
+        } else if (chance <= 0) {
+            chance = 0.01;
         }
         giveaway.chance = chance;
         for (i = 0, n = esgst.gwc_colors.length; i < n; ++i) {
@@ -8238,8 +8277,8 @@ ${avatar.outerHTML}
                 popup.open();
                 newGiveaways = {};
                 newGroups = {};
-                savedGiveaways = JSON.parse(GM_getValue(`giveaways`, `{}`));
-                savedGroups = JSON.parse(GM_getValue(`groups`, `{}`));
+                savedGiveaways = JSON.parse(localStorage.esgst_giveaways || `{}`);
+                savedGroups = JSON.parse(localStorage.esgst_groups || `{}`);
                 loadGglGroups([giveaway], 0, 1, newGiveaways, newGroups, savedGiveaways, savedGroups, function(groups) {
                     var className, groupCount, i, n, key, link;
                     if (groups) {
@@ -8297,8 +8336,8 @@ ${avatar.outerHTML}
         var newGiveaways, newGroups, savedGiveaways, savedGroups;
         newGiveaways = {};
         newGroups = {};
-        savedGiveaways = JSON.parse(GM_getValue(`giveaways`, `{}`));
-        savedGroups = JSON.parse(GM_getValue(`groups`, `{}`));
+        savedGiveaways = JSON.parse(localStorage.esgst_giveaways || `{}`);
+        savedGroups = JSON.parse(localStorage.esgst_groups || `{}`);
         loadGglGroups(giveaways, 0, giveaways.length, newGiveaways, newGroups, savedGiveaways, savedGroups);
     }
 
@@ -8477,7 +8516,7 @@ ${avatar.outerHTML}
                 templates = insertHtml(popup.scrollable, `beforeEnd`, `
                     <div class="esgst-text-left popup__keys__list"></div>
                 `);
-                savedTemplates = JSON.parse(GM_getValue(`templates`, `[]`));
+                savedTemplates = JSON.parse(localStorage.esgst_templates || `[]`);
                 for (i = 0, n = savedTemplates.length; i < n; ++i) {
                     savedTemplate = savedTemplates[i];
                     details = ``;
@@ -8615,7 +8654,7 @@ ${avatar.outerHTML}
                         template.endTime = endTime;
                     }
                     createLock(`templateLock`, 300, function(deleteLock) {
-                        savedTemplates = JSON.parse(GM_getValue(`templates`, `[]`));
+                        savedTemplates = JSON.parse(localStorage.esgst_templates || `[]`);
                         for (i = 0, n = savedTemplates.length; i < n && savedTemplates[i].name !== template.name; ++i);
                         if (i < n) {
                             if (edit) {
@@ -8638,7 +8677,7 @@ ${avatar.outerHTML}
                                 message.classList.add(`esgst-hidden`);
                             }, 2000);
                         }
-                        GM_setValue(`templates`, JSON.stringify(savedTemplates));
+                        localStorage.esgst_templates = JSON.stringify(savedTemplates);
                         deleteLock();
                         callback();
                     });
@@ -8771,10 +8810,10 @@ ${avatar.outerHTML}
                         <i class="fa fa-circle-o-notch fa-spin"></i>
                     `;
                     createLock(`templateLock`, 300, function (deleteLock) {
-                        savedTemplates = JSON.parse(GM_getValue(`templates`, `[]`));
+                        savedTemplates = JSON.parse(localStorage.esgst_templates || `[]`);
                         for (i = 0, n = savedTemplates.length; i < n && savedTemplates[i].name !== savedTemplate.name; ++i);
                         savedTemplates.splice(i, 1);
-                        GM_setValue(`templates`, JSON.stringify(savedTemplates));
+                        localStorage.esgst_templates = JSON.stringify(savedTemplates);
                         deleteLock();
                         template.remove();
                         edit = false;
@@ -8787,7 +8826,7 @@ ${avatar.outerHTML}
     function setGtsSource(gts, name, template) {
         var i, n, savedTemplates;
         gts.source = template;
-        savedTemplates = JSON.parse(GM_getValue(`templates`, `[]`));
+        savedTemplates = JSON.parse(localStorage.esgst_templates || `[]`);
         for (i = 0, n = savedTemplates.length; i < n && savedTemplates[i].name !== name; ++i);
         if (i < n) {
             gts.sourceIndex = i;
@@ -8813,9 +8852,9 @@ ${avatar.outerHTML}
 
     function saveGtsSource(gts) {
         var savedTemplates;
-        savedTemplates = JSON.parse(GM_getValue(`templates`, `[]`));
+        savedTemplates = JSON.parse(localStorage.esgst_templates || `[]`);
         savedTemplates.splice(gts.sourceNewIndex, 0, savedTemplates.splice(gts.sourceIndex, 1)[0]);
-        GM_setValue(`templates`, JSON.stringify(savedTemplates));
+        localStorage.esgst_templates = JSON.stringify(savedTemplates);
     }
 
     /* [MGC] Multiple Giveaways Creator */
@@ -8942,6 +8981,7 @@ ${avatar.outerHTML}
             keys: mgc.keys.value
         };
         if (values.gameId && ((values.gameType === `gift` && parseInt(values.copies) > 0) || (values.gameType === `key` && values.keys))) {
+            esgst.busy = true;
             values.gameName = mgc.gameName.value;
             values.startTime = mgc.startTime.value;
             values.endTime = mgc.endTime.value;
@@ -9065,6 +9105,7 @@ ${avatar.outerHTML}
 
     function getMgcGiveaways(mgc, popup, progress, textArea, callback) {
         var giveaways, lines, max, n, value;
+        esgst.busy = true;
         giveaways = [];
         lines = textArea.value.trim().split(/\n/);
         for (i = 0, n = lines.length; i < n; ++i) {
@@ -9223,6 +9264,7 @@ ${avatar.outerHTML}
 
     function emptyMgcGiveaways(mgc, callback) {
         if (window.confirm(`Are you sure you want to empty the creator?`)) {
+            esgst.busy = false;
             mgc.datas = [];
             mgc.created = [];
             mgc.giveaways.innerHTML = ``;
@@ -9430,7 +9472,7 @@ ${avatar.outerHTML}
 
     function setSggGiveawayGroups() {
         var avatar, communityName, container, context, elements, i, id, key, n, savedGroups, separator, stickied;
-        savedGroups = JSON.parse(GM_getValue(`groups`, `{}`));
+        savedGroups = JSON.parse(localStorage.esgst_groups || `{}`);
         container = document.getElementsByClassName(`form__groups`)[0];
         separator = container.firstElementChild.nextElementSibling;
         elements = container.getElementsByClassName(`form__group--steam`);
@@ -9465,7 +9507,7 @@ ${avatar.outerHTML}
 
     function setSggGroups(context) {
         var avatar, communityName, element, elements, i, key, n, savedGroups, stickied;
-        savedGroups = JSON.parse(GM_getValue(`groups`, `{}`));
+        savedGroups = JSON.parse(localStorage.esgst_groups || `{}`);
         elements = context.getElementsByClassName(`table__row-inner-wrap`);
         for (i = 0, n = elements.length; i < n; ++i) {
             element = elements[i];
@@ -9675,10 +9717,10 @@ ${avatar.outerHTML}
         if (category.value === `1`) {
             id = winner.value;
             if (id) {
-                rerolls = JSON.parse(GM_getValue(`rerolls`, `[]`));
+                rerolls = JSON.parse(localStorage.esgst_rerolls);
                 if (rerolls.indexOf(id) < 0) {
                     rerolls.push(id);
-                    GM_setValue(`rerolls`, JSON.stringify(rerolls));
+                    localStorage.esgst_rerolls = JSON.stringify(rerolls);
                 }
             }
         }
@@ -9936,7 +9978,7 @@ ${avatar.outerHTML}
             codes = Object.keys(ugs.giveaways);
             n = codes.length;
             if (n > 0) {
-                ugs.rerolls = JSON.parse(GM_getValue(`rerolls`, `[]`));
+                ugs.rerolls = JSON.parse(localStorage.esgst_rerolls);
                 ugs.sentWinners = {};
                 ugs.winners = {};
                 ugs.results.classList.remove(`esgst-hidden`);
@@ -10228,7 +10270,7 @@ ${avatar.outerHTML}
     function completeUgsSender(ugs, callback) {
         var i, key, n, savedUsers, winners;
         if (!ugs.canceled) {
-            winners = JSON.parse(GM_getValue(`winners`, `{}`));
+            winners = JSON.parse(localStorage.esgst_winners || `{}`);
             for (key in ugs.sentWinners) {
                 if (!winners[key]) {
                     winners[key] = [];
@@ -10237,7 +10279,7 @@ ${avatar.outerHTML}
                     winners[key].push(ugs.sentWinners[key][i]);
                 }
             }
-            GM_setValue(`winners`, JSON.stringify(winners));
+            localStorage.esgst_winners = JSON.stringify(winners);
             savedUsers = [];
             for (key in ugs.giveaways) {
                 for (i = 0, n = ugs.giveaways[key].winners.length; i < n; ++i) {
@@ -10288,14 +10330,14 @@ ${avatar.outerHTML}
 
     function setEtEntry(code, entry, name) {
         var entries;
-        entries = JSON.parse(GM_getValue(`entries`, `[]`));
+        entries = JSON.parse(localStorage.esgst_entries || `[]`);
         entries.push({
             code: code,
             entry: entry,
             name: name,
             timestamp: Date.now()
         });
-        GM_setValue(`entries`, JSON.stringify(entries));
+        localStorage.esgst_entries = JSON.stringify(entries);
     }
 
     /* [ER] Entries Remover */
@@ -10555,7 +10597,7 @@ ${avatar.outerHTML}
             var cewgd = {
                 count: 0,
                 giveaways: [],
-                savedGiveaways: JSON.parse(GM_getValue(`giveaways`, `{}`))
+                savedGiveaways: JSON.parse(localStorage.esgst_giveaways || `{}`)
             };
             for (i = 0, n = giveaways.length; i < n; ++i) {
                 getCewgdDetail(cewgd, giveaways, i);
@@ -10568,7 +10610,7 @@ ${avatar.outerHTML}
         var currentGiveaway, i, key, n, savedGiveaways;
         if (cewgd.count === total) {
             createLock(`giveawayLock`, 300, function (deleteLock) {
-                savedGiveaways = JSON.parse(GM_getValue(`giveaways`, `{}`));
+                savedGiveaways = JSON.parse(localStorage.esgst_giveaways || `{}`);
                 for (i = 0, n = cewgd.giveaways.length; i < n; ++i) {
                     currentGiveaway = cewgd.giveaways[i];
                     if (savedGiveaways[currentGiveaway.code]) {
@@ -10579,7 +10621,7 @@ ${avatar.outerHTML}
                         savedGiveaways[currentGiveaway.code] = currentGiveaway;
                     }
                 }
-                GM_setValue(`giveaways`, JSON.stringify(savedGiveaways));
+                localStorage.esgst_giveaways = JSON.stringify(savedGiveaways);
                 deleteLock();
             });
         } else {
@@ -19121,7 +19163,7 @@ ${avatar.outerHTML}
     }
 
     function getCfhAreas(context) {
-        var textAreas = context.querySelectorAll(`textarea[name='description']`);
+        var textAreas = context.getElementsByTagName(`textarea`);
         for (var i = 0, n = textAreas.length; i < n; ++i) {
             addCFHPanel(textAreas[i]);
         }
@@ -21313,7 +21355,7 @@ ${avatar.outerHTML}
     function loadSgcGroups(profile, response) {
         var avatar, communityName, element, elements, groups, i, info, link, n, responseHtml, savedGroup, savedGroups;
         groups = [];
-        savedGroups = JSON.parse(GM_getValue(`groups`, `{}`));
+        savedGroups = JSON.parse(localStorage.esgst_groups || `{}`);
         responseHtml = DOM.parse(response.responseText);
         elements = responseHtml.getElementsByClassName(`groupBlock`);
         for (i = 0, n = elements.length; i < n; ++i) {
@@ -22964,7 +23006,7 @@ ${avatar.outerHTML}
                                     if (Result) {
                                         Callback(wbc);
                                     } else {
-                                        Groups = JSON.parse(GM_getValue(`groups`, `{}`));
+                                        Groups = JSON.parse(localStorage.esgst_groups || `{}`);
                                         for (GroupGiveaway in wbc.groupGiveaways) {
                                             Found = false;
                                             GroupGiveaways = wbc.groupGiveaways[GroupGiveaway];
@@ -23329,14 +23371,14 @@ ${avatar.outerHTML}
         Username = Context.closest(".table__row-inner-wrap").getElementsByClassName("table__column__heading")[0].querySelector("a[href*='/user/']").textContent;
         Context.addEventListener("click", function () {
             var Winners;
-            Winners = JSON.parse(GM_getValue(`winners`, `{}`));
+            Winners = JSON.parse(localStorage.esgst_winners || `{}`);
             if (!Winners[Key]) {
                 Winners[Key] = [];
             }
             if (Winners[Key].indexOf(Username) < 0) {
                 Winners[Key].push(Username);
             }
-            GM_setValue(`winners`, JSON.stringify(Winners));
+            localStorage.esgst_winners = JSON.stringify(Winners);
         });
     }
 
@@ -23345,7 +23387,7 @@ ${avatar.outerHTML}
         Match = Context.firstElementChild.firstElementChild.getAttribute("href").match(/\/giveaway\/(.+?)\//);
         if (Match) {
             Key = Match[1];
-            Winners = JSON.parse(GM_getValue(`winners`, `{}`));
+            Winners = JSON.parse(localStorage.esgst_winners || `{}`);
             if (Winners[Key]) {
                 Matches = Context.nextElementSibling.children;
                 for (I = 0, N = Matches.length; I < N; ++I) {
@@ -23370,7 +23412,7 @@ ${avatar.outerHTML}
 
     function highlightGhGroups(context) {
         var code, element, elements, i, key, n, savedGroups;
-        savedGroups = JSON.parse(GM_getValue(`groups`, `{}`));
+        savedGroups = JSON.parse(localStorage.esgst_groups || `{}`);
         elements = context.querySelectorAll(`.table__column__heading[href*="/group/"]`);
         for (i = 0, n = elements.length; i < n; ++i) {
             element = elements[i];
@@ -24424,6 +24466,22 @@ ${avatar.outerHTML}
             "<div class=\"esgst-page-heading\">" +
             "</div>" +
             "<div class=\"SMMenu\"></div>";
+        Container.lastElementChild.appendChild(createButtonSet(`green`, `grey`, `fa-trash`, `fa-circle-o-notch fa-spin`, `Wipe Storage`, `Wiping...`, function (callback) {
+            if (confirm(`This will wipe all GM_setValue/GM_getValue storage that has been moved to localStorage and other useless data. Are you sure you want to do this?`)) {
+                GM_deleteValue(`entries`);
+                GM_deleteValue(`giveaways`);
+                GM_deleteValue(`groups`);
+                GM_deleteValue(`Groups`);
+                GM_deleteValue(`rerolls`);
+                GM_deleteValue(`Rerolls`);
+                GM_deleteValue(`templates`);
+                GM_deleteValue(`Templates`);
+                GM_deleteValue(`winners`);
+                GM_deleteValue(`Winners`);
+                callback();
+                alert(`Deleted!`);
+            }
+        }).set);
         var heading = Container.getElementsByClassName(`esgst-page-heading`)[0];
         createSMButtons(heading, [/*{
             Check: true,
@@ -24446,12 +24504,12 @@ ${avatar.outerHTML}
             Name: "SMManageFilteredUsers",
             Title: "See list of filtered users."
         }, {
-            Check: esgst.gf && esgst.gf_h,
+            Check: esgst.sg && esgst.gf && esgst.gf_h,
             Icons: ["fa-gift", "fa-eye-slash"],
             Name: "SMManageFilteredGiveaways esgst-heading-button",
             Title: "Manage hidden giveaways."
         }, {
-            Check: esgst.et,
+            Check: esgst.sg && esgst.et,
             Icons: ["fa-ticket", "fa-history"],
             Name: "SMManageEntriesTracker esgst-heading-button",
             Title: "Manage Entries Tracker stats."
@@ -24714,11 +24772,6 @@ ${avatar.outerHTML}
                 settingKey: `StCommentHistory`
             },
             {
-                key: `stickiedGroups`,
-                name: `Stickied Giveaway Groups`,
-                settingKey: `SGG`
-            },
-            {
                 key: `templates`,
                 name: `Templates`,
                 settingKey: `Templates`
@@ -24753,7 +24806,6 @@ ${avatar.outerHTML}
                     winners: "W",
                     sgCommentHistory: `CH_SG`,
                     stCommentHistory: `CH_ST`,
-                    StickiedGroups: "SG",
                     templates: `T`,
                     decryptedGiveaways: "DG",
                     settings: `S`
@@ -24858,7 +24910,7 @@ ${avatar.outerHTML}
                 ID: "SM_ITADI"
             }, {
                 Check: function () {
-                    return true;
+                    return esgst.sg && true;
                 },
                 Description: "Giveaways data.",
                 Title: "Includes Giveaway Groups Loader data.",
@@ -24867,7 +24919,7 @@ ${avatar.outerHTML}
                 ID: "SM_GG"
             }, {
                 Check: function () {
-                    return true;
+                    return esgst.sg && true;
                 },
                 Description: "Entries Tracker data.",
                 Title: "Includes Entries Tracker data.",
@@ -24876,7 +24928,7 @@ ${avatar.outerHTML}
                 ID: "SM_ER"
             }, {
                 Check: function () {
-                    return true;
+                    return esgst.sg && true;
                 },
                 Description: "Groups data.",
                 Title: "Includes groups data.",
@@ -24912,7 +24964,7 @@ ${avatar.outerHTML}
                 ID: "SM_SR"
             }, {
                 Check: function () {
-                    return true;
+                    return esgst.sg && true;
                 },
                 Description: "Rerolls data.",
                 Title: "Includes Unsent Gifts Sender rerolls data.",
@@ -24921,7 +24973,7 @@ ${avatar.outerHTML}
                 ID: "SM_R"
             }, {
                 Check: function () {
-                    return true;
+                    return esgst.sg && true;
                 },
                 Description: "Winners data.",
                 Title: "Includes Inbox Winners Highlighter winners data.",
@@ -24948,16 +25000,7 @@ ${avatar.outerHTML}
                 ID: "SM_CH_ST"
             }, {
                 Check: function () {
-                    return true;
-                },
-                Description: "Stickied groups data.",
-                Title: "Includes Stickied Giveaway Groups data.",
-                Name: "StickiedGroups",
-                Key: "SG",
-                ID: "SM_SG"
-            }, {
-                Check: function () {
-                    return true;
+                    return esgst.sg && true;
                 },
                 Description: "Templates data.",
                 Title: "Includes Giveaway Templates data.",
@@ -25504,7 +25547,9 @@ ${avatar.outerHTML}
                                     } else if (Key.match(/^(games|Games)$/)) {
                                         importGamesAndMerge(File, Key, SM);
                                     } else if (Key === `giveaways`) {
-                                        importGiveawaysAndMerge(File, Key, SM);
+                                        if (esgst.sg) {
+                                            importGiveawaysAndMerge(File, Key, SM);
+                                        }
                                     } else if (Key.match(/^(comments|Comments|Comments_ST)$/) && SM.C.checked) {
                                         importCommentsAndMerge(File, Key, SM);
                                     } else if (Key == `Emojis` && SM.E.checked) {
@@ -25519,24 +25564,27 @@ ${avatar.outerHTML}
                                     } else if (Key === `savedReplies` && SM.SR.checked) {
                                         importSavedRepliesAndMerge(File, Key, SM);
                                     } else if (Key === `entries` && SM.ER.checked) {
-                                        importEntriesAndMerge(File, Key, SM);
+                                        if (esgst.sg) {
+                                            importEntriesAndMerge(File, Key, SM);
+                                        }
                                     } else if (Key.match(/^(CommentHistory|sgCommentHistory|stCommentHistory)$/)) {
                                         importCommentHistoryAndMerge(File, Key, SM);
-                                    } else if (Key.match(/^(Rerolls|StickiedGroups)$/) && SM[SM.Names[Key]].checked) {
-                                        saved = GM_getValue(Key, []);
-                                        for (i = 0, n = File.Data[Key].length; i < n; ++i) {
-                                            value = File.Data[Key][i];
-                                            if (saved.indexOf(value) < 0) {
-                                                saved.push(value);
-                                            }
-                                        }
-                                        GM_setValue(Key, saved);
                                     } else if (Key.match(/^(Templates|templates)$/)) {
-                                        importTemplatesAndMerge(File, Key, SM);
+                                        if (esgst.sg) {
+                                            importTemplatesAndMerge(File, Key, SM);
+                                        }
                                     } else if (Key.match(/^(Rerolls|rerolls)$/)) {
-                                        importRerollsAndMerge(File, Key, SM);
+                                        if (esgst.sg) {
+                                            importRerollsAndMerge(File, Key, SM);
+                                        }
                                     } else if (Key.match(/^(Winners|winners)$/)) {
-                                        importWinnersAndMerge(File, Key, SM);
+                                        if (esgst.sg) {
+                                            importWinnersAndMerge(File, Key, SM);
+                                        }
+                                    } else if (Key === `groups`) {
+                                        if (esgst.sg) {
+                                            importGroupsAndMerge(File, Key, SM);
+                                        }
                                     } else if (SM.Names[Key] && SM[SM.Names[Key]] && SM[SM.Names[Key]].checked) {
                                         GM_setValue(Key, File.Data[Key]);
                                     }
@@ -25545,9 +25593,13 @@ ${avatar.outerHTML}
                                 } else if (Key.match(/^(games|Games)$/)) {
                                     importGames(File, Key, SM);
                                 } else if (Key === `giveaways`) {
-                                    importGiveaways(File, Key, SM);
+                                    if (esgst.sg) {
+                                        importGiveaways(File, Key, SM);
+                                    }
                                 } else if (Key === `entries` && SM.ER.checked) {
-                                    importEntries(File, Key, SM);
+                                    if (esgst.sg) {
+                                        importEntries(File, Key, SM);
+                                    }
                                 } else if (Key === `savedReplies` && SM.SR.checked) {
                                     importSavedReplies(File, Key, SM);
                                 } else if (Key.match(/^(CommentHistory|sgCommentHistory|stCommentHistory)$/)) {
@@ -25555,11 +25607,21 @@ ${avatar.outerHTML}
                                 } else if (Key === `comments` && SM.C.checked) {
                                     importComments(File, Key, SM);
                                 } else if (Key.match(/^(Templates|templates)$/)) {
-                                    importTemplates(File, Key, SM);
+                                    if (esgst.sg) {
+                                        importTemplates(File, Key, SM);
+                                    }
                                 } else if (Key.match(/^(Rerolls|rerolls)$/)) {
-                                    importRerolls(File, Key, SM);
+                                    if (esgst.sg) {
+                                        importRerolls(File, Key, SM);
+                                    }
                                 } else if (Key.match(/^(Winners|winners)$/)) {
-                                    importWinners(File, Key, SM);
+                                    if (esgst.sg) {
+                                        importWinners(File, Key, SM);
+                                    }
+                                } else if (Key === `groups`) {
+                                    if (esgst.sg) {
+                                        importGroups(File, Key, SM);
+                                    }
                                 } else if (SM.Names[Key] && SM[SM.Names[Key]] && SM[SM.Names[Key]].checked) {
                                     GM_setValue(Key, File.Data[Key]);
                                 }
@@ -25578,7 +25640,7 @@ ${avatar.outerHTML}
 
     function importGiveawaysAndMerge(File) {
         createLock(`giveawayLock`, 300, function(deleteLock) {
-            var saved = JSON.parse(GM_getValue(`giveaways`, `{}`));
+            var saved = JSON.parse(localStorage.esgst_giveaways || `{}`);
             var giveaways = File.Data.giveaways;
             for (var key in giveaways) {
                 if (!saved[key]) {
@@ -25588,14 +25650,14 @@ ${avatar.outerHTML}
                     saved[key][subKey] = giveaways[key][subKey];
                 }
             }
-            GM_setValue(`giveaways`, JSON.stringify(saved));
+            localStorage.esgst_giveaways = JSON.stringify(saved);
             deleteLock();
         });
     }
 
     function importGiveaways(File) {
         createLock(`giveawayLock`, 300, function(deleteLock) {
-            GM_setValue(`giveaways`, JSON.stringify(File.Data.giveaways));
+            localStorage.esgst_giveaways = JSON.stringify(File.Data.giveaways);
             deleteLock();
         });
     }
@@ -25603,7 +25665,7 @@ ${avatar.outerHTML}
     function importTemplatesAndMerge(File, Key, SM) {
         createLock(`templateLock`, 300, function (deleteLock) {
             var i, j, n, numT, savedTemplates, template, templates;
-            savedTemplates = JSON.parse(GM_getValue(`templates`, `[]`));
+            savedTemplates = JSON.parse(localStorage.esgst_templates || `[]`);
             if (Key === `Templates`) {
                 templates = getTemplateStorageV6(File.Data.Templates);
             } else {
@@ -25616,7 +25678,7 @@ ${avatar.outerHTML}
                     savedTemplates.push(template);
                 }
             }
-            GM_setValue(`templates`, JSON.stringify(savedTemplates));
+            localStorage.esgst_templates = JSON.stringify(savedTemplates);
             deleteLock();
         });
     }
@@ -25629,30 +25691,30 @@ ${avatar.outerHTML}
             } else {
                 templates = File.Data.templates;
             }
-            GM_setValue(`templates`, JSON.stringify(templates));
+            localStorage.esgst_templates = JSON.stringify(templates);
             deleteLock();
         });
     }
 
     function importRerollsAndMerge(File, Key, SM) {
         var i, n, savedRerolls, rerolls;
-        savedRerolls = JSON.parse(GM_getValue(`rerolls`, `[]`));
+        savedRerolls = JSON.parse(localStorage.esgst_rerolls);
         rerolls = File.Data[Key];
         for (i = 0, n = rerolls.length; i < n; ++i) {
             if (savedRerolls.indexOf(rerolls[i]) < 0) {
                 savedRerolls.push(rerolls[i]);
             }
         }
-        GM_setValue(`rerolls`, JSON.stringify(savedRerolls));
+        localStorage.esgst_rerolls = JSON.stringify(savedRerolls);
     }
 
     function importRerolls(File, Key, SM) {
-        GM_setValue(`rerolls`, JSON.stringify(File.Data[Key]));
+        localStorage.esgst_rerolls = JSON.stringify(File.Data[Key]);
     }
 
     function importSavedRepliesAndMerge(File, Key, SM) {
         var i, n, savedReplies, replies;
-        savedReplies = JSON.parse(GM_getValue(`rerolls`, `[]`));
+        savedReplies = JSON.parse(localStorage.esgst_rerolls);
         replies = File.Data[Key];
         for (i = 0, n = replies.length; i < n; ++i) {
             savedReplies.push(replies[i]);
@@ -25666,7 +25728,7 @@ ${avatar.outerHTML}
 
     function importEntriesAndMerge(File, Key, SM) {
         var i, n, savedEntries, entries;
-        savedEntries = JSON.parse(GM_getValue(`entries`, `[]`));
+        savedEntries = JSON.parse(localStorage.esgst_entries || `[]`);
         entries = File.Data[Key];
         for (i = 0, n = entries.length; i < n; ++i) {
             savedEntries.push(entries[i]);
@@ -25680,16 +25742,16 @@ ${avatar.outerHTML}
                 return 0;
             }
         });
-        GM_setValue(`entries`, JSON.stringify(savedEntries));
+        localStorage.esgst_entries = JSON.stringify(savedEntries);
     }
 
     function importEntries(File, Key, SM) {
-        GM_setValue(`entries`, JSON.stringify(File.Data[Key]));
+        localStorage.esgst_entries = JSON.stringify(File.Data[Key]);
     }
 
     function importWinnersAndMerge(File, Key, SM) {
         var i, key, n, savedWinners, winners;
-        savedWinners = JSON.parse(GM_getValue(`winners`, `{}`));
+        savedWinners = JSON.parse(localStorage.esgst_winners || `{}`);
         winners = File.Data[Key];
         for (key in winners) {
             if (!savedWinners[key]) {
@@ -25701,11 +25763,31 @@ ${avatar.outerHTML}
                 }
             }
         }
-        GM_setValue(`winners`, JSON.stringify(savedWinners));
+        localStorage.esgst_winners = JSON.stringify(savedWinners);
     }
 
     function importWinners(File, Key, SM) {
-        GM_setValue(`winners`, JSON.stringify(File.Data[Key]));
+        localStorage.esgst_winners = JSON.stringify(File.Data[Key]);
+    }
+
+    function importGroupsAndMerge(File, Key, SM) {
+        var subKey, key, savedGroups, groups;
+        savedGroups = JSON.parse(localStorage.esgst_groups || `{}`);
+        groups = File.Data[Key];
+        for (key in groups) {
+            if (savedGroups[key]) {
+                for (subKey in groups[key]) {
+                    savedGroups[key][subKey] = groups[key][subKey];
+                }
+            } else {
+                savedGroups[key] = groups[key];
+            }
+        }
+        localStorage.esgst_groups = JSON.stringify(savedGroups);
+    }
+
+    function importGroups(File, Key, SM) {
+        localStorage.esgst_groups = JSON.stringify(File.Data[Key]);
     }
 
     function importUsersAndMerge(File, Key, SM) {
@@ -26246,8 +26328,12 @@ ${avatar.outerHTML}
                     getSMGames(games, `itadi`, Data.games, `apps`);
                     getSMGames(games, `itadi`, Data.games, `subs`);
                 }
-            } else if (Key.match(/entries|savedReplies|sgCommentHistory|stCommentHistory|comments|giveaways|descryptedGiveaways|templates|rerolls|winners|settings/) && SM[SM.Names[Key]].checked) {
+            } else if (Key.match(/savedReplies|sgCommentHistory|stCommentHistory|comments|descryptedGiveaways|settings/) && SM[SM.Names[Key]].checked) {
                 Data[Key] = JSON.parse(GM_getValue(Key, `{}`));
+            } else if (Key.match(/entries|giveaways|groups|templates|rerolls|winners/) && SM[SM.Names[Key]].checked) {
+                if (esgst.sg) {
+                    Data[Key] = JSON.parse(localStorage[`esgst_${Key}`] || `{}`);
+                }
             } else if (SM[SM.Names[Key]].checked) {
                 Data[Key] = GM_getValue(Key);
             }
@@ -26322,6 +26408,10 @@ ${avatar.outerHTML}
                         }
                         deleteLock();
                     });
+                } else if (Key.match(/^(entries|giveaways|groups|templates|rerolls|winners)$/) && SM[SM.Names[Key]].checked) {
+                    if (esgst.sg) {
+                        localStorage.removeItem(`esgst_${Key}`);
+                    }
                 } else if (SM[SM.Names[Key]].checked) {
                     GM_deleteValue(Key);
                 }
@@ -26394,7 +26484,7 @@ ${avatar.outerHTML}
                     giveaway.hidden = false;
                 }
             }
-            GM_setValue(`giveaways`, JSON.stringify(esgst.giveaways));
+            localStorage.esgst_giveaways = JSON.stringify(esgst.giveaways);
             i = 0;
             n = hidden.length;
             gfGiveaways = insertHtml(popup.scrollable, `beforeEnd`, `<div class="esgst-text-left"></div>`);
@@ -26452,7 +26542,7 @@ ${avatar.outerHTML}
     function setSMManageEntriesTracker(button) {
         var average, date, dates, entry, entries, history, historyHtml, i, key, keys, popup, table, tableHtml, total;
         button.addEventListener(`click`, function () {
-            entries = JSON.parse(GM_getValue(`entries`, `[]`));
+            entries = JSON.parse(localStorage.esgst_entries || `[]`);
             historyHtml = ``;
             dates = {};
             for (i = entries.length - 1; i >= 0; --i) {
@@ -28032,8 +28122,10 @@ ${avatar.outerHTML}
 
     function updateTemplateStorageToV6() {
         if (!GM_getValue(`templateStorageV6_3`, false)) {
-            GM_setValue(`templates`, JSON.stringify(getTemplateStorageV6(GM_getValue(`Templates`, []))));
+            localStorage.esgst_templates = JSON.stringify(getTemplateStorageV6(GM_getValue(`Templates`, [])));
             GM_setValue(`templateStorageV6_3`, true);
+        } else if (!localStorage.esgst_templates) {
+            localStorage.esgst_templates = GM_getValue(`templates`);
         }
     }
 
@@ -28973,6 +29065,10 @@ ${avatar.outerHTML}
                 z-index: 9999;
             }
 
+            .ui-tooltip {
+                z-index: 99999;
+            }
+
             .esgst-ap-popout .featured__outer-wrap:not(.esgst-uh-box) {
     	        border-radius: 5px;
                 padding: 5px;
@@ -29290,7 +29386,7 @@ ${avatar.outerHTML}
                 vertical-align: top;
             }
 
-            .esgst-gh-highlight {
+            .esgst-gh-highlight, .esgst-green-highlight {
                 background-color: rgba(150, 196, 104, 0.2);
             }
 
@@ -29931,10 +30027,13 @@ ${avatar.outerHTML}
                 margin: -18px 0 0 !important;
             }
 
-            .esgst-gv-time, .esgst-popup .esgst-ged-source {
+            .esgst-gv-time, .esgst-gv-icons .esgst-ged-source {
                 background-color: #fff;
-                font-weight: bold;
                 padding: 2px !important;
+            }
+
+            .esgst-ged-source {
+                font-weight: bold;
             }
 
             .esgst-gv-time i {

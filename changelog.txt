@@ -1,4 +1,20 @@
 /*
+ * August 10, 2017 - v6.Beta.25.0
+ */
+
+* Moved all data that doesn't need to be shared between SG and ST to localStorage, to start getting rid of GM_setValue/GM_getValue and hopefully improve the script's performance. This data includes: entries, giveaways, groups, rerolls, templates and winners. As a result, this data can no longer be managed through SteamTrades, only through SteamGifts. A button has been added to the settings menu to wipe the GM_setValue/GM_getValue data from the storage (make sure to backup through Tampermonkey before doing this).
+* The script's settings page now has the title "ESGST Settings" and the icon of the script as favicon.
+* Fixed a style issue that was making tooltips appear behind popups/popouts (closes #321).
+* Fixed a style issue with the source link in Giveaways Encrypter/Decrypter that was affecting non-grid view (closes #326).
+* The currently used preset in Giveaway Filters is now highlighted in the preset list (closes #312).
+* Chances lower than 0.01 are now rounded up to 0.01 in Giveaway Winning Chance (closes #324).
+* Added a confirmation dialog to Multiple Giveaways Creator when trying to leave the new giveaway page if giveaways have been added (closes #328).
+* Fixed a bug in Comment Formatting Helper that was not adding the panel to text areas in the new ticket page (closes #325).
+Added the following features:
+
+* General.8 Search Maginifying Glass Button (closes #319)
+
+/*
  * August 6, 2017 - v6.Beta.24.2
  */
 
