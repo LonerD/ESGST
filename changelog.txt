@@ -1,4 +1,10 @@
 /*
+ * August 10, 2017 - v6.Beta.25.1
+ */
+
+* Fixed a bug with the rerolls/winners localStorage (possible solution for #329).
+
+/*
  * August 10, 2017 - v6.Beta.25.0
  */
 

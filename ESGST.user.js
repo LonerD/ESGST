@@ -3,7 +3,7 @@
 // @namespace ESGST
 // @description Enhances SteamGifts and SteamTrades by adding some cool features to them.
 // @icon https://github.com/revilheart/ESGST/raw/master/Resources/esgstIcon.ico
-// @version 6.Beta.25.0
+// @version 6.Beta.25.1
 // @author revilheart
 // @downloadURL https://github.com/revilheart/ESGST/raw/master/ESGST.user.js
 // @updateURL https://github.com/revilheart/ESGST/raw/master/ESGST.meta.js
@@ -440,29 +440,49 @@
                     }
                     esgst.rerolls = localStorage.esgst_rerolls;;
                     if (typeof esgst.rerolls === `undefined`) {
-                        var oldRerolls = GM_getValue(`rerolls`, GM_getValue(`Rerolls`));
+                        var oldRerolls = GM_getValue(`rerolls`);
                         if (oldRerolls) {
-                            localStorage.esgst_rerolls = JSON.stringify(oldRerolls);
-                            esgst.rerolls = oldRerolls;
+                            localStorage.esgst_rerolls = oldRerolls;
+                            esgst.rerolls = JSON.parse(oldRerolls);
                         } else {
-                            localStorage.esgst_rerolls = `[]`;
-                            esgst.rerolls = [];
+                            oldRerolls = GM_getValue(`Rerolls`);
+                            if (oldRerolls) {
+                                localStorage.esgst_rerolls = JSON.stringify(oldRerolls);
+                                esgst.rerolls = oldRerolls;
+                            } else {
+                                localStorage.esgst_rerolls = `[]`;
+                                esgst.rerolls = [];
+                            }
                         }
                     } else {
                         esgst.rerolls = JSON.parse(esgst.rerolls);
+                        if (typeof esgst.rerolls === `string`) {
+                            localStorage.esgst_rerolls = esgst.rerolls;
+                            esgst.rerolls = JSON.parse(esgst.rerolls);
+                        }
                     }
                     esgst.winners = localStorage.esgst_winners;
                     if (typeof esgst.winners === `undefined`) {
-                        var oldWinners = GM_getValue(`winners`, GM_getValue(`Winners`));
+                        var oldWinners = GM_getValue(`winners`);
                         if (oldWinners) {
-                            localStorage.esgst_winners = JSON.stringify(oldWinners);
-                            esgst.winners = oldWinners;
+                            localStorage.esgst_winners = oldWinners;
+                            esgst.winners = JSON.parse(oldWinners);
                         } else {
-                            localStorage.esgst_winners = `{}`;
-                            esgst.winners = {};
+                            oldWinners = GM_getValue(`Winners`);
+                            if (oldWinners) {
+                                localStorage.esgst_winners = JSON.stringify(oldWinners);
+                                esgst.winners = oldWinners;
+                            } else {
+                                localStorage.esgst_winners = `{}`;
+                                esgst.winners = {};
+                            }
                         }
                     } else {
                         esgst.winners = JSON.parse(esgst.winners);
+                        if (typeof esgst.winners === `string`) {
+                            localStorage.esgst_winners = esgst.winners;
+                            esgst.winners = JSON.parse(esgst.winners);
+                        }
                     }
                     esgst.values = {};
                     esgst.features = [
