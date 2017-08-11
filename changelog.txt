@@ -1,4 +1,10 @@
 /*
+ * August 11, 2017 - v6.Beta.25.3
+ */
+
+* Fixed a bug with the Comment Tracker localStorage.
+
+/*
  * August 11, 2017 - v6.Beta.25.2
  */
 
