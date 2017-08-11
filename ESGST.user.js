@@ -3,7 +3,7 @@
 // @namespace ESGST
 // @description Enhances SteamGifts and SteamTrades by adding some cool features to them.
 // @icon https://github.com/revilheart/ESGST/raw/master/Resources/esgstIcon.ico
-// @version 6.Beta.25.1
+// @version 6.Beta.25.2
 // @author revilheart
 // @downloadURL https://github.com/revilheart/ESGST/raw/master/ESGST.user.js
 // @updateURL https://github.com/revilheart/ESGST/raw/master/ESGST.meta.js
@@ -387,41 +387,105 @@
                             GM_setValue(`users`, JSON.stringify(esgst.users));
                         }
                     }
-                    esgst.groups = localStorage.esgst_groups;
-                    if (typeof esgst.groups === `undefined`) {
-                        localStorage.esgst_groups = GM_getValue(`groups`, `{}`);
-                        esgst.groups = {};
-                    } else {
-                        esgst.groups = JSON.parse(esgst.groups);
+                    if (!localStorage.esgst_replies) {
+                        localStorage.esgst_replies = GM_getValue(`rfi_replies_${esgst.name}`, `{}`);
                     }
-                    esgst.comments = GM_getValue(`comments`);
-                    if (typeof esgst.comments === `undefined`) {
-                        GM_setValue(`comments`, `
+                    if (esgst.sg) {
+                        if (!localStorage.discussions) {
+                            var comments = JSON.parse(GM_getValue(`comments`, `
+                                {
+                                    "giveaways": {},
+                                    "discussions": {},
+                                    "tickets": {},
+                                    "trades": {}
+                                }
+                            `));
+                            var giveaways = JSON.parse(localStorage.esgst_giveaways || `{}`);
+                            for (key in comments.giveaways) {
+                                if (giveaways[key]) {
+                                    for (var subKey in comments.giveaways[key]) {
+                                        giveaways[key][subKey] = comments.giveaways[key][subKey];
+                                    }
+                                } else {
+                                    giveaways[key] = comments.giveaways[key];
+                                }
+                            }
+                            localStorage.esgst_giveaways = JSON.stringify(giveaways);
+                            localStorage.esgst_discussions = JSON.stringify(comments.discussions);
+                            localStorage.esgst_tickets = JSON.stringify(comments.tickets);
+                        }
+                        esgst.groups = localStorage.esgst_groups;
+                        if (typeof esgst.groups === `undefined`) {
+                            localStorage.esgst_groups = GM_getValue(`groups`, `{}`);
+                            esgst.groups = {};
+                        } else {
+                            esgst.groups = JSON.parse(esgst.groups);
+                        }
+                        if (!localStorage.esgst_entries) {
+                            localStorage.esgst_entries = GM_getValue(`entries`, `[]`);
+                        }                    
+                        esgst.giveaways = localStorage.esgst_giveaways;
+                        if (typeof esgst.giveaways === `undefined`) {
+                            localStorage.esgst_giveaways = GM_getValue(`giveaways`) || `{}`;
+                            esgst.giveaways = {};
+                        } else {
+                            esgst.giveaways = JSON.parse(esgst.giveaways);
+                        }
+                        esgst.rerolls = localStorage.esgst_rerolls;;
+                        if (typeof esgst.rerolls === `undefined`) {
+                            var oldRerolls = GM_getValue(`rerolls`);
+                            if (oldRerolls) {
+                                localStorage.esgst_rerolls = oldRerolls;
+                                esgst.rerolls = JSON.parse(oldRerolls);
+                            } else {
+                                oldRerolls = GM_getValue(`Rerolls`);
+                                if (oldRerolls) {
+                                    localStorage.esgst_rerolls = JSON.stringify(oldRerolls);
+                                    esgst.rerolls = oldRerolls;
+                                } else {
+                                    localStorage.esgst_rerolls = `[]`;
+                                    esgst.rerolls = [];
+                                }
+                            }
+                        } else {
+                            esgst.rerolls = JSON.parse(esgst.rerolls);
+                            if (typeof esgst.rerolls === `string`) {
+                                localStorage.esgst_rerolls = esgst.rerolls;
+                                esgst.rerolls = JSON.parse(esgst.rerolls);
+                            }
+                        }
+                        esgst.winners = localStorage.esgst_winners;
+                        if (typeof esgst.winners === `undefined`) {
+                            var oldWinners = GM_getValue(`winners`);
+                            if (oldWinners) {
+                                localStorage.esgst_winners = oldWinners;
+                                esgst.winners = JSON.parse(oldWinners);
+                            } else {
+                                oldWinners = GM_getValue(`Winners`);
+                                if (oldWinners) {
+                                    localStorage.esgst_winners = JSON.stringify(oldWinners);
+                                    esgst.winners = oldWinners;
+                                } else {
+                                    localStorage.esgst_winners = `{}`;
+                                    esgst.winners = {};
+                                }
+                            }
+                        } else {
+                            esgst.winners = JSON.parse(esgst.winners);
+                            if (typeof esgst.winners === `string`) {
+                                localStorage.esgst_winners = esgst.winners;
+                                esgst.winners = JSON.parse(esgst.winners);
+                            }
+                        }
+                    } else if (!localStorage.esgst_trades) {
+                        localStorage.esgst_trades = JSON.stringify(JSON.parse(GM_getValue(`comments`, `
                             {
                                 "giveaways": {},
                                 "discussions": {},
                                 "tickets": {},
                                 "trades": {}
                             }
-                        `);
-                        esgst.comments = {
-                            giveaways: {},
-                            discussions: {},
-                            tickets: {},
-                            trades: {}
-                        };
-                    } else {
-                        esgst.comments = JSON.parse(esgst.comments);
-                    }
-                    if (!localStorage.esgst_entries) {
-                        localStorage.esgst_entries = GM_getValue(`entries`, `[]`);
-                    }
-                    esgst.giveaways = localStorage.esgst_giveaways;
-                    if (typeof esgst.giveaways === `undefined`) {
-                        localStorage.esgst_giveaways = GM_getValue(`giveaways`) || `{}`;
-                        esgst.giveaways = {};
-                    } else {
-                        esgst.giveaways = JSON.parse(esgst.giveaways);
+                        `)).trades);
                     }
                     esgst.games = GM_getValue(`games`);
                     if (typeof esgst.games === `undefined`) {
@@ -437,52 +501,6 @@
                         };
                     } else {
                         esgst.games = JSON.parse(esgst.games);
-                    }
-                    esgst.rerolls = localStorage.esgst_rerolls;;
-                    if (typeof esgst.rerolls === `undefined`) {
-                        var oldRerolls = GM_getValue(`rerolls`);
-                        if (oldRerolls) {
-                            localStorage.esgst_rerolls = oldRerolls;
-                            esgst.rerolls = JSON.parse(oldRerolls);
-                        } else {
-                            oldRerolls = GM_getValue(`Rerolls`);
-                            if (oldRerolls) {
-                                localStorage.esgst_rerolls = JSON.stringify(oldRerolls);
-                                esgst.rerolls = oldRerolls;
-                            } else {
-                                localStorage.esgst_rerolls = `[]`;
-                                esgst.rerolls = [];
-                            }
-                        }
-                    } else {
-                        esgst.rerolls = JSON.parse(esgst.rerolls);
-                        if (typeof esgst.rerolls === `string`) {
-                            localStorage.esgst_rerolls = esgst.rerolls;
-                            esgst.rerolls = JSON.parse(esgst.rerolls);
-                        }
-                    }
-                    esgst.winners = localStorage.esgst_winners;
-                    if (typeof esgst.winners === `undefined`) {
-                        var oldWinners = GM_getValue(`winners`);
-                        if (oldWinners) {
-                            localStorage.esgst_winners = oldWinners;
-                            esgst.winners = JSON.parse(oldWinners);
-                        } else {
-                            oldWinners = GM_getValue(`Winners`);
-                            if (oldWinners) {
-                                localStorage.esgst_winners = JSON.stringify(oldWinners);
-                                esgst.winners = oldWinners;
-                            } else {
-                                localStorage.esgst_winners = `{}`;
-                                esgst.winners = {};
-                            }
-                        }
-                    } else {
-                        esgst.winners = JSON.parse(esgst.winners);
-                        if (typeof esgst.winners === `string`) {
-                            localStorage.esgst_winners = esgst.winners;
-                            esgst.winners = JSON.parse(esgst.winners);
-                        }
                     }
                     esgst.values = {};
                     esgst.features = [
@@ -4807,7 +4825,7 @@
             "<li" + (Option.Check() ? "" : " class=\"rhHidden\"") + ">" +
             "    <span></span>" +
             "    <span>" + Option.Description + "</span>" +
-            "    <i class=\"fa fa-question-circle\" title=\"" + Option.Title + "\"></i>" +
+            (Option.Title ? "    <i class=\"fa fa-question-circle\" title=\"" + Option.Title + "\"></i>" : "") +
             "</li>"
         );
         Name = Option.Name;
@@ -5615,17 +5633,17 @@
         }
         if (esgst.commentsPath && !esgst.ct) {
             createLock(`commentLock`, 300, function (deleteLock) {
-                var savedComments = JSON.parse(GM_getValue(`comments`));
                 var match = window.location.pathname.match(/(giveaway|discussion|ticket|trade)\/(.+?)\//);
                 var type = `${match[1]}s`;
+                var savedComments = JSON.parse(localStorage[`esgst_${type}`]);
                 var code = match[2];
-                if (!savedComments[type][code]) {
-                    savedComments[type][code] = {
+                if (!savedComments[code]) {
+                    savedComments[code] = {
                         comments: {}
                     };
                 }
-                savedComments[type][code].visited = true;
-                GM_setValue(`comments`, JSON.stringify(savedComments));
+                savedComments[code].visited = true;
+                localStorage[`esgst_${type}`] = JSON.stringify(savedComments);
                 deleteLock();
             });
         }
@@ -5634,8 +5652,7 @@
     }
 
     function checkGdtttVisited(context) {
-        var code, comments, container, heading, i, match, matches, n, source, type, url;
-        comments = JSON.parse(GM_getValue(`comments`));
+        var code, comment, container, heading, i, match, matches, n, source, type, url;
         matches = context.querySelectorAll(`.homepage_table_column_heading, .table__column__heading, .giveaway__heading__name, .column_flex h3 a`);
         for (i = 0, n = matches.length; i < n; ++i) {
             match = matches[i];
@@ -5646,7 +5663,8 @@
                     type = `${source[1]}s`;
                     code = source[2];
                     container = match.closest(`.table__row-outer-wrap, .giveaway__row-outer-wrap, .row_outer_wrap`);
-                    if (comments[type][code] && comments[type][code].visited && container) {
+                    comment = localStorage[`esgst_${type}`][code];
+                    if (comment && comment.visited && container) {
                         if ((type === `giveaways` && esgst.gdttt_g) || type !== `giveaways`) {
                             container.classList.add(`esgst-ct-visited`);
                             container.style.opacity = `0.5`;
@@ -11557,7 +11575,7 @@ ${avatar.outerHTML}
 						</div>
                     </div>
                 `);
-                discussions = JSON.parse(GM_getValue(`comments`)).discussions;
+                discussions = JSON.parse(localStorage.esgst_discussions);
                 keys = Object.keys(discussions);
                 i = 0;
                 set = createButtonSet(`green`, `grey`, `fa-plus`, `fa-circle-o-notch fa-spin`, `Load more...`, `Loading more...`, function (callback) {
@@ -11574,7 +11592,7 @@ ${avatar.outerHTML}
                 set.trigger();
             });
             if (esgst.discussionPath) {
-                comments = JSON.parse(GM_getValue(`comments`)).discussions;
+                comments = JSON.parse(localStorage.esgst_discussions);
                 source = window.location.pathname.match(/^\/discussion\/(.+?)(\/.*)?$/);
                 if (source) {
                     code = source[1];
@@ -11592,7 +11610,7 @@ ${avatar.outerHTML}
 
     function getDhDiscussions(discussions) {
         var i, n, savedDiscussions;
-        savedDiscussions = JSON.parse(GM_getValue(`comments`)).discussions;
+        savedDiscussions = JSON.parse(localStorage.esgst_discussions);
         for (i = 0, n = discussions.length; i < n; ++i) {
             getDhDiscussion(discussions[i], savedDiscussions);
         }
@@ -11611,14 +11629,14 @@ ${avatar.outerHTML}
         if (save) {
             createLock(`commentLock`, 300, function(deleteLock) {
                 var comments;
-                comments = JSON.parse(GM_getValue(`comments`));
-                if (!comments.discussions[code]) {
-                    comments.discussions[code] = {
+                comments = JSON.parse(localStorage.esgst_discussions);
+                if (!comments[code]) {
+                    comments[code] = {
                         comments: {}
                     };
                 }
-                comments.discussions[code].highlighted = true;
-                GM_setValue(`comments`, JSON.stringify(comments));
+                comments[code].highlighted = true;
+                localStorage.esgst_discussions = JSON.stringify(comments);
                 context.classList.add(`esgst-dh-highlighted`);
                 deleteLock();
             });
@@ -11631,9 +11649,9 @@ ${avatar.outerHTML}
         if (save) {
             createLock(`commentLock`, 300, function(deleteLock) {
                 var comments;
-                comments = JSON.parse(GM_getValue(`comments`));
-                delete comments.discussions[code].highlighted;
-                GM_setValue(`comments`, JSON.stringify(comments));
+                comments = JSON.parse(localStorage.esgst_discussions);
+                delete comments[code].highlighted;
+                localStorage.esgst_discussions = JSON.stringify(comments);
                 context.classList.remove(`esgst-dh-highlighted`);
                 deleteLock();
             });
@@ -11758,7 +11776,7 @@ ${avatar.outerHTML}
             } while (Sibling);
             esgst.mainPageHeading.parentElement.insertBefore(MPPPost, esgst.mainPageHeading);
             if (esgst.mpp_r) {
-                discussion = JSON.parse(GM_getValue(`comments`)).discussions[window.location.pathname.match(/^\/discussion\/(.+?)\//)[1]];
+                discussion = JSON.parse(localStorage.esgst_discussions)[window.location.pathname.match(/^\/discussion\/(.+?)\//)[1]];
                 if (discussion) {
                     if (discussion.comments[``] && discussion.comments[``].timestamp) {
                         Hidden = true;
@@ -19191,349 +19209,352 @@ ${avatar.outerHTML}
 
     function addCFHPanel(Context) {
         var CFH, I, N;
-        Context.insertAdjacentHTML("beforeBegin", "<div class=\"page__heading page_heading CFHPanel\"></div>");
-        CFH = {
-            Items: [{
-                ID: "cfh_i",
-                Name: "Italic",
-                Icon: "fa-italic",
-                Prefix: "*",
-                Suffix: "*"
-            }, {
-                ID: "cfh_b",
-                Name: "Bold",
-                Icon: "fa-bold",
-                Prefix: "**",
-                Suffix: "**"
-            }, {
-                ID: "cfh_s",
-                Name: "Spoiler",
-                Icon: "fa-eye-slash",
-                Prefix: "~",
-                Suffix: "~"
-            }, {
-                ID: "cfh_st",
-                Name: "Strikethrough",
-                Icon: "fa-strikethrough",
-                Prefix: "~~",
-                Suffix: "~~"
-            }, {
-                ID: "cfh_h1",
-                Name: "Heading 1",
-                Icon: "fa-header",
-                Text: "1",
-                Prefix: "# "
-            }, {
-                ID: "cfh_h2",
-                Name: "Heading 2",
-                Icon: "fa-header",
-                Text: "2",
-                Prefix: "## "
-            }, {
-                ID: "cfh_h3",
-                Name: "Heading 3",
-                Icon: "fa-header",
-                Text: "3",
-                Prefix: "### "
-            }, {
-                ID: "cfh_bq",
-                Name: "Blockquote",
-                Icon: "fa-quote-left",
-                Prefix: "> "
-            }, {
-                ID: "cfh_lb",
-                Name: "Line Break",
-                Icon: "fa-minus",
-                Prefix: "\n---\n\n"
-            }, {
-                ID: "cfh_ol",
-                Name: "Ordered List",
-                Icon: "fa-list-ol",
-                OrderedList: true
-            }, {
-                ID: "cfh_ul",
-                Name: "Unordered List",
-                Icon: "fa-list-ul",
-                UnorderedList: true
-            }, {
-                ID: "cfh_ic",
-                Name: "Inline Code",
-                Icon: "fa-code",
-                Prefix: "`",
-                Suffix: "`"
-            }, {
-                ID: "cfh_lc",
-                Name: "Line Code",
-                Icon: "fa-code",
-                SecondaryIcon: "fa-indent",
-                Prefix: "    "
-            }, {
-                ID: "cfh_pc",
-                Name: "Paragraph Code",
-                Icon: "fa-code",
-                SecondaryIcon: "fa-paragraph",
-                Prefix: "```\n",
-                Suffix: "\n```"
-            }, {
-                ID: "cfh_l",
-                Name: "Link",
-                Icon: "fa-globe",
-                setPopout: function (Popout) {
-                    var URL, Title;
-                    Popout.innerHTML =
-                        "URL: <input placeholder=\"http://www.example.com\" type=\"text\"/>" +
-                        "Title: <input placeholder=\"Cat\" type=\"text\"/>" +
-                        "<div class=\"form__saving-button btn_action white\">Add</div>";
-                    URL = Popout.firstElementChild;
-                    Title = URL.nextElementSibling;
-                    Title.nextElementSibling.addEventListener("click", function () {
-                        wrapCFHLinkImage(CFH, Title.value, URL.value);
-                        URL.value = ``;
-                        Title.value = ``;
-                        URL.focus();
-                    });
-                },
-                Callback: function (Popout) {
-                    var Value = CFH.TextArea.value;
-                    var Start = CFH.TextArea.selectionStart;
-                    var End = CFH.TextArea.selectionEnd;
-                    Popout.firstElementChild.nextElementSibling.value = Value.slice(Start, End);
-                    window.setTimeout(function () {
-                        Popout.firstElementChild.focus();
-                    }, 0);
-                }
-            }, {
-                ID: "cfh_img",
-                Name: "Image",
-                Icon: "fa-image",
-                setPopout: function (Popout) {
-                    var URL, Title;
-                    Popout.innerHTML =
-                        "URL: <input placeholder=\"http://www.example.com/image.jpg\" type=\"text\"/>" +
-                        "Title: <input placeholder=\"Cats\" type=\"text\"/>" +
-                        "<div class=\"form__saving-button btn_action white\">Add</div>";
-                    URL = Popout.firstElementChild;
-                    Title = URL.nextElementSibling;
-                    Title.nextElementSibling.addEventListener("click", function () {
-                        wrapCFHLinkImage(CFH, Title.value, URL.value, true);
-                        URL.value = ``;
-                        Title.value = ``;
-                        URL.focus();
-                    });
-                },
-                Callback: function (Popout) {
-                    var Value = CFH.TextArea.value;
-                    var Start = CFH.TextArea.selectionStart;
-                    var End = CFH.TextArea.selectionEnd;
-                    Popout.firstElementChild.nextElementSibling.value = Value.slice(Start, End);
-                    window.setTimeout(function () {
-                        Popout.firstElementChild.focus();
-                    }, 0);
-                }
-            }, {
-                ID: "cfh_t",
-                Name: "Table",
-                Icon: "fa-table",
-                setPopup: function (Popup) {
-                    var Table, InsertRow, InsertColumn, Popout;
-                    Popout = Popup.scrollable;
-                    Popout.innerHTML =
-                        "<table></table>" +
-                        "<div class=\"form__saving-button btn_action white\">Insert Row</div>" +
-                        "<div class=\"form__saving-button btn_action white\">Insert Column</div>" +
-                        "<div class=\"form__saving-button btn_action white\">Add</div>";
-                    Table = Popout.firstElementChild;
-                    InsertRow = Table.nextElementSibling;
-                    InsertColumn = InsertRow.nextElementSibling;
-                    insertCFHTableRows(4, Table);
-                    insertCFHTableColumns(2, Table);
-                    InsertRow.addEventListener("click", function () {
-                        insertCFHTableRows(1, Table);
-                    });
-                    InsertColumn.addEventListener("click", function () {
-                        insertCFHTableColumns(1, Table);
-                    });
-                    InsertColumn.nextElementSibling.addEventListener("click", function () {
-                        var Rows, I, NumRows, J, NumColumns, Value, Start, End;
-                        Rows = Table.rows;
-                        for (I = 1, NumRows = Rows.length; I < NumRows; ++I) {
-                            for (J = 1, NumColumns = Rows[0].cells.length; J < NumColumns; ++J) {
-                                if (!Rows[I].cells[J].firstElementChild.value) {
-                                    I = NumRows + 1;
-                                    J = NumColumns + 1;
-                                }
-                            }
-                        }
-                        if ((I <= NumRows) || ((I > NumRows) && window.confirm("Some cells are empty. This might lead to unexpected results. Are you sure you want to continue?"))) {
-                            Value = "";
-                            for (I = 1; I < NumRows; ++I) {
-                                Value += "\n";
-                                for (J = 1; J < NumColumns; ++J) {
-                                    Value += Rows[I].cells[J].firstElementChild.value + ((J < (NumColumns - 1)) ? " | " : "");
-                                }
-                            }
-                            Value += "\n\n";
-                            Start = CFH.TextArea.selectionStart;
-                            End = CFH.TextArea.selectionEnd;
-                            CFH.TextArea.value = CFH.TextArea.value.slice(0, Start) + Value + CFH.TextArea.value.slice(End);
-                            CFH.TextArea.setSelectionRange(End + Value.length, End + Value.length);
-                            CFH.TextArea.focus();
-                            Popup.close();
-                        }
-                    });
-                }
-            }, {
-                ID: "cfh_e",
-                Name: "Emojis",
-                Icon: "fa-smile-o",
-                setPopout: function (Popout) {
-                    var Emojis;
-                    Popout.innerHTML =
-                        "<div class=\"CFHEmojis\">" + GM_getValue("Emojis", ``) + "</div>" +
-                        "<div class=\"form__saving-button btn_action white\">Select Emojis</div>";
-                    Emojis = Popout.firstElementChild;
-                    setCFHEmojis(Emojis, CFH);
-
-                    Emojis.nextElementSibling.addEventListener("click", function () {
-                        var Popup, I, N, Emoji, SavedEmojis;
-                        Popup = createPopup(`fa-smile-o`, `Select emojis:`);
-                        Popup.scrollable.insertAdjacentHTML(
-                            "afterBegin",
-                            "<div class=\"CFHEmojis\"></div>" +
-                            `<div class="esgst-description">Drag the emojis you want to use and drop them in the box below. Click on an emoji to remove it.</div>` +
-                            "<div class=\"global__image-outer-wrap page_heading_btn CFHEmojis\">" + GM_getValue("Emojis", ``) + "</div>"
-                        );
-                        Emojis = Popup.scrollable.firstElementChild;
-                        for (I = 0, N = esgst.emojis.length; I < N; ++I) {
-                            Emoji = esgst.emojis[I].Emoji;
-                            Emojis.insertAdjacentHTML("beforeEnd", "<span data-id=\"" + Emoji + "\" draggable=\"true\" title=\"" + esgst.emojis[I].Title + "\">" + Emoji + "</span>");
-                            Emojis.lastElementChild.addEventListener("dragstart", function (Event) {
-                                Event.dataTransfer.setData("text", Event.currentTarget.getAttribute("data-id"));
-                            });
-                        }
-                        SavedEmojis = Emojis.nextElementSibling.nextElementSibling;
-                        for (I = 0, N = SavedEmojis.children.length; I < N; ++I) {
-                            SavedEmojis.children[I].addEventListener("click", function (Event) {
-                                Event.currentTarget.remove();
-                                GM_setValue("Emojis", SavedEmojis.innerHTML);
-                                Popup.reposition();
-                            });
-                        }
-                        SavedEmojis.addEventListener("dragover", function (Event) {
-                            Event.preventDefault();
+        if (!Context.parentElement.getElementsByClassName(`CFHPanel`)[0]) {
+            Context.insertAdjacentHTML("beforeBegin", "<div class=\"page__heading page_heading CFHPanel\"></div>");
+            CFH = {
+                Items: [{
+                    ID: "cfh_i",
+                    Name: "Italic",
+                    Icon: "fa-italic",
+                    Prefix: "*",
+                    Suffix: "*"
+                }, {
+                    ID: "cfh_b",
+                    Name: "Bold",
+                    Icon: "fa-bold",
+                    Prefix: "**",
+                    Suffix: "**"
+                }, {
+                    ID: "cfh_s",
+                    Name: "Spoiler",
+                    Icon: "fa-eye-slash",
+                    Prefix: "~",
+                    Suffix: "~"
+                }, {
+                    ID: "cfh_st",
+                    Name: "Strikethrough",
+                    Icon: "fa-strikethrough",
+                    Prefix: "~~",
+                    Suffix: "~~"
+                }, {
+                    ID: "cfh_h1",
+                    Name: "Heading 1",
+                    Icon: "fa-header",
+                    Text: "1",
+                    Prefix: "# "
+                }, {
+                    ID: "cfh_h2",
+                    Name: "Heading 2",
+                    Icon: "fa-header",
+                    Text: "2",
+                    Prefix: "## "
+                }, {
+                    ID: "cfh_h3",
+                    Name: "Heading 3",
+                    Icon: "fa-header",
+                    Text: "3",
+                    Prefix: "### "
+                }, {
+                    ID: "cfh_bq",
+                    Name: "Blockquote",
+                    Icon: "fa-quote-left",
+                    Prefix: "> "
+                }, {
+                    ID: "cfh_lb",
+                    Name: "Line Break",
+                    Icon: "fa-minus",
+                    Prefix: "\n---\n\n"
+                }, {
+                    ID: "cfh_ol",
+                    Name: "Ordered List",
+                    Icon: "fa-list-ol",
+                    OrderedList: true
+                }, {
+                    ID: "cfh_ul",
+                    Name: "Unordered List",
+                    Icon: "fa-list-ul",
+                    UnorderedList: true
+                }, {
+                    ID: "cfh_ic",
+                    Name: "Inline Code",
+                    Icon: "fa-code",
+                    Prefix: "`",
+                    Suffix: "`"
+                }, {
+                    ID: "cfh_lc",
+                    Name: "Line Code",
+                    Icon: "fa-code",
+                    SecondaryIcon: "fa-indent",
+                    Prefix: "    "
+                }, {
+                    ID: "cfh_pc",
+                    Name: "Paragraph Code",
+                    Icon: "fa-code",
+                    SecondaryIcon: "fa-paragraph",
+                    Prefix: "```\n",
+                    Suffix: "\n```"
+                }, {
+                    ID: "cfh_l",
+                    Name: "Link",
+                    Icon: "fa-globe",
+                    setPopout: function (Popout) {
+                        var URL, Title;
+                        Popout.innerHTML =
+                            "URL: <input placeholder=\"http://www.example.com\" type=\"text\"/>" +
+                            "Title: <input placeholder=\"Cat\" type=\"text\"/>" +
+                            "<div class=\"form__saving-button btn_action white\">Add</div>";
+                        URL = Popout.firstElementChild;
+                        Title = URL.nextElementSibling;
+                        Title.nextElementSibling.addEventListener("click", function () {
+                            wrapCFHLinkImage(CFH, Title.value, URL.value);
+                            URL.value = ``;
+                            Title.value = ``;
+                            URL.focus();
                         });
-                        SavedEmojis.addEventListener("drop", function (Event) {
-                            var ID;
-                            Event.preventDefault();
-                            ID = Event.dataTransfer.getData("text").replace(/\\/g, "\\\\");
-                            if (!SavedEmojis.querySelector("[data-id='" + ID + "']")) {
-                                SavedEmojis.appendChild(document.querySelector("[data-id='" + ID + "']").cloneNode(true));
-                                GM_setValue("Emojis", SavedEmojis.innerHTML);
-                                Popup.reposition();
-                                SavedEmojis.lastElementChild.addEventListener("click", function (Event) {
+                    },
+                    Callback: function (Popout) {
+                        var Value = CFH.TextArea.value;
+                        var Start = CFH.TextArea.selectionStart;
+                        var End = CFH.TextArea.selectionEnd;
+                        Popout.firstElementChild.nextElementSibling.value = Value.slice(Start, End);
+                        window.setTimeout(function () {
+                            Popout.firstElementChild.focus();
+                        }, 0);
+                    }
+                }, {
+                    ID: "cfh_img",
+                    Name: "Image",
+                    Icon: "fa-image",
+                    setPopout: function (Popout) {
+                        var URL, Title;
+                        Popout.innerHTML =
+                            "URL: <input placeholder=\"http://www.example.com/image.jpg\" type=\"text\"/>" +
+                            "Title: <input placeholder=\"Cats\" type=\"text\"/>" +
+                            "<div class=\"form__saving-button btn_action white\">Add</div>";
+                        URL = Popout.firstElementChild;
+                        Title = URL.nextElementSibling;
+                        Title.nextElementSibling.addEventListener("click", function () {
+                            wrapCFHLinkImage(CFH, Title.value, URL.value, true);
+                            URL.value = ``;
+                            Title.value = ``;
+                            URL.focus();
+                        });
+                    },
+                    Callback: function (Popout) {
+                        var Value = CFH.TextArea.value;
+                        var Start = CFH.TextArea.selectionStart;
+                        var End = CFH.TextArea.selectionEnd;
+                        Popout.firstElementChild.nextElementSibling.value = Value.slice(Start, End);
+                        window.setTimeout(function () {
+                            Popout.firstElementChild.focus();
+                        }, 0);
+                    }
+                }, {
+                    ID: "cfh_t",
+                    Name: "Table",
+                    Icon: "fa-table",
+                    setPopup: function (Popup) {
+                        var Table, InsertRow, InsertColumn, Popout;
+                        Popout = Popup.scrollable;
+                        Popout.innerHTML =
+                            "<table></table>" +
+                            "<div class=\"form__saving-button btn_action white\">Insert Row</div>" +
+                            "<div class=\"form__saving-button btn_action white\">Insert Column</div>" +
+                            "<div class=\"form__saving-button btn_action white\">Add</div>";
+                        Table = Popout.firstElementChild;
+                        InsertRow = Table.nextElementSibling;
+                        InsertColumn = InsertRow.nextElementSibling;
+                        insertCFHTableRows(4, Table);
+                        insertCFHTableColumns(2, Table);
+                        InsertRow.addEventListener("click", function () {
+                            insertCFHTableRows(1, Table);
+                        });
+                        InsertColumn.addEventListener("click", function () {
+                            insertCFHTableColumns(1, Table);
+                        });
+                        InsertColumn.nextElementSibling.addEventListener("click", function () {
+                            var Rows, I, NumRows, J, NumColumns, Value, Start, End;
+                            Rows = Table.rows;
+                            for (I = 1, NumRows = Rows.length; I < NumRows; ++I) {
+                                for (J = 1, NumColumns = Rows[0].cells.length; J < NumColumns; ++J) {
+                                    if (!Rows[I].cells[J].firstElementChild.value) {
+                                        I = NumRows + 1;
+                                        J = NumColumns + 1;
+                                    }
+                                }
+                            }
+                            if ((I <= NumRows) || ((I > NumRows) && window.confirm("Some cells are empty. This might lead to unexpected results. Are you sure you want to continue?"))) {
+                                Value = "";
+                                for (I = 1; I < NumRows; ++I) {
+                                    Value += "\n";
+                                    for (J = 1; J < NumColumns; ++J) {
+                                        Value += Rows[I].cells[J].firstElementChild.value + ((J < (NumColumns - 1)) ? " | " : "");
+                                    }
+                                }
+                                Value += "\n\n";
+                                Start = CFH.TextArea.selectionStart;
+                                End = CFH.TextArea.selectionEnd;
+                                CFH.TextArea.value = CFH.TextArea.value.slice(0, Start) + Value + CFH.TextArea.value.slice(End);
+                                CFH.TextArea.setSelectionRange(End + Value.length, End + Value.length);
+                                CFH.TextArea.focus();
+                                Popup.close();
+                            }
+                        });
+                    }
+                }, {
+                    ID: "cfh_e",
+                    Name: "Emojis",
+                    Icon: "fa-smile-o",
+                    setPopout: function (Popout) {
+                        var Emojis;
+                        Popout.innerHTML =
+                            "<div class=\"CFHEmojis\">" + GM_getValue("Emojis", ``) + "</div>" +
+                            "<div class=\"form__saving-button btn_action white\">Select Emojis</div>";
+                        Emojis = Popout.firstElementChild;
+                        setCFHEmojis(Emojis, CFH);
+
+                        Emojis.nextElementSibling.addEventListener("click", function () {
+                            var Popup, I, N, Emoji, SavedEmojis;
+                            Popup = createPopup(`fa-smile-o`, `Select emojis:`);
+                            Popup.scrollable.insertAdjacentHTML(
+                                "afterBegin",
+                                "<div class=\"CFHEmojis\"></div>" +
+                                `<div class="esgst-description">Drag the emojis you want to use and drop them in the box below. Click on an emoji to remove it.</div>` +
+                                "<div class=\"global__image-outer-wrap page_heading_btn CFHEmojis\">" + GM_getValue("Emojis", ``) + "</div>"
+                            );
+                            Emojis = Popup.scrollable.firstElementChild;
+                            for (I = 0, N = esgst.emojis.length; I < N; ++I) {
+                                Emoji = esgst.emojis[I].Emoji;
+                                Emojis.insertAdjacentHTML("beforeEnd", "<span data-id=\"" + Emoji + "\" draggable=\"true\" title=\"" + esgst.emojis[I].Title + "\">" + Emoji + "</span>");
+                                Emojis.lastElementChild.addEventListener("dragstart", function (Event) {
+                                    Event.dataTransfer.setData("text", Event.currentTarget.getAttribute("data-id"));
+                                });
+                            }
+                            SavedEmojis = Emojis.nextElementSibling.nextElementSibling;
+                            for (I = 0, N = SavedEmojis.children.length; I < N; ++I) {
+                                SavedEmojis.children[I].addEventListener("click", function (Event) {
                                     Event.currentTarget.remove();
                                     GM_setValue("Emojis", SavedEmojis.innerHTML);
                                     Popup.reposition();
                                 });
                             }
+                            SavedEmojis.addEventListener("dragover", function (Event) {
+                                Event.preventDefault();
+                            });
+                            SavedEmojis.addEventListener("drop", function (Event) {
+                                var ID;
+                                Event.preventDefault();
+                                ID = Event.dataTransfer.getData("text").replace(/\\/g, "\\\\");
+                                if (!SavedEmojis.querySelector("[data-id='" + ID + "']")) {
+                                    SavedEmojis.appendChild(document.querySelector("[data-id='" + ID + "']").cloneNode(true));
+                                    GM_setValue("Emojis", SavedEmojis.innerHTML);
+                                    Popup.reposition();
+                                    SavedEmojis.lastElementChild.addEventListener("click", function (Event) {
+                                        Event.currentTarget.remove();
+                                        GM_setValue("Emojis", SavedEmojis.innerHTML);
+                                        Popup.reposition();
+                                    });
+                                }
+                            });
+                            Popup.open(function () {
+                                Popout.classList.add("rhHidden");
+                            });
                         });
-                        Popup.open(function () {
-                            Popout.classList.add("rhHidden");
-                        });
-                    });
-                },
-                Callback: function (Popout) {
-                    var Emojis;
-                    Emojis = Popout.firstElementChild;
-                    Emojis.innerHTML = GM_getValue("Emojis", ``);
-                    setCFHEmojis(Emojis, CFH);
-                }
-            }, {
-                Name: "Links / Images Paste Formatting",
-                Icon: "fa-paste",
-                Callback: function (Context) {
-                    CFH.ALIPF = Context.firstElementChild;
-                    setCFHALIPF(CFH, esgst.cfh_pasteFormatting);
-                },
-                OnClick: function () {
-                    setCFHALIPF(CFH);
-                }
-            }, {
-                ID: "cfh_g",
-                Name: "Giveaway Encrypter",
-                Icon: "fa-star",
-                setPopout: function (Popout) {
-                    var Code;
-                    Popout.innerHTML =
-                        "Giveaway Code: <input placeholder=\"XXXXX\" type=\"text\"/>" +
-                        "<div class=\"form__saving-button btn_action white\">Add</div>";
-                    Code = Popout.firstElementChild;
-                    Code.nextElementSibling.addEventListener("click", function () {
-                        if (Code.value.match(/^[\d\w]{5}$/)) {
-                            var encodedCode = encryptGedCode(Code.value);
-                            wrapCFHLinkImage(CFH, ``, `ESGST-${encodedCode}`);
-                            Code.value = ``;
-                            Code.focus();
-                        } else {
-                            window.alert(`Wrong format. The right format is XXXXX.`);
-                        }
-                    });
-                },
-                Callback: function (Popout) {
-                    var Value = CFH.TextArea.value;
-                    var Start = CFH.TextArea.selectionStart;
-                    var End = CFH.TextArea.selectionEnd;
-                    Popout.firstElementChild.nextElementSibling.value = Value.slice(Start, End);
-                    window.setTimeout(function () {
-                        Popout.firstElementChild.focus();
-                    }, 0);
-                }
-            }, {
-                ID: `cfh_sr`,
-                Name: `Saved Replies`,
-                Icon: `fa-floppy-o`,
-                setPopout: function (popout) {
-                    var addButton, filter, i, n, reply, replies, savedReply, savedReplies;
-                    savedReplies = JSON.parse(GM_getValue(`savedReplies`, `[]`));
-                    popout.innerHTML = `
-                        <div>
-                            <input placeholder="Filter replies..." type="text"/>
-                        </div>
-                        <div class="esgst-cfh-sr-container"></div>
-                        <div class="form__saving-button btn_action white">Add New Reply</div>
-                    `;
-                    filter = popout.firstElementChild.firstElementChild;
-                    addButton = popout.lastElementChild;
-                    replies = addButton.previousElementSibling;
-                    for (i = 0, n = savedReplies.length; i < n; ++i) {
-                        savedReply = savedReplies[i];
-                        setCfhReply(CFH, replies, savedReply);
+                    },
+                    Callback: function (Popout) {
+                        var Emojis;
+                        Emojis = Popout.firstElementChild;
+                        Emojis.innerHTML = GM_getValue("Emojis", ``);
+                        setCFHEmojis(Emojis, CFH);
                     }
-                    filter.addEventListener(`input`, filterCfhReplies.bind(null, replies));
-                    addButton.addEventListener(`click`, openCfhReplyPopup.bind(null, CFH, null, null, replies, null));
-                },
-                Callback: function (popout) {
-                    window.setTimeout(function () {
-                        popout.firstElementChild.firstElementChild.focus();
-                    }, 0);
-                }
-            }],
-            Panel: Context.previousElementSibling,
-            TextArea: Context,
-        };
-        for (I = 0, N = CFH.Items.length; I < N; ++I) {
-            addCFHItem(CFH.Items[I], CFH);
-        }
-        CFH.TextArea.addEventListener("paste", function (Event) {
-            var Value;
-            if (esgst.cfh_pasteFormatting) {
-                Value = Event.clipboardData.getData("text/plain");
-                if (Value.match(/^https?:/)) {
-                    Event.preventDefault();
-                    wrapCFHLinkImage(CFH, "", Value, Value.match(/\.(jpg|jpeg|gif|bmp|png)/) ? true : false);
-                }
+                }, {
+                    Name: "Links / Images Paste Formatting",
+                    Icon: "fa-paste",
+                    Callback: function (Context) {
+                        CFH.ALIPF = Context.firstElementChild;
+                        setCFHALIPF(CFH, esgst.cfh_pasteFormatting);
+                    },
+                    OnClick: function () {
+                        setCFHALIPF(CFH);
+                    }
+                }, {
+                    ID: "cfh_g",
+                    Name: "Giveaway Encrypter",
+                    Icon: "fa-star",
+                    setPopout: function (Popout) {
+                        var Code;
+                        Popout.innerHTML =
+                            "Giveaway Code: <input placeholder=\"XXXXX\" type=\"text\"/>" +
+                            "<div class=\"form__saving-button btn_action white\">Add</div>";
+                        Code = Popout.firstElementChild;
+                        Code.nextElementSibling.addEventListener("click", function () {
+                            if (Code.value.match(/^[\d\w]{5}$/)) {
+                                var encodedCode = encryptGedCode(Code.value);
+                                wrapCFHLinkImage(CFH, ``, `ESGST-${encodedCode}`);
+                                Code.value = ``;
+                                Code.focus();
+                            } else {
+                                window.alert(`Wrong format. The right format is XXXXX.`);
+                            }
+                        });
+                    },
+                    Callback: function (Popout) {
+                        var Value = CFH.TextArea.value;
+                        var Start = CFH.TextArea.selectionStart;
+                        var End = CFH.TextArea.selectionEnd;
+                        Popout.firstElementChild.nextElementSibling.value = Value.slice(Start, End);
+                        window.setTimeout(function () {
+                            Popout.firstElementChild.focus();
+                        }, 0);
+                    }
+                }, {
+                    ID: `cfh_sr`,
+                    Name: `Saved Replies`,
+                    Icon: `fa-floppy-o`,
+                    setPopout: function (popout) {
+                        var addButton, filter, i, n, reply, replies, savedReply, savedReplies;
+                        savedReplies = JSON.parse(GM_getValue(`savedReplies`, `[]`));
+                        popout.innerHTML = `
+                            <div>
+                                <input placeholder="Filter replies..." type="text"/>
+                            </div>
+                            <div class="esgst-cfh-sr-container"></div>
+                            <div class="form__saving-button btn_action white">Add New Reply</div>
+                        `;
+                        filter = popout.firstElementChild.firstElementChild;
+                        addButton = popout.lastElementChild;
+                        replies = addButton.previousElementSibling;
+                        for (i = 0, n = savedReplies.length; i < n; ++i) {
+                            savedReply = savedReplies[i];
+                            setCfhReply(CFH, replies, savedReply);
+                        }
+                        filter.addEventListener(`input`, filterCfhReplies.bind(null, replies));
+                        addButton.addEventListener(`click`, openCfhReplyPopup.bind(null, CFH, null, null, replies, null));
+                    },
+                    Callback: function (popout) {
+                        window.setTimeout(function () {
+                            popout.firstElementChild.firstElementChild.focus();
+                        }, 0);
+                    }
+                }],
+                Panel: Context.previousElementSibling,
+                TextArea: Context,
+            };
+            for (I = 0, N = CFH.Items.length; I < N; ++I) {
+                addCFHItem(CFH.Items[I], CFH);
             }
-        });
+            CFH.TextArea.addEventListener("paste", function (Event) {
+                var Value;
+                if (esgst.cfh_pasteFormatting) {
+                    Value = Event.clipboardData.getData("text/plain");
+                    if (Value.match(/^https?:/)) {
+                        Event.preventDefault();
+                        wrapCFHLinkImage(CFH, "", Value, Value.match(/\.(jpg|jpeg|gif|bmp|png)/) ? true : false);
+                    }
+                }
+            });
+    
+        }
     }
 
     function setCfhReply(cfh, replies, savedReply) {
@@ -20239,7 +20260,7 @@ ${avatar.outerHTML}
         if (url) {
             source = url.match(/\/comment\/(.+)/)[1];
         }
-        saved = JSON.parse(GM_getValue(`rfi_replies_${esgst.name}`, `{}`));
+        saved = JSON.parse(localStorage.esgst_replies || `{}`);
         if (edit) {
             for (key in saved) {
                 for (i = 0, n = saved[key].length; i < n && saved[key][i].id !== id; ++i);
@@ -20258,13 +20279,13 @@ ${avatar.outerHTML}
                 timestamp: Date.now()
             });
         }
-        GM_setValue(`rfi_replies_${esgst.name}`, JSON.stringify(saved));
+        localStorage.esgst_replies = JSON.stringify(saved);
     }
 
     function getRfiReplies(comments, main) {
         var children, comment, i, id, ids, j, key, n, numReplies, saved, toDelte;
         ids = [];
-        saved = JSON.parse(GM_getValue(`rfi_replies_${esgst.name}`, `{}`));
+        saved = JSON.parse(localStorage.esgst_replies || `{}`);
         for (i = 0, n = comments.length; i < n; ++i) {
             comment = comments[i];
             id = comment.id;
@@ -20290,7 +20311,7 @@ ${avatar.outerHTML}
                 delete saved[key];
             }
         }
-        GM_setValue(`rfi_replies_${esgst.name}`, JSON.stringify(saved));
+        localStorage.esgst_replies = JSON.stringify(saved);
     }
 
     function setMREdit(MR) {
@@ -20462,7 +20483,17 @@ ${avatar.outerHTML}
 
     function checkCtComments(count, comments, goToUnread, markRead, markUnread, callback) {
         var button, code, comment, found, i, n, saved, source, type, unread;
-        saved = JSON.parse(GM_getValue(`comments`));
+        if (esgst.sg) {
+            saved = {
+                giveaways: JSON.parse(localStorage.esgst_giveaways),
+                discussions: JSON.parse(localStorage.esgst_discussions),
+                tickets: JSON.parse(localStorage.esgst_tickets)
+            };
+        } else {
+            saved = {
+                trades: JSON.parse(localStorage.esgst_trades)
+            };
+        }
         n = comments.length;
         if (n > 0) {
             found = false;
@@ -20551,7 +20582,13 @@ ${avatar.outerHTML}
                     }
                 }
             } else {
-                GM_setValue(`comments`, JSON.stringify(saved));
+                if (esgst.sg) {
+                    localStorage.esgst_giveaways = JSON.stringify(saved.giveaways);
+                    localStorage.esgst_discussions = JSON.stringify(saved.discussions);
+                    localStorage.esgst_tickets = JSON.stringify(saved.tickets);
+                } else {
+                    localStorage.esgst_trades = JSON.stringify(saved.trades);
+                }
             }
             if (callback) {
                 callback(found);
@@ -20570,7 +20607,13 @@ ${avatar.outerHTML}
                 if (count > 0) {
                     saved[type][code].count = count;
                 }
-                GM_setValue(`comments`, JSON.stringify(saved));
+                if (esgst.sg) {
+                    localStorage.esgst_giveaways = JSON.stringify(saved.giveaways);
+                    localStorage.esgst_discussions = JSON.stringify(saved.discussions);
+                    localStorage.esgst_tickets = JSON.stringify(saved.tickets);
+                } else {
+                    localStorage.esgst_trades = JSON.stringify(saved.trades);
+                }
             }
             if (callback) {
                 callback();
@@ -20581,12 +20624,12 @@ ${avatar.outerHTML}
     function markCtCommentRead(comment, comments, save, callback) {
         if (save) {
             createLock(`commentLock`, 300, function(deleteLock) {
-                comments = JSON.parse(GM_getValue(`comments`));
-                if (!comments[comment.type][comment.code].comments[comment.id]) {
-                    comments[comment.type][comment.code].comments[comment.id] = {};
+                comments = JSON.parse(localStorage[`esgst_${comment.type}`]);
+                if (!comments[comment.code].comments[comment.id]) {
+                    comments[comment.code].comments[comment.id] = {};
                 }
-                comments[comment.type][comment.code].comments[comment.id].timestamp = comment.timestamp;
-                GM_setValue(`comments`, JSON.stringify(comments));
+                comments[comment.code].comments[comment.id].timestamp = comment.timestamp;
+                localStorage[`esgst_${comment.type}`] = JSON.stringify(comments);
                 deleteLock();
                 comment.comment.classList.add(`esgst-ct-comment-read`);
                 comment.comment.style.opacity = `0.5`;
@@ -20610,12 +20653,12 @@ ${avatar.outerHTML}
         if (save) {
             createLock(`commentLock`, 300, function(deleteLock) {
                 var comments;
-                comments = JSON.parse(GM_getValue(`comments`));
-                if (!comments[comment.type][comment.code].comments[comment.id]) {
-                    comments[comment.type][comment.code].comments[comment.id] = {};
+                comments = JSON.parse(localStorage[`esgst_${comment.type}`]);
+                if (!comments[comment.code].comments[comment.id]) {
+                    comments[comment.code].comments[comment.id] = {};
                 }
-                comments[comment.type][comment.code].comments[comment.id].timestamp = 0;
-                GM_setValue(`comments`, JSON.stringify(comments));
+                comments[comment.code].comments[comment.id].timestamp = 0;
+                localStorage[`esgst_${comment.type}`] = JSON.stringify(comments);
                 deleteLock();
                 comment.comment.classList.remove(`esgst-ct-comment-read`);
                 comment.comment.style.opacity = `1`;
@@ -20754,7 +20797,7 @@ ${avatar.outerHTML}
         } else {
             key = `discussions`;
         }
-        comments = JSON.parse(GM_getValue(`comments`));
+        comments = JSON.parse(localStorage[`esgst_${key}`]);
         matches = context.querySelectorAll(`.table__row-outer-wrap, .row_outer_wrap`);
         for (i = 0, n = matches.length; i < n; ++i) {
             match = matches[i];
@@ -20766,13 +20809,13 @@ ${avatar.outerHTML}
                     code = url.match(new RegExp(`/${key.slice(0, -1)}/(.+?)(/.*)?$`));
                     if (code) {
                         code = code[1];
-                        if (comments[key][code]) {
+                        if (comments[code]) {
                             if (esgst.ct_s) {
-                                read = comments[key][code].count || (esgst.ct_s_h ? count : 0);
+                                read = comments[code].count || (esgst.ct_s_h ? count : 0);
                             } else {
                                 read = 0;
-                                for (id in comments[key][code].comments) {
-                                    if (!id.match(/^(Count|undefined|)$/) && comments[key][code].comments[id].timestamp) {
+                                for (id in comments[code].comments) {
+                                    if (!id.match(/^(Count|undefined|)$/) && comments[code].comments[id].timestamp) {
                                         ++read;
                                     }
                                 }
@@ -20783,7 +20826,7 @@ ${avatar.outerHTML}
                         } else {
                             diff = count;
                         }
-                        addCtDiscussionPanel(code, comments[key], match, countLink, count, diff, url, key, dh);
+                        addCtDiscussionPanel(code, comments, match, countLink, count, diff, url, key, dh);
                     }
                 }
             }
@@ -20877,11 +20920,11 @@ ${avatar.outerHTML}
             loadingIcon.classList.remove(`esgst-hidden`);
             createLock(`commentLock`, 300, function(deleteLock) {
                 var key;
-                comments = JSON.parse(GM_getValue(`comments`));
-                for (key in comments.discussions[code].comments) {
-                    comments.discussions[code].comments[key].timestamp = 0;
+                comments = JSON.parse(localStorage.esgst_discussions);
+                for (key in comments[code].comments) {
+                    comments[code].comments[key].timestamp = 0;
                 }
-                GM_setValue(`comments`, JSON.stringify(comments));
+                localStorage.esgst_discussions = JSON.stringify(comments);
                 deleteLock();
                 loadingIcon.classList.add(`esgst-hidden`);
                 diffContainer.classList.remove(`esgst-hidden`);
@@ -20897,18 +20940,18 @@ ${avatar.outerHTML}
             markVisited.classList.add(`esgst-hidden`);
             loadingIcon.classList.remove(`esgst-hidden`);
             createLock(`commentLock`, 300, function(deleteLock) {
-                comments = JSON.parse(GM_getValue(`comments`));
-                if (!comments[type][code]) {
-                    comments[type][code] = {
+                comments = JSON.parse(localStorage[`esgst_${type}`]);
+                if (!comments[code]) {
+                    comments[code] = {
                         comments: {}
                     };
                 }
                 if (esgst.ct_s) {
-                    comments[type][code].count = count;
+                    comments[code].count = count;
                     diffContainer.textContent = ``;
                 }
-                comments[type][code].visited = true;
-                GM_setValue(`comments`, JSON.stringify(comments));
+                comments[code].visited = true;
+                localStorage[`esgst_${type}`] = JSON.stringify(comments);
                 deleteLock();
                 loadingIcon.classList.add(`esgst-hidden`);
                 if (esgst.ct && !esgst.ct_s && (esgst.giveawaysPath || esgst.discussionsPath || dh)) {
@@ -20929,13 +20972,13 @@ ${avatar.outerHTML}
             markUnvisited.classList.add(`esgst-hidden`);
             loadingIcon.classList.remove(`esgst-hidden`);
             createLock(`commentLock`, 300, function(deleteLock) {
-                comments = JSON.parse(GM_getValue(`comments`));
+                comments = JSON.parse(localStorage[`esgst_${type}`]);
                 if (esgst.ct_s) {
-                    delete comments[type][code].count;
+                    delete comments[code].count;
                     diffContainer.textContent = `(+${count})`;
                 }
-                delete comments[type][code].visited;
-                GM_setValue(`comments`, JSON.stringify(comments));
+                delete comments[code].visited;
+                localStorage[`esgst_${type}`] = JSON.stringify(comments);
                 deleteLock();
                 loadingIcon.classList.add(`esgst-hidden`);
                 if (esgst.ct && !esgst.ct_s && (esgst.giveawaysPath || esgst.discussionsPath || dh)) {
@@ -24498,8 +24541,25 @@ ${avatar.outerHTML}
                 GM_deleteValue(`Templates`);
                 GM_deleteValue(`winners`);
                 GM_deleteValue(`Winners`);
+                GM_deleteValue(`rfi_replies_${esgst.name}`);
+                var comments = JSON.parse(GM_getValue(`comments`));
+                if (comments) {
+                    if (esgst.sg) {
+                        delete comments.giveaways;
+                        delete comments.discussions;
+                        delete comments.tickets;
+                    } else {
+                        delete comments.trades;
+                    }
+                    GM_setValue(`comments`, JSON.stringify(comments));
+                    if (Object.keys(comments).length === 0) {
+                        GM_deleteValue(`comments`);
+                    }
+                }
                 callback();
                 alert(`Deleted!`);
+            } else {
+                callback();
             }
         }).set);
         var heading = Container.getElementsByClassName(`esgst-page-heading`)[0];
@@ -24817,9 +24877,11 @@ ${avatar.outerHTML}
                     users:  `U`,
                     games: `G`,
                     giveaways: `GG`,
+                    discussions: `D`,
+                    tickets: `TC`,
+                    trades: `TD`,
                     entries: `ER`,
                     groups: "GP",
-                    comments: "C",
                     Emojis: "E",
                     savedReplies: "SR",
                     rerolls: "R",
@@ -24836,7 +24898,7 @@ ${avatar.outerHTML}
                 Check: function () {
                     return true;
                 },
-                Description: "User Notes data.",
+                Description: "User Notes",
                 Name: "un",
                 Key: "UN",
                 ID: "SM_UN"
@@ -24844,7 +24906,7 @@ ${avatar.outerHTML}
                 Check: function () {
                     return true;
                 },
-                Description: "User Tags data.",
+                Description: "User Tags",
                 Name: "ut",
                 Key: "UT",
                 ID: "SM_UT"
@@ -24852,7 +24914,7 @@ ${avatar.outerHTML}
                 Check: function () {
                     return true;
                 },
-                Description: "User Giveaways Data data.",
+                Description: "User Giveaways Data",
                 Name: "udg",
                 Key: "UGD",
                 ID: "SM_UGD"
@@ -24860,7 +24922,7 @@ ${avatar.outerHTML}
                 Check: function () {
                     return true;
                 },
-                Description: "Not Activated/Multiple Wins Checker data.",
+                Description: "Not Activated/Multiple Wins Checker",
                 Name: "namwc",
                 Key: "NAMWC",
                 ID: "SM_NAMWC"
@@ -24868,7 +24930,7 @@ ${avatar.outerHTML}
                 Check: function () {
                     return true;
                 },
-                Description: "Not Received Finder data.",
+                Description: "Not Received Finder",
                 Name: "nrf",
                 Key: "NRF",
                 ID: "SM_NRF"
@@ -24876,7 +24938,7 @@ ${avatar.outerHTML}
                 Check: function () {
                     return true;
                 },
-                Description: "Whitelist/Blacklist Checker data.",
+                Description: "Whitelist/Blacklist Checker",
                 Name: "wbc",
                 Key: "WBC",
                 ID: "SM_WBC"
@@ -24884,7 +24946,7 @@ ${avatar.outerHTML}
                 Check: function () {
                     return true;
                 },
-                Description: "Real Won/Sent CV Links data.",
+                Description: "Real Won/Sent CV Links",
                 Name: "rwscvl",
                 Key: "RWSCVL",
                 ID: "SM_RWSCVL"
@@ -24892,7 +24954,7 @@ ${avatar.outerHTML}
                 Check: function () {
                     return true;
                 },
-                Description: "User Filters data.",
+                Description: "User Filters",
                 Name: "uf",
                 Key: "UF",
                 ID: "SM_UF"
@@ -24900,7 +24962,7 @@ ${avatar.outerHTML}
                 Check: function () {
                     return true;
                 },
-                Description: "Game Tags data.",
+                Description: "Game Tags",
                 Name: "gt",
                 Key: "GT",
                 ID: "SM_GT"
@@ -24908,7 +24970,7 @@ ${avatar.outerHTML}
                 Check: function () {
                     return true;
                 },
-                Description: "Entered Games Highlighter data.",
+                Description: "Entered Games Highlighter",
                 Name: "egh",
                 Key: "EGH",
                 ID: "SM_EGH"
@@ -24916,7 +24978,7 @@ ${avatar.outerHTML}
                 Check: function () {
                     return true;
                 },
-                Description: "Game Categories data.",
+                Description: "Game Categories",
                 Name: "gc",
                 Key: "GC",
                 ID: "SM_GC"
@@ -24924,7 +24986,7 @@ ${avatar.outerHTML}
                 Check: function () {
                     return true;
                 },
-                Description: "Is There Any Deal? Info data.",
+                Description: "Is There Any Deal? Info",
                 Name: "itadi",
                 Key: "ITADI",
                 ID: "SM_ITADI"
@@ -24932,8 +24994,7 @@ ${avatar.outerHTML}
                 Check: function () {
                     return esgst.sg && true;
                 },
-                Description: "Giveaways data.",
-                Title: "Includes Giveaway Groups Loader data.",
+                Description: "Giveaways",
                 Name: "giveaways",
                 Key: "GG",
                 ID: "SM_GG"
@@ -24941,8 +25002,31 @@ ${avatar.outerHTML}
                 Check: function () {
                     return esgst.sg && true;
                 },
-                Description: "Entries Tracker data.",
-                Title: "Includes Entries Tracker data.",
+                Description: "Discussions",
+                Name: "discussions",
+                Key: "D",
+                ID: "SM_D"
+            }, {
+                Check: function () {
+                    return esgst.sg && true;
+                },
+                Description: "Tickets",
+                Name: "tickets",
+                Key: "TC",
+                ID: "SM_TC"
+            }, {
+                Check: function () {
+                    return esgst.st && true;
+                },
+                Description: "Trades",
+                Name: "trades",
+                Key: "TD",
+                ID: "SM_TD"
+            }, {
+                Check: function () {
+                    return esgst.sg && true;
+                },
+                Description: "Entries Tracker",
                 Name: "entries",
                 Key: "ER",
                 ID: "SM_ER"
@@ -24950,8 +25034,7 @@ ${avatar.outerHTML}
                 Check: function () {
                     return esgst.sg && true;
                 },
-                Description: "Groups data.",
-                Title: "Includes groups data.",
+                Description: "Groups",
                 Name: "groups",
                 Key: "GP",
                 ID: "SM_GP"
@@ -24959,17 +25042,7 @@ ${avatar.outerHTML}
                 Check: function () {
                     return true;
                 },
-                Description: "Comments data.",
-                Title: "Includes Comment Tracker & Discussion Highlighter data.",
-                Name: "comments",
-                Key: "C",
-                ID: "SM_C"
-            }, {
-                Check: function () {
-                    return true;
-                },
-                Description: "Emojis data.",
-                Title: "Includes Comment Formatting Helper emojis data.",
+                Description: "Emojis",
                 Name: "Emojis",
                 Key: "E",
                 ID: "SM_E"
@@ -24977,8 +25050,7 @@ ${avatar.outerHTML}
                 Check: function () {
                     return true;
                 },
-                Description: "Saved Replies data.",
-                Title: "Includes saved replies.",
+                Description: "Saved Replies",
                 Name: "savedReplies",
                 Key: "SR",
                 ID: "SM_SR"
@@ -24986,8 +25058,7 @@ ${avatar.outerHTML}
                 Check: function () {
                     return esgst.sg && true;
                 },
-                Description: "Rerolls data.",
-                Title: "Includes Unsent Gifts Sender rerolls data.",
+                Description: "Rerolls",
                 Name: "rerolls",
                 Key: "R",
                 ID: "SM_R"
@@ -24995,8 +25066,7 @@ ${avatar.outerHTML}
                 Check: function () {
                     return esgst.sg && true;
                 },
-                Description: "Winners data.",
-                Title: "Includes Inbox Winners Highlighter winners data.",
+                Description: "Winners",
                 Name: "winners",
                 Key: "W",
                 ID: "SM_W"
@@ -25004,8 +25074,7 @@ ${avatar.outerHTML}
                 Check: function () {
                     return true;
                 },
-                Description: "SteamGifts comment history data.",
-                Title: "Includes SteamGifts' comment History data.",
+                Description: "SteamGifts Comment History",
                 Name: "sgCommentHistory",
                 Key: "CH_SG",
                 ID: "SM_CH_SG"
@@ -25013,8 +25082,7 @@ ${avatar.outerHTML}
                 Check: function () {
                     return true;
                 },
-                Description: "SteamTrades comment history data.",
-                Title: "Includes SteamTrades' comment History data.",
+                Description: "SteamTrades Comment History",
                 Name: "stCommentHistory",
                 Key: "CH_ST",
                 ID: "SM_CH_ST"
@@ -25022,8 +25090,7 @@ ${avatar.outerHTML}
                 Check: function () {
                     return esgst.sg && true;
                 },
-                Description: "Templates data.",
-                Title: "Includes Giveaway Templates data.",
+                Description: "Templates",
                 Name: "templates",
                 Key: "T",
                 ID: "SM_T"
@@ -25031,8 +25098,7 @@ ${avatar.outerHTML}
                 Check: function () {
                     return true;
                 },
-                Description: "Decrypted giveaways data.",
-                Title: "Includes data from decrypted giveaways.",
+                Description: "Decrypted Giveaways",
                 Name: "decryptedGiveaways",
                 Key: "DG",
                 ID: "SM_DG"
@@ -25040,8 +25106,7 @@ ${avatar.outerHTML}
                 Check: function () {
                     return true;
                 },
-                Description: "Settings data.",
-                Title: "Includes feature settings.",
+                Description: "Settings",
                 Name: "settings",
                 Key: "S",
                 ID: "SM_S"
@@ -25566,12 +25631,14 @@ ${avatar.outerHTML}
                                         importUsersAndMerge(File, Key, SM);
                                     } else if (Key.match(/^(games|Games)$/)) {
                                         importGamesAndMerge(File, Key, SM);
-                                    } else if (Key === `giveaways`) {
+                                    } else if (Key.match(/^(giveaways|discussions|tickets)$/) && SM.Names[Key] && SM[SM.Names[Key]] && SM[SM.Names[Key]].checked) {
                                         if (esgst.sg) {
-                                            importGiveawaysAndMerge(File, Key, SM);
+                                            importGdttAndMerge(File, Key, SM);
                                         }
-                                    } else if (Key.match(/^(comments|Comments|Comments_ST)$/) && SM.C.checked) {
-                                        importCommentsAndMerge(File, Key, SM);
+                                    } else if (Key === `trades` && SM.Names[Key] && SM[SM.Names[Key]] && SM[SM.Names[Key]].checked) {
+                                        if (esgst.st) {
+                                            importGdttAndMerge(File, Key, SM);
+                                        }
                                     } else if (Key == `Emojis` && SM.E.checked) {
                                         var savedEmojis = GM_getValue(`Emojis`, ``);
                                         var emojis = DOM.parse(File.Data.Emojis).getElementsByTagName(`span`);
@@ -25612,9 +25679,13 @@ ${avatar.outerHTML}
                                     importUsers(File, Key, SM);
                                 } else if (Key.match(/^(games|Games)$/)) {
                                     importGames(File, Key, SM);
-                                } else if (Key === `giveaways`) {
+                                } else if (Key.match(/^(giveaways|discussions|tickets)$/) && SM.Names[Key] && SM[SM.Names[Key]] && SM[SM.Names[Key]].checked) {
                                     if (esgst.sg) {
-                                        importGiveaways(File, Key, SM);
+                                        importGdtt(File, Key, SM);
+                                    }
+                                } else if (Key === `trades` && SM.Names[Key] && SM[SM.Names[Key]] && SM[SM.Names[Key]].checked) {
+                                    if (esgst.st) {
+                                        importGdtt(File, Key, SM);
                                     }
                                 } else if (Key === `entries` && SM.ER.checked) {
                                     if (esgst.sg) {
@@ -25624,8 +25695,6 @@ ${avatar.outerHTML}
                                     importSavedReplies(File, Key, SM);
                                 } else if (Key.match(/^(CommentHistory|sgCommentHistory|stCommentHistory)$/)) {
                                     importCommentHistory(File, Key, SM);
-                                } else if (Key === `comments` && SM.C.checked) {
-                                    importComments(File, Key, SM);
                                 } else if (Key.match(/^(Templates|templates)$/)) {
                                     if (esgst.sg) {
                                         importTemplates(File, Key, SM);
@@ -25658,62 +25727,67 @@ ${avatar.outerHTML}
         });
     }
 
-    function importGiveawaysAndMerge(File) {
-        createLock(`giveawayLock`, 300, function(deleteLock) {
-            var saved = JSON.parse(localStorage.esgst_giveaways || `{}`);
-            var giveaways = File.Data.giveaways;
-            for (var key in giveaways) {
-                if (!saved[key]) {
-                    saved[key] = {};
-                }
-                for (var subKey in giveaways[key]) {
-                    saved[key][subKey] = giveaways[key][subKey];
+    function importGdttAndMerge(File, Key, SM) {
+        var saved = JSON.parse(localStorage[`esgst_${Key}`] || `{}`);
+        var data = File.Data[Key];
+        for (var key in data) {
+            if (!saved[key]) {
+                saved[key] = {};
+            }
+            for (var subKey in data[key]) {
+                if (subKey === `comments`) {
+                    if (saved[key].comments) {
+                        for (id in data[key].comments) {
+                            if (saved[key].comments[id]) {
+                                if (data[key].comments[id].timestamp > saved[key].comments[id].timestamp) {
+                                    saved[key].comments[id].timestamp = data[key].comments[id].timestamp;
+                                }
+                            } else {
+                                saved[key].comments[id] = data[key].comments.id;
+                            }
+                        }
+                    } else {
+                        saved[key].comments = data[key].comments;
+                    }
+                } else {
+                    saved[key][subKey] = data[key][subKey];
                 }
             }
-            localStorage.esgst_giveaways = JSON.stringify(saved);
-            deleteLock();
-        });
+        }
+        localStorage[`esgst_${Key}`] = JSON.stringify(saved);
     }
 
-    function importGiveaways(File) {
-        createLock(`giveawayLock`, 300, function(deleteLock) {
-            localStorage.esgst_giveaways = JSON.stringify(File.Data.giveaways);
-            deleteLock();
-        });
+    function importGdtt(File, Key, SM) {
+        localStorage[`esgst_${Key}`] = JSON.stringify(File.Data[Key]);
     }
 
     function importTemplatesAndMerge(File, Key, SM) {
-        createLock(`templateLock`, 300, function (deleteLock) {
-            var i, j, n, numT, savedTemplates, template, templates;
-            savedTemplates = JSON.parse(localStorage.esgst_templates || `[]`);
-            if (Key === `Templates`) {
-                templates = getTemplateStorageV6(File.Data.Templates);
-            } else {
-                templates = File.Data.templates;
+        var i, j, n, numT, savedTemplates, template, templates;
+        savedTemplates = JSON.parse(localStorage.esgst_templates || `[]`);
+        if (Key === `Templates`) {
+            templates = getTemplateStorageV6(File.Data.Templates);
+        } else {
+            templates = File.Data.templates;
+        }
+        for (i = 0, n = templates.length; i < n; ++i) {
+            template = templates[i];
+            for (j = 0, numT = savedTemplates.length; j < numT && savedTemplates[j].name !== template.name; ++j);
+            if (j >= numT) {
+                savedTemplates.push(template);
             }
-            for (i = 0, n = templates.length; i < n; ++i) {
-                template = templates[i];
-                for (j = 0, numT = savedTemplates.length; j < numT && savedTemplates[j].name !== template.name; ++j);
-                if (j >= numT) {
-                    savedTemplates.push(template);
-                }
-            }
-            localStorage.esgst_templates = JSON.stringify(savedTemplates);
-            deleteLock();
-        });
+        }
+        localStorage.esgst_templates = JSON.stringify(savedTemplates);
     }
 
     function importTemplates(File, Key, SM) {
-        createLock(`templateLock`, 300, function (deleteLock) {
-            var templates;
-            if (Key === `Templates`) {
-                templates = getTemplateStorageV6(File.Data.Templates);
-            } else {
-                templates = File.Data.templates;
-            }
-            localStorage.esgst_templates = JSON.stringify(templates);
-            deleteLock();
-        });
+        var templates;
+        if (Key === `Templates`) {
+            templates = getTemplateStorageV6(File.Data.Templates);
+        } else {
+            templates = File.Data.templates;
+        }
+        localStorage.esgst_templates = JSON.stringify(templates);
+        deleteLock();
     }
 
     function importRerollsAndMerge(File, Key, SM) {
@@ -25811,16 +25885,13 @@ ${avatar.outerHTML}
     }
 
     function importUsersAndMerge(File, Key, SM) {
-        createLock(`userLock`, 300, function (deleteLock) {
-            var savedUsers = JSON.parse(GM_getValue(`users`));
-            if (Key === `Users`) {
-                mergeUsers(savedUsers, getUserStorageV6(File.Data.Users), SM);
-            } else {
-                mergeUsers(savedUsers, File.Data.users, SM);
-            }
-            GM_setValue(`users`, JSON.stringify(savedUsers));
-            deleteLock();
-        });
+        var savedUsers = JSON.parse(GM_getValue(`users`));
+        if (Key === `Users`) {
+            mergeUsers(savedUsers, getUserStorageV6(File.Data.Users), SM);
+        } else {
+            mergeUsers(savedUsers, File.Data.users, SM);
+        }
+        GM_setValue(`users`, JSON.stringify(savedUsers));
     }
 
     function mergeUsers(savedUsers, users, SM) {
@@ -25890,116 +25961,69 @@ ${avatar.outerHTML}
 
     function importUsers(File, Key, SM) {
         var key;
-        createLock(`userLock`, 300, function(deleteLock) {
-            var users;
-            if (Key === `Users`) {
-                users = getUserStorageV6(File.Data.Users);
-            } else {
-                users = File.Data.users;
+        var users;
+        if (Key === `Users`) {
+            users = getUserStorageV6(File.Data.Users);
+        } else {
+            users = File.Data.users;
+        }
+        var keys = {
+            notes: `UN`,
+            tags: `UT`,
+            ugd: `UGD`,
+            namwc: `NAMWC`,
+            nrf: `NRF`,
+            rwscvl: `RWSCVL`,
+            wbc: `WBC`,
+            uf: `UF`
+        };
+        var found = true, key;
+        for (key in keys) {
+            if (!SM[keys[key]].checked) {
+                found = false;
             }
-            var keys = {
-                notes: `UN`,
-                tags: `UT`,
-                ugd: `UGD`,
-                namwc: `NAMWC`,
-                nrf: `NRF`,
-                rwscvl: `RWSCVL`,
-                wbc: `WBC`,
-                uf: `UF`
-            };
-            var found = true, key;
-            for (key in keys) {
-                if (!SM[keys[key]].checked) {
-                    found = false;
-                }
+        }
+        if (found) {
+            users.steamIds = {};
+            for (key in users.users) {
+                users.steamIds[users.users[key].username] = key;
             }
-            if (found) {
-                users.steamIds = {};
-                for (key in users.users) {
-                    users.steamIds[users.users[key].username] = key;
+            GM_setValue(`users`, JSON.stringify(users));
+        } else {
+            var savedUsers = JSON.parse(GM_getValue(`users`));
+            for (key in users.users) {
+                if (!savedUsers.users[key]) {
+                    savedUsers.users[key] = {};
                 }
-                GM_setValue(`users`, JSON.stringify(users));
-            } else {
-                var savedUsers = JSON.parse(GM_getValue(`users`));
-                for (key in users.users) {
-                    if (!savedUsers.users[key]) {
-                        savedUsers.users[key] = {};
-                    }
-                    savedUsers.users[key].id = users.users[key].id;
-                    savedUsers.users[key].username = users.users[key].username;
-                    savedUsers.steamIds[users.users[key].username] = key;
-                    for (var subKey in keys) {
-                        if (SM[keys[subKey]].checked && users.users[key][subKey]) {
-                            savedUsers.users[key][subKey] = users.users[key][subKey];
-                        }
+                savedUsers.users[key].id = users.users[key].id;
+                savedUsers.users[key].username = users.users[key].username;
+                savedUsers.steamIds[users.users[key].username] = key;
+                for (var subKey in keys) {
+                    if (SM[keys[subKey]].checked && users.users[key][subKey]) {
+                        savedUsers.users[key][subKey] = users.users[key][subKey];
                     }
                 }
-                GM_setValue(`users`, JSON.stringify(savedUsers));
             }
-            deleteLock();
-        });
+            GM_setValue(`users`, JSON.stringify(savedUsers));
+        }
     }
 
     function importCommentHistoryAndMerge(File, kk, SM) {
-        createLock(`${kk === `CommentHistory` ? `sgCommentHistory` : kk}Lock`, 300, function (deleteLock) {
-            var i, j, nS, nC, k, nK, newComments, comments, savedComments;
-            savedComments = JSON.parse(GM_getValue(kk === `CommentHistory` ? `sgCommentHistory` : kk, `[]`));
-            newComments = savedComments;
-            if (kk === `CommentHistory` && SM.CH_SG.checked) {
-                newComments = [];
-                comments = getCommentHistoryStorageV6(File.Data.CommentHistory);
-                i = 0;
-                j = 0;
-                nS = savedComments.length;
-                nC = comments.length;
-                while (i < nS && j < nC) {
-                    if (savedComments[i].timestamp > comments[j].timestamp) {
-                        newComments.push(savedComments[i]);
-                        ++i;
-                    } else {
-                        for (k = 0, nK = savedComments.length; k < nK && savedComments[k].id !== comments[j].id; ++k);
-                        if (k >= nK) {
-                            newComments.push(comments[j]);
-                        }
-                        ++j;
-                    }
-                }
-                while (i < nS) {
+        var i, j, nS, nC, k, nK, newComments, comments, savedComments;
+        savedComments = JSON.parse(GM_getValue(kk === `CommentHistory` ? `sgCommentHistory` : kk, `[]`));
+        newComments = savedComments;
+        if (kk === `CommentHistory` && SM.CH_SG.checked) {
+            newComments = [];
+            comments = getCommentHistoryStorageV6(File.Data.CommentHistory);
+            i = 0;
+            j = 0;
+            nS = savedComments.length;
+            nC = comments.length;
+            while (i < nS && j < nC) {
+                if (savedComments[i].timestamp > comments[j].timestamp) {
                     newComments.push(savedComments[i]);
                     ++i;
-                }
-                while (j < nC) {
-                    for (k = 0, nK = savedComments.length; k < nK && savedComments[k].id !== comments[j].id; ++k);
-                    if (k >= nK) {
-                        newComments.push(comments[j]);
-                    }
-                    ++j;
-                }
-                savedComments = newComments;
-            } else if ((kk === `sgCommentHistory` && SM.CH_SG.checked) || (kk === `stCommentHistory` && SM.CH_ST.checked)) {
-                newComments = [];
-                comments = File.Data[kk];
-                i = 0;
-                j = 0;
-                nS = savedComments.length;
-                nC = comments.length;
-                while (i < nS && j < nC) {
-                    if (savedComments[i].timestamp > comments[j].timestamp) {
-                        newComments.push(savedComments[i]);
-                        ++i;
-                    } else {
-                        for (k = 0, nK = savedComments.length; k < nK && savedComments[k].id !== comments[j].id; ++k);
-                        if (k >= nK) {
-                            newComments.push(comments[j]);
-                        }
-                        ++j;
-                    }
-                }
-                while (i < nS) {
-                    newComments.push(savedComments[i]);
-                    ++i;
-                }
-                while (j < nC) {
+                } else {
                     for (k = 0, nK = savedComments.length; k < nK && savedComments[k].id !== comments[j].id; ++k);
                     if (k >= nK) {
                         newComments.push(comments[j]);
@@ -26007,247 +26031,233 @@ ${avatar.outerHTML}
                     ++j;
                 }
             }
-            GM_setValue(kk === `CommentHistory` ? `sgCommentHistory` : kk, JSON.stringify(newComments));
-            deleteLock();
-        });
+            while (i < nS) {
+                newComments.push(savedComments[i]);
+                ++i;
+            }
+            while (j < nC) {
+                for (k = 0, nK = savedComments.length; k < nK && savedComments[k].id !== comments[j].id; ++k);
+                if (k >= nK) {
+                    newComments.push(comments[j]);
+                }
+                ++j;
+            }
+            savedComments = newComments;
+        } else if ((kk === `sgCommentHistory` && SM.CH_SG.checked) || (kk === `stCommentHistory` && SM.CH_ST.checked)) {
+            newComments = [];
+            comments = File.Data[kk];
+            i = 0;
+            j = 0;
+            nS = savedComments.length;
+            nC = comments.length;
+            while (i < nS && j < nC) {
+                if (savedComments[i].timestamp > comments[j].timestamp) {
+                    newComments.push(savedComments[i]);
+                    ++i;
+                } else {
+                    for (k = 0, nK = savedComments.length; k < nK && savedComments[k].id !== comments[j].id; ++k);
+                    if (k >= nK) {
+                        newComments.push(comments[j]);
+                    }
+                    ++j;
+                }
+            }
+            while (i < nS) {
+                newComments.push(savedComments[i]);
+                ++i;
+            }
+            while (j < nC) {
+                for (k = 0, nK = savedComments.length; k < nK && savedComments[k].id !== comments[j].id; ++k);
+                if (k >= nK) {
+                    newComments.push(comments[j]);
+                }
+                ++j;
+            }
+        }
+        GM_setValue(kk === `CommentHistory` ? `sgCommentHistory` : kk, JSON.stringify(newComments));
     }
 
     function importCommentHistory(File, Key, SM) {
         var key = `${Key === `CommentHistory` ? `sgCommentHistory` : Key}`;
         if ((key === `sgCommentHistory` && SM.CH_SG.checked) || (key === `stCommentHistory` && SM.CH_ST.checked)) {
-            createLock(`${key}Lock`, 300, function (deleteLock) {
-                GM_setValue(key, JSON.stringify(Key === `CommentHistory` ? getCommentHistoryStorageV6(File.Data.CommentHistory) : File.Data[Key]));
-                deleteLock();
-            });
+            GM_setValue(key, JSON.stringify(Key === `CommentHistory` ? getCommentHistoryStorageV6(File.Data.CommentHistory) : File.Data[Key]));
         }
-    }
-
-    function importCommentsAndMerge(File, Key) {
-        createLock(`commentLock`, 300, function(deleteLock) {
-            var comments, id, key, savedComments, sgComments, stComments, subKey, type;
-            savedComments = JSON.parse(GM_getValue(`comments`));
-            if (Key.match(/Comments|Comments_ST/)) {
-                sgComments = File.Data.Comments ? File.Data.Comments : {};
-                stComments = File.Data.Comments_ST ? File.Data.Comments_ST : {};
-                comments = getCommentStorageV6(sgComments, stComments);
-            } else {
-                comments = File.Data.comments;
-            }
-            for (type in comments) {
-                for (key in comments[type]) {
-                    if (savedComments[type][key]) {
-                        for (subKey in comments[type][key]) {
-                            if (subKey === `comments`) {
-                                for (id in comments[type][key].comments) {
-                                    if (savedComments[type][key].comments[id]) {
-                                        if (comments[type][key].comments[id].timestamp > savedComments[type][key].comments[id].timestamp) {
-                                            savedComments[type][key].comments[id].timestamp = comments[type][key].comments[id].timestamp;
-                                        }
-                                    } else {
-                                        savedComments[type][key].comments[id] = comments[type][key].comments.id;
-                                    }
-                                }
-                            } else {
-                                savedComments[type][key][subKey] = comments[type][key][subKey];
-                            }
-                        }
-                    } else {
-                        savedComments[type][key] = comments[type][key];
-                    }
-                }
-            }
-            GM_setValue(`comments`, JSON.stringify(savedComments));
-            deleteLock();
-        });
-    }
-
-    function importComments(File) {
-        createLock(`commentLock`, 300, function(deleteLock) {
-            GM_setValue(`comments`, JSON.stringify(File.Data.comments));
-            deleteLock();
-        });
     }
 
     function importGamesAndMerge(File, Key, SM) {
         var i, n, types, categories, savedGames, games, type, id;
-        createLock(`gameLock`, 300, function (deleteLock) {
-            types = { apps: ``, subs: `` };
-            categories = [`rating`, `bundled`, `owned`, `wishlisted`, `ignored`, `tradingCards`, `achievements`, `multiplayer`, `steamCloud`, `linux`, `mac`, `dlc`, `genres`];
-            savedGames = JSON.parse(GM_getValue(`games`));
-            if (Key === `Games`) {
-                games = getGameStorageV6(File.Data.Games);
-                for (type in types) {
-                    for (id in games[type]) {
-                        if (savedGames[type][id]) {
-                            if (games[type][id].tags && SM.GT.checked) {
-                                if (!Array.isArray(games[type][id].tags)) {
-                                    games[type][id].tags = games[type][id].tags.split(`, `);
-                                }
-                                if (savedGames[type][id].tags) {
-                                    for (i = 0, n = games[type][id].tags.length; i < n; ++i) {
-                                        if (savedGames[type][id].tags.indexOf(games[type][id].tags[i]) < 0) {
-                                            savedGames[type][id].tags.push(games[type][id].tags[i]);
-                                        }
-                                    }
-                                } else {
-                                    savedGames[type][id].tags = games[type][id].tags;
-                                }
+        types = { apps: ``, subs: `` };
+        categories = [`rating`, `bundled`, `owned`, `wishlisted`, `ignored`, `tradingCards`, `achievements`, `multiplayer`, `steamCloud`, `linux`, `mac`, `dlc`, `genres`];
+        savedGames = JSON.parse(GM_getValue(`games`));
+        if (Key === `Games`) {
+            games = getGameStorageV6(File.Data.Games);
+            for (type in types) {
+                for (id in games[type]) {
+                    if (savedGames[type][id]) {
+                        if (games[type][id].tags && SM.GT.checked) {
+                            if (!Array.isArray(games[type][id].tags)) {
+                                games[type][id].tags = games[type][id].tags.split(`, `);
                             }
-                            if (games[type][id].entered && SM.EGH.checked) {
-                                savedGames[type][id].entered = true;
-                            }
-                            if (games[type][id].lastCheck && SM.GC.checked) {
-                                if (savedGames[type][id].lastCheck) {
-                                    if (games[type][id].lastCheck > savedGames[type][id].lastCheck) {
-                                        savedGames[type][id].lastCheck = games[type][id].lastCheck;
-                                        for (i = 0, n = categories.length; i < n; ++i) {
-                                            savedGames[type][id][categories[i]] = games[type][id][categories[i]];
-                                        }
+                            if (savedGames[type][id].tags) {
+                                for (i = 0, n = games[type][id].tags.length; i < n; ++i) {
+                                    if (savedGames[type][id].tags.indexOf(games[type][id].tags[i]) < 0) {
+                                        savedGames[type][id].tags.push(games[type][id].tags[i]);
                                     }
-                                } else {
+                                }
+                            } else {
+                                savedGames[type][id].tags = games[type][id].tags;
+                            }
+                        }
+                        if (games[type][id].entered && SM.EGH.checked) {
+                            savedGames[type][id].entered = true;
+                        }
+                        if (games[type][id].lastCheck && SM.GC.checked) {
+                            if (savedGames[type][id].lastCheck) {
+                                if (games[type][id].lastCheck > savedGames[type][id].lastCheck) {
                                     savedGames[type][id].lastCheck = games[type][id].lastCheck;
                                     for (i = 0, n = categories.length; i < n; ++i) {
                                         savedGames[type][id][categories[i]] = games[type][id][categories[i]];
                                     }
                                 }
-                            }
-                            if (games[type][id].itadi && SM.ITADI.checked) {
-                                if (savedGames[type][id].itadi) {
-                                    if (savedGames[type][id].itadi.lastCheck < games[type][id].itadi.lastCheck) {
-                                        savedGames[type][id].itadi = games[type][id].itadi;
-                                    }
-                                } else {
-                                    savedGames[type][id].itadi = games[type][id].itadi;
-                                }
-                            }
-                        } else if (SM.GT.checked || SM.EGH.checked || SM.GC.checked) {
-                            if (!savedGames[type][id]) {
-                                savedGames[type][id] = {};
-                            }
-                            if (games[type][id].tags && SM.GT.checked) {
-                                savedGames[type][id].tags = games[type][id].tags;
-                            }
-                            if (games[type][id].entered && SM.EGH.checked) {
-                                savedGames[type][id].entered = true;
-                            }
-                            if (games[type][id].lastCheck && SM.GC.checked) {
+                            } else {
                                 savedGames[type][id].lastCheck = games[type][id].lastCheck;
                                 for (i = 0, n = categories.length; i < n; ++i) {
                                     savedGames[type][id][categories[i]] = games[type][id][categories[i]];
                                 }
                             }
-                            if (games[type][id].itadi && SM.ITADI.checked) {
+                        }
+                        if (games[type][id].itadi && SM.ITADI.checked) {
+                            if (savedGames[type][id].itadi) {
+                                if (savedGames[type][id].itadi.lastCheck < games[type][id].itadi.lastCheck) {
+                                    savedGames[type][id].itadi = games[type][id].itadi;
+                                }
+                            } else {
                                 savedGames[type][id].itadi = games[type][id].itadi;
                             }
                         }
-                    }
-                }
-            } else {
-                games = File.Data.games;
-                for (type in types) {
-                    for (id in games[type]) {
-                        if (savedGames[type][id]) {
-                            if (games[type][id].tags && SM.GT.checked) {
-                                if (!Array.isArray(games[type][id].tags)) {
-                                    games[type][id].tags = games[type][id].tags.split(`, `);
-                                }
-                                if (savedGames[type][id].tags) {
-                                    for (i = 0, n = games[type][id].tags.length; i < n; ++i) {
-                                        if (savedGames[type][id].tags.indexOf(games[type][id].tags[i]) < 0) {
-                                            savedGames[type][id].tags.push(games[type][id].tags[i]);
-                                        }
-                                    }
-                                } else {
-                                    savedGames[type][id].tags = games[type][id].tags;
-                                }
+                    } else if (SM.GT.checked || SM.EGH.checked || SM.GC.checked) {
+                        if (!savedGames[type][id]) {
+                            savedGames[type][id] = {};
+                        }
+                        if (games[type][id].tags && SM.GT.checked) {
+                            savedGames[type][id].tags = games[type][id].tags;
+                        }
+                        if (games[type][id].entered && SM.EGH.checked) {
+                            savedGames[type][id].entered = true;
+                        }
+                        if (games[type][id].lastCheck && SM.GC.checked) {
+                            savedGames[type][id].lastCheck = games[type][id].lastCheck;
+                            for (i = 0, n = categories.length; i < n; ++i) {
+                                savedGames[type][id][categories[i]] = games[type][id][categories[i]];
                             }
-                            if (games[type][id].entered && SM.EGH.checked) {
-                                savedGames[type][id].entered = true;
-                            }
-                            if (games[type][id].lastCheck && SM.GC.checked) {
-                                if (savedGames[type][id].lastCheck) {
-                                    if (games[type][id].lastCheck > savedGames[type][id].lastCheck) {
-                                        savedGames[type][id].lastCheck = games[type][id].lastCheck;
-                                        for (i = 0, n = categories.length; i < n; ++i) {
-                                            savedGames[type][id][categories[i]] = games[type][id][categories[i]];
-                                        }
-                                    }
-                                } else {
-                                    savedGames[type][id].lastCheck = games[type][id].lastCheck;
-                                    for (i = 0, n = categories.length; i < n; ++i) {
-                                        savedGames[type][id][categories[i]] = games[type][id][categories[i]];
-                                    }
-                                }
-                            }
-                            if (games[type][id].itadi && SM.ITADI.checked) {
-                                if (savedGames[type][id].itadi) {
-                                    if (savedGames[type][id].itadi.lastCheck < games[type][id].itadi) {
-                                        savedGames[type][id].itadi = games[type][id].itadi;
-                                    }
-                                } else {
-                                    savedGames[type][id].itadi = games[type][id].itadi;
-                                }
-                            }
-                        } else if (SM.GT.checked || SM.EGH.checked || SM.GC.checked) {
-                            if (!savedGames[type][id]) {
-                                savedGames[type][id] = {};
-                            }
-                            if (games[type][id].tags && SM.GT.checked) {
-                                savedGames[type][id].tags = games[type][id].tags;
-                            }
-                            if (games[type][id].entered && SM.EGH.checked) {
-                                savedGames[type][id].entered = true;
-                            }
-                            if (games[type][id].lastCheck && SM.GC.checked) {
-                                savedGames[type][id].lastCheck = games[type][id].lastCheck;
-                                for (i = 0, n = categories.length; i < n; ++i) {
-                                    savedGames[type][id][categories[i]] = games[type][id][categories[i]];
-                                }
-                            }
-                            if (games[type][id].itadi && SM.ITADI.checked) {
-                                savedGames[type][id].itadi = games[type][id].itadi;
-                            }
+                        }
+                        if (games[type][id].itadi && SM.ITADI.checked) {
+                            savedGames[type][id].itadi = games[type][id].itadi;
                         }
                     }
                 }
             }
-            GM_setValue(`games`, JSON.stringify(savedGames));
-            deleteLock();
-        });
+        } else {
+            games = File.Data.games;
+            for (type in types) {
+                for (id in games[type]) {
+                    if (savedGames[type][id]) {
+                        if (games[type][id].tags && SM.GT.checked) {
+                            if (!Array.isArray(games[type][id].tags)) {
+                                games[type][id].tags = games[type][id].tags.split(`, `);
+                            }
+                            if (savedGames[type][id].tags) {
+                                for (i = 0, n = games[type][id].tags.length; i < n; ++i) {
+                                    if (savedGames[type][id].tags.indexOf(games[type][id].tags[i]) < 0) {
+                                        savedGames[type][id].tags.push(games[type][id].tags[i]);
+                                    }
+                                }
+                            } else {
+                                savedGames[type][id].tags = games[type][id].tags;
+                            }
+                        }
+                        if (games[type][id].entered && SM.EGH.checked) {
+                            savedGames[type][id].entered = true;
+                        }
+                        if (games[type][id].lastCheck && SM.GC.checked) {
+                            if (savedGames[type][id].lastCheck) {
+                                if (games[type][id].lastCheck > savedGames[type][id].lastCheck) {
+                                    savedGames[type][id].lastCheck = games[type][id].lastCheck;
+                                    for (i = 0, n = categories.length; i < n; ++i) {
+                                        savedGames[type][id][categories[i]] = games[type][id][categories[i]];
+                                    }
+                                }
+                            } else {
+                                savedGames[type][id].lastCheck = games[type][id].lastCheck;
+                                for (i = 0, n = categories.length; i < n; ++i) {
+                                    savedGames[type][id][categories[i]] = games[type][id][categories[i]];
+                                }
+                            }
+                        }
+                        if (games[type][id].itadi && SM.ITADI.checked) {
+                            if (savedGames[type][id].itadi) {
+                                if (savedGames[type][id].itadi.lastCheck < games[type][id].itadi) {
+                                    savedGames[type][id].itadi = games[type][id].itadi;
+                                }
+                            } else {
+                                savedGames[type][id].itadi = games[type][id].itadi;
+                            }
+                        }
+                    } else if (SM.GT.checked || SM.EGH.checked || SM.GC.checked) {
+                        if (!savedGames[type][id]) {
+                            savedGames[type][id] = {};
+                        }
+                        if (games[type][id].tags && SM.GT.checked) {
+                            savedGames[type][id].tags = games[type][id].tags;
+                        }
+                        if (games[type][id].entered && SM.EGH.checked) {
+                            savedGames[type][id].entered = true;
+                        }
+                        if (games[type][id].lastCheck && SM.GC.checked) {
+                            savedGames[type][id].lastCheck = games[type][id].lastCheck;
+                            for (i = 0, n = categories.length; i < n; ++i) {
+                                savedGames[type][id][categories[i]] = games[type][id][categories[i]];
+                            }
+                        }
+                        if (games[type][id].itadi && SM.ITADI.checked) {
+                            savedGames[type][id].itadi = games[type][id].itadi;
+                        }
+                    }
+                }
+            }
+        }
+        GM_setValue(`games`, JSON.stringify(savedGames));
     }
 
     function importGames(File, Key, SM) {
-        createLock(`gameLock`, 300, function (deleteLock) {
-            var games, savedGames;
-            if (Key === `Games`) {
-                games = getGameStorageV6(File.Data.Games);
-            } else {
-                games = File.Data.games;
+        var games, savedGames;
+        if (Key === `Games`) {
+            games = getGameStorageV6(File.Data.Games);
+        } else {
+            games = File.Data.games;
+        }
+        if (SM.GT.checked && SM.EGH.checked && SM.GC.checked && SM.ITADI.checked) {
+            GM_setValue(`games`, JSON.stringify(games));
+        } else {
+            savedGames = JSON.parse(GM_getValue(`games`));
+            if (SM.GT.checked) {
+                getSMGames(games, `tags`, savedGames, `apps`);
+                getSMGames(games, `tags`, savedGames, `subs`);
             }
-            if (SM.GT.checked && SM.EGH.checked && SM.GC.checked && SM.ITADI.checked) {
-                GM_setValue(`games`, JSON.stringify(games));
-            } else {
-                savedGames = JSON.parse(GM_getValue(`games`));
-                if (SM.GT.checked) {
-                    getSMGames(games, `tags`, savedGames, `apps`);
-                    getSMGames(games, `tags`, savedGames, `subs`);
-                }
-                if (SM.EGH.checked) {
-                    getSMGames(games, `entered`, savedGames, `apps`);
-                    getSMGames(games, `entered`, savedGames, `subs`);
-                }
-                if (SM.GC.checked) {
-                    getSMGames(games, `lastCheck`, savedGames, `apps`);
-                    getSMGames(games, `lastCheck`, savedGames, `subs`);
-                }
-                if (SM.ITADI.checked) {
-                    getSMGames(games, `itadi`, savedGames, `apps`);
-                    getSMGames(games, `itadi`, savedGames, `subs`);
-                }
-                GM_setValue(`games`, JSON.stringify(savedGames));
+            if (SM.EGH.checked) {
+                getSMGames(games, `entered`, savedGames, `apps`);
+                getSMGames(games, `entered`, savedGames, `subs`);
             }
-            deleteLock();
-        });
+            if (SM.GC.checked) {
+                getSMGames(games, `lastCheck`, savedGames, `apps`);
+                getSMGames(games, `lastCheck`, savedGames, `subs`);
+            }
+            if (SM.ITADI.checked) {
+                getSMGames(games, `itadi`, savedGames, `apps`);
+                getSMGames(games, `itadi`, savedGames, `subs`);
+            }
+            GM_setValue(`games`, JSON.stringify(savedGames));
+        }
     }
 
     function getSMGames(games, key, selected, type, deleteData) {
@@ -26348,10 +26358,14 @@ ${avatar.outerHTML}
                     getSMGames(games, `itadi`, Data.games, `apps`);
                     getSMGames(games, `itadi`, Data.games, `subs`);
                 }
-            } else if (Key.match(/savedReplies|sgCommentHistory|stCommentHistory|comments|descryptedGiveaways|settings/) && SM[SM.Names[Key]].checked) {
+            } else if (Key.match(/savedReplies|sgCommentHistory|stCommentHistory|descryptedGiveaways|settings/) && SM[SM.Names[Key]].checked) {
                 Data[Key] = JSON.parse(GM_getValue(Key, `{}`));
-            } else if (Key.match(/entries|giveaways|groups|templates|rerolls|winners/) && SM[SM.Names[Key]].checked) {
+            } else if (Key.match(/entries|giveaways|discussions|tickets|groups|templates|rerolls|winners/) && SM[SM.Names[Key]].checked) {
                 if (esgst.sg) {
+                    Data[Key] = JSON.parse(localStorage[`esgst_${Key}`] || `{}`);
+                }
+            } else if (Key === `trades` && SM[SM.Names[Key]].checked) {
+                if (esgst.st) {
                     Data[Key] = JSON.parse(localStorage[`esgst_${Key}`] || `{}`);
                 }
             } else if (SM[SM.Names[Key]].checked) {
@@ -26377,59 +26391,57 @@ ${avatar.outerHTML}
             exportSMData(SM);
             for (Key in SM.Names) {
                 if (Key === `users`) {
-                    createLock(`userLock`, 300, function(deleteLock) {
-                        var keys = {
-                            notes: `UN`,
-                            tags: `UT`,
-                            ugd: `UGD`,
-                            namwc: `NAMWC`,
-                            nrf: `NRF`,
-                            rwscvl: `RWSCVL`,
-                            wbc: `WBC`,
-                            uf: `UF`
-                        };
-                        var users = JSON.parse(GM_getValue(`users`));
-                        for (var key in users.users) {
-                            for (var subKey in keys) {
-                                if (SM[keys[subKey]].checked) {
-                                   delete users.users[key][subKey];
-                                }
+                    var keys = {
+                        notes: `UN`,
+                        tags: `UT`,
+                        ugd: `UGD`,
+                        namwc: `NAMWC`,
+                        nrf: `NRF`,
+                        rwscvl: `RWSCVL`,
+                        wbc: `WBC`,
+                        uf: `UF`
+                    };
+                    var users = JSON.parse(GM_getValue(`users`));
+                    for (var key in users.users) {
+                        for (var subKey in keys) {
+                            if (SM[keys[subKey]].checked) {
+                                delete users.users[key][subKey];
                             }
                         }
-                        GM_setValue(`users`, JSON.stringify(users));
-                        deleteLock();
-                    });
+                    }
+                    GM_setValue(`users`, JSON.stringify(users));
                 } else if (Key === `games`) {
-                    createLock(`gameLock`, 300, function (deleteLock) {
-                        var games = JSON.parse(GM_getValue(`games`));
-                        if (SM.GT.checked && SM.EGH.checked && SM.GC.checked) {
-                            GM_setValue(`games`, JSON.stringify({
-                                apps: {},
-                                subs: {}
-                            }));
-                        } else {
-                            if (SM.GT.checked) {
-                                getSMGames(games, `tags`, null, `apps`, true);
-                                getSMGames(games, `tags`, null, `subs`, true);
-                            }
-                            if (SM.EGH.checked) {
-                                getSMGames(games, `entered`, null, `apps`, true);
-                                getSMGames(games, `entered`, null, `subs`, true);
-                            }
-                            if (SM.GC.checked) {
-                                getSMGames(games, `lastCheck`, null, `apps`, true);
-                                getSMGames(games, `lastCheck`, null, `subs`, true);
-                            }
-                            if (SM.ITADI.checked) {
-                                getSMGames(games, `itadi`, null, `apps`, true);
-                                getSMGames(games, `itadi`, null, `subs`, true);
-                            }
-                            GM_setValue(`games`, JSON.stringify(games));
+                    var games = JSON.parse(GM_getValue(`games`));
+                    if (SM.GT.checked && SM.EGH.checked && SM.GC.checked) {
+                        GM_setValue(`games`, JSON.stringify({
+                            apps: {},
+                            subs: {}
+                        }));
+                    } else {
+                        if (SM.GT.checked) {
+                            getSMGames(games, `tags`, null, `apps`, true);
+                            getSMGames(games, `tags`, null, `subs`, true);
                         }
-                        deleteLock();
-                    });
-                } else if (Key.match(/^(entries|giveaways|groups|templates|rerolls|winners)$/) && SM[SM.Names[Key]].checked) {
+                        if (SM.EGH.checked) {
+                            getSMGames(games, `entered`, null, `apps`, true);
+                            getSMGames(games, `entered`, null, `subs`, true);
+                        }
+                        if (SM.GC.checked) {
+                            getSMGames(games, `lastCheck`, null, `apps`, true);
+                            getSMGames(games, `lastCheck`, null, `subs`, true);
+                        }
+                        if (SM.ITADI.checked) {
+                            getSMGames(games, `itadi`, null, `apps`, true);
+                            getSMGames(games, `itadi`, null, `subs`, true);
+                        }
+                        GM_setValue(`games`, JSON.stringify(games));
+                    }
+                } else if (Key.match(/^(entries|giveaways|discussions|tickets|groups|templates|rerolls|winners)$/) && SM[SM.Names[Key]].checked) {
                     if (esgst.sg) {
+                        localStorage.removeItem(`esgst_${Key}`);
+                    }
+                } else if (Key === `trades` && SM[SM.Names[Key]].checked) {
+                    if (esgst.st) {
                         localStorage.removeItem(`esgst_${Key}`);
                     }
                 } else if (SM[SM.Names[Key]].checked) {
@@ -28144,7 +28156,7 @@ ${avatar.outerHTML}
         if (!GM_getValue(`templateStorageV6_3`, false)) {
             localStorage.esgst_templates = JSON.stringify(getTemplateStorageV6(GM_getValue(`Templates`, [])));
             GM_setValue(`templateStorageV6_3`, true);
-        } else if (!localStorage.esgst_templates) {
+        } else if (esgst.sg && !localStorage.esgst_templates) {
             localStorage.esgst_templates = GM_getValue(`templates`);
         }
     }
@@ -28319,7 +28331,14 @@ ${avatar.outerHTML}
 
     function updateCommentStorageToV6() {
         if (!GM_getValue(`commentStorageV6_2`, false)) {
-            GM_setValue(`comments`, JSON.stringify(getCommentStorageV6(GM_getValue(`Comments`, {}), GM_getValue(`Comments_ST`, {}))));
+            var comments = getCommentStorageV6(GM_getValue(`Comments`, {}), GM_getValue(`Comments_ST`, {}));
+            if (esgst.sg) {
+                localStorage.esgst_giveaways = JSON.stringify(comments.giveaways);
+                localStorage.esgst_discussions = JSON.stringify(comments.discussions);
+                localStorage.esgst_tickets = JSON.stringify(comments.tickets);
+            } else {
+                localStorage.esgst_tickets = JSON.stringify(comments.trades);
+            }
             GM_setValue(`commentStorageV6_2`, true);
         }
     }

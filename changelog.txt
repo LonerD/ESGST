@@ -1,4 +1,13 @@
 /*
+ * August 11, 2017 - v6.Beta.25.2
+ */
+
+* Moved Comment Tracker data to localStorage.
+* Removed tooltips from the manage popup in the settings menu, as they were redundant (closes #196).
+* Removed redundant "data" and period from the manage popup in the settings menu (closes #253).
+* Fixed a bug that was duplicating the Comment Formatting Helper panel in some places (closes #330).
+
+/*
  * August 10, 2017 - v6.Beta.25.1
  */
 
