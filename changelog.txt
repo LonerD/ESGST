@@ -1,4 +1,10 @@
 /*
+ * August 11, 2017 - v6.Beta.25.4
+ */
+
+* Fixed a bug in Giveaways/Discussions/Tickets/Trades Tracker that was not fading out visited places.
+
+/*
  * August 11, 2017 - v6.Beta.25.3
  */
 

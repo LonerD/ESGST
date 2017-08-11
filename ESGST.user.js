@@ -3,7 +3,7 @@
 // @namespace ESGST
 // @description Enhances SteamGifts and SteamTrades by adding some cool features to them.
 // @icon https://github.com/revilheart/ESGST/raw/master/Resources/esgstIcon.ico
-// @version 6.Beta.25.3
+// @version 6.Beta.25.4
 // @author revilheart
 // @downloadURL https://github.com/revilheart/ESGST/raw/master/ESGST.user.js
 // @updateURL https://github.com/revilheart/ESGST/raw/master/ESGST.meta.js
@@ -5663,7 +5663,7 @@
                     type = `${source[1]}s`;
                     code = source[2];
                     container = match.closest(`.table__row-outer-wrap, .giveaway__row-outer-wrap, .row_outer_wrap`);
-                    comment = localStorage[`esgst_${type}`][code];
+                    comment = JSON.parse(localStorage[`esgst_${type}`])[code];
                     if (comment && comment.visited && container) {
                         if ((type === `giveaways` && esgst.gdttt_g) || type !== `giveaways`) {
                             container.classList.add(`esgst-ct-visited`);
