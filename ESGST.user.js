@@ -3,7 +3,7 @@
 // @namespace ESGST
 // @description Enhances SteamGifts and SteamTrades by adding some cool features to them.
 // @icon https://github.com/revilheart/ESGST/raw/master/Resources/esgstIcon.ico
-// @version 6.Beta.25.4
+// @version 6.Beta.25.5
 // @author revilheart
 // @downloadURL https://github.com/revilheart/ESGST/raw/master/ESGST.user.js
 // @updateURL https://github.com/revilheart/ESGST/raw/master/ESGST.meta.js
@@ -391,6 +391,13 @@
                         localStorage.esgst_replies = GM_getValue(`rfi_replies_${esgst.name}`, `{}`);
                     }
                     if (esgst.sg) {
+                        esgst.giveaways = localStorage.esgst_giveaways;
+                        if (typeof esgst.giveaways === `undefined`) {
+                            localStorage.esgst_giveaways = GM_getValue(`giveaways`) || `{}`;
+                            esgst.giveaways = {};
+                        } else {
+                            esgst.giveaways = JSON.parse(esgst.giveaways);
+                        }
                         if (!localStorage.esgst_discussions) {
                             var comments = JSON.parse(GM_getValue(`comments`, `
                                 {
@@ -423,13 +430,6 @@
                         }
                         if (!localStorage.esgst_entries) {
                             localStorage.esgst_entries = GM_getValue(`entries`, `[]`);
-                        }                    
-                        esgst.giveaways = localStorage.esgst_giveaways;
-                        if (typeof esgst.giveaways === `undefined`) {
-                            localStorage.esgst_giveaways = GM_getValue(`giveaways`) || `{}`;
-                            esgst.giveaways = {};
-                        } else {
-                            esgst.giveaways = JSON.parse(esgst.giveaways);
                         }
                         esgst.rerolls = localStorage.esgst_rerolls;;
                         if (typeof esgst.rerolls === `undefined`) {

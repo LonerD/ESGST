@@ -1,4 +1,10 @@
 /*
+ * August 11, 2017 - v6.Beta.25.5
+ */
+
+* Fixed a bug that was replacing giveaway data for users who did not previously update to 25.0.
+
+/*
  * August 11, 2017 - v6.Beta.25.4
  */
 
