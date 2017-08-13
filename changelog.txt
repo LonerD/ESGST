@@ -1,4 +1,25 @@
 /*
+ * August 13, 2017 - v6.Beta.26.0
+ */
+
+* Completely removed support for storages from older versions. Users coming from very old versions will now have to downgrade to v25.5 before upgrading to 26.0 to carry their data on.
+* Added buttons that allow you to select all/none/inverse when importing/exporting/deleting (closes #251).
+* Fixed a bug that was adding the Comment Formatting Helper panel to the keys text area in the new giveaway page.
+
+Renamed the settings and sync pages:
+
+* /esgst-settings -> /esgst/settings
+* /esgst-sync -> /esgst/sync
+
+Revamped the import/export/delete tools and added specific pages for them:
+
+* /esgst/import
+* /esgst/export
+* /esgst/delete
+
+WARNING: Any exported files from versions prior to v26.0 are no longer supported. If you have old exported files that you wish to make compatible with v26.0+, you'll have to downgrade to v25.5, import the file, upgrade to v26.0 and export it.
+
+/*
  * August 11, 2017 - v6.Beta.25.5
  */
 

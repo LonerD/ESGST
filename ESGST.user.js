@@ -3,7 +3,7 @@
 // @namespace ESGST
 // @description Enhances SteamGifts and SteamTrades by adding some cool features to them.
 // @icon https://github.com/revilheart/ESGST/raw/master/Resources/esgstIcon.ico
-// @version 6.Beta.25.5
+// @version 6.Beta.26.0
 // @author revilheart
 // @downloadURL https://github.com/revilheart/ESGST/raw/master/ESGST.user.js
 // @updateURL https://github.com/revilheart/ESGST/raw/master/ESGST.meta.js
@@ -53,8 +53,16 @@
         esgst.st = window.location.hostname.match(/www.steamtrades.com/);
         esgst.steam = window.location.hostname.match(/store.steampowered.com/);
         var logoutButton = document.getElementsByClassName(esgst.sg ? "js__logout" : "js_logout")[0];
-        esgst.menuPath = location.pathname.match(/esgst-settings/);
-        if (location.pathname.match(/esgst-sync/)) {
+        esgst.menuPath = location.pathname.match(/^\/esgst\//);
+        esgst.settingsPath = location.pathname.match(/^\/esgst\/settings/);
+        esgst.importMenuPath = location.pathname.match(/^\/esgst\/import/);
+        esgst.exportMenuPath = location.pathname.match(/^\/esgst\/export/);
+        esgst.deleteMenuPath = location.pathname.match(/^\/esgst\/delete/);
+        if (location.pathname.match(/esgst-settings/)) {
+            location.href = `/esgst/settings`;
+        } else if (location.pathname.match(/esgst-sync/)) {
+            location.href = `/esgst/sync`;
+        } else if (location.pathname.match(/esgst\/sync/)) {
             setSync();
         } else if (logoutButton || esgst.menuPath) {
             if (esgst.sg || (esgst.st && esgst.settings.esgst_st)) {
@@ -63,11 +71,6 @@
                     if (esgst.menuPath) {
                         document.head.insertAdjacentHTML(`beforeEnd`, `<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.1/css/font-awesome.min.css"><link rel="stylesheet" type="text/css" href="https://cdn.steamgifts.com/css/minified_v27.css">`);
                     }
-                    updateTemplateStorageToV6();
-                    updateUserStorageToV6();
-                    updateGameStorageToV6();
-                    updateCommentHistoryStorageToV6();
-                    updateCommentStorageToV6();
                     if (window.location.pathname.match(/^\/discussion\/TDyzv\//)) {
                         if (document.querySelector(`[href*="ESGST-currentVersion"]`).getAttribute(`href`).match(/currentVersion-(.+)/)[1] !== GM_info.script.version) {
                             createAlert(`You are not using the latest ESGST version. Please update before reporting any bugs and make sure the bugs still exist in the latest version.`);
@@ -358,8 +361,7 @@
                         steamId: ``,
                         steamApiKey: ``,
                         lastSync: 0,
-                        syncFrequency: 7,
-                        Emojis: ""
+                        syncFrequency: 7
                     };
                     esgst.users = GM_getValue(`users`);
                     if (typeof esgst.users === `undefined`) {
@@ -390,6 +392,10 @@
                     if (!localStorage.esgst_replies) {
                         localStorage.esgst_replies = GM_getValue(`rfi_replies_${esgst.name}`, `{}`);
                     }
+                    if (typeof GM_getValue(`emojis`) === `undefined`) {
+                        GM_setValue(`emojis`, GM_getValue(`Emojis`, ``));
+                        GM_deleteValue(`Emojis`);
+                    }
                     if (esgst.sg) {
                         esgst.giveaways = localStorage.esgst_giveaways;
                         if (typeof esgst.giveaways === `undefined`) {
@@ -398,7 +404,50 @@
                         } else {
                             esgst.giveaways = JSON.parse(esgst.giveaways);
                         }
-                        if (!localStorage.esgst_discussions) {
+                        if (localStorage.esgst_discussions) {
+                            if (!localStorage.esgst_dFix) {
+                                var discussions = JSON.parse(localStorage.esgst_discussions);
+                                for (key in discussions) {
+                                    if (discussions[key].comments) {
+                                        discussions[key].readComments = discussions[key].comments;
+                                        delete discussions[key].comments;
+                                        for (subKey in discussions[key].readComments) {
+                                            discussions[key].readComments[subKey] = discussions[key].readComments[subKey].timestamp;
+                                        }
+                                    }
+                                }
+                                localStorage.esgst_discussions = JSON.stringify(discussions);
+                                localStorage.esgst_dFix = 1;
+                            }
+                            if (!localStorage.esgst_gFix) {
+                                var giveaways = JSON.parse(localStorage.esgst_giveaways);
+                                for (key in giveaways) {
+                                    if (giveaways[key].comments) {
+                                        giveaways[key].readComments = giveaways[key].comments;
+                                        delete giveaways[key].comments;
+                                        for (subKey in giveaways[key].readComments) {
+                                            giveaways[key].readComments[subKey] = giveaways[key].readComments[subKey].timestamp;
+                                        }
+                                    }
+                                }
+                                localStorage.esgst_giveaways = JSON.stringify(giveaways);
+                                localStorage.esgst_gFix = 1;
+                            }
+                            if (!localStorage.esgst_tFix) {
+                                var tickets = JSON.parse(localStorage.esgst_tickets);
+                                for (key in tickets) {
+                                    if (tickets[key].comments) {
+                                        tickets[key].readComments = tickets[key].comments;
+                                        delete tickets[key].comments;
+                                        for (subKey in tickets[key].readComments) {
+                                            tickets[key].readComments[subKey] = tickets[key].readComments[subKey].timestamp;
+                                        }
+                                    }
+                                }
+                                localStorage.esgst_tickets = JSON.stringify(tickets);
+                                localStorage.esgst_tFix = 1;
+                            }
+                        } else {
                             var comments = JSON.parse(GM_getValue(`comments`, `
                                 {
                                     "giveaways": {},
@@ -477,7 +526,22 @@
                                 esgst.winners = JSON.parse(esgst.winners);
                             }
                         }
-                    } else if (!localStorage.esgst_trades) {
+                    } else if (localStorage.esgst_trades) {
+                        if (!localStorage.esgst_tFix) {
+                            var trades = JSON.parse(localStorage.esgst_trades);
+                            for (key in trades) {
+                                if (trades[key].comments) {
+                                    trades[key].readComments = trades[key].comments;
+                                    delete trades[key].comments;
+                                    for (subKey in trades[key].readComments) {
+                                        trades[key].readComments[subKey] = trades[key].readComments[subKey].timestamp;
+                                    }
+                                }
+                            }
+                            localStorage.esgst_trades = JSON.stringify(trades);
+                            localStorage.esgst_tFix = 1;
+                        }
+                    } else {
                         localStorage.esgst_trades = JSON.stringify(JSON.parse(GM_getValue(`comments`, `
                             {
                                 "giveaways": {},
@@ -2406,9 +2470,20 @@
                     addStyle();
                     var sibling, height;
                     if (esgst.menuPath) {
-                        document.title = `ESGST Settings`;
                         esgst.favicon.href = `https://github.com/revilheart/ESGST/raw/master/Resources/esgstIcon.ico`;
-                        loadSMMenu(true);
+                        if (esgst.settingsPath) {
+                            document.title = `ESGST - Settings`;
+                            loadSMMenu(true);
+                        } else if (esgst.importMenuPath) {
+                            document.title = `ESGST - Import`;
+                            loadDataManagement(true, `import`);
+                        } else if (esgst.exportMenuPath) {
+                            document.title = `ESGST - Export`;
+                            loadDataManagement(true, `export`);
+                        } else if (esgst.deleteMenuPath) {
+                            document.title = `ESGST - Delete`;
+                            loadDataManagement(true, `delete`);
+                        }
                     } else {
                         addHeaderMenu();
                         checkNewVersion();
@@ -3051,7 +3126,7 @@
         }
         button.addEventListener(`click`, function () {
             if (esgst.openSettingsInTab) {
-                window.open(`/esgst-settings`);
+                window.open(`/esgst/settings`);
             } else {
                 loadSMMenu();
             }
@@ -3596,7 +3671,7 @@
             } else {
                 setValue(`avatar`, document.getElementsByClassName(`nav_avatar`)[0].style.backgroundImage.match(/\("(.+)"\)/)[1]);
             }
-            window.open(`/esgst-sync`);
+            window.open(`/esgst/sync`);
         }
     }
 
@@ -4173,6 +4248,18 @@
         });
     }
 
+    function sortArrayByNumberKey(array, numberKey) {
+        return array.sort(function (a, b) {
+            if (a[numberKey] < b[numberKey]) {
+                return -1;
+            } else if (a[numberKey] > b[numberKey]) {
+                return 1;
+            } else {
+                return 0;
+            }
+        });
+    }
+
     function setSiblingsOpacity(Element, Opacity) {
         var Siblings, I, N;
         Siblings = Element.parentElement.children;
@@ -4302,7 +4389,7 @@
             settings.classList.remove(`esgst-hidden`);
             settings.addEventListener(`click`, function () {
                 if (esgst.openSettingsInTab) {
-                    window.open(`/esgst-settings`);
+                    window.open(`/esgst/settings`);
                 } else {
                     loadSMMenu();
                 }
@@ -4792,6 +4879,10 @@
         });
         toggleSwitch.enable = function () {
             toggleSwitch.input.checked = true;
+            if (id) {
+                setValue(id, toggleSwitch.input.checked, sg, st);
+                esgst[id] = toggleSwitch.input.checked;
+            }
             if (toggleSwitch.onEnabled) {
                 toggleSwitch.onEnabled();
             }
@@ -4801,11 +4892,37 @@
         };
         toggleSwitch.disable = function () {
             toggleSwitch.input.checked = false;
+            if (id) {
+                setValue(id, toggleSwitch.input.checked, sg, st);
+                esgst[id] = toggleSwitch.input.checked;
+            }
             if (toggleSwitch.onDisabled) {
                 toggleSwitch.onDisabled();
             }
             for (i = 0, n = toggleSwitch.dependencies.length; i < n; ++i) {
                 toggleSwitch.dependencies[i].classList.add(`esgst-hidden`);
+            }
+        };
+        toggleSwitch.toggle = function () {
+            toggleSwitch.input.checked = toggleSwitch.input.checked ? false : true;
+            if (id) {
+                setValue(id, toggleSwitch.input.checked, sg, st);
+                esgst[id] = toggleSwitch.input.checked;
+            }
+            if (toggleSwitch.input.checked) {
+                if (toggleSwitch.onEnabled) {
+                    toggleSwitch.onEnabled();
+                }
+                for (i = 0, n = toggleSwitch.dependencies.length; i < n; ++i) {
+                    toggleSwitch.dependencies[i].classList.remove(`esgst-hidden`);
+                }
+            } else {
+                if (toggleSwitch.onDisabled) {
+                    toggleSwitch.onDisabled();
+                }
+                for (i = 0, n = toggleSwitch.dependencies.length; i < n; ++i) {
+                    toggleSwitch.dependencies[i].classList.add(`esgst-hidden`);
+                }
             }
         };
         return toggleSwitch;
@@ -5639,7 +5756,7 @@
                 var code = match[2];
                 if (!savedComments[code]) {
                     savedComments[code] = {
-                        comments: {}
+                        readComments: {}
                     };
                 }
                 savedComments[code].visited = true;
@@ -11632,7 +11749,7 @@ ${avatar.outerHTML}
                 comments = JSON.parse(localStorage.esgst_discussions);
                 if (!comments[code]) {
                     comments[code] = {
-                        comments: {}
+                        readComments: {}
                     };
                 }
                 comments[code].highlighted = true;
@@ -11778,7 +11895,7 @@ ${avatar.outerHTML}
             if (esgst.mpp_r) {
                 discussion = JSON.parse(localStorage.esgst_discussions)[window.location.pathname.match(/^\/discussion\/(.+?)\//)[1]];
                 if (discussion) {
-                    if (discussion.comments[``] && discussion.comments[``].timestamp) {
+                    if (discussion.readComments[``]) {
                         Hidden = true;
                     } else {
                         Hidden = false;
@@ -19201,7 +19318,7 @@ ${avatar.outerHTML}
     }
 
     function getCfhAreas(context) {
-        var textAreas = context.getElementsByTagName(`textarea`);
+        var textAreas = context.querySelectorAll(`textarea[name*="description"]`);
         for (var i = 0, n = textAreas.length; i < n; ++i) {
             addCFHPanel(textAreas[i]);
         }
@@ -19408,7 +19525,7 @@ ${avatar.outerHTML}
                     setPopout: function (Popout) {
                         var Emojis;
                         Popout.innerHTML =
-                            "<div class=\"CFHEmojis\">" + GM_getValue("Emojis", ``) + "</div>" +
+                            "<div class=\"CFHEmojis\">" + GM_getValue("emojis", ``) + "</div>" +
                             "<div class=\"form__saving-button btn_action white\">Select Emojis</div>";
                         Emojis = Popout.firstElementChild;
                         setCFHEmojis(Emojis, CFH);
@@ -19420,7 +19537,7 @@ ${avatar.outerHTML}
                                 "afterBegin",
                                 "<div class=\"CFHEmojis\"></div>" +
                                 `<div class="esgst-description">Drag the emojis you want to use and drop them in the box below. Click on an emoji to remove it.</div>` +
-                                "<div class=\"global__image-outer-wrap page_heading_btn CFHEmojis\">" + GM_getValue("Emojis", ``) + "</div>"
+                                "<div class=\"global__image-outer-wrap page_heading_btn CFHEmojis\">" + GM_getValue("emojis", ``) + "</div>"
                             );
                             Emojis = Popup.scrollable.firstElementChild;
                             for (I = 0, N = esgst.emojis.length; I < N; ++I) {
@@ -19464,7 +19581,7 @@ ${avatar.outerHTML}
                     Callback: function (Popout) {
                         var Emojis;
                         Emojis = Popout.firstElementChild;
-                        Emojis.innerHTML = GM_getValue("Emojis", ``);
+                        Emojis.innerHTML = GM_getValue("emojis", ``);
                         setCFHEmojis(Emojis, CFH);
                     }
                 }, {
@@ -20502,11 +20619,11 @@ ${avatar.outerHTML}
                 if (comment.id || comment.id.match(/^$/)) {
                     if (!saved[comment.type][comment.code]) {
                         saved[comment.type][comment.code] = {
-                            comments: {}
+                            readComments: {}
                         };
                     } else {
-                        delete saved[comment.type][comment.code].comments.Count;
-                        delete saved[comment.type][comment.code].comments.undefined;
+                        delete saved[comment.type][comment.code].readComments.Count;
+                        delete saved[comment.type][comment.code].readComments.undefined;
                     }
                     if (count > 0) {
                         saved[comment.type][comment.code].count = count;
@@ -20516,7 +20633,7 @@ ${avatar.outerHTML}
                         button = comment.comment.getElementsByClassName(`esgst-ct-comment-button`)[0];
                         if (comment.author === esgst.username) {
                             markCtCommentRead(comment, saved);
-                        } else if (!saved[comment.type][comment.code].comments[comment.id] || comment.timestamp !== saved[comment.type][comment.code].comments[comment.id].timestamp) {
+                        } else if (!saved[comment.type][comment.code].readComments[comment.id] || comment.timestamp !== saved[comment.type][comment.code].readComments[comment.id]) {
                             if (goToUnread) {
                                 if ((esgst.discussionPath && ((esgst.ct_r && esgst.es_r) || (!esgst.ct_r && !esgst.es_r))) || (!esgst.discussionPath && !esgst.ct_r)) {
                                     unread = comment;
@@ -20600,7 +20717,7 @@ ${avatar.outerHTML}
                 code = source[2];
                 if (!saved[type][code]) {
                     saved[type][code] = {
-                        comments: {},
+                        readComments: {},
                         visited: true
                     };
                 }
@@ -20625,10 +20742,7 @@ ${avatar.outerHTML}
         if (save) {
             createLock(`commentLock`, 300, function(deleteLock) {
                 comments = JSON.parse(localStorage[`esgst_${comment.type}`]);
-                if (!comments[comment.code].comments[comment.id]) {
-                    comments[comment.code].comments[comment.id] = {};
-                }
-                comments[comment.code].comments[comment.id].timestamp = comment.timestamp;
+                comments[comment.code].readComments[comment.id] = comment.timestamp;
                 localStorage[`esgst_${comment.type}`] = JSON.stringify(comments);
                 deleteLock();
                 comment.comment.classList.add(`esgst-ct-comment-read`);
@@ -20638,10 +20752,7 @@ ${avatar.outerHTML}
             });
         } else {
             if (comments) {
-                if (!comments[comment.type][comment.code].comments[comment.id]) {
-                    comments[comment.type][comment.code].comments[comment.id] = {};
-                }
-                comments[comment.type][comment.code].comments[comment.id].timestamp = comment.timestamp;
+                comments[comment.type][comment.code].readComments[comment.id] = comment.timestamp;
             }
             comment.comment.classList.add(`esgst-ct-comment-read`);
             comment.comment.style.opacity = `0.5`;
@@ -20654,10 +20765,7 @@ ${avatar.outerHTML}
             createLock(`commentLock`, 300, function(deleteLock) {
                 var comments;
                 comments = JSON.parse(localStorage[`esgst_${comment.type}`]);
-                if (!comments[comment.code].comments[comment.id]) {
-                    comments[comment.code].comments[comment.id] = {};
-                }
-                comments[comment.code].comments[comment.id].timestamp = 0;
+                delete comments[comment.code].readComments[comment.id];
                 localStorage[`esgst_${comment.type}`] = JSON.stringify(comments);
                 deleteLock();
                 comment.comment.classList.remove(`esgst-ct-comment-read`);
@@ -20667,10 +20775,7 @@ ${avatar.outerHTML}
             });
         } else {
             if (comments) {
-                if (!comments[comment.type][comment.code].comments[comment.id]) {
-                    comments[comment.type][comment.code].comments[comment.id] = {};
-                }
-                comments[comment.type][comment.code].comments[comment.id].timestamp = 0;
+                delete comments[comment.type][comment.code].readComments[comment.id];
             }
             comment.comment.classList.remove(`esgst-ct-comment-read`);
             comment.comment.style.opacity = `1`;
@@ -20814,8 +20919,8 @@ ${avatar.outerHTML}
                                 read = comments[code].count || (esgst.ct_s_h ? count : 0);
                             } else {
                                 read = 0;
-                                for (id in comments[code].comments) {
-                                    if (!id.match(/^(Count|undefined|)$/) && comments[code].comments[id].timestamp) {
+                                for (id in comments[code].readComments) {
+                                    if (!id.match(/^(Count|undefined|)$/) && comments[code].readComments[id]) {
                                         ++read;
                                     }
                                 }
@@ -20921,8 +21026,8 @@ ${avatar.outerHTML}
             createLock(`commentLock`, 300, function(deleteLock) {
                 var key;
                 comments = JSON.parse(localStorage.esgst_discussions);
-                for (key in comments[code].comments) {
-                    comments[code].comments[key].timestamp = 0;
+                for (key in comments[code].readComments) {
+                    delete comments[code].readComments[key];
                 }
                 localStorage.esgst_discussions = JSON.stringify(comments);
                 deleteLock();
@@ -20943,7 +21048,7 @@ ${avatar.outerHTML}
                 comments = JSON.parse(localStorage[`esgst_${type}`]);
                 if (!comments[code]) {
                     comments[code] = {
-                        comments: {}
+                        readComments: {}
                     };
                 }
                 if (esgst.ct_s) {
@@ -24508,7 +24613,7 @@ ${avatar.outerHTML}
     /* */
 
     function loadSMMenu(tab) {
-        var Selected, Item, SMSyncFrequency, I, Container, SMGeneral, SMGiveaways, SMDiscussions, SMCommenting, SMUsers, SMOthers, SMManageData, SMManageFilteredUsers, SMRecentUsernameChanges,
+        var Selected, Item, SMSyncFrequency, I, Container, SMGeneral, SMGiveaways, SMDiscussions, SMCommenting, SMUsers, SMOthers, SMManageFilteredUsers, SMRecentUsernameChanges,
             SMCommentHistory, SMManageTags, SMGeneralFeatures, SMGiveawayFeatures, SMDiscussionFeatures, SMCommentingFeatures, SMUserGroupGamesFeatures, SMOtherFeatures,
             SMLastSync, LastSync, SMAPIKey;
         var popup;
@@ -24563,7 +24668,7 @@ ${avatar.outerHTML}
             }
         }).set);
         var heading = Container.getElementsByClassName(`esgst-page-heading`)[0];
-        createSMButtons(heading, [/*{
+        createSMButtons(heading, [{
             Check: true,
             Icons: ["fa-arrow-circle-up"],
             Name: "esgst-heading-button",
@@ -24573,11 +24678,11 @@ ${avatar.outerHTML}
             Icons: ["fa-arrow-circle-down"],
             Name: "esgst-heading-button",
             Title: "Export data"
-        },*/ {
+        }, {
             Check: true,
-            Icons: ["fa-arrow-circle-up", "fa-arrow-circle-down", "fa-trash"],
-            Name: "SMManageData",
-            Title: "Manage data."
+            Icons: ["fa-trash"],
+            Name: "esgst-heading-button",
+            Title: "Delete data"
         }, {
             Check: esgst.uf,
             Icons: ["fa-user", "fa-eye-slash"],
@@ -24683,7 +24788,6 @@ ${avatar.outerHTML}
                 "<div class=\"esgst-description\">This is optional for Entries Remover (syncs new games faster). " +
                     "Get a Steam API Key <a class=\"rhBold\" href=\"https://steamcommunity.com/dev/apikey\" target=\"_blank\">here</a>.</div>"
             }]));
-        SMManageData = Container.getElementsByClassName("SMManageData")[0];
         SMRecentUsernameChanges = Container.getElementsByClassName("SMRecentUsernameChanges")[0];
         SMManageFilteredUsers = Container.getElementsByClassName("SMManageFilteredUsers")[0];
         var SMManageFilteredGiveaways = Container.getElementsByClassName("SMManageFilteredGiveaways")[0];
@@ -24726,423 +24830,9 @@ ${avatar.outerHTML}
         SMSyncFrequency.addEventListener("change", function () {
             setValue(`syncFrequency`, SMSyncFrequency.selectedIndex);
         });
-        var options = [
-            {
-                key: `users`,
-                name: `Users`,
-                options: [
-                    {
-                        key: `notes`,
-                        name: `User Notes`,
-                        settingKey: `UN`
-                    },
-                    {
-                        key: `tags`,
-                        name: `User Tags`,
-                        settingKey: `UT`
-                    },
-                    {
-                        key: `ugd`,
-                        name: `User Giveaways Data`,
-                        settingKey: `UGD`
-                    },
-                    {
-                        key: `namwc`,
-                        name: `Not Activated/Multiple Wins Checker`,
-                        settingKey: `NAMWC`
-                    },
-                    {
-                        key: `nrf`,
-                        name: `Not Received Finder`,
-                        settingKey: `NRF`
-                    },
-                    {
-                        key: `wbc`,
-                        name: `Whitelist/Blacklist Checker`,
-                        settingKey: `WBC`
-                    },
-                    {
-                        key: `rwscvl`,
-                        name: `Real Won/Sent CV Links`,
-                        settingKey: `RWSCVL`
-                    },
-                    {
-                        key: `uf`,
-                        name: `User Filters`,
-                        settingKey: `UF`
-                    }
-                ],
-                settingKey: `Users`
-            },
-            {
-                key: `games`,
-                name: `Games`,
-                options: [
-                    {
-                        key: `gt`,
-                        name: `Game Tags`,
-                        settingKey: `GT`
-                    },
-                    {
-                        key: `egh`,
-                        name: `Entered Games Highlighter`,
-                        settingKey: `EGH`
-                    },
-                    {
-                        key: `gc`,
-                        name: `Game Categories`,
-                        settingKey: `GC`
-                    },
-                    {
-                        key: `itadi`,
-                        name: `Is There Any Deal? Info`,
-                        settingKey: `ITADI`
-                    }
-                ],
-                settingKey: `Games`
-            },
-            {
-                key: `giveaways`,
-                name: `Giveaways`,
-                settingKey: `Giveaways`
-            },
-            {
-                key: `entries`,
-                name: `Entries Tracker`,
-                settingKey: `ET`
-            },
-            {
-                key: `groups`,
-                name: `Groups`,
-                settingKey: `Groups`
-            },
-            {
-                key: `comments`,
-                name: `Comments`,
-                settingKey: `Comments`
-            },
-            {
-                key: `emojis`,
-                name: `Emojis`,
-                settingKey: `Emojis`
-            },
-            {
-                key: `savedReplies`,
-                name: `Saved Replies`,
-                settingKey: `SavedReplies`
-            },
-            {
-                key: `rerolls`,
-                name: `Rerolls`,
-                settingKey: `Rerolls`
-            },
-            {
-                key: `winners`,
-                name: `Winners`,
-                settingKey: `Winners`
-            },
-            {
-                key: `sgCommentHistory`,
-                name: `SG Comment History`,
-                settingKey: `SgCommentHistory`
-            },
-            {
-                key: `stCommentHistory`,
-                name: `ST Comment History`,
-                settingKey: `StCommentHistory`
-            },
-            {
-                key: `templates`,
-                name: `Templates`,
-                settingKey: `Templates`
-            },
-            {
-                key: `decryptedGiveaways`,
-                name: `Decrypted Giveaways`,
-                settingKey: `DecryptedGiveaways`
-            },
-            {
-                key: `settings`,
-                name: `Settings`,
-                settingKey: `Settings`
-            }
-        ];
-        //heading.firstElementChild.addEventListener(`click`, openImportPopup.bind(null, options));
-        //heading.firstElementChild.nextElementSibling.addEventListener(`click`, openExportPopup.bind(null, options));
-        SMManageData.addEventListener("click", function () {
-            var Popup, SM, SMImport, SMExport, SMDelete;
-            Popup = createPopup(`fa-cog`, `Manage data:`, true);
-            SM = {
-                Names: {
-                    users:  `U`,
-                    games: `G`,
-                    giveaways: `GG`,
-                    discussions: `D`,
-                    tickets: `TC`,
-                    trades: `TD`,
-                    entries: `ER`,
-                    groups: "GP",
-                    Emojis: "E",
-                    savedReplies: "SR",
-                    rerolls: "R",
-                    winners: "W",
-                    sgCommentHistory: `CH_SG`,
-                    stCommentHistory: `CH_ST`,
-                    templates: `T`,
-                    decryptedGiveaways: "DG",
-                    settings: `S`
-                }
-            };
-            Popup.Options = insertHtml(Popup.scrollable, `beforeEnd`, `<div></div>`);
-            createOptions(Popup.Options, SM, [{
-                Check: function () {
-                    return true;
-                },
-                Description: "User Notes",
-                Name: "un",
-                Key: "UN",
-                ID: "SM_UN"
-            }, {
-                Check: function () {
-                    return true;
-                },
-                Description: "User Tags",
-                Name: "ut",
-                Key: "UT",
-                ID: "SM_UT"
-            }, {
-                Check: function () {
-                    return true;
-                },
-                Description: "User Giveaways Data",
-                Name: "udg",
-                Key: "UGD",
-                ID: "SM_UGD"
-            }, {
-                Check: function () {
-                    return true;
-                },
-                Description: "Not Activated/Multiple Wins Checker",
-                Name: "namwc",
-                Key: "NAMWC",
-                ID: "SM_NAMWC"
-            }, {
-                Check: function () {
-                    return true;
-                },
-                Description: "Not Received Finder",
-                Name: "nrf",
-                Key: "NRF",
-                ID: "SM_NRF"
-            }, {
-                Check: function () {
-                    return true;
-                },
-                Description: "Whitelist/Blacklist Checker",
-                Name: "wbc",
-                Key: "WBC",
-                ID: "SM_WBC"
-            }, {
-                Check: function () {
-                    return true;
-                },
-                Description: "Real Won/Sent CV Links",
-                Name: "rwscvl",
-                Key: "RWSCVL",
-                ID: "SM_RWSCVL"
-            }, {
-                Check: function () {
-                    return true;
-                },
-                Description: "User Filters",
-                Name: "uf",
-                Key: "UF",
-                ID: "SM_UF"
-            }, {
-                Check: function () {
-                    return true;
-                },
-                Description: "Game Tags",
-                Name: "gt",
-                Key: "GT",
-                ID: "SM_GT"
-            }, {
-                Check: function () {
-                    return true;
-                },
-                Description: "Entered Games Highlighter",
-                Name: "egh",
-                Key: "EGH",
-                ID: "SM_EGH"
-            }, {
-                Check: function () {
-                    return true;
-                },
-                Description: "Game Categories",
-                Name: "gc",
-                Key: "GC",
-                ID: "SM_GC"
-            }, {
-                Check: function () {
-                    return true;
-                },
-                Description: "Is There Any Deal? Info",
-                Name: "itadi",
-                Key: "ITADI",
-                ID: "SM_ITADI"
-            }, {
-                Check: function () {
-                    return esgst.sg && true;
-                },
-                Description: "Giveaways",
-                Name: "giveaways",
-                Key: "GG",
-                ID: "SM_GG"
-            }, {
-                Check: function () {
-                    return esgst.sg && true;
-                },
-                Description: "Discussions",
-                Name: "discussions",
-                Key: "D",
-                ID: "SM_D"
-            }, {
-                Check: function () {
-                    return esgst.sg && true;
-                },
-                Description: "Tickets",
-                Name: "tickets",
-                Key: "TC",
-                ID: "SM_TC"
-            }, {
-                Check: function () {
-                    return esgst.st && true;
-                },
-                Description: "Trades",
-                Name: "trades",
-                Key: "TD",
-                ID: "SM_TD"
-            }, {
-                Check: function () {
-                    return esgst.sg && true;
-                },
-                Description: "Entries Tracker",
-                Name: "entries",
-                Key: "ER",
-                ID: "SM_ER"
-            }, {
-                Check: function () {
-                    return esgst.sg && true;
-                },
-                Description: "Groups",
-                Name: "groups",
-                Key: "GP",
-                ID: "SM_GP"
-            }, {
-                Check: function () {
-                    return true;
-                },
-                Description: "Emojis",
-                Name: "Emojis",
-                Key: "E",
-                ID: "SM_E"
-            }, {
-                Check: function () {
-                    return true;
-                },
-                Description: "Saved Replies",
-                Name: "savedReplies",
-                Key: "SR",
-                ID: "SM_SR"
-            }, {
-                Check: function () {
-                    return esgst.sg && true;
-                },
-                Description: "Rerolls",
-                Name: "rerolls",
-                Key: "R",
-                ID: "SM_R"
-            }, {
-                Check: function () {
-                    return esgst.sg && true;
-                },
-                Description: "Winners",
-                Name: "winners",
-                Key: "W",
-                ID: "SM_W"
-            }, {
-                Check: function () {
-                    return true;
-                },
-                Description: "SteamGifts Comment History",
-                Name: "sgCommentHistory",
-                Key: "CH_SG",
-                ID: "SM_CH_SG"
-            }, {
-                Check: function () {
-                    return true;
-                },
-                Description: "SteamTrades Comment History",
-                Name: "stCommentHistory",
-                Key: "CH_ST",
-                ID: "SM_CH_ST"
-            }, {
-                Check: function () {
-                    return esgst.sg && true;
-                },
-                Description: "Templates",
-                Name: "templates",
-                Key: "T",
-                ID: "SM_T"
-            }, {
-                Check: function () {
-                    return true;
-                },
-                Description: "Decrypted Giveaways",
-                Name: "decryptedGiveaways",
-                Key: "DG",
-                ID: "SM_DG"
-            }, {
-                Check: function () {
-                    return true;
-                },
-                Description: "Settings",
-                Name: "settings",
-                Key: "S",
-                ID: "SM_S"
-            }, {
-                Check: function () {
-                    return true;
-                },
-                Description: "Merge current data with the imported one.",
-                Title: "If unchecked, the new data will replace the current one.",
-                Name: "Merge",
-                Key: "M",
-                ID: "SM_M"
-            }]);
-            Popup.Button = insertHtml(Popup.description, `beforeEnd`, `<div></div>`);
-            Popup.Button.classList.add("SMManageDataPopup");
-            Popup.Button.innerHTML =
-                "<div class=\"SMImport\"></div>" +
-                "<div class=\"SMExport\"></div>" +
-                "<div class=\"SMDelete\"></div>";
-            SMImport = Popup.Button.firstElementChild;
-            SMExport = SMImport.nextElementSibling;
-            SMDelete = SMExport.nextElementSibling;
-            createButton(SMImport, "fa-arrow-circle-up", "Import", "", "", function (Callback) {
-                Callback();
-                importSMData(SM);
-            });
-            createButton(SMExport, "fa-arrow-circle-down", "Export", "", "", function (Callback) {
-                Callback();
-                exportSMData(SM);
-            });
-            createButton(SMDelete, "fa-trash", "Delete", "", "", function (Callback) {
-                Callback();
-                deleteSMData(SM);
-            });
-            Popup.open();
-        });
+        heading.firstElementChild.addEventListener(`click`, loadDataManagement.bind(null, false, `import`));
+        heading.firstElementChild.nextElementSibling.addEventListener(`click`, loadDataManagement.bind(null, false, `export`));
+        heading.firstElementChild.nextElementSibling.nextElementSibling.addEventListener(`click`, loadDataManagement.bind(null, false, `delete`));
         if (SMManageTags) {
             SMManageTags.addEventListener("click", function () {
                 var Popup, MT, SMManageTagsPopup;
@@ -25597,858 +25287,6 @@ ${avatar.outerHTML}
                 }
                 Heading.insertAdjacentHTML("beforeEnd", "<a class=\"" + Item.Name + "\" title=\"" + Item.Title + "\">" + Icons + "</a>");
             }
-        }
-    }
-
-    function importSMData(SM) {
-        var File, Reader;
-        File = document.createElement("input");
-        File.type = "file";
-        File.click();
-        File.addEventListener("change", function () {
-            File = File.files[0];
-            if (File.name.match(/\.json/)) {
-                Reader = new FileReader();
-                Reader.readAsText(File);
-                Reader.onload = function () {
-                    var Key, Setting;
-                    File = JSON.parse(Reader.result);
-                    if ((File.rhSGST && (File.rhSGST == "Data")) || (File.ESGST && (File.ESGST == "Data"))) {
-                        if (window.confirm("Are you sure you want to import this data? A copy of your current data will be downloaded as precaution.")) {
-                            exportSMData(SM);
-                            for (Key in File.Data) {
-                                if (Key === `settings`) {
-                                    if (SM.S.checked) {
-                                        var savedSettings = JSON.parse(GM_getValue(`settings`, `{}`));
-                                        for (Setting in File.Data.settings) {
-                                            savedSettings[Setting] = File.Data.settings[Setting];
-                                        }
-                                        GM_setValue(`settings`, JSON.stringify(savedSettings));
-                                    }
-                                } else if (SM.M.checked) {
-                                    var i, j, n, numT, saved, value;
-                                    if (Key.match(/^(users|Users)$/)) {
-                                        importUsersAndMerge(File, Key, SM);
-                                    } else if (Key.match(/^(games|Games)$/)) {
-                                        importGamesAndMerge(File, Key, SM);
-                                    } else if (Key.match(/^(giveaways|discussions|tickets)$/) && SM.Names[Key] && SM[SM.Names[Key]] && SM[SM.Names[Key]].checked) {
-                                        if (esgst.sg) {
-                                            importGdttAndMerge(File, Key, SM);
-                                        }
-                                    } else if (Key === `trades` && SM.Names[Key] && SM[SM.Names[Key]] && SM[SM.Names[Key]].checked) {
-                                        if (esgst.st) {
-                                            importGdttAndMerge(File, Key, SM);
-                                        }
-                                    } else if (Key == `Emojis` && SM.E.checked) {
-                                        var savedEmojis = GM_getValue(`Emojis`, ``);
-                                        var emojis = DOM.parse(File.Data.Emojis).getElementsByTagName(`span`);
-                                        for (i = 0, n = emojis.length; i < n; ++i) {
-                                            if (!savedEmojis.match(emojis[i].outerHTML)) {
-                                                savedEmojis += emojis[i].outerHTML;
-                                            }
-                                        }
-                                        GM_setValue(`Emojis`, savedEmojis);
-                                    } else if (Key === `savedReplies` && SM.SR.checked) {
-                                        importSavedRepliesAndMerge(File, Key, SM);
-                                    } else if (Key === `entries` && SM.ER.checked) {
-                                        if (esgst.sg) {
-                                            importEntriesAndMerge(File, Key, SM);
-                                        }
-                                    } else if (Key.match(/^(CommentHistory|sgCommentHistory|stCommentHistory)$/)) {
-                                        importCommentHistoryAndMerge(File, Key, SM);
-                                    } else if (Key.match(/^(Templates|templates)$/)) {
-                                        if (esgst.sg) {
-                                            importTemplatesAndMerge(File, Key, SM);
-                                        }
-                                    } else if (Key.match(/^(Rerolls|rerolls)$/)) {
-                                        if (esgst.sg) {
-                                            importRerollsAndMerge(File, Key, SM);
-                                        }
-                                    } else if (Key.match(/^(Winners|winners)$/)) {
-                                        if (esgst.sg) {
-                                            importWinnersAndMerge(File, Key, SM);
-                                        }
-                                    } else if (Key === `groups`) {
-                                        if (esgst.sg) {
-                                            importGroupsAndMerge(File, Key, SM);
-                                        }
-                                    } else if (SM.Names[Key] && SM[SM.Names[Key]] && SM[SM.Names[Key]].checked) {
-                                        GM_setValue(Key, File.Data[Key]);
-                                    }
-                                } else if (Key.match(/^(users|Users)$/)) {
-                                    importUsers(File, Key, SM);
-                                } else if (Key.match(/^(games|Games)$/)) {
-                                    importGames(File, Key, SM);
-                                } else if (Key.match(/^(giveaways|discussions|tickets)$/) && SM.Names[Key] && SM[SM.Names[Key]] && SM[SM.Names[Key]].checked) {
-                                    if (esgst.sg) {
-                                        importGdtt(File, Key, SM);
-                                    }
-                                } else if (Key === `trades` && SM.Names[Key] && SM[SM.Names[Key]] && SM[SM.Names[Key]].checked) {
-                                    if (esgst.st) {
-                                        importGdtt(File, Key, SM);
-                                    }
-                                } else if (Key === `entries` && SM.ER.checked) {
-                                    if (esgst.sg) {
-                                        importEntries(File, Key, SM);
-                                    }
-                                } else if (Key === `savedReplies` && SM.SR.checked) {
-                                    importSavedReplies(File, Key, SM);
-                                } else if (Key.match(/^(CommentHistory|sgCommentHistory|stCommentHistory)$/)) {
-                                    importCommentHistory(File, Key, SM);
-                                } else if (Key.match(/^(Templates|templates)$/)) {
-                                    if (esgst.sg) {
-                                        importTemplates(File, Key, SM);
-                                    }
-                                } else if (Key.match(/^(Rerolls|rerolls)$/)) {
-                                    if (esgst.sg) {
-                                        importRerolls(File, Key, SM);
-                                    }
-                                } else if (Key.match(/^(Winners|winners)$/)) {
-                                    if (esgst.sg) {
-                                        importWinners(File, Key, SM);
-                                    }
-                                } else if (Key === `groups`) {
-                                    if (esgst.sg) {
-                                        importGroups(File, Key, SM);
-                                    }
-                                } else if (SM.Names[Key] && SM[SM.Names[Key]] && SM[SM.Names[Key]].checked) {
-                                    GM_setValue(Key, File.Data[Key]);
-                                }
-                            }
-                            window.alert("Imported! It is always recommended to sync your data after importing it.");
-                        }
-                    } else {
-                        window.alert("Wrong file!");
-                    }
-                };
-            } else {
-                window.alert("File should be in the .json format.");
-            }
-        });
-    }
-
-    function importGdttAndMerge(File, Key, SM) {
-        var saved = JSON.parse(localStorage[`esgst_${Key}`] || `{}`);
-        var data = File.Data[Key];
-        for (var key in data) {
-            if (!saved[key]) {
-                saved[key] = {};
-            }
-            for (var subKey in data[key]) {
-                if (subKey === `comments`) {
-                    if (saved[key].comments) {
-                        for (id in data[key].comments) {
-                            if (saved[key].comments[id]) {
-                                if (data[key].comments[id].timestamp > saved[key].comments[id].timestamp) {
-                                    saved[key].comments[id].timestamp = data[key].comments[id].timestamp;
-                                }
-                            } else {
-                                saved[key].comments[id] = data[key].comments.id;
-                            }
-                        }
-                    } else {
-                        saved[key].comments = data[key].comments;
-                    }
-                } else {
-                    saved[key][subKey] = data[key][subKey];
-                }
-            }
-        }
-        localStorage[`esgst_${Key}`] = JSON.stringify(saved);
-    }
-
-    function importGdtt(File, Key, SM) {
-        localStorage[`esgst_${Key}`] = JSON.stringify(File.Data[Key]);
-    }
-
-    function importTemplatesAndMerge(File, Key, SM) {
-        var i, j, n, numT, savedTemplates, template, templates;
-        savedTemplates = JSON.parse(localStorage.esgst_templates || `[]`);
-        if (Key === `Templates`) {
-            templates = getTemplateStorageV6(File.Data.Templates);
-        } else {
-            templates = File.Data.templates;
-        }
-        for (i = 0, n = templates.length; i < n; ++i) {
-            template = templates[i];
-            for (j = 0, numT = savedTemplates.length; j < numT && savedTemplates[j].name !== template.name; ++j);
-            if (j >= numT) {
-                savedTemplates.push(template);
-            }
-        }
-        localStorage.esgst_templates = JSON.stringify(savedTemplates);
-    }
-
-    function importTemplates(File, Key, SM) {
-        var templates;
-        if (Key === `Templates`) {
-            templates = getTemplateStorageV6(File.Data.Templates);
-        } else {
-            templates = File.Data.templates;
-        }
-        localStorage.esgst_templates = JSON.stringify(templates);
-        deleteLock();
-    }
-
-    function importRerollsAndMerge(File, Key, SM) {
-        var i, n, savedRerolls, rerolls;
-        savedRerolls = JSON.parse(localStorage.esgst_rerolls);
-        rerolls = File.Data[Key];
-        for (i = 0, n = rerolls.length; i < n; ++i) {
-            if (savedRerolls.indexOf(rerolls[i]) < 0) {
-                savedRerolls.push(rerolls[i]);
-            }
-        }
-        localStorage.esgst_rerolls = JSON.stringify(savedRerolls);
-    }
-
-    function importRerolls(File, Key, SM) {
-        localStorage.esgst_rerolls = JSON.stringify(File.Data[Key]);
-    }
-
-    function importSavedRepliesAndMerge(File, Key, SM) {
-        var i, n, savedReplies, replies;
-        savedReplies = JSON.parse(localStorage.esgst_rerolls);
-        replies = File.Data[Key];
-        for (i = 0, n = replies.length; i < n; ++i) {
-            savedReplies.push(replies[i]);
-        }
-        GM_setValue(`savedReplies`, JSON.stringify(savedReplies));
-    }
-
-    function importSavedReplies(File, Key, SM) {
-        GM_setValue(`savedReplies`, JSON.stringify(File.Data[Key]));
-    }
-
-    function importEntriesAndMerge(File, Key, SM) {
-        var i, n, savedEntries, entries;
-        savedEntries = JSON.parse(localStorage.esgst_entries || `[]`);
-        entries = File.Data[Key];
-        for (i = 0, n = entries.length; i < n; ++i) {
-            savedEntries.push(entries[i]);
-        }
-        savedEntries.sort(function (a, b) {
-            if (a.timestamp < b.timestamp) {
-                return -1;
-            } else if (a.timestamp > b.timestamp) {
-                return 1;
-            } else {
-                return 0;
-            }
-        });
-        localStorage.esgst_entries = JSON.stringify(savedEntries);
-    }
-
-    function importEntries(File, Key, SM) {
-        localStorage.esgst_entries = JSON.stringify(File.Data[Key]);
-    }
-
-    function importWinnersAndMerge(File, Key, SM) {
-        var i, key, n, savedWinners, winners;
-        savedWinners = JSON.parse(localStorage.esgst_winners || `{}`);
-        winners = File.Data[Key];
-        for (key in winners) {
-            if (!savedWinners[key]) {
-                savedWinners[key] = [];
-            }
-            for (i = 0, n = winners[key].length; i < n; ++i) {
-                if (savedWinners[key].indexOf(winners[key][i]) < 0) {
-                    savedWinners[key].push(winners[key][i]);
-                }
-            }
-        }
-        localStorage.esgst_winners = JSON.stringify(savedWinners);
-    }
-
-    function importWinners(File, Key, SM) {
-        localStorage.esgst_winners = JSON.stringify(File.Data[Key]);
-    }
-
-    function importGroupsAndMerge(File, Key, SM) {
-        var subKey, key, savedGroups, groups;
-        savedGroups = JSON.parse(localStorage.esgst_groups || `{}`);
-        groups = File.Data[Key];
-        for (key in groups) {
-            if (savedGroups[key]) {
-                for (subKey in groups[key]) {
-                    savedGroups[key][subKey] = groups[key][subKey];
-                }
-            } else {
-                savedGroups[key] = groups[key];
-            }
-        }
-        localStorage.esgst_groups = JSON.stringify(savedGroups);
-    }
-
-    function importGroups(File, Key, SM) {
-        localStorage.esgst_groups = JSON.stringify(File.Data[Key]);
-    }
-
-    function importUsersAndMerge(File, Key, SM) {
-        var savedUsers = JSON.parse(GM_getValue(`users`));
-        if (Key === `Users`) {
-            mergeUsers(savedUsers, getUserStorageV6(File.Data.Users), SM);
-        } else {
-            mergeUsers(savedUsers, File.Data.users, SM);
-        }
-        GM_setValue(`users`, JSON.stringify(savedUsers));
-    }
-
-    function mergeUsers(savedUsers, users, SM) {
-        var keys = {
-            notes: `UN`,
-            tags: `UT`,
-            ugd: `UGD`,
-            namwc: `NAMWC`,
-            nrf: `NRF`,
-            rwscvl: `RWSCVL`,
-            wbc: `WBC`,
-            uf: `UF`
-        };
-        for (var key in users.users) {
-            if (!savedUsers.users[key]) {
-                savedUsers.users[key] = users.users[key];
-                savedUsers.steamIds[users.users[key].username] = key;
-            } else {
-                savedUsers.users[key].id = users.users[key].id;
-                savedUsers.users[key].username = users.users[key].username;
-                savedUsers.steamIds[users.users[key].username] = key;
-                for (var subKey in keys) {
-                    if (SM[keys[subKey]].checked && users.users[key][subKey]) {
-                        if (subKey === `notes`) {
-                            if (savedUsers.users[key].notes) {
-                                savedUsers.users[key].notes += `\n\n${users.users[key].notes}`;
-                            } else {
-                                savedUsers.users[key].notes = users.users[key].notes;
-                            }
-                        } else if (subKey === `tags`) {
-                            if (savedUsers.users[key].tags && savedUsers.users[key].tags.length) {
-                                for (var i = 0, n = users.users[key].tags.length; i < n; ++i) {
-                                    if (savedUsers.users[key].tags.indexOf(users.users[key].tags[i]) < 0) {
-                                        savedUsers.users[key].tags.push(users.users[key].tags[i]);
-                                    }
-                                }
-                            } else {
-                                savedUsers.users[key].tags = users.users[key].tags;
-                            }
-                        } else if (subKey === `ugd`) {
-                            if (savedUsers.users[key].ugd) {
-                                if (users.users[key].ugd.wonTimestamp > savedUsers.users[key].ugd.wonTimestamp) {
-                                    savedUsers.users[key].ugd.won = users.users[key].ugd.won;
-                                    savedUsers.users[key].ugd.wonTimestamp = users.users[key].ugd.wonTimestamp;
-                                }
-                                if (users.users[key].ugd.sentTimestamp > savedUsers.users[key].ugd.sentTimestamp) {
-                                    savedUsers.users[key].ugd.sent = users.users[key].ugd.sent;
-                                    savedUsers.users[key].ugd.sentTimestamp = users.users[key].ugd.sentTimestamp;
-                                }
-                            } else {
-                                savedUsers.users[key].ugd = users.users[key].ugd;
-                            }
-                        } else {
-                            if (savedUsers.users[key][subKey]) {
-                                if (users.users[key][subKey].lastCheck > savedUsers.users[key][subKey].lastCheck) {
-                                    savedUsers.users[key][subKey] = users.users[key][subKey];
-                                }
-                            } else {
-                                savedUsers.users[key][subKey] = users.users[key][subKey];
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    function importUsers(File, Key, SM) {
-        var key;
-        var users;
-        if (Key === `Users`) {
-            users = getUserStorageV6(File.Data.Users);
-        } else {
-            users = File.Data.users;
-        }
-        var keys = {
-            notes: `UN`,
-            tags: `UT`,
-            ugd: `UGD`,
-            namwc: `NAMWC`,
-            nrf: `NRF`,
-            rwscvl: `RWSCVL`,
-            wbc: `WBC`,
-            uf: `UF`
-        };
-        var found = true, key;
-        for (key in keys) {
-            if (!SM[keys[key]].checked) {
-                found = false;
-            }
-        }
-        if (found) {
-            users.steamIds = {};
-            for (key in users.users) {
-                users.steamIds[users.users[key].username] = key;
-            }
-            GM_setValue(`users`, JSON.stringify(users));
-        } else {
-            var savedUsers = JSON.parse(GM_getValue(`users`));
-            for (key in users.users) {
-                if (!savedUsers.users[key]) {
-                    savedUsers.users[key] = {};
-                }
-                savedUsers.users[key].id = users.users[key].id;
-                savedUsers.users[key].username = users.users[key].username;
-                savedUsers.steamIds[users.users[key].username] = key;
-                for (var subKey in keys) {
-                    if (SM[keys[subKey]].checked && users.users[key][subKey]) {
-                        savedUsers.users[key][subKey] = users.users[key][subKey];
-                    }
-                }
-            }
-            GM_setValue(`users`, JSON.stringify(savedUsers));
-        }
-    }
-
-    function importCommentHistoryAndMerge(File, kk, SM) {
-        var i, j, nS, nC, k, nK, newComments, comments, savedComments;
-        savedComments = JSON.parse(GM_getValue(kk === `CommentHistory` ? `sgCommentHistory` : kk, `[]`));
-        newComments = savedComments;
-        if (kk === `CommentHistory` && SM.CH_SG.checked) {
-            newComments = [];
-            comments = getCommentHistoryStorageV6(File.Data.CommentHistory);
-            i = 0;
-            j = 0;
-            nS = savedComments.length;
-            nC = comments.length;
-            while (i < nS && j < nC) {
-                if (savedComments[i].timestamp > comments[j].timestamp) {
-                    newComments.push(savedComments[i]);
-                    ++i;
-                } else {
-                    for (k = 0, nK = savedComments.length; k < nK && savedComments[k].id !== comments[j].id; ++k);
-                    if (k >= nK) {
-                        newComments.push(comments[j]);
-                    }
-                    ++j;
-                }
-            }
-            while (i < nS) {
-                newComments.push(savedComments[i]);
-                ++i;
-            }
-            while (j < nC) {
-                for (k = 0, nK = savedComments.length; k < nK && savedComments[k].id !== comments[j].id; ++k);
-                if (k >= nK) {
-                    newComments.push(comments[j]);
-                }
-                ++j;
-            }
-            savedComments = newComments;
-        } else if ((kk === `sgCommentHistory` && SM.CH_SG.checked) || (kk === `stCommentHistory` && SM.CH_ST.checked)) {
-            newComments = [];
-            comments = File.Data[kk];
-            i = 0;
-            j = 0;
-            nS = savedComments.length;
-            nC = comments.length;
-            while (i < nS && j < nC) {
-                if (savedComments[i].timestamp > comments[j].timestamp) {
-                    newComments.push(savedComments[i]);
-                    ++i;
-                } else {
-                    for (k = 0, nK = savedComments.length; k < nK && savedComments[k].id !== comments[j].id; ++k);
-                    if (k >= nK) {
-                        newComments.push(comments[j]);
-                    }
-                    ++j;
-                }
-            }
-            while (i < nS) {
-                newComments.push(savedComments[i]);
-                ++i;
-            }
-            while (j < nC) {
-                for (k = 0, nK = savedComments.length; k < nK && savedComments[k].id !== comments[j].id; ++k);
-                if (k >= nK) {
-                    newComments.push(comments[j]);
-                }
-                ++j;
-            }
-        }
-        GM_setValue(kk === `CommentHistory` ? `sgCommentHistory` : kk, JSON.stringify(newComments));
-    }
-
-    function importCommentHistory(File, Key, SM) {
-        var key = `${Key === `CommentHistory` ? `sgCommentHistory` : Key}`;
-        if ((key === `sgCommentHistory` && SM.CH_SG.checked) || (key === `stCommentHistory` && SM.CH_ST.checked)) {
-            GM_setValue(key, JSON.stringify(Key === `CommentHistory` ? getCommentHistoryStorageV6(File.Data.CommentHistory) : File.Data[Key]));
-        }
-    }
-
-    function importGamesAndMerge(File, Key, SM) {
-        var i, n, types, categories, savedGames, games, type, id;
-        types = { apps: ``, subs: `` };
-        categories = [`rating`, `bundled`, `owned`, `wishlisted`, `ignored`, `tradingCards`, `achievements`, `multiplayer`, `steamCloud`, `linux`, `mac`, `dlc`, `genres`];
-        savedGames = JSON.parse(GM_getValue(`games`));
-        if (Key === `Games`) {
-            games = getGameStorageV6(File.Data.Games);
-            for (type in types) {
-                for (id in games[type]) {
-                    if (savedGames[type][id]) {
-                        if (games[type][id].tags && SM.GT.checked) {
-                            if (!Array.isArray(games[type][id].tags)) {
-                                games[type][id].tags = games[type][id].tags.split(`, `);
-                            }
-                            if (savedGames[type][id].tags) {
-                                for (i = 0, n = games[type][id].tags.length; i < n; ++i) {
-                                    if (savedGames[type][id].tags.indexOf(games[type][id].tags[i]) < 0) {
-                                        savedGames[type][id].tags.push(games[type][id].tags[i]);
-                                    }
-                                }
-                            } else {
-                                savedGames[type][id].tags = games[type][id].tags;
-                            }
-                        }
-                        if (games[type][id].entered && SM.EGH.checked) {
-                            savedGames[type][id].entered = true;
-                        }
-                        if (games[type][id].lastCheck && SM.GC.checked) {
-                            if (savedGames[type][id].lastCheck) {
-                                if (games[type][id].lastCheck > savedGames[type][id].lastCheck) {
-                                    savedGames[type][id].lastCheck = games[type][id].lastCheck;
-                                    for (i = 0, n = categories.length; i < n; ++i) {
-                                        savedGames[type][id][categories[i]] = games[type][id][categories[i]];
-                                    }
-                                }
-                            } else {
-                                savedGames[type][id].lastCheck = games[type][id].lastCheck;
-                                for (i = 0, n = categories.length; i < n; ++i) {
-                                    savedGames[type][id][categories[i]] = games[type][id][categories[i]];
-                                }
-                            }
-                        }
-                        if (games[type][id].itadi && SM.ITADI.checked) {
-                            if (savedGames[type][id].itadi) {
-                                if (savedGames[type][id].itadi.lastCheck < games[type][id].itadi.lastCheck) {
-                                    savedGames[type][id].itadi = games[type][id].itadi;
-                                }
-                            } else {
-                                savedGames[type][id].itadi = games[type][id].itadi;
-                            }
-                        }
-                    } else if (SM.GT.checked || SM.EGH.checked || SM.GC.checked) {
-                        if (!savedGames[type][id]) {
-                            savedGames[type][id] = {};
-                        }
-                        if (games[type][id].tags && SM.GT.checked) {
-                            savedGames[type][id].tags = games[type][id].tags;
-                        }
-                        if (games[type][id].entered && SM.EGH.checked) {
-                            savedGames[type][id].entered = true;
-                        }
-                        if (games[type][id].lastCheck && SM.GC.checked) {
-                            savedGames[type][id].lastCheck = games[type][id].lastCheck;
-                            for (i = 0, n = categories.length; i < n; ++i) {
-                                savedGames[type][id][categories[i]] = games[type][id][categories[i]];
-                            }
-                        }
-                        if (games[type][id].itadi && SM.ITADI.checked) {
-                            savedGames[type][id].itadi = games[type][id].itadi;
-                        }
-                    }
-                }
-            }
-        } else {
-            games = File.Data.games;
-            for (type in types) {
-                for (id in games[type]) {
-                    if (savedGames[type][id]) {
-                        if (games[type][id].tags && SM.GT.checked) {
-                            if (!Array.isArray(games[type][id].tags)) {
-                                games[type][id].tags = games[type][id].tags.split(`, `);
-                            }
-                            if (savedGames[type][id].tags) {
-                                for (i = 0, n = games[type][id].tags.length; i < n; ++i) {
-                                    if (savedGames[type][id].tags.indexOf(games[type][id].tags[i]) < 0) {
-                                        savedGames[type][id].tags.push(games[type][id].tags[i]);
-                                    }
-                                }
-                            } else {
-                                savedGames[type][id].tags = games[type][id].tags;
-                            }
-                        }
-                        if (games[type][id].entered && SM.EGH.checked) {
-                            savedGames[type][id].entered = true;
-                        }
-                        if (games[type][id].lastCheck && SM.GC.checked) {
-                            if (savedGames[type][id].lastCheck) {
-                                if (games[type][id].lastCheck > savedGames[type][id].lastCheck) {
-                                    savedGames[type][id].lastCheck = games[type][id].lastCheck;
-                                    for (i = 0, n = categories.length; i < n; ++i) {
-                                        savedGames[type][id][categories[i]] = games[type][id][categories[i]];
-                                    }
-                                }
-                            } else {
-                                savedGames[type][id].lastCheck = games[type][id].lastCheck;
-                                for (i = 0, n = categories.length; i < n; ++i) {
-                                    savedGames[type][id][categories[i]] = games[type][id][categories[i]];
-                                }
-                            }
-                        }
-                        if (games[type][id].itadi && SM.ITADI.checked) {
-                            if (savedGames[type][id].itadi) {
-                                if (savedGames[type][id].itadi.lastCheck < games[type][id].itadi) {
-                                    savedGames[type][id].itadi = games[type][id].itadi;
-                                }
-                            } else {
-                                savedGames[type][id].itadi = games[type][id].itadi;
-                            }
-                        }
-                    } else if (SM.GT.checked || SM.EGH.checked || SM.GC.checked) {
-                        if (!savedGames[type][id]) {
-                            savedGames[type][id] = {};
-                        }
-                        if (games[type][id].tags && SM.GT.checked) {
-                            savedGames[type][id].tags = games[type][id].tags;
-                        }
-                        if (games[type][id].entered && SM.EGH.checked) {
-                            savedGames[type][id].entered = true;
-                        }
-                        if (games[type][id].lastCheck && SM.GC.checked) {
-                            savedGames[type][id].lastCheck = games[type][id].lastCheck;
-                            for (i = 0, n = categories.length; i < n; ++i) {
-                                savedGames[type][id][categories[i]] = games[type][id][categories[i]];
-                            }
-                        }
-                        if (games[type][id].itadi && SM.ITADI.checked) {
-                            savedGames[type][id].itadi = games[type][id].itadi;
-                        }
-                    }
-                }
-            }
-        }
-        GM_setValue(`games`, JSON.stringify(savedGames));
-    }
-
-    function importGames(File, Key, SM) {
-        var games, savedGames;
-        if (Key === `Games`) {
-            games = getGameStorageV6(File.Data.Games);
-        } else {
-            games = File.Data.games;
-        }
-        if (SM.GT.checked && SM.EGH.checked && SM.GC.checked && SM.ITADI.checked) {
-            GM_setValue(`games`, JSON.stringify(games));
-        } else {
-            savedGames = JSON.parse(GM_getValue(`games`));
-            if (SM.GT.checked) {
-                getSMGames(games, `tags`, savedGames, `apps`);
-                getSMGames(games, `tags`, savedGames, `subs`);
-            }
-            if (SM.EGH.checked) {
-                getSMGames(games, `entered`, savedGames, `apps`);
-                getSMGames(games, `entered`, savedGames, `subs`);
-            }
-            if (SM.GC.checked) {
-                getSMGames(games, `lastCheck`, savedGames, `apps`);
-                getSMGames(games, `lastCheck`, savedGames, `subs`);
-            }
-            if (SM.ITADI.checked) {
-                getSMGames(games, `itadi`, savedGames, `apps`);
-                getSMGames(games, `itadi`, savedGames, `subs`);
-            }
-            GM_setValue(`games`, JSON.stringify(savedGames));
-        }
-    }
-
-    function getSMGames(games, key, selected, type, deleteData) {
-        var categories, i, id, n;
-        categories = [`rating`, `bundled`, `owned`, `wishlisted`, `ignored`, `tradingCards`, `achievements`, `multiplayer`, `steamCloud`, `linux`, `mac`, `dlc`, `genres`];
-        for (id in games[type]) {
-            if (typeof games[type][id][key] !== `undefined`) {
-                if (deleteData) {
-                    if (key === `lastCheck`) {
-                        for (i = 0, n = categories.length; i < n; ++i) {
-                            if (games[type][id][categories[i]]) {
-                                delete games[type][id][categories[i]];
-                            }
-                        }
-                        delete games[type][id][key];
-                    } else {
-                        delete games[type][id][key];
-                    }
-                } else {
-                    if (!selected[type][id]) {
-                        selected[type][id] = {};
-                    }
-                    if (key === `lastCheck`) {
-                        for (i = 0, n = categories.length; i < n; ++i) {
-                            if (games[type][id][categories[i]]) {
-                                selected[type][id][categories[i]] = games[type][id][categories[i]];
-                            }
-                        }
-                        selected[type][id][key] = games[type][id][key];
-                    } else if (key === `tags`) {
-                        if (!Array.isArray(games[type][id].tags)) {
-                            games[type][id].tags = games[type][id].tags.split(`, `);
-                        }
-                        selected[type][id][key] = games[type][id][key];
-                    } else {
-                        selected[type][id][key] = games[type][id][key];
-                    }
-                }
-            }
-        }
-    }
-
-    function exportSMData(SM) {
-        var File, Data, Key, URL;
-        File = document.createElement("a");
-        File.download = "ESGST.json";
-        Data = {};
-        for (Key in SM.Names) {
-            if (Key === `users`) {
-                Data.users = {};
-                var keys = {
-                    notes: `UN`,
-                    tags: `UT`,
-                    ugd: `UGD`,
-                    namwc: `NAMWC`,
-                    nrf: `NRF`,
-                    rwscvl: `RWSCVL`,
-                    wbc: `WBC`,
-                    uf: `UF`
-                };
-                var users = JSON.parse(GM_getValue(`users`));
-                Data.users.users = {};
-                for (var key in users.users) {
-                    Data.users.users[key] = {
-                        id: users.users[key].id,
-                        username: users.users[key].username
-                    };
-                    var added = false;
-                    for (var subKey in keys) {
-                        if (SM[keys[subKey]].checked && users.users[key][subKey]) {
-                            Data.users.users[key][subKey] = users.users[key][subKey];
-                            added = true;
-                        }
-                    }
-                    if (!added) {
-                        delete Data.users.users[key];
-                    }
-                }
-            } else if (Key === `games`) {
-                Data.games = {
-                    apps: {},
-                    subs: {}
-                };
-                var games = JSON.parse(GM_getValue(`games`));
-                if (SM.GT.checked) {
-                    getSMGames(games, `tags`, Data.games, `apps`);
-                    getSMGames(games, `tags`, Data.games, `subs`);
-                }
-                if (SM.EGH.checked) {
-                    getSMGames(games, `entered`, Data.games, `apps`);
-                    getSMGames(games, `entered`, Data.games, `subs`);
-                }
-                if (SM.GC.checked) {
-                    getSMGames(games, `lastCheck`, Data.games, `apps`);
-                    getSMGames(games, `lastCheck`, Data.games, `subs`);
-                }
-                if (SM.ITADI.checked) {
-                    getSMGames(games, `itadi`, Data.games, `apps`);
-                    getSMGames(games, `itadi`, Data.games, `subs`);
-                }
-            } else if (Key.match(/savedReplies|sgCommentHistory|stCommentHistory|descryptedGiveaways|settings/) && SM[SM.Names[Key]].checked) {
-                Data[Key] = JSON.parse(GM_getValue(Key, `{}`));
-            } else if (Key.match(/entries|giveaways|discussions|tickets|groups|templates|rerolls|winners/) && SM[SM.Names[Key]].checked) {
-                if (esgst.sg) {
-                    Data[Key] = JSON.parse(localStorage[`esgst_${Key}`] || `{}`);
-                }
-            } else if (Key === `trades` && SM[SM.Names[Key]].checked) {
-                if (esgst.st) {
-                    Data[Key] = JSON.parse(localStorage[`esgst_${Key}`] || `{}`);
-                }
-            } else if (SM[SM.Names[Key]].checked) {
-                Data[Key] = GM_getValue(Key);
-            }
-        }
-        Data = new Blob([JSON.stringify({
-            ESGST: "Data",
-            Data: Data
-        })]);
-        URL = window.URL.createObjectURL(Data);
-        File.href = URL;
-        document.body.appendChild(File);
-        File.click();
-        File.remove();
-        window.URL.revokeObjectURL(URL);
-        window.alert("Exported!");
-    }
-
-    function deleteSMData(SM) {
-        var Key;
-        if (window.confirm("Are you sure you want to delete this data? A copy will be downloaded as precaution.")) {
-            exportSMData(SM);
-            for (Key in SM.Names) {
-                if (Key === `users`) {
-                    var keys = {
-                        notes: `UN`,
-                        tags: `UT`,
-                        ugd: `UGD`,
-                        namwc: `NAMWC`,
-                        nrf: `NRF`,
-                        rwscvl: `RWSCVL`,
-                        wbc: `WBC`,
-                        uf: `UF`
-                    };
-                    var users = JSON.parse(GM_getValue(`users`));
-                    for (var key in users.users) {
-                        for (var subKey in keys) {
-                            if (SM[keys[subKey]].checked) {
-                                delete users.users[key][subKey];
-                            }
-                        }
-                    }
-                    GM_setValue(`users`, JSON.stringify(users));
-                } else if (Key === `games`) {
-                    var games = JSON.parse(GM_getValue(`games`));
-                    if (SM.GT.checked && SM.EGH.checked && SM.GC.checked) {
-                        GM_setValue(`games`, JSON.stringify({
-                            apps: {},
-                            subs: {}
-                        }));
-                    } else {
-                        if (SM.GT.checked) {
-                            getSMGames(games, `tags`, null, `apps`, true);
-                            getSMGames(games, `tags`, null, `subs`, true);
-                        }
-                        if (SM.EGH.checked) {
-                            getSMGames(games, `entered`, null, `apps`, true);
-                            getSMGames(games, `entered`, null, `subs`, true);
-                        }
-                        if (SM.GC.checked) {
-                            getSMGames(games, `lastCheck`, null, `apps`, true);
-                            getSMGames(games, `lastCheck`, null, `subs`, true);
-                        }
-                        if (SM.ITADI.checked) {
-                            getSMGames(games, `itadi`, null, `apps`, true);
-                            getSMGames(games, `itadi`, null, `subs`, true);
-                        }
-                        GM_setValue(`games`, JSON.stringify(games));
-                    }
-                } else if (Key.match(/^(entries|giveaways|discussions|tickets|groups|templates|rerolls|winners)$/) && SM[SM.Names[Key]].checked) {
-                    if (esgst.sg) {
-                        localStorage.removeItem(`esgst_${Key}`);
-                    }
-                } else if (Key === `trades` && SM[SM.Names[Key]].checked) {
-                    if (esgst.st) {
-                        localStorage.removeItem(`esgst_${Key}`);
-                    }
-                } else if (SM[SM.Names[Key]].checked) {
-                    GM_deleteValue(Key);
-                }
-            }
-            window.alert("Deleted!");
         }
     }
 
@@ -27253,7 +26091,7 @@ ${avatar.outerHTML}
                         profile.sentReduced = parseInt(rows[2].columns[1].name.replace(/,/g, ``));
                         profile.sentZero = parseInt(rows[3].columns[1].name.replace(/,/g, ``));
                         profile.notSent = parseInt(rows[4].columns[1].name.replace(/,/g, ``));
-                        cvrow = profile.sentRowRight.firstElementChild.lastElementChild;console.log(cvrow);
+                        cvrow = profile.sentRowRight.firstElementChild.lastElementChild;
                         rows = JSON.parse(cvrow.getAttribute(`data-ui-tooltip`)).rows;
                         profile.sentCV = parseFloat(cvrow.textContent.replace(/\$|,/g, ``));
                         profile.realSentCV = parseFloat(rows[0].columns[1].name.replace(/\$|,/g, ``));
@@ -28150,252 +26988,9 @@ ${avatar.outerHTML}
         }
     }
 
-    /* */
-
-    function updateTemplateStorageToV6() {
-        if (!GM_getValue(`templateStorageV6_3`, false)) {
-            localStorage.esgst_templates = JSON.stringify(getTemplateStorageV6(GM_getValue(`Templates`, [])));
-            GM_setValue(`templateStorageV6_3`, true);
-        } else if (esgst.sg && !localStorage.esgst_templates) {
-            localStorage.esgst_templates = GM_getValue(`templates`);
-        }
-    }
-
-    function getTemplateStorageV6(saved) {
-        var i, n, templates;
-        templates = [];
-        for (i = 0, n = saved.length; i < n; ++i) {
-            templates.push({
-                delay: saved[i].Delay,
-                description: saved[i].Description,
-                duration: saved[i].Duration,
-                groups: saved[i].Groups,
-                level: saved[i].Level,
-                name: saved[i].Name,
-                region: saved[i].Region,
-                type: saved[i].Type,
-                whitelist: saved[i].Whitelist
-            });
-        }
-        return templates;
-    }
-
-    function updateUserStorageToV6() {
-        if (!GM_getValue(`userStorageV6`, false)) {
-            GM_setValue(`users`, JSON.stringify(getUserStorageV6(GM_getValue(`Users`, []))));
-            GM_setValue(`userStorageV6`, true);
-        }
-    }
-
-    function getUserStorageV6(saved) {
-        var i, n, users, steamId;
-        users = {
-            users: {},
-            steamIds: {}
-        };
-        for (i = 0, n = saved.length; i < n; ++i) {
-            steamId = saved[i].SteamID64;
-            users.users[steamId] = {
-                id: saved[i].ID,
-                username: saved[i].Username
-            };
-            if (saved[i].Tags) {
-                users.users[steamId].tags = saved[i].Tags.split(`, `);
-            }
-            if (saved[i].Notes) {
-                users.users[steamId].notes = saved[i].Notes;
-            }
-            if (saved[i].Whitelisted) {
-                users.users[steamId].whitelisted = true;
-            }
-            if (saved[i].Blacklisted) {
-                users.users[steamId].blacklisted = true;
-            }
-            if (saved[i].WBC) {
-                users.users[steamId].wbc = {
-                    result: saved[i].WBC.Result ? saved[i].WBC.Result.replace(/^(.)/, function (m, p1) {
-                        return p1.toLowerCase();
-                    }) : ``,
-                    giveaway: saved[i].WBC.Giveaway,
-                    whitelistGiveaway: saved[i].WBC.WhitelistGiveaway,
-                    groupGiveaways: saved[i].WBC.GroupGiveaways,
-                    lastCheck: saved[i].WBC.LastSearch,
-                    timestamp: saved[i].WBC.Timestamp
-                };
-            }
-            if (saved[i].NAMWC) {
-                users.users[steamId].namwc = {};
-                if (saved[i].NAMWC.Results) {
-                    users.users[steamId].namwc.results = {};
-                    users.users[steamId].namwc.results.activated = saved[i].NAMWC.Results.Activated;
-                    users.users[steamId].namwc.results.notActivated = saved[i].NAMWC.Results.NotActivated;
-                    users.users[steamId].namwc.results.multiple = saved[i].NAMWC.Results.Multiple;
-                    users.users[steamId].namwc.results.notMultiple = saved[i].NAMWC.Results.NotMultiple;
-                    users.users[steamId].namwc.results.unknown = saved[i].NAMWC.Results.Unknown;
-                }
-                if (saved[i].NAMWC.LastSearch) {
-                    users.users[steamId].namwc.lastCheck = saved[i].NAMWC.LastSearch;
-                }
-            }
-            if (saved[i].NRF) {
-                users.users[steamId].nrf = {};
-                var found = saved[i].NRF.OverallProgress;
-                found = found ? found.match(/(\d+) of (\d+)/) : null;
-                if (found) {
-                    users.users[steamId].nrf.found = parseInt(found[1]);
-                    users.users[steamId].nrf.total = parseInt(found[2]);
-                } else {
-                    users.users[steamId].nrf.found = 0;
-                    users.users[steamId].nrf.total = 0;
-                }
-                users.users[steamId].nrf.results = ``;
-                var matches = DOM.parse(saved[i].NRF.Results).getElementsByClassName(`giveaway__summary`);
-                for (var j = 0, nj = matches.length; j < nj; ++j) {
-                    var outerWrap = document.createElement(`div`);
-                    var innerWrap = document.createElement(`div`);
-                    outerWrap.className = `giveaway__row-outer-wrap`;
-                    innerWrap.className = `giveaway__row-inner-wrap`;
-                    innerWrap.appendChild(matches[0]);
-                    outerWrap.appendChild(innerWrap);
-                    users.users[steamId].nrf.results += outerWrap.outerHTML;
-                }
-                users.users[steamId].nrf.lastCheck = saved[i].NRF.LastSearch;
-            }
-            if (saved[i].RWSCVL) {
-                users.users[steamId].rwscvl = {
-                    won: saved[i].RWSCVL.WonCV,
-                    sent: saved[i].RWSCVL.SentCV,
-                    lastCheck: saved[i].RWSCVL.LastSentCheck
-                };
-            }
-            users.steamIds[saved[i].Username] = steamId;
-        }
-        return users;
-    }
-
-    function updateGameStorageToV6() {
-        if (!GM_getValue(`v6GameStorage`, false)) {
-            GM_setValue(`games`, JSON.stringify(getGameStorageV6(GM_getValue(`Games`, []))));
-            GM_setValue(`v6GameStorage`, true);
-        }
-    }
-
-    function getGameStorageV6(saved) {
-        var games = {
-            apps: {},
-            subs: {}
-        };
-        for (var id in saved) {
-            games.apps[id] = {};
-            for (var subKey in saved[id]) {
-                if (subKey === `Tags`) {
-                    games.apps[id].tags = saved[id].Tags.split(`, `);
-                } else if (subKey === `Entered`) {
-                    games.apps[id].entered = saved[id].Entered;
-                } else {
-                    games.apps[id][subKey] = saved[id][subKey];
-                }
-            }
-        }
-        return games;
-    }
-
-    function updateCommentHistoryStorageToV6() {
-        if (!GM_getValue(`sgCommentHistoryStorageV6`, false)) {
-            GM_setValue(`sgCommentHistory`, JSON.stringify(getCommentHistoryStorageV6(GM_getValue(`CommentHistory`, ``))));
-            GM_setValue(`sgCommentHistoryStorageV6`, true);
-        }
-    }
-
-    function getCommentHistoryStorageV6(context) {
-        var comments, i, id, match, n, saved;
-        comments = [];
-        saved = DOM.parse(context).getElementsByTagName(`div`);
-        n = saved.length;
-        if (n > 0) {
-            for (i = 0, n = saved.length; i < n; ++i) {
-                match = saved[i].lastElementChild;
-                if (match) {
-                    id = match.getAttribute(`href`).match(/\/go\/comment\/(.+)/);
-                    if (id) {
-                        comments.push({
-                            id: id[1],
-                            timestamp: parseInt(match.getAttribute(`data-timestamp`)) * 1e3
-                        });
-                    }
-                }
-            }
-        }
-        return comments;
-    }
-
-    function updateCommentStorageToV6() {
-        if (!GM_getValue(`commentStorageV6_2`, false)) {
-            var comments = getCommentStorageV6(GM_getValue(`Comments`, {}), GM_getValue(`Comments_ST`, {}));
-            if (esgst.sg) {
-                localStorage.esgst_giveaways = JSON.stringify(comments.giveaways);
-                localStorage.esgst_discussions = JSON.stringify(comments.discussions);
-                localStorage.esgst_tickets = JSON.stringify(comments.tickets);
-            } else {
-                localStorage.esgst_tickets = JSON.stringify(comments.trades);
-            }
-            GM_setValue(`commentStorageV6_2`, true);
-        }
-    }
-
-    function getCommentStorageV6(savedSg, savedSt) {
-        var comments, key, subKey;
-        comments = {
-            giveaways: {},
-            discussions: {},
-            tickets: {},
-            trades: {}
-        };
-        for (key in savedSg) {
-            if (!comments.discussions[key]) {
-                comments.discussions[key] = {
-                    comments: {}
-                };
-            }
-            if (savedSg[key].Visited) {
-                comments.discussions[key].visited = true;
-            }
-            if (savedSg[key].Highlighted) {
-                comments.discussions[key].highlighted = true;
-            }
-            for (subKey in savedSg[key]) {
-                if (!subKey.match(/^(Visited|Highlighted)$/)) {
-                    comments.discussions[key].comments[subKey] = {
-                        timestamp: savedSg[key][subKey]
-                    };
-                }
-            }
-            if (!comments.discussions[key].visited && !comments.discussions[key].highlighted && !Object.keys(comments.discussions[key].comments).length) {
-                delete comments.discussions[key];
-            }
-        }
-        for (key in savedSt) {
-            if (!comments.trades[key]) {
-                comments.trades[key] = {
-                    comments: {}
-                };
-            }
-            if (savedSt[key].Visited) {
-                comments.trades[key].visited = true;
-            }
-            for (subKey in savedSt[key]) {
-                if (!subKey.match(/^(Visited|Highlighted)$/)) {
-                    comments.trades[key].comments[subKey] = {
-                        timestamp: savedSt[key][subKey]
-                    };
-                }
-            }
-            if (!comments.trades[key].visited && !Object.keys(comments.trades[key].comments).length) {
-                delete comments.trades[key];
-            }
-        }
-        return comments;
-    }
+    /*
+     * Helper Functions
+     */
 
     function createAlert(message) {
         var popup;
@@ -28403,247 +26998,946 @@ ${avatar.outerHTML}
         popup.open();
     }
 
-    /*
-     * Helper Functions
-     */
-
     function createConfirmation(message, onYes, onNo) {
-        var popup;
+        var callback, popup;
+        callback = onNo;
         popup = createPopup(`fa-question`, message, true);
-        popup.description.appendChild(createButtonSet(`green`, ``, `fa-check`, ``, `Yes`, ``, completeConfirmation.bind(null, onYes)));
-        popup.description.appendChild(createButtonSet(`red`, ``, `fa-times`, ``, `No`, ``, completeConfirmation.bind(null, onNo)));
-        popup.onClose = completeConfirmation.bind(null, onNo);
+        popup.description.appendChild(createButtonSet(`green`, ``, `fa-check`, ``, `Yes`, ``, function () {
+            callback = onYes;
+            popup.close();
+        }).set);
+        popup.description.appendChild(createButtonSet(`red`, ``, `fa-times`, ``, `No`, ``, function () {
+            callback = onNo;
+            popup.close();
+        }).set);
+        popup.onClose = function () {
+            if (callback) {
+                callback();
+            }
+        };
         popup.open();
     }
 
-    function completeConfirmation(callback) {
-        if (callback) {
-            callback();
-        }   
+    function createFadeMessage(context, message) {
+        context.textContent = message;
+        setTimeout(function () {
+            context.textContent = ``;
+        }, 2000);
     }
 
-    /* Import Tool */
+    /* Data Management */
 
-    function openImportPopup(options) {
-        var i, id, input, n, options, popup, switches, warning;
-        switches = {};
-        popup = createPopup(`fa-arrow-up`, `Import Data`, true, true);
-        for (i = 0, n = options.length; i < n; ++i) {
-            option = options[i];
-            id = `import${option.id}`;
-            switches[option.key] = createToggleSwitch(popup.scrollable, id, false, option.name, false, false, option.tooltip, esgst[id]);
+    function loadDataManagement(openInTab, type) {
+        var container, context, i, input, n, option, options, popup, section, switches;
+        dm = {
+            type: type
+        };
+        dm[type] = true;
+        switch (type) {
+            case `import`:
+                icon = `fa-arrow-circle-up`;
+                onClick = loadImportFile,
+                title = `Import`
+                break;
+            case `export`:
+                icon = `fa-arrow-circle-down`;
+                onClick = manageData,
+                title = `Export`;
+                break;
+            case `delete`:
+                icon = `fa-trash`;
+                onClick = manageData,
+                title = `Delete`;
+                break;
         }
-        input = insertHtml(popup.description, `beforeEnd`, `<input type="file"/>`);
-        warning = insertHtml(popup.description, `beforeEnd`, `<div class="esgst-description esgst-red"></div>`);
-        popup.description.appendChild(createButtonSet(`green`, `grey`, `fa-arrow-circle-up`, `fa-circle-o-notch fa-spin`, `Select All`, ``, selectSwitches.bind(null, true, switches)).set);
-        popup.description.appendChild(createButtonSet(`green`, `grey`, `fa-arrow-circle-up`, `fa-circle-o-notch fa-spin`, `Select None`, ``, selectSwitches.bind(null, false, switches)).set);
-        popup.description.appendChild(createButtonSet(`green`, `grey`, `fa-arrow-circle-up`, `fa-circle-o-notch fa-spin`, `Import`, `Importing...`, loadImportFile.bind(null, input, warning)).set);
-        popup.open();
+        if (openInTab) {
+            document.body.className = `esgst-tab-menu`;
+            context = container = document.body;
+            context.innerHTML = ``;
+        } else {
+            popup = createPopup(icon, title, true, true);
+            popup.description.classList.add(`esgst-text-left`);
+            context = popup.scrollable;
+            container = popup.description;
+        }
+        section = insertHtml(context, `beforeEnd`, `
+            ${createSMSections(1, [{
+                Title: title
+            }])}
+        `);
+        switches = {};
+        dm.options = [
+            {
+                check: true,
+                key: `decryptedGiveaways`,
+                name: `Decrypted Giveaways`
+            },
+            {
+                check: esgst.sg,
+                key: `discussions`,
+                name: `Discussions`,
+                options: [
+                    {
+                        key: `discussions_ct`,
+                        name: `Comment Tracker`
+                    },
+                    {
+                        key: `discussions_dh`,
+                        name: `Discussion Highlighter`
+                    },
+                    {
+                        key: `discussions_gdttt`,
+                        name: `Giveaways/Discussions/Tickets/Trades Tracker`
+                    }
+                ]
+            },
+            {
+                check: true,
+                key: `emojis`,
+                name: `Emojis`
+            },
+            {
+                check: esgst.sg,
+                key: `entries`,
+                name: `Entries`
+            },
+            {
+                check: true,
+                key: `games`,
+                name: `Games`,
+                options: [
+                    {
+                        key: `games_egh`,
+                        name: `Entered Games Highlighter`
+                    },
+                    {
+                        key: `games_gc`,
+                        name: `Game Categories`
+                    },
+                    {
+                        key: `games_gt`,
+                        name: `Game Tags`
+                    },
+                    {
+                        key: `games_itadi`,
+                        name: `Is There Any Data? Info`
+                    }
+                ]
+            },
+            {
+                check: esgst.sg,
+                key: `giveaways`,
+                name: `Giveaways`,
+                options: [
+                    {
+                        key: `giveaways_ct`,
+                        name: `Comment Tracker`
+                    },
+                    {
+                        key: `giveaways_gdttt`,
+                        name: `Giveaways/Discussions/Tickets/Trades Tracker`
+                    },
+                    {
+                        key: `giveaways_gf`,
+                        name: `Giveaway Filters`
+                    },
+                    {
+                        key: `giveaways_ggl`,
+                        name: `Giveaway Groups Loader`
+                    }
+                ]
+            },
+            {
+                check: esgst.sg,
+                key: `groups`,
+                name: `Groups`,
+                options: [
+                    {
+                        key: `groups_sgg`,
+                        name: `Stickied Giveaway Groups`
+                    }
+                ]
+            },
+            {
+                check: esgst.sg,
+                key: `rerolls`,
+                name: `Rerolls`
+            },
+            {
+                check: true,
+                key: `savedReplies`,
+                name: `Saved Replies`
+            },
+            {
+                check: true,
+                key: `settings`,
+                name: `Settings`
+            },
+            {
+                check: true,
+                key: `sgCommentHistory`,
+                name: `SG Comment History`
+            },
+            {
+                check: true,
+                key: `stCommentHistory`,
+                name: `ST Comment History`
+            },
+            {
+                check: esgst.sg,
+                key: `templates`,
+                name: `Templates`
+            },
+            {
+                check: esgst.sg,
+                key: `tickets`,
+                name: `Tickets`,
+                options: [
+                    {
+                        key: `tickets_ct`,
+                        name: `Comment Tracker`
+                    },
+                    {
+                        key: `tickets_gdttt`,
+                        name: `Giveaways/Discussions/Tickets/Trades Tracker`
+                    }
+                ]
+            },
+            {
+                check: esgst.st,
+                key: `trades`,
+                name: `Trades`,
+                options: [
+                    {
+                        key: `trades_ct`,
+                        name: `Comment Tracker`
+                    },
+                    {
+                        key: `trades_gdttt`,
+                        name: `Giveaways/Discussions/Tickets/Trades Tracker`
+                    }
+                ]
+            },
+            {
+                check: true,
+                key: `users`,
+                name: `Users`,
+                options: [
+                    {
+                        key: `users_namwc`,
+                        name: `Not Activated/Multiple Wins Checker`
+                    },
+                    {
+                        key: `users_nrf`,
+                        name: `Not Received Finder`
+                    },
+                    {
+                        key: `users_uf`,
+                        name: `User Filters`
+                    },
+                    {
+                        key: `users_ugd`,
+                        name: `User Giveaways Data`
+                    },
+                    {
+                        key: `users_notes`,
+                        name: `User Notes`
+                    },
+                    {
+                        key: `users_tags`,
+                        name: `User Tags`
+                    },
+                    {
+                        key: `users_wbc`,
+                        name: `Whitelist/Blacklist Checker`
+                    }
+                ]
+            },
+            {
+                check: esgst.sg,
+                key: `winners`,
+                name: `Winners`
+            }
+        ];
+        for (i = 0, n = dm.options.length; i < n; ++i) {
+            option = dm.options[i];
+            if (option.check) {
+                section.lastElementChild.appendChild(getDataMenu(option, switches, type));
+            }
+        }
+        if (type === `import`) {
+            dm.input = insertHtml(container, `beforeEnd`, `<input type="file"/>`);
+            createToggleSwitch(container, `importAndMerge`, false, `Merge`, false, false, `Merges the current data with the imported data instead of replacing`, esgst.settings.importAndMerge);
+        }
+        dm.message = insertHtml(container, `beforeEnd`, `<div class="esgst-description"></div>`);
+        dm.warning = insertHtml(container, `beforeEnd`, `<div class="esgst-description esgst-warning"></div>`);
+        container.appendChild(createButtonSet(`green`, `grey`, `fa-circle`, `fa-circle-o-notch fa-spin`, `Select All`, ``, selectSwitches.bind(null, switches, `enable`)).set);
+        container.appendChild(createButtonSet(`green`, `grey`, `fa-circle-o`, `fa-circle-o-notch fa-spin`, `Select None`, ``, selectSwitches.bind(null, switches, `disable`)).set);
+        container.appendChild(createButtonSet(`green`, `grey`, `fa-dot-circle-o`, `fa-circle-o-notch fa-spin`, `Select Inverse`, ``, selectSwitches.bind(null, switches, `toggle`)).set);
+        container.appendChild(createButtonSet(`green`, `grey`, icon, `fa-circle-o-notch fa-spin`, title, `${title}ing...`, onClick.bind(null, dm)).set);
+        if (!openInTab) {
+            popup.open();
+        }
     }
 
-    function loadImportFile(input, warning, callback) {
-        var file, reader;
-        file = input.files[0];
+    function getDataMenu(option, switches, type) {
+        var i, m, menu, n, options, toggleSwitch;
+        menu = document.createElement(`div`);
+        switches[option.key] = toggleSwitch = createToggleSwitch(menu, `${type}_${option.key}`, false, option.name, false, false, null, esgst.settings[`${type}_${option.key}`]);        
+        if (option.options) {
+            options = insertHtml(menu, `beforeEnd`, `
+                <div class="esgst-form-row-indent SMFeatures esgst-hidden"></div>
+            `);
+            for (i = 0, n = option.options.length; i < n; ++i) {
+                m = getDataMenu(option.options[i], switches, type);
+                options.appendChild(m);
+                toggleSwitch.dependencies.push(m);
+            }
+            if (esgst.settings[`${type}_${option.key}`]) {
+                options.classList.remove(`esgst-hidden`);
+            }
+        }
+        toggleSwitch.onEnabled = function () {
+            if (options) {
+                options.classList.remove(`esgst-hidden`);
+            }
+        };
+        toggleSwitch.onDisabled = function () {
+            if (options) {
+                options.classList.add(`esgst-hidden`);
+            }
+        }
+        return menu;
+    }
+
+    function loadImportFile(dm, callback) {
+        var file;
+        file = dm.input.files[0];
         if (file) {
-            if (file.name.match(/esgst-data.*?\.json/)) {
-                reader = new FileReader();
-                reader.readAsText(file);
-                reader.onload = readImportFile.bind(null, reader, warning, callback);
+            if (file.name.match(/esgst_data_.*?\.json/)) {
+                dm.reader = new FileReader();
+                dm.reader.readAsText(file);
+                dm.reader.onload = readImportFile.bind(null, dm, callback);
             } else {
-                warning.textContent = `Invalid file!`;
+                createFadeMessage(dm.warning, `Invalid file!`);
                 callback();
             }
         } else {
-            warning.textContent = `No file was loaded!`;
+            createFadeMessage(dm.warning, `No file was loaded!`);
             callback();
         }
     }
 
-    function readImportFile(reader, warning, callback) {
-        var file;
-        file = JSON.parse(reader.result);
-        if (file.data) {
-            createConfirmation(`Are you sure you want to import this data? A copy of your current data will be downloaded as a precaution.`, importData.bind(null, file.data), callback);
-        } else {
-            warning.textContent = `Invalid file!`;
+    function readImportFile(dm, callback) {
+        try {
+            dm.data = JSON.parse(dm.reader.result);
+            createConfirmation(`Are you sure you want to import the selected data? A copy of your current data will be downloaded as a precaution.`, manageData.bind(null, dm, callback), callback);
+        } catch (error) {
+            createFadeMessage(dm.warning, `Cannot parse file!`);
             callback();
         }
     }
 
-    function importData(data) {
-
-    }
-
-    /* Export Tool */
-
-    function createSwitches(option, popup, switches) {
-        var i, key, n, sw;
-        key = `export${option.settingKey}`;
-        switches[option.key] = createToggleSwitch(popup.scrollable, key, false, option.name, false, false, option.tooltip, esgst[key]);
-        if (option.options) {
-            for (i = 0, n = option.options.length; i < n; ++i) {
-                sw = createSwitches(option.options[i], popup, switches);
-                if (!esgst[key]) {
-                    sw.container.classList.add(`esgst-hidden`);
-                }
-                switches[option.key].dependencies.push(sw.container);
-            }
-        }
-        return switches[option.key];
-    }
-
-    function openExportPopup(options) {
-        var i, id, n, popup, switches, warning;
-        switches = {};
-        popup = createPopup(`fa-arrow-down`, `Export Data`, true);
-        for (i = 0, n = options.length; i < n; ++i) {
-            createSwitches(options[i], popup, switches);
-        }
-        popup.description.appendChild(createButtonSet(`green`, `grey`, `fa-arrow-circle-up`, `fa-circle-o-notch fa-spin`, `Select All`, ``, selectSwitches.bind(null, true, switches)).set);
-        popup.description.appendChild(createButtonSet(`green`, `grey`, `fa-arrow-circle-up`, `fa-circle-o-notch fa-spin`, `Select None`, ``, selectSwitches.bind(null, false, switches)).set);
-        popup.description.appendChild(createButtonSet(`green`, `grey`, `fa-arrow-circle-up`, `fa-circle-o-notch fa-spin`, `Export`, `Exporting...`, exportData.bind(null, options)).set);
-        popup.open();
-    }
-
-    function exportData(options) {
-        /*file = document.createElement(`a`);
-        file.download = `ESGST.json`;
+    function manageData(dm, callback) {
+        var data, dataKey, i, id, j, k, l, mergedData, mergedDataKey, mergedDataValue, newData, newDataKey, newDataValue, numMerged, numNew, numOld, numOptions, numTags, oldData, oldDataKey, oldDataValue, option, optionKey, tag, tags, username, value, valueKey, values;
         data = {};
-        for (i = 0, n = options.length; i < n; ++i) {
-            option = options[i];
-            key = option.key;
-            if (key === `users`) {
-                data.users = {
-                    users: {}
-                };
-                savedUsers = JSON.parse(GM_getValue(`users`));
-                for (key in savedUsers.users) {
-                    savedUser = savedUsers.users[key];
-                    data.users[key] = {
-                        id: savedUser.id,
-                        steamId: key,
-                        username: savedUser.username
-                    };
-                    for (j = 0, numOp = option.options.length; j < numOp; ++j) {
-                        if (esgst[]) {
-                            data.users[key][op] = savedUser[op];
-                        }
-                    }
-                    if (Object.keys(data.users[key]).length > 0) {
-                        data.users[key] = {
-
-                        };
+        for (i = 0, numOptions = dm.options.length; i < numOptions; ++i) {
+            option = dm.options[i];
+            if (option.check) {
+                optionKey = option.key;
+                if (esgst.settings[`${dm.type}_${optionKey}`]) {
+                    values = null;
+                    switch (optionKey) {
+                        case `decryptedGiveaways`:
+                        case `settings`:
+                            data[optionKey] = JSON.parse(GM_getValue(optionKey));
+                            if (dm.import) {
+                                newData = dm.data[optionKey];
+                                if (newData) {
+                                    if (esgst.settings.importAndMerge) {
+                                        mergedData = data[optionKey];
+                                        for (newDataKey in newData) {
+                                            mergedData[newDataKey] = newData[newDataKey];
+                                        }
+                                        GM_setValue(optionKey, JSON.stringify(mergedData));
+                                    } else {
+                                        GM_setValue(optionKey, JSON.stringify(newData));
+                                    }
+                                }
+                            } else if (dm.delete) {
+                                GM_deleteValue(optionKey);
+                            }
+                            break;
+                        case `discussions`:
+                            if (!values) {
+                                values = {
+                                    ct: [`count`, `readComments`],
+                                    dh: [`highlighted`],
+                                    gdttt: [`visited`]
+                                };
+                            }
+                        case `giveaways`:
+                            if (!values) {
+                                values = {
+                                    ct: [`count`, `readComments`],
+                                    gdttt: [`visited`],
+                                    gf: [`hidden`],
+                                    ggl: [`groups`],
+                                    main: [`code`, `comments`, `copies`, `creator`, `endTime`, `entries`, `gameId`, `gameName`, `gameSteamId`, `gameType`, `group`, `inviteOnly`, `level`, `points`, `regionRestricted`, `started`, `startTime`, `whitelist`, `winners`]
+                                };
+                            }
+                        case `groups`:
+                            if (!values) {
+                                values = {
+                                    main: [`avatar`, `code`, `member`, `name`],
+                                    sgg: [`stickied`]
+                                };
+                            }
+                        case `tickets`:
+                            if (!values) {
+                                values = {
+                                    ct: [`count`, `readComments`],
+                                    gdttt: [`visited`]
+                                };
+                            }
+                        case `trades`:
+                            if (!values) {
+                                values = {
+                                    ct: [`count`, `readComments`],
+                                    gdttt: [`visited`]
+                                };
+                            }
+                            mergedData = JSON.parse(localStorage[`esgst_${optionKey}`]);
+                            data[optionKey] = {};
+                            for (mergedDataKey in mergedData) {
+                                newData = {};
+                                for (value in values) {
+                                    if (esgst.settings[`${dm.type}_${optionKey}_${value}`] || (!dm.delete && value === `main`)) {
+                                        for (j = 0, numValues = values[value].length; j < numValues; ++j) {
+                                            valueKey = values[value][j];
+                                            mergedDataValue = mergedData[mergedDataKey][valueKey];
+                                            if (typeof mergedDataValue !== `undefined`) {
+                                                newData[valueKey] = mergedDataValue;
+                                                if (dm.delete) {
+                                                    delete mergedData[mergedDataKey][valueKey];
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                                if (Object.keys(newData).length > 0) {
+                                    data[optionKey][mergedDataKey] = newData;
+                                }
+                                if (dm.delete && Object.keys(mergedData[mergedDataKey]).length <= 0) {
+                                    delete mergedData[mergedDataKey];
+                                }
+                            }
+                            if (dm.import) {
+                                newData = dm.data[optionKey];
+                                if (newData) {
+                                    for (newDataKey in newData) {
+                                        if (!mergedData[newDataKey]) {
+                                            mergedData[newDataKey] = {};
+                                        }
+                                        for (value in values) {
+                                            if (esgst.settings[`${dm.type}_${optionKey}_${value}`] || (!dm.delete && value === `main`)) {
+                                                if (esgst.settings.importAndMerge) {
+                                                    for (j = 0, numValues = values[value].length; j < numValues; ++j) {
+                                                        valueKey = values[value][j];
+                                                        if (valueKey === `readComments`) {
+                                                            if (mergedData[newDataKey].readComments) {
+                                                                for (id in mergedData[newDataKey].readComments) {
+                                                                    if (newData[newDataKey].readComments[id] > mergedData[newDataKey].readComments[id]) {
+                                                                        mergedData[newDataKey].readComments[id] = newData[newDataKey].readComments[id];
+                                                                    }
+                                                                }
+                                                            } else {
+                                                                mergedData[newDataKey].readComments = newData[newDataKey].readComments;
+                                                            }
+                                                        } else {
+                                                            mergedData[newDataKey][valueKey] = newData[newDataKey][valueKey];
+                                                        }
+                                                    }
+                                                } else {
+                                                    for (j = 0, numValues = values[value].length; j < numValues; ++j) {
+                                                        valueKey = values[value][j];
+                                                        mergedData[newDataKey][valueKey] = newData[newDataKey][valueKey];
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                    localStorage[`esgst_${optionKey}`] = JSON.stringify(mergedData);  
+                                }
+                            } else if (dm.delete) {
+                                localStorage[`esgst_${optionKey}`] = JSON.stringify(mergedData);  
+                            }
+                            break;
+                        case `emojis`:
+                            data.emojis = GM_getValue(`emojis`);
+                            if (dm.import) {
+                                newData = dm.data.emojis;
+                                if (newData) {
+                                    if (esgst.settings.importAndMerge) {
+                                        mergedData = data.emojis;
+                                        newData = DOM.parse(newData).getElementsByTagName(`span`);
+                                        for (j = 0, numNew = newData.length; j < numNew; ++j) {
+                                            newDataValue = newData[j].outerHTML;
+                                            if (!mergedData.match(newDataValue)) {
+                                                mergedData = `${mergedData}${newDataValue}`;
+                                            }
+                                        }
+                                        GM_setValue(`emojis`, mergedData);
+                                    } else {
+                                        GM_setValue(`emojis`, newData);
+                                    }
+                                }
+                            } else if (dm.delete) {
+                                GM_deleteValue(`emojis`);
+                            }
+                            break;
+                        case `entries`:
+                        case `templates`:
+                        case `savedReplies`:
+                            data[optionKey] = JSON.parse(optionKey === `savedReplies` ? GM_getValue(`savedReplies`) : localStorage[`esgst_${optionKey}`]);
+                            if (dm.import) {
+                                newData = dm.data[optionKey];
+                                if (newData) {
+                                    if (esgst.settings.importAndMerge) {
+                                        dataKey = key === `entries` ? `timestamp` : `name`;
+                                        mergedData = data[optionKey];
+                                        for (j = 0, numNew = newData.length; j < numNew; ++j) {
+                                            newDataValue = newData[j];
+                                            for (k = 0, numMerged = mergedData.length; k < numMerged && mergedData[k][dataKey] !== newDataValue[dataKey]; ++k);
+                                            if (k < numMerged) {
+                                                mergedData[k] = newDataValue;
+                                            } else {
+                                                mergedData.push(newDataValue);
+                                            }
+                                        }
+                                        if (optionKey === `savedReplies`) {
+                                            GM_setValue(optionKey, JSON.stringify(mergedData));
+                                        } else {
+                                            if (key === `entries`) {
+                                                mergedData = sortArrayByNumberKey(mergedData, `timestamp`);
+                                            }
+                                            localStorage[`esgst_${optionKey}`] = JSON.stringify(mergedData);
+                                        }
+                                    } else {
+                                        if (optionKey === `savedReplies`) {
+                                            GM_setValue(`savedReplies`, JSON.stringify(newData));
+                                        } else {
+                                            localStorage[`esgst_${optionKey}`] = JSON.stringify(newData);
+                                        }
+                                    }
+                                }
+                            } else if (dm.delete) {
+                                if (optionKey === `savedReplies`) {
+                                    GM_deleteValue(`savedReplies`);
+                                } else {
+                                    localStorage.removeItem(`esgst_${key}`);
+                                }
+                            }
+                            break;
+                        case `games`:
+                            values = {
+                                gt: [`tags`],
+                                egh: [`entered`],
+                                gc: [`achievements`, `bundled`, `dlc`, `genres`, `giveawayInfo`, `hidden`, `ignored`, `lastCheck`, `linux`, `mac`, `multiplayer`, `owned`, `rating`, `removed`, `steamCloud`, `tradingCards`, `wishlisted`],
+                                itadi: [`itadi`]
+                            };
+                            data.games = {
+                                apps: {},
+                                subs: {}
+                            };
+                            mergedData = JSON.parse(GM_getValue(`games`));
+                            for (mergedDataKey in mergedData.apps) {
+                                mergedDataValue = mergedData.apps[mergedDataKey];
+                                newData = {};
+                                for (value in values) {
+                                    if (esgst.settings[`${dm.type}_games_${value}`]) {
+                                        for (j = 0, numValues = values[value].length; j < numValues; ++j) {
+                                            valueKey = values[value][j];
+                                            newDataValue = mergedDataValue[valueKey];
+                                            if (typeof newDataValue !== `undefined`) {
+                                                newData[valueKey] = newDataValue;
+                                                if (dm.delete) {
+                                                    delete mergedDataValue[valueKey];
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                                if (Object.keys(newData).length > 0) {
+                                    data.games.apps[mergedDataKey] = newData;
+                                }
+                                if (dm.delete && Object.keys(mergedDataValue).length <= 0) {
+                                    delete mergedData.apps[mergedDataKey];
+                                }
+                            }
+                            for (mergedDataKey in mergedData.subs) {
+                                mergedDataValue = mergedData.subs[mergedDataKey];
+                                newData = {};
+                                for (value in values) {
+                                    if (esgst.settings[`${dm.type}_games_${value}`]) {
+                                        for (j = 0, numValues = values[value].length; j < numValues; ++j) {
+                                            valueKey = values[value][j];
+                                            newDataValue = mergedDataValue[valueKey];
+                                            if (typeof newDataValue !== `undefined`) {
+                                                newData[valueKey] = newDataValue;
+                                                if (dm.delete) {
+                                                    delete mergedDataValue[valueKey];
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                                if (Object.keys(newData).length > 0) {
+                                    data.games.subs[mergedDataKey] = newData;
+                                }
+                                if (dm.delete && Object.keys(mergedDataValue).length <= 0) {
+                                    delete mergedData.subs[mergedDataKey];
+                                }
+                            }
+                            if (dm.import) {
+                                newData = dm.data.games;
+                                if (newData) {
+                                    for (newDataKey in newData.apps) {
+                                        newDataValue = newData.apps[newDataKey];
+                                        if (!mergedData.apps[newDataKey]) {
+                                            mergedData.apps[newDataKey] = {};
+                                        }
+                                        mergedDataValue = mergedData.apps[newDataKey];
+                                        for (value in values) {
+                                            if (esgst.settings[`${dm.type}_games_${value}`]) {
+                                                for (j = 0, numValues = values[value].length; j < numValues; ++j) {
+                                                    valueKey = values[value][j];
+                                                    if (typeof newDataValue[valueKey] !== `undefined`) {
+                                                        if (esgst.settings.importAndMerge) {
+                                                            switch (valueKey) {
+                                                                case `entered`:
+                                                                    mergedDataValue.entered = true;
+                                                                    break;
+                                                                case `itadi`:
+                                                                    if (mergedDataValue.itadi) {
+                                                                        if (newDataValue.itadi.lastCheck > mergedDataValue.itadi.lastCheck) {
+                                                                            mergedDataValue.itadi = newDataValue.itadi;
+                                                                        }
+                                                                    } else {
+                                                                        mergedDataValue.itadi = newDataValue.itadi;
+                                                                    }
+                                                                    break;
+                                                                case `tags`:
+                                                                    if (mergedDataValue.tags) {
+                                                                        tags = newDataValue.tags;
+                                                                        for (k = 0, numTags = tags.length; k < numTags; ++k) {
+                                                                            tag = tags[k];
+                                                                            if (mergedDataValue.tags.indexOf(tag) < 0) {
+                                                                                mergedDataValue.tags.push(tag);
+                                                                            }
+                                                                        }
+                                                                    } else {
+                                                                        mergedDataValue.tags = newDataValue.tags;
+                                                                    }
+                                                                    break;
+                                                                default:
+                                                                    if (newDataValue.lastCheck > mergedDataValue.lastCheck) {
+                                                                        mergedDataValue[valueKey] = newDataValue[valueKey];
+                                                                    } 
+                                                                    break;
+                                                            }
+                                                        } else {
+                                                            mergedDataValue[valueKey] = newDataValue[valueKey];
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                    for (newDataKey in newData.subs) {
+                                        newDataValue = newData.subs[newDataKey];
+                                        if (!mergedData.subs[newDataKey]) {
+                                            mergedData.subs[newDataKey] = {};
+                                        }
+                                        mergedDataValue = mergedData.subs[newDataKey];
+                                        for (value in values) {
+                                            if (esgst.settings[`${dm.type}_games_${value}`]) {
+                                                for (j = 0, numValues = values[value].length; j < numValues; ++j) {
+                                                    valueKey = values[value][j];
+                                                    if (typeof newDataValue[valueKey] !== `undefined`) {
+                                                        if (esgst.settings.importAndMerge) {
+                                                            switch (valueKey) {
+                                                                case `entered`:
+                                                                    mergedDataValue.entered = true;
+                                                                    break;
+                                                                case `itadi`:
+                                                                    if (mergedDataValue.itadi) {
+                                                                        if (newDataValue.itadi.lastCheck > mergedDataValue.itadi.lastCheck) {
+                                                                            mergedDataValue.itadi = newDataValue.itadi;
+                                                                        }
+                                                                    } else {
+                                                                        mergedDataValue.itadi = newDataValue.itadi;
+                                                                    }
+                                                                    break;
+                                                                case `tags`:
+                                                                    if (mergedDataValue.tags) {
+                                                                        tags = newDataValue.tags;
+                                                                        for (k = 0, numTags = tags.length; k < numTags; ++k) {
+                                                                            tag = tags[k];
+                                                                            if (mergedDataValue.tags.indexOf(tag) < 0) {
+                                                                                mergedDataValue.tags.push(tag);
+                                                                            }
+                                                                        }
+                                                                    } else {
+                                                                        mergedDataValue.tags = newDataValue.tags;
+                                                                    }
+                                                                    break;
+                                                                default:
+                                                                    if (newDataValue.lastCheck > mergedDataValue.lastCheck) {
+                                                                        mergedDataValue[valueKey] = newDataValue[valueKey];
+                                                                    } 
+                                                                    break;
+                                                            }
+                                                        } else {
+                                                            mergedDataValue[valueKey] = newDataValue[valueKey];
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                    GM_setValue(`games`, JSON.stringify(mergedData));
+                                }
+                            } else if (dm.delete) {
+                                GM_setValue(`games`, JSON.stringify(mergedData));
+                            }
+                            break;
+                        case `rerolls`:
+                            data.rerolls = JSON.parse(localStorage.esgst_rerolls);
+                            if (dm.import) {
+                                newData = dm.data.rerolls;
+                                if (newData) {
+                                    if (esgst.settings.importAndMerge) {
+                                        mergedData = data.rerolls;
+                                        for (j = 0, numNew = newData.length; j < numNew; ++j) {
+                                            newDataValue = newData[j];
+                                            if (mergedData.indexOf(newDataValue) < 0) {
+                                                mergedData.push(newDataValue);
+                                            }
+                                        }
+                                        localStorage.esgst_rerolls = JSON.stringify(mergedData);
+                                    } else {
+                                        localStorage.esgst_rerolls = JSON.stringify(newData);
+                                    }
+                                }
+                            } else if (dm.delete) {
+                                localStorage.removeItem(`esgst_rerolls`);
+                            }                                            
+                            break;
+                        case `sgCommentHistory`:
+                        case `stCommentHistory`:
+                            data[optionKey] = JSON.parse(GM_getValue(optionKey));
+                            if (dm.import) {
+                                newData = dm.data[optionKey];
+                                if (newData) {
+                                    if (esgst.settings.importAndMerge) {
+                                        mergedData = [];
+                                        oldData = data[optionKey];
+                                        j = 0;
+                                        k = 0;
+                                        numNew = newData.length;
+                                        numOld = oldData.length;
+                                        while (j < numOld && k < numNew) {
+                                            oldDataValue = oldData[j];
+                                            newDataValue = newData[k];
+                                            if (oldDataValue.timestamp > newDataValue.timestamp) {
+                                                mergedData.push(oldDataValue);
+                                                ++j;
+                                            } else {
+                                                for (l = 0; l < numOld && oldData[l].id !== newDataValue.id; ++l);
+                                                if (l >= numOld) {
+                                                    mergedData.push(newDataValue);
+                                                }
+                                                ++k;
+                                            }
+                                        }
+                                        while (j < numOld) {
+                                            mergedData.push(oldData[j]);
+                                            ++j;
+                                        }
+                                        while (k < numNew) {
+                                            newDataValue = newData[k];
+                                            for (l = 0; l < numOld && oldData[l].id !== newDataValue.id; ++l);
+                                            if (l >= numOld) {
+                                                mergedData.push(newDataValue);
+                                            }
+                                            ++k;
+                                        }
+                                        GM_setValue(optionKey, JSON.stringify(mergedData));
+                                    } else {
+                                        GM_setValue(optionKey, JSON.stringify(newData));
+                                    }
+                                }
+                            } else if (dm.delete) {
+                                GM_deleteValue(optionKey);
+                            }
+                            break;
+                        case `users`:
+                            values = [`uf`, `notes`, `tags`, `ugd`, `namwc`, `nrf`, `wbc`];
+                            data.users = {
+                                steamIds: {},
+                                users: {}
+                            };
+                            mergedData = JSON.parse(GM_getValue(`users`));
+                            for (mergedDataKey in mergedData.users) {
+                                mergedDataValue = mergedData.users[mergedDataKey];
+                                newData = {};
+                                for (j = 0, numValues = values.length; j < numValues; ++j) {
+                                    valueKey = values[j];
+                                    if (esgst.settings[`${dm.type}_users_${valueKey}`]) {
+                                        value = mergedDataValue[valueKey];
+                                        if (typeof value !== `undefined`) {
+                                            newData[valueKey] = value;
+                                            if (dm.delete) {
+                                                delete mergedDataValue[valueKey];
+                                            }
+                                        }
+                                    }
+                                }
+                                if (Object.keys(newData).length > 0) {
+                                    id = mergedDataValue.id;
+                                    username = mergedDataValue.username;
+                                    if (id) {
+                                        newData.id = id;
+                                    }
+                                    if (username) {
+                                        newData.username = username;
+                                        data.users.steamIds[username] = mergedDataKey;
+                                    }
+                                    data.users.users[mergedDataKey] = newData;
+                                }
+                            }
+                            if (dm.import) {
+                                newData = dm.data.users;
+                                if (newData) {
+                                    for (newDataKey in newData.users) {
+                                        newDataValue = newData.users[newDataKey];
+                                        if (!mergedData.users[newDataKey]) {
+                                            mergedData.users[newDataKey] = {
+                                                id: newDataValue.id,
+                                                username: newDataValue.username
+                                            };
+                                            mergedData.steamIds[newDataValue.username] = newDataKey;
+                                        }
+                                        mergedDataValue = mergedData.users[newDataKey];
+                                        for (j = 0, numValues = values.length; j < numValues; ++j) {
+                                            value = values[j];
+                                            if (newDataValue[value] && esgst.settings[`${dm.type}_users_${value}`]) {
+                                                if (esgst.settings.importAndMerge) {
+                                                    switch (value) {
+                                                        case `notes`:
+                                                            mergedDataValue.notes = mergedDataValue.notes ? `${mergedDataValue.notes}\n\n${newDataValue.notes}` : newDataValue.notes;
+                                                            break;
+                                                        case `tags`:
+                                                            if (mergedDataValue.tags) {
+                                                                tags = newDataValue.tags;
+                                                                for (k = 0, numTags = tags.length; k < numTags; ++k) {
+                                                                    tag = tags[k];
+                                                                    if (mergedDataValue.tags.indexOf(tag) < 0) {
+                                                                        mergedDataValue.tags.push(tag);
+                                                                    }
+                                                                }
+                                                            } else {
+                                                                mergedDataValue.tags = newDataValue.tags;
+                                                            }
+                                                            break;
+                                                        case `ugd`:
+                                                            if (mergedDataValue.ugd) {
+                                                                if (newDataValue.ugd.wonTimestamp > mergedDataValue.ugd.wonTimestamp) {
+                                                                    mergedDataValue.ugd.won = newDataValue.ugd.won;
+                                                                    mergedDataValue.ugd.wonTimestamp = newDataValue.ugd.wonTimestamp;
+                                                                }
+                                                                if (newDataValue.ugd.sentTimestamp > mergedDataValue.ugd.sentTimestamp) {
+                                                                    mergedDataValue.ugd.sent = newDataValue.ugd.sent;
+                                                                    mergedDataValue.ugd.sentTimestamp = newDataValue.ugd.sentTimestamp;
+                                                                }
+                                                            } else {
+                                                                mergedDataValue.ugd = newDataValue.ugd;
+                                                            }
+                                                            break;
+                                                        default:
+                                                            if (mergedDataValue[value]) {
+                                                                if (newDataValue[value].lastCheck > mergedDataValue[value].lastCheck) {
+                                                                    mergedDataValue[value] = newDataValue[value];
+                                                                }
+                                                            } else {
+                                                                mergedDataValue[value] = newDataValue[value];
+                                                            }
+                                                            break;
+                                                    }
+                                                } else {
+                                                    mergedDataValue[value] = newDataValue[value];
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            } else if (dm.delete) {
+                                GM_setValue(`users`, JSON.stringify(mergedData));
+                            }
+                            break;
+                        case `winners`:
+                            data.winners = JSON.parse(localStorage.esgst_winners);
+                            if (dm.import) {
+                                newData = dm.data.winners;
+                                if (newData) {
+                                    if (esgst.settings.importAndMerge) {
+                                        mergedData = data.winners;
+                                        for (newDataKey in newData) {
+                                            if (!mergedData[newDataKey]) {
+                                                mergedData[newDataKey] = [];
+                                            }
+                                            for (j = 0, numNew = newData[newDataKey].length; j < numNew; ++j) {
+                                                newDataValue = newData[newDataKey][j];
+                                                if (mergedData[newDataKey].indexOf(newDataValue) < 0) {
+                                                    mergedData[newDataKey].push(newDataValue);
+                                                }
+                                            }
+                                        }
+                                        localStorage.esgst_winners = JSON.stringify(mergedData);
+                                    } else {
+                                        localStorage.esgst_winners = JSON.stringify(newData);
+                                    }
+                                }
+                            } else if (dm.delete) {
+                                localStorage.removeItem(`esgst_winners`);
+                            }
+                            break;
+                        default:
+                            break;
                     }
                 }
-            } else if (key === `games`) {
-            } else {
-                data[key] = GM_getValue(key);
             }
         }
-        for (Key in SM.Names) {
-            if (Key === `users`) {
-                Data.users = {};
-                var keys = {
-                    notes: `UN`,
-                    tags: `UT`,
-                    ugd: `UGD`,
-                    namwc: `NAMWC`,
-                    nrf: `NRF`,
-                    rwscvl: `RWSCVL`,
-                    wbc: `WBC`,
-                    uf: `UF`
-                };
-                var users = JSON.parse(GM_getValue(`users`));
-                Data.users.users = {};
-                for (var key in users.users) {
-                    Data.users.users[key] = {
-                        id: users.users[key].id,
-                        username: users.users[key].username
-                    };
-                    var added = false;
-                    for (var subKey in keys) {
-                        if (SM[keys[subKey]].checked && users.users[key][subKey]) {
-                            Data.users.users[key][subKey] = users.users[key][subKey];
-                            added = true;
-                        }
-                    }
-                    if (!added) {
-                        delete Data.users.users[key];
-                    }
-                }
-            } else if (Key === `games`) {
-                Data.games = {
-                    apps: {},
-                    subs: {}
-                };
-                var games = JSON.parse(GM_getValue(`games`));
-                if (SM.GT.checked) {
-                    getSMGames(games, `tags`, Data.games, `apps`);
-                    getSMGames(games, `tags`, Data.games, `subs`);
-                }
-                if (SM.EGH.checked) {
-                    getSMGames(games, `entered`, Data.games, `apps`);
-                    getSMGames(games, `entered`, Data.games, `subs`);
-                }
-                if (SM.GC.checked) {
-                    getSMGames(games, `lastCheck`, Data.games, `apps`);
-                    getSMGames(games, `lastCheck`, Data.games, `subs`);
-                }
-                if (SM.ITADI.checked) {
-                    getSMGames(games, `itadi`, Data.games, `apps`);
-                    getSMGames(games, `itadi`, Data.games, `subs`);
-                }
-            } else if (Key.match(/entries|savedReplies|sgCommentHistory|stCommentHistory|comments|giveaways|descryptedGiveaways|templates|rerolls|winners|settings/) && SM[SM.Names[Key]].checked) {
-                Data[Key] = JSON.parse(GM_getValue(Key, `{}`));
-            } else if (SM[SM.Names[Key]].checked) {
-                Data[Key] = GM_getValue(Key);
-            }
-        }
-        Data = new Blob([JSON.stringify({
-            ESGST: "Data",
-            Data: Data
-        })]);
-        URL = window.URL.createObjectURL(Data);
-        File.href = URL;
-        document.body.appendChild(File);
-        File.click();
-        File.remove();
-        window.URL.revokeObjectURL(URL);
-        window.alert("Exported!");  
-        */   
-    }
-
-    /* Delete Tool */
-
-    function openDeletePopup(options) {
-        var i, id, n, popup, switches, warning;
-        switches = {};
-        popup = createPopup(`fa-trash`, `Delete Data`, true);
-        for (i = 0, n = options.length; i < n; ++i) {
-            id = `export${option.id}`;
-            switches[option.key] = createToggleSwitch(popup.scrollable, id, false, option.name, false, false, option.tooltip, esgst[id]);
-        }
-        warning = insertHtml(popup.description, `beforeEnd`, `<div class="esgst-description esgst-red"></div>`);
-        popup.description.appendChild(createButtonSet(`green`, `grey`, `fa-arrow-circle-up`, `fa-circle-o-notch fa-spin`, `Select All`, ``, selectSwitches.bind(null, true, switches)).set);
-        popup.description.appendChild(createButtonSet(`green`, `grey`, `fa-arrow-circle-up`, `fa-circle-o-notch fa-spin`, `Select None`, ``, selectSwitches.bind(null, false, switches)).set);
-        popup.description.appendChild(createButtonSet(`green`, `grey`, `fa-arrow-circle-up`, `fa-circle-o-notch fa-spin`, `Delete`, `Deleting...`, deleteData.bind(null, input, warning)).set);
-    }
-
-    function deleteData() {
-
+        data = new Blob([JSON.stringify(data)]);
+        url = URL.createObjectURL(data);
+        file = document.createElement(`a`);
+        file.download = `esgst_data_${new Date().toISOString()}.json`;
+        file.href = url;
+        document.body.appendChild(file);
+        file.click();
+        file.remove();
+        URL.revokeObjectURL(url);
+        createFadeMessage(dm.message, `Data ${dm.type}ed with success!`);
+        callback();
     }
 
     /* */
 
-    function selectSwitches(select, switches, callback) {
-        if (select) {
-            for (key in switches) {
-                switches[key].enable();
-            }
-        } else {
-            for (key in switches) {
-                switches[key].disable();                
-            }
+    function selectSwitches(switches, type, callback) {
+        var key;
+        for (key in switches) {
+            switches[key][type]();
         }
         if (callback) {
             callback();
