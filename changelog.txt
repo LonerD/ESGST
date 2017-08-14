@@ -1,4 +1,13 @@
 /*
+ * August 14, 2017 - v6.Beta.26.2
+ */
+
+* Removed Game Categories from the new giveaway page, since SG now shows an asterisk there if the game is bundled.
+* You can now sort the categories in Game Categories from the settings menu (you will find it at the end of the Game Categories section - Games.4).
+* EXPERIMENTAL: Game Categories are now loaded from a Google Sheet instead of being stored locally (closes #291 and #302). If you're requesting games for the first time, it should take around 15 seconds for the categories to load, but every other time it should be a lot faster, sometimes loading instantly or after around 2 seconds. I believe this is a worth time to wait considering this method doesn't consume any memory. This method is experimental though, since I'm not sure if Google Sheets will be able to handle the request quota, but worst case scenario I can add a manual request method as fallback later.
+* Added Game Categories data to the "Wipe Storage" button in the settings menu, now that this data is no longer stored locally and therefore useless to keep.
+
+/*
  * August 13, 2017 - v6.Beta.26.1
  */
 
