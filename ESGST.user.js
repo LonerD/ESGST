@@ -3,7 +3,7 @@
 // @namespace ESGST
 // @description Enhances SteamGifts and SteamTrades by adding some cool features to them.
 // @icon https://github.com/revilheart/ESGST/raw/master/Resources/esgstIcon.ico
-// @version 6.Beta.26.0
+// @version 6.Beta.26.1
 // @author revilheart
 // @downloadURL https://github.com/revilheart/ESGST/raw/master/ESGST.user.js
 // @updateURL https://github.com/revilheart/ESGST/raw/master/ESGST.meta.js
@@ -24647,7 +24647,12 @@ ${avatar.outerHTML}
                 GM_deleteValue(`winners`);
                 GM_deleteValue(`Winners`);
                 GM_deleteValue(`rfi_replies_${esgst.name}`);
-                var comments = JSON.parse(GM_getValue(`comments`));
+                var comments = JSON.parse(GM_getValue(`comments`, `{                    
+                    "giveaways": {},
+                    "discussions": {},
+                    "tickets": {},
+                    "trades": {}
+                }`));
                 if (comments) {
                     if (esgst.sg) {
                         delete comments.giveaways;
@@ -27350,7 +27355,7 @@ ${avatar.outerHTML}
                     switch (optionKey) {
                         case `decryptedGiveaways`:
                         case `settings`:
-                            data[optionKey] = JSON.parse(GM_getValue(optionKey));
+                            data[optionKey] = JSON.parse(GM_getValue(optionKey, `{}`));
                             if (dm.import) {
                                 newData = dm.data[optionKey];
                                 if (newData) {
@@ -27407,7 +27412,7 @@ ${avatar.outerHTML}
                                     gdttt: [`visited`]
                                 };
                             }
-                            mergedData = JSON.parse(localStorage[`esgst_${optionKey}`]);
+                            mergedData = JSON.parse(localStorage[`esgst_${optionKey}`] || `{}`);
                             data[optionKey] = {};
                             for (mergedDataKey in mergedData) {
                                 newData = {};
@@ -27474,7 +27479,7 @@ ${avatar.outerHTML}
                             }
                             break;
                         case `emojis`:
-                            data.emojis = GM_getValue(`emojis`);
+                            data.emojis = GM_getValue(`emojis`, ``);
                             if (dm.import) {
                                 newData = dm.data.emojis;
                                 if (newData) {
@@ -27499,7 +27504,7 @@ ${avatar.outerHTML}
                         case `entries`:
                         case `templates`:
                         case `savedReplies`:
-                            data[optionKey] = JSON.parse(optionKey === `savedReplies` ? GM_getValue(`savedReplies`) : localStorage[`esgst_${optionKey}`]);
+                            data[optionKey] = JSON.parse(optionKey === `savedReplies` ? GM_getValue(`savedReplies`, `[]`) : localStorage[`esgst_${optionKey}`] || `[]`);
                             if (dm.import) {
                                 newData = dm.data[optionKey];
                                 if (newData) {
@@ -27550,7 +27555,10 @@ ${avatar.outerHTML}
                                 apps: {},
                                 subs: {}
                             };
-                            mergedData = JSON.parse(GM_getValue(`games`));
+                            mergedData = JSON.parse(GM_getValue(`games`, `{
+                                "apps": {}
+                                "subs": {}
+                            }`));
                             for (mergedDataKey in mergedData.apps) {
                                 mergedDataValue = mergedData.apps[mergedDataKey];
                                 newData = {};
@@ -27713,7 +27721,7 @@ ${avatar.outerHTML}
                             }
                             break;
                         case `rerolls`:
-                            data.rerolls = JSON.parse(localStorage.esgst_rerolls);
+                            data.rerolls = JSON.parse(localStorage.esgst_rerolls || `[]`);
                             if (dm.import) {
                                 newData = dm.data.rerolls;
                                 if (newData) {
@@ -27736,7 +27744,7 @@ ${avatar.outerHTML}
                             break;
                         case `sgCommentHistory`:
                         case `stCommentHistory`:
-                            data[optionKey] = JSON.parse(GM_getValue(optionKey));
+                            data[optionKey] = JSON.parse(GM_getValue(optionKey, `[]`));
                             if (dm.import) {
                                 newData = dm.data[optionKey];
                                 if (newData) {
@@ -27788,7 +27796,10 @@ ${avatar.outerHTML}
                                 steamIds: {},
                                 users: {}
                             };
-                            mergedData = JSON.parse(GM_getValue(`users`));
+                            mergedData = JSON.parse(GM_getValue(`users`, `{
+                                "steamIds": {},
+                                "users": {}
+                            }`));
                             for (mergedDataKey in mergedData.users) {
                                 mergedDataValue = mergedData.users[mergedDataKey];
                                 newData = {};
@@ -27887,7 +27898,7 @@ ${avatar.outerHTML}
                             }
                             break;
                         case `winners`:
-                            data.winners = JSON.parse(localStorage.esgst_winners);
+                            data.winners = JSON.parse(localStorage.esgst_winners || `{}`);
                             if (dm.import) {
                                 newData = dm.data.winners;
                                 if (newData) {

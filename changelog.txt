@@ -1,4 +1,10 @@
 /*
+ * August 13, 2017 - v6.Beta.26.1
+ */
+
+* Fixed a bug that was preventing some users from exporting data (closes #335).
+
+/*
  * August 13, 2017 - v6.Beta.26.0
  */
 
