@@ -1,4 +1,12 @@
 /*
+ * August 14, 2017 - v6.Beta.26.3
+ */
+
+* Added an option to sync "No CV Games" to the settings menu and renamed the option to sync bundles to "Reduced CV Games".
+* Removed the "Bundled" and "Not Bundled" categories from Game Categories and added the "Full CV", "Reduced CV" and "No CV" categories. The "No CV" category is currently updated manually, so it might take some time until a game is added to the list. You must sync "Reduced CV Games" through the settings menu in this update otherwise the old "bundled" data will not appear.
+* The "Giveaway Info" category from Game Categories and Real CV Calculator now both use the "No CV" data to correctly calculate the CV.
+
+/*
  * August 14, 2017 - v6.Beta.26.2
  */
 

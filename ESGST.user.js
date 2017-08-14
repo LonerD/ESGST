@@ -3,7 +3,7 @@
 // @namespace ESGST
 // @description Enhances SteamGifts and SteamTrades by adding some cool features to them.
 // @icon https://github.com/revilheart/ESGST/raw/master/Resources/esgstIcon.ico
-// @version 6.Beta.26.2
+// @version 6.Beta.26.3
 // @author revilheart
 // @downloadURL https://github.com/revilheart/ESGST/raw/master/ESGST.user.js
 // @updateURL https://github.com/revilheart/ESGST/raw/master/ESGST.meta.js
@@ -244,7 +244,7 @@
                         ugs_checkMember: `UGS_G`
                     };
                     esgst.defaultValues = {
-                        gc_categories: [`gc_gi`, `gc_r`, `gc_b`, `gc_b_r`, `gc_h`, `gc_i`, `gc_o`, `gc_w`, `gc_a`, `gc_mp`, `gc_sc`, `gc_tc`, `gc_l`, `gc_m`, `gc_ea`, `gc_rm`, `gc_dlc`, `gc_p`, `gc_g`],
+                        gc_categories: [`gc_gi`, `gc_r`, `gc_fcv`, `gc_rcv`, `gc_ncv`, `gc_h`, `gc_i`, `gc_o`, `gc_w`, `gc_a`, `gc_mp`, `gc_sc`, `gc_tc`, `gc_l`, `gc_m`, `gc_ea`, `gc_rm`, `gc_dlc`, `gc_p`, `gc_g`],
                         gas_auto: false,
                         gas_option: `name_asc`,
                         gas_autoWishlist: false,
@@ -319,7 +319,9 @@
                         cfh_pasteFormatting: true,
                         gc_h_color: `#ffffff`,
                         gc_gi_color: `#ffffff`,
-                        gc_b_color: `#ffffff`,
+                        gc_fcv_color: `#ffffff`,
+                        gc_rcv_color: `#ffffff`,
+                        gc_ncv_color: `#ffffff`,
                         gc_w_color: `#ffffff`,
                         gc_o_color: `#ffffff`,
                         gc_i_color: `#ffffff`,
@@ -336,7 +338,9 @@
                         gc_g_color: `#ffffff`,
                         gc_h_bgColor: `#e74c3c`,
                         gc_gi_bgColor: `#555555`,
-                        gc_b_bgColor: `#641e16`,
+                        gc_fcv_bgColor: `#641e16`,
+                        gc_rcv_bgColor: `#641e16`,
+                        gc_ncv_bgColor: `#641e16`,
                         gc_o_bgColor: `#16a085`,
                         gc_w_bgColor: `#3498db`,
                         gc_i_bgColor: `#e74c3c`,
@@ -1253,7 +1257,7 @@
                             decription: `
                                 <ul>
                                     <li>Calculates how much real CV you should get for a giveaway.</li>
-                                    <li>It's only accurate if you have synced the bundle list from the settings menu and also scanned your sent giveaways using User Giveaways Data. But even then, it's only 100% accurate if the user has 0 not received giveaways, since User Giveaways Data doesn't currently know if the giveaways have been received or not.</li>
+                                    <li>It's only accurate if you have synced the reduced CV/no CV lists from the settings menu and also scanned your sent giveaways using User Giveaways Data. But even then, it's only 100% accurate if the user has 0 not received giveaways, since User Giveaways Data doesn't currently know if the giveaways have been received or not.</li>
                                 </ul>
                                 <p>In the example below, as I had previously given away 3 copies of Max Payne 3, the sixth copy is worth 10% less (18P). So the 3 new copies would equal 58P:</p>
                                 <img src="https://camo.githubusercontent.com/7b57fc903dddbf988ec3b700412fbfcd16bfed3a/687474703a2f2f692e696d6775722e636f6d2f6f4347537455712e706e67"/>
@@ -2241,15 +2245,20 @@
                                 },
                                 {
                                     colors: true,
-                                    features: [
-                                        {
-                                            id: `gc_b_r`,
-                                            name: `Reverse (show only if not bundled).`,
-                                            sg: true
-                                        }
-                                    ],
-                                    id: `gc_b`,
-                                    name: `Bundled`,
+                                    id: `gc_fcv`,
+                                    name: `Full CV`,
+                                    sg: true
+                                },
+                                {
+                                    colors: true,
+                                    id: `gc_rcv`,
+                                    name: `Reduced CV`,
+                                    sg: true
+                                },
+                                {
+                                    colors: true,
+                                    id: `gc_ncv`,
+                                    name: `No CV`,
                                     sg: true
                                 },
                                 {
@@ -3019,7 +3028,7 @@
     }
 
     function getValue(key, sg, st) {
-        var defaultValue, localKey;
+        var defaultValue, i, localKey, n;
         if ((esgst.name === `sg` && sg) || (esgst.name === `st` && st) || (!sg && !st)) {
             if (sg || st) {
                 localKey = `${key}_${esgst.name}`;
@@ -3032,6 +3041,11 @@
                     defaultValue = esgst.enableByDefault || false;
                 }
                 esgst.settings[localKey] = GM_getValue(esgst.oldValues[key] || key, defaultValue);
+            } else if (key === `gc_categories` && !esgst.settings.gc_categories.gc_ncv) {
+                for (i = 0, n = esgst.settings.gc_categories.length; i < n && !esgst.settings.gc_categories[i].match(/gc_b|gc_b_r/); ++i);
+                if (i < n) {
+                    esgst.settings.gc_categories.splice(i, 1, `gc_fcv`, `gc_rcv`, `gc_ncv`);
+                }
             }
             return esgst.settings[localKey];
         }
@@ -3687,7 +3701,8 @@
             createToggleSwitch(popup.description, `syncBlacklist`, false, `Blacklist`, false, false, null, esgst.syncBlacklist);
             createToggleSwitch(popup.description, `syncHiddenGames`, false, `Hidden Games`, false, false, null, esgst.syncHiddenGames);
             createToggleSwitch(popup.description, `syncGames`, false, `Owned/Wishlisted/Ignored Games`, false, false, null, esgst.syncGames);
-            createToggleSwitch(popup.description, `syncBundles`, false, `Bundles`, false, false, null, esgst.syncBundles);
+            createToggleSwitch(popup.description, `syncReducedCvGames`, false, `Reduced CV Games`, false, false, null, esgst.syncReducedCvGames);
+            createToggleSwitch(popup.description, `syncNoCvGames`, false, `No CV Games`, false, false, null, esgst.syncNoCvGames);
             syncer.progress = insertHtml(popup.description, `beforeEnd`, `
                 <div class="esgst-hidden esgst-popup-progress"></div>
             `);
@@ -4173,9 +4188,18 @@
         if (html) {
             syncer.scrollable.insertAdjacentHTML(`beforeEnd`, html);
         }
-        if (esgst.settings.syncBundles) {
-            syncer.progress.lastElementChild.textContent = `Syncing bundles...`;
-            request(null, false, `https://script.google.com/macros/s/AKfycbwJK-7RBh5ghaKprEsmx4DQ6CyXc_3_9eYiOCu3yhI6W4B3W4YN/exec`, syncBundles.bind(null, syncer, callback));
+        if (esgst.settings.syncReducedCvGames) {
+            syncer.progress.lastElementChild.textContent = `Syncing reduced CV games...`;
+            request(null, false, `https://script.google.com/macros/s/AKfycbwJK-7RBh5ghaKprEsmx4DQ6CyXc_3_9eYiOCu3yhI6W4B3W4YN/exec`, syncCvGames.bind(null, syncer, continueSyncStep6.bind(null, syncer, callback)));
+        } else {
+            continueSyncStep6(syncer, callback);
+        }
+    }
+
+    function continueSyncStep6(syncer, callback) {
+        if (esgst.settings.syncNoCvGames) {
+            syncer.progress.lastElementChild.textContent = `Syncing no CV games...`;
+            request(null, false, `https://script.google.com/macros/s/AKfycbym0nzeyr3_b93ViuiZRivkBMl9PBI2dTHQxNC0rtgeQSlCTI-P/exec`, syncCvGames.bind(null, syncer, callback));
         } else {
             callback();
         }
@@ -5031,8 +5055,8 @@
         }
     }
 
-    function syncBundles(syncer, callback, response) {
-        lockAndSaveGames(JSON.parse(response.responseText).bundles, callback);
+    function syncCvGames(syncer, callback, response) {
+        lockAndSaveGames(JSON.parse(response.responseText).success, callback);
     }
 
      function lockAndSaveGames(games, callback) {
@@ -6446,8 +6470,16 @@
                     name: `ignored`
                 },
                 {
-                    key: `bundled`,
-                    name: `bundled`
+                    key: `fullCV`,
+                    name: `full CV`
+                },
+                {
+                    key: `reducedCV`,
+                    name: `reduced CV`
+                },
+                {
+                    key: `noCV`,
+                    name: `no CV`,
                 },
                 {
                     key: `removed`,
@@ -6573,7 +6605,7 @@
         applyButton = preset.firstElementChild;
         deleteButton = applyButton.nextElementSibling;
         applyButton.addEventListener(`click`, function () {
-            keys = [`maxLevel`, `minLevel`, `maxEntries`, `minEntries`, `maxCopies`, `minCopies`, `maxPoints`, `minPoints`, `maxChance`, `minChance`, `maxRating`, `minRating`, `pinned`, `group`, `whitelist`, `regionRestricted`, `created`, `entered`, `hidden`, `bundled`, `owned`, `wishlisted`, `ignored`, `removed`, `tradingCards`, `achievements`, `multiplayer`, `steamCloud`, `linux`, `mac`, `dlc`, `package`, `genres`, `genreList`, `exceptionPinned`, `exceptionWishlist`, `exceptionGroup`, `exceptionWhitelist`, `exceptionRegionRestricted`, `exceptionMultiple`, `exceptionMultipleCopies`];
+            keys = [`maxLevel`, `minLevel`, `maxEntries`, `minEntries`, `maxCopies`, `minCopies`, `maxPoints`, `minPoints`, `maxChance`, `minChance`, `maxRating`, `minRating`, `pinned`, `group`, `whitelist`, `regionRestricted`, `created`, `entered`, `hidden`, `fullCV`, `reducedCV`, `noCV`, `owned`, `wishlisted`, `ignored`, `removed`, `tradingCards`, `achievements`, `multiplayer`, `steamCloud`, `linux`, `mac`, `dlc`, `package`, `genres`, `genreList`, `exceptionPinned`, `exceptionWishlist`, `exceptionGroup`, `exceptionWhitelist`, `exceptionRegionRestricted`, `exceptionMultiple`, `exceptionMultipleCopies`];
             for (i = 0, n = keys.length; i < n; ++i) {
                 key = keys[i];
                 checkbox = gf[`${key}Checkbox`];
@@ -6666,7 +6698,7 @@
         var i, key, keys, n, preset, savedPresets;
         if (input.value) {
             warning.classList.add(`esgst-hidden`);
-            keys = [`maxLevel`, `minLevel`, `maxEntries`, `minEntries`, `maxCopies`, `minCopies`, `maxPoints`, `minPoints`, `maxChance`, `minChance`, `maxRating`, `minRating`, `pinned`, `group`, `whitelist`, `regionRestricted`, `created`, `entered`, `hidden`, `bundled`, `owned`, `wishlisted`, `ignored`, `removed`, `tradingCards`, `achievements`, `multiplayer`, `steamCloud`, `linux`, `mac`, `dlc`, `package`, `genres`, `genreList`, `exceptionPinned`, `exceptionWishlist`, `exceptionGroup`, `exceptionWhitelist`, `exceptionRegionRestricted`, `exceptionMultiple`, `exceptionMultipleCopies`];
+            keys = [`maxLevel`, `minLevel`, `maxEntries`, `minEntries`, `maxCopies`, `minCopies`, `maxPoints`, `minPoints`, `maxChance`, `minChance`, `maxRating`, `minRating`, `pinned`, `group`, `whitelist`, `regionRestricted`, `created`, `entered`, `hidden`, `fullCV`, `reducedCV`, `noCV`, `owned`, `wishlisted`, `ignored`, `removed`, `tradingCards`, `achievements`, `multiplayer`, `steamCloud`, `linux`, `mac`, `dlc`, `package`, `genres`, `genreList`, `exceptionPinned`, `exceptionWishlist`, `exceptionGroup`, `exceptionWhitelist`, `exceptionRegionRestricted`, `exceptionMultiple`, `exceptionMultipleCopies`];
             preset = {
                 name: input.value
             };
@@ -6816,9 +6848,19 @@
                     key: `ignored`
                 },
                 {
-                    id: `gc_b`,
-                    name: esgst.gc_b_r ? `Not Bundled` : `Bundled`,
-                    key: `bundled`
+                    id: `gc_fcv`,
+                    name: `Full CV`,
+                    key: `fullCV`
+                },
+                {
+                    id: `gc_rcv`,
+                    name: `Reduced CV`,
+                    key: `reducedCV`
+                },
+                {
+                    id: `gc_ncv`,
+                    name: `No CV`,
+                    key: `noCV`
                 }
             ],
             categoryFilters: [
@@ -7003,7 +7045,7 @@
             }
         }
         if (!preset) {
-            var keys = [`maxLevel`, `minLevel`, `maxEntries`, `minEntries`, `maxCopies`, `minCopies`, `maxPoints`, `minPoints`, `maxChance`, `minChance`, `maxRating`, `minRating`, `pinned`, `group`, `whitelist`, `regionRestricted`, `created`, `entered`, `hidden`, `bundled`, `owned`, `wishlisted`, `ignored`, `removed`, `tradingCards`, `achievements`, `multiplayer`, `steamCloud`, `linux`, `mac`, `dlc`, `package`, `genres`, `genreList`, `exceptionPinned`, `exceptionWishlist`, `exceptionGroup`, `exceptionWhitelist`, `exceptionRegionRestricted`, `exceptionMultiple`, `exceptionMultipleCopies`];
+            var keys = [`maxLevel`, `minLevel`, `maxEntries`, `minEntries`, `maxCopies`, `minCopies`, `maxPoints`, `minPoints`, `maxChance`, `minChance`, `maxRating`, `minRating`, `pinned`, `group`, `whitelist`, `regionRestricted`, `created`, `entered`, `hidden`, `fullCV`, `reducedCV`, `noCV`, `owned`, `wishlisted`, `ignored`, `removed`, `tradingCards`, `achievements`, `multiplayer`, `steamCloud`, `linux`, `mac`, `dlc`, `package`, `genres`, `genreList`, `exceptionPinned`, `exceptionWishlist`, `exceptionGroup`, `exceptionWhitelist`, `exceptionRegionRestricted`, `exceptionMultiple`, `exceptionMultipleCopies`];
             preset = {
                 name: `Default${gf.type}`
             };
@@ -7217,7 +7259,7 @@
                     for (j = 0, n2 = gf.typeFilters.length; !filtered && j < n2; ++j) {
                         key = gf.typeFilters[j].key;
                         if ((key === `regionRestricted` && !gf.advancedSearch) || key !== `regionRestricted`) {
-                            if (((gf[key] === `disabled`) && giveaway[key]) || ((gf[key] === `none`) && !giveaway[key])) {
+                            if ((key === `fullCV` && ((gf.fullCV === `disabled` && !giveaway.reducedCV) || (gf.fullCV === `none` && giveaway.reducedCV))) || (key !== `fullCV` && ((gf[key] === `disabled` && giveaway[key]) || (gf[key] === `none` && !giveaway[key])))) {
                                 filtered = true;
                             }
                         }
@@ -9350,7 +9392,7 @@ ${avatar.outerHTML}
                         }
                     } while (found);
                 }
-                request(`do=autocomplete_game&page_number=1&search_query=${encodeURIComponent(name)}`, false, `/ajax.php`, getMgcGiveaway.bind(null, giveaways, i, j, mgc, n, name, progress, textArea, values, mainCallback, callback));
+                request(`do=autocomplete_giveaway_game&page_number=1&search_query=${encodeURIComponent(name)}`, false, `/ajax.php`, getMgcGiveaway.bind(null, giveaways, i, j, mgc, n, name, progress, textArea, values, mainCallback, callback));
             } else {
                 createAlert(`The next giveaway is not in the right format. Please correct it and click on "Import" again to continue importing.`);
                 callback();
@@ -9784,8 +9826,12 @@ ${avatar.outerHTML}
                     }
                     var value = parseInt(pointsHeading.textContent.match(/\d+/)[0]);
                     var games = JSON.parse(GM_getValue(`games`));
-                    if (games[type][id] && games[type][id].bundled) {
-                        value *= 0.15;
+                    if (games[type][id]) {
+                        if (games[type][id].noCV) {
+                            value = 0;
+                        } else if (games[type][id].reducedCV) {
+                            value *= 0.15;
+                        }
                     }
                     var user = {
                         Username: esgst.username,
@@ -24132,17 +24178,24 @@ ${avatar.outerHTML}
             category = esgst.settings.gc_categories[i];
             if (esgst[category]) {
                 switch (category) {
-                    case `gc_b`:
-                        if (savedGame && savedGame.bundled && !esgst.gc_b_r && !location.pathname.match(/^\/bundle-games/)) {
+                    case `gc_fcv`:
+                        if (savedGame && !savedGame.reducedCV) {
                             elements.push(`
-                                <a class="esgst-gc esgst-gc-bundled" href="https://www.steamgifts.com/bundle-games/search?q=${nname}" title="Bundled ${savedGame.bundled}">${esgst.gc_s ? (esgst.gc_s_i ? `<i class="fa fa-recycle"></i>` : `B`) : `Bundled`}</a>
+                                <a class="esgst-gc esgst-gc-fullCV" href="https://www.steamgifts.com/bundle-games/search?q=${nname}" title="Full CV">${esgst.gc_s ? (esgst.gc_s_i ? `<i class="fa fa-calendar"></i>` : `FCV`) : `Full CV`}</a>
                             `);
                         }
                         break;
-                    case `gc_b_r`:
-                        if (savedGame && !savedGame.bundled) {
+                    case `gc_rcv`:
+                        if (savedGame && savedGame.reducedCV && !location.pathname.match(/^\/bundle-games/)) {
                             elements.push(`
-                                <a class="esgst-gc esgst-gc-bundled" href="https://www.steamgifts.com/bundle-games/search?q=${nname}" title="Not Bundled">${esgst.gc_s ? (esgst.gc_s_i ? `<i class="fa fa-fire"></i>` : `NB`) : `Not Bundled`}</a>
+                                <a class="esgst-gc esgst-gc-reducedCV" href="https://www.steamgifts.com/bundle-games/search?q=${nname}" title="Reduced CV since ${savedGame.reducedCV}">${esgst.gc_s ? (esgst.gc_s_i ? `<i class="fa fa-calendar-minus-o"></i>` : `RCV`) : `Reduced CV`}</a>
+                            `);
+                        }
+                        break;
+                    case `gc_ncv`:
+                        if (savedGame && savedGame.noCV) {
+                            elements.push(`
+                                <a class="esgst-gc esgst-gc-noCV" href="https://www.steamgifts.com/bundle-games/search?q=${nname}" title="No CV since ${savedGame.noCV}">${esgst.gc_s ? (esgst.gc_s_i ? `<i class="fa fa-calendar-times-o"></i>` : `NCV`) : `No CV`}</a>
                             `);
                         }
                         break;
@@ -24194,8 +24247,12 @@ ${avatar.outerHTML}
                                             }
                                         }
                                         value = data.price;
-                                        if (savedGame && savedGame.bundled) {
-                                            value *= 0.15;
+                                        if (savedGame) {
+                                            if (savedGame.noCV) {
+                                                value = 0;
+                                            } else if (savedGame.reducedCV) {
+                                                value *= 0.15;
+                                            }
                                         }
                                         if (sent > 5) {
                                             for (j = 0, numGiveaways = sent - 5; j < numGiveaways; ++j) {
@@ -24212,8 +24269,12 @@ ${avatar.outerHTML}
                                         title += ` You should get \$${cv} real CV if you make a giveaway for this game.`;
                                     } else {
                                         value = data.price;
-                                        if (savedGame && savedGame.bundled) {
-                                            value *= 0.15;
+                                        if (savedGame) {
+                                            if (savedGame.noCV) {
+                                                value = 0;
+                                            } else if (savedGame.reducedCV) {
+                                                value *= 0.15;
+                                            }
                                         }
                                         cv = Math.round(value * 100) / 100;
                                     }
@@ -24410,7 +24471,7 @@ ${avatar.outerHTML}
                 }
                 var games = JSON.parse(GM_getValue(`games`));
                 if (games) {
-                    var values = [`achievements`, `dlc`, `genres`, `giveawayInfo`, `ignored`, `lastCheck`, `linux`, `mac`, `multiplayer`, `rating`, `removed`, `steamCloud`, `tradingCards`];
+                    var values = [`bundled`, `reducedCv`, `achievements`, `dlc`, `genres`, `giveawayInfo`, `ignored`, `lastCheck`, `linux`, `mac`, `multiplayer`, `rating`, `removed`, `steamCloud`, `tradingCards`];
                     for (var id in games.apps) {
                         for (i = 0, n = values.length; i < n; ++i) {
                             delete games.apps[id][values[i]];
@@ -24846,16 +24907,19 @@ ${avatar.outerHTML}
                 var category = esgst.settings.gc_categories[i];
                 if (esgst.settings[`${category}_sg`]) {
                     switch (category) {
-                        case `gc_b`:
-                            if (!esgst.settings.gc_b_r_sg) {
-                                elements.push(`
-                                    <div class="esgst-clickable esgst-gc esgst-gc-bundled" draggable="true" id="gc_b" title="Bundled">${esgst.gc_s ? (esgst.gc_s_i ? `<i class="fa fa-recycle"></i>` : `B`) : `Bundled`}</div>
-                                `);
-                            }
-                            break;
-                        case `gc_b_r`:
+                        case `gc_fcv`:
                             elements.push(`
-                                <div class="esgst-clickable esgst-gc esgst-gc-bundled" draggable="true" id="gc_b_r" title="Not Bundled">${esgst.gc_s ? (esgst.gc_s_i ? `<i class="fa fa-fire"></i>` : `NB`) : `Not Bundled`}</div>
+                                <div class="esgst-clickable esgst-gc esgst-gc-fullCV" draggable="true" id="gc_fcv" title="Full CV">${esgst.gc_s ? (esgst.gc_s_i ? `<i class="fa fa-calendar"></i>` : `FCV`) : `Full CV`}</div>
+                            `);
+                            break;
+                        case `gc_rcv`:
+                            elements.push(`
+                                <div class="esgst-clickable esgst-gc esgst-gc-reducedCV" draggable="true" id="gc_rcv" title="Reduced CV">${esgst.gc_s ? (esgst.gc_s_i ? `<i class="fa fa-calendar-minus-o"></i>` : `RCV`) : `Reduced CV`}</div>
+                            `);
+                            break;
+                        case `gc_ncv`:
+                            elements.push(`
+                                <div class="esgst-clickable esgst-gc esgst-gc-noCV" draggable="true" id="gc_ncv" title="No CV">${esgst.gc_s ? (esgst.gc_s_i ? `<i class="fa fa-calendar-times-o"></i>` : `NCV`) : `No CV`}</div>
                             `);
                             break;
                         case `gc_h`:
@@ -25524,7 +25588,7 @@ ${avatar.outerHTML}
             giveaway.id = info.id;
             giveaway.type = info.type;
             if (games && games[giveaway.type][giveaway.id]) {
-                keys = [`owned`, `wishlisted`, `hidden`, `ignored`, `bundled`];
+                keys = [`owned`, `wishlisted`, `hidden`, `ignored`, `reducedCV`, `noCV`];
                 for (i = 0, n = keys.length; i < n; ++i) {
                     key = keys[i];
                     if (games[giveaway.type][giveaway.id][key]) {
@@ -27450,7 +27514,7 @@ ${avatar.outerHTML}
                                 gt: [`tags`],
                                 egh: [`entered`],
                                 itadi: [`itadi`],
-                                main: [`bundled`, `hidden`, `ignored`, `owned`, `wishlisted`]
+                                main: [`reducedCV`, `noCV`, `hidden`, `ignored`, `owned`, `wishlisted`]
                             };
                             data.games = {
                                 apps: {},
@@ -27873,13 +27937,18 @@ ${avatar.outerHTML}
                 mainKey: `esgst-gc`
             },
             {
-                id: `gc_b`,
-                key: `bundled`,
+                id: `gc_fcv`,
+                key: `fullCV`,
                 mainKey: `esgst-gc`
             },
             {
-                id: `gc_b_r`,
-                key: `bundled`,
+                id: `gc_rcv`,
+                key: `reducedCV`,
+                mainKey: `esgst-gc`
+            },
+            {
+                id: `gc_ncv`,
+                key: `noCV`,
                 mainKey: `esgst-gc`
             },
             {
