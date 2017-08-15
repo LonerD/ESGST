@@ -1,4 +1,10 @@
 /*
+ * August 15, 2017 - v6.Beta.26.7
+ */
+
+* Fixed a bug that was happening for new users.
+
+/*
  * August 15, 2017 - v6.Beta.26.6
  */
 
