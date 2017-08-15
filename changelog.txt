@@ -1,4 +1,11 @@
 /*
+ * August 14, 2017 - v6.Beta.26.5
+ */
+
+* Popups are now fixed in the center of the page (closes #238).
+* Added a small 24-hour cache to Game Categories.
+
+/*
  * August 14, 2017 - v6.Beta.26.4
  */
 

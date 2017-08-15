@@ -3,7 +3,7 @@
 // @namespace ESGST
 // @description Enhances SteamGifts and SteamTrades by adding some cool features to them.
 // @icon https://github.com/revilheart/ESGST/raw/master/Resources/esgstIcon.ico
-// @version 6.Beta.26.4
+// @version 6.Beta.26.5
 // @author revilheart
 // @downloadURL https://github.com/revilheart/ESGST/raw/master/ESGST.user.js
 // @updateURL https://github.com/revilheart/ESGST/raw/master/ESGST.meta.js
@@ -4385,7 +4385,9 @@
 
     function createPopup(icon, title, temp, settings) {
         var popup;
-        popup = {};
+        popup = {
+            temp: temp
+        };
         popup.popup = insertHtml(document.body, `beforeEnd`, `
             <div class="esgst-hidden esgst-popup">
                 <div class="popup_summary">
@@ -4401,7 +4403,7 @@
                 </div>
                 <div class="popup__actions popup_actions">
                     <span class="esgst-hidden">Settings</span>
-                    <span class="b-close">Close</span>
+                    <span>Close</span>
                 </div>
             </div>
         `);
@@ -4418,43 +4420,40 @@
                 }
             });
         }
-        popup.open = function (callback) {
-            popup.popup.classList.remove(`esgst-hidden`);
-            popup.opened = $(popup.popup).bPopup({
-                amsl: [0],
-                fadeSpeed: 200,
-                followSpeed: 500,
-                modalColor: `#3c424d`,
-                scrollbar: true,
-                onClose: function () {
-                    if (temp) {
-                        popup.popup.remove();
-                    } else {
-                        popup.popup.classList.add(`esgst-hidden`);
-                    }
-                    if (popup.onClose) {
-                        popup.onClose();
-                    }
-                }
-            }, function() {
-                popup.scrollable.style.maxHeight = `${window.innerHeight * 0.9 - (popup.popup.offsetHeight - popup.scrollable.offsetHeight)}px`;
-                popup.opened.reposition();
-                if (callback) {
-                    callback();
-                }
-            });
-        };
-        popup.close = function () {
-            popup.opened.close();
-        };
-        popup.reposition = function () {
-            if (popup.opened) {
-                popup.scrollable.style.maxHeight = `${window.innerHeight * 0.9 - (popup.popup.offsetHeight - popup.scrollable.offsetHeight)}px`;
-                popup.opened.reposition();
-            }
-        };
-        popup.popup.addEventListener(`click`, popup.reposition);
+        popup.description.nextElementSibling.lastElementChild.addEventListener(`click`, closePopup.bind(null, popup));
+        popup.open = openPopup.bind(null, popup);
+        popup.close = closePopup.bind(null, popup);
+        popup.reposition = repositionPopup.bind(null, popup);
+        popup.popup.addEventListener(`click`, repositionPopup.bind(null, popup));
         return popup;
+    }
+
+    function repositionPopup(popup) {
+        popup.scrollable.style.maxHeight = `${window.innerHeight * 0.9 - (popup.popup.offsetHeight - popup.scrollable.offsetHeight)}px`;
+    }
+
+    function openPopup(popup, callback) {
+        popup.popup.classList.remove(`esgst-hidden`);
+        popup.modal = insertHtml(document.body, `beforeEnd`, `
+            <div class="esgst-popup-modal"></div>
+        `);
+        popup.modal.addEventListener(`click`, closePopup.bind(null, popup));
+        popup.reposition();
+        if (callback) {
+            callback();
+        }
+    }
+
+    function closePopup(popup) {
+        popup.modal.remove();
+        if (popup.temp) {
+            popup.popup.remove();
+        } else {
+            popup.popup.classList.add(`esgst-hidden`);
+        }
+        if (popup.onClose) {
+            popup.onClose();
+        }
     }
 
     /* Popout */
@@ -24077,7 +24076,7 @@ ${avatar.outerHTML}
     /* [GC] Game Categories */
 
     function getGcGames(games) {
-        var apps, i, id, ids, n, savedGames, subs;
+        var apps, gcCache, i, id, ids, missingApps, missingSubs, n, savedGames, subs;
         for (id in games.apps) {
             for (i = 0, n = games.apps[id].length; i < n; ++i) {
                 if (!games.apps[id][i].container.getElementsByClassName(`esgst-gc-panel`)[0] && ((games.apps[id][i].table && esgst.gc_t) || !games.apps[id][i].table)) {
@@ -24095,27 +24094,66 @@ ${avatar.outerHTML}
         apps = Object.keys(games.apps);
         subs = Object.keys(games.subs);
         if (esgst.gc_gi || esgst.gc_r || esgst.gc_a || esgst.gc_mp || esgst.gc_sc || esgst.gc_tc || esgst.gc_l || esgst.gc_m || esgst.gc_dlc || esgst.gc_ea || esgst.gc_rm || esgst.gc_g) {
-            request(null, false, `https://script.google.com/macros/s/AKfycbwQgqhHHYlFCajD_K4K1Qhz33CzGbSRiwCSTPWkJcVabrCNNkMm/exec?apps=${apps.join(`,`)}&subs=${subs.join(`,`)}`, addGcCategories.bind(null, games));
+            gcCache = JSON.parse(GM_getValue(`gcCache`, `{"apps":{},"subs":{},"timestamp":0}`));
+            if (Date.now() - gcCache.timestamp > 86400000) {
+                gcCache = {
+                    apps: {},
+                    subs: {},
+                    timestamp: 0
+                };
+                request(null, false, `https://script.google.com/macros/s/AKfycbwQgqhHHYlFCajD_K4K1Qhz33CzGbSRiwCSTPWkJcVabrCNNkMm/exec?apps=${apps.join(`,`)}&subs=${subs.join(`,`)}`, addGcCategories.bind(null, apps, games, gcCache, subs));
+            } else {
+                missingApps = [];
+                missingSubs = [];
+                for (i = 0, n = apps.length; i < n; ++i) {
+                    id = apps[i];
+                    if (!gcCache.apps[id]) {
+                        missingApps.push(id);
+                    }
+                }
+                for (i = 0, n = subs.length; i < n; ++i) {
+                    id = subs[i];
+                    if (!gcCache.subs[id]) {
+                        missingSubs.push(id);
+                    }
+                }
+                if (missingApps.length > 0 || missingSubs.length > 0) {
+                    request(null, false, `https://script.google.com/macros/s/AKfycbwQgqhHHYlFCajD_K4K1Qhz33CzGbSRiwCSTPWkJcVabrCNNkMm/exec?apps=${missingApps.join(`,`)}&subs=${missingSubs.join(`,`)}`, addGcCategories.bind(null, apps, games, gcCache, subs));
+                } else {
+                    addGcCategories(apps, games, gcCache, subs);
+                }
+            }
         } else {
             savedGames = JSON.parse(GM_getValue(`games`));
             for (id in games.apps) {
                 addGcCategory(null, games.apps[id], savedGames.apps[id], id, games.apps[id][0].name, `apps`);
             }
             for (id in games.subs) {
-                addGcCategory(null, games.subs[id], savedGames.subs[id], id, games.apps[id][0].name, `subs`);
+                addGcCategory(null, games.subs[id], savedGames.subs[id], id, games.subs[id][0].name, `subs`);
             }
         }
     }
     
-    function addGcCategories(games, response) {
+    function addGcCategories(apps, games, gcCache, subs, response) {
         var category, categories, giveaway, i, j, id, n, numCategories, responseJson, savedGames;
-        responseJson = JSON.parse(response.responseText);
         savedGames = JSON.parse(GM_getValue(`games`));
-        for (id in responseJson.apps) {
-            addGcCategory(responseJson.apps[id], games.apps[id], savedGames.apps[id], id, responseJson.apps[id].name, `apps`);
+        if (response) {
+            responseJson = JSON.parse(response.responseText);
+            for (id in responseJson.apps) {
+                gcCache.apps[id] = responseJson.apps[id];
+            }
+            for (id in responseJson.subs) {
+                gcCache.subs[id] = responseJson.subs[id];
+            }
         }
-        for (id in responseJson.subs) {
-            addGcCategory(responseJson.subs[id], games.subs[id], savedGames.subs[id], id, responseJson.subs[id].name, `subs`);
+        GM_setValue(`gcCache`, JSON.stringify(gcCache));
+        for (i = 0, n = apps.length; i < n; ++i) {
+            id = apps[i];
+            addGcCategory(gcCache.apps[id], games.apps[id], savedGames.apps[id], id, gcCache.apps[id].name, `apps`);
+        }
+        for (i = 0, n = subs.length; i < n; ++i) {
+            id = subs[i];
+            addGcCategory(gcCache.subs[id], games.subs[id], savedGames.subs[id], id, gcCache.subs[id].name, `subs`);
         }
         categories = [`removed`, `tradingCards`, `achievements`, `multiplayer`, `steamCloud`, `linux`, `mac`, `dlc`, `package`, `genres`, `rating`];
         for (i = 0, n = esgst.currentGiveaways.length; i < n; ++i) {
@@ -28809,15 +28847,30 @@ ${avatar.outerHTML}
                 z-index: 99999;
             }
 
+            .esgst-popup-modal {
+                background-color: rgba(60, 66, 77, 0.7);
+                bottom: 0;
+                cursor: pointer;
+                left: 0;
+                position: fixed;
+                right: 0;
+                top: 0;
+                z-index: 9998; 
+            }
+
             .esgst-popup {
                 color: #465670;
                 max-width: 75%;
                 padding: 35px 100px;
-                position: absolute;
+                position: fixed;
                 background-color: #f0f2f5;
                 border-radius: 4px;
                 text-align: center;
                 text-shadow: 1px 1px rgba(255,255,255,0.94);
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                z-index: 9999;
             }
 
             .esgst-popup li:before {
