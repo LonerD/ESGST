@@ -3,7 +3,7 @@
 // @namespace ESGST
 // @description Enhances SteamGifts and SteamTrades by adding some cool features to them.
 // @icon https://github.com/revilheart/ESGST/raw/master/Resources/esgstIcon.ico
-// @version 6.Beta.26.9
+// @version 6.Beta.26.10
 // @author revilheart
 // @downloadURL https://github.com/revilheart/ESGST/raw/master/ESGST.user.js
 // @updateURL https://github.com/revilheart/ESGST/raw/master/ESGST.meta.js
@@ -1051,6 +1051,16 @@
                                     id: `gb_h`,
                                     input: true,
                                     name: `Highlight the button when giveaways have started and/or are about to end.`,
+                                    sg: true
+                                },
+                                {
+                                    description: `
+                                        <ul>
+                                            <li>If disabled, ended giveaways will remain in the bookmarked list until manually unbookmarked.</li>
+                                        </ul>
+                                    `,
+                                    id: `gb_u`,
+                                    name: `Automatically unbookmark ended giveaways.`,
                                     sg: true
                                 }
                             ],
@@ -7373,7 +7383,7 @@
     }
 
     function addGbButton() {
-        var button, context, html;
+        var button, context, i, n, html;
         context = document.getElementsByClassName(`nav__left-container`)[0];
         html = `
             <div class="nav__button-container esgst-hidden" title="View your bookmarked giveaways">
@@ -7396,7 +7406,11 @@
                     }
                     if (Date.now() >= giveaways[key].endTime || !giveaways[key].endTime) {
                         if (giveaways[key].started) {
-                            delete giveaways[key].bookmarked;
+                            if (esgst.gb_u) {
+                                delete giveaways[key].bookmarked;
+                            } else {
+                                bookmarked.push(giveaways[key]);
+                            }
                         } else {
                             bookmarked.push(giveaways[key]);
                             ++started;
@@ -7440,6 +7454,13 @@
                         return 0;
                     }
                 });
+                for (i = 0, n = bookmarked.length; i < n; ++i) {
+                    if (Date.now() > bookmarked[i].endTime) {
+                        bookmarked.push(bookmarked.splice(i, 1)[0]);
+                        i -= 1;
+                        n -= 1;
+                    }
+                }
                 button.classList.remove(`esgst-hidden`);
                 if (esgst.gb_h && ending > 0) {
                     button.classList.add(`ending`);
@@ -7515,7 +7536,7 @@
                                 }
                                 var counts = responseHtml.getElementsByClassName(`sidebar__navigation__item__count`);
                                 var image = responseHtml.getElementsByClassName(`global__image-outer-wrap--game-large`)[0].firstElementChild.getAttribute(`src`);
-                                var popupHtml = `
+                                var popupHtml = `${Date.now() > bookmarked[i].endTime && !gbGiveaways.getElementsByClassName(`row-spacer`)[0] ? `<div class="row-spacer"></div>` : ``}
 <div><div class="giveaway__row-outer-wrap" data-game-id="${gameId}">
 <div class="giveaway__row-inner-wrap">
 <div class="giveaway__summary">
@@ -7575,10 +7596,10 @@ ${avatar.outerHTML}
         var savedGiveaways = JSON.parse(localStorage.esgst_giveaways || `{}`);
         for (var i = 0, n = giveaways.length; i < n; ++i) {
             var giveaway = giveaways[i];
-            if (((esgst.archivePath && !main) || !esgst.archivePath) && giveaway.creator !== esgst.username && !giveaway.ended && !giveaway.entered && giveaway.url && !giveaway.innerWrap.getElementsByClassName(`esgst-gb-button`)[0]) {
+            if (((esgst.archivePath && !main) || !esgst.archivePath) && giveaway.creator !== esgst.username && !giveaway.entered && giveaway.url && !giveaway.innerWrap.getElementsByClassName(`esgst-gb-button`)[0]) {
                 if (savedGiveaways[giveaway.code] && savedGiveaways[giveaway.code].bookmarked) {
                     addGbUnbookmarkButton(giveaway);
-                } else {
+                } else if (!giveaway.ended) {
                     addGbBookmarkButton(giveaway);
                 }
             }
@@ -20658,9 +20679,6 @@ ${avatar.outerHTML}
                         saved[comment.type][comment.code] = {
                             readComments: {}
                         };
-                    } else {
-                        delete saved[comment.type][comment.code].readComments.Count;
-                        delete saved[comment.type][comment.code].readComments.undefined;
                     }
                     if (count > 0) {
                         saved[comment.type][comment.code].count = count;
@@ -25236,17 +25254,17 @@ ${avatar.outerHTML}
                     esgst.npth_nextKey = e.key;
                     next.value = e.key;
                 });
-            } else {
-            var hours = esgst.gb_hours;
-            input = insertHtml(SMFeatures, `beforeEnd`, `
-                <div class="esgst-sm-colors">
-                    Time range to trigger highlight: <input type="text" value=${hours}> hours
-                </div>
-            `);
-            input.firstElementChild.addEventListener(`change`, function() {
-                setValue(`gb_hours`, input.firstElementChild.value);
-                esgst.gb_hours = input.firstElementChild.value;
-            });
+            } else if (Feature.id === `gb_h`) {
+                var hours = esgst.gb_hours;
+                input = insertHtml(SMFeatures, `beforeEnd`, `
+                    <div class="esgst-sm-colors">
+                        Time range to trigger highlight: <input type="text" value=${hours}> hours
+                    </div>
+                `);
+                input.firstElementChild.addEventListener(`change`, function() {
+                    setValue(`gb_hours`, input.firstElementChild.value);
+                    esgst.gb_hours = input.firstElementChild.value;
+                });
             }
             if (siwtchSg) {
                 siwtchSg.dependencies.push(SMFeatures);

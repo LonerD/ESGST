@@ -1,4 +1,11 @@
 /*
+ * August 15, 2017 - v6.Beta.26.10
+ */
+
+* Fixed a Comment Tracker bug.
+* Separated the default Giveaway Bookmarks behavior of automatically unbookmarking ended giveaways into an option (2.9.2). With this option disabled, ended giveaways will remain in the bookmarked list until manually unbookmarked.
+
+/*
  * August 15, 2017 - v6.Beta.26.9
  */
 
