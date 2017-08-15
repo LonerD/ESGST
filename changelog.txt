@@ -1,4 +1,13 @@
 /*
+ * August 15, 2017 - v6.Beta.26.9
+ */
+
+* Fixed a typo in the description of Whitelist/Blacklist Highlighter.
+* Separated the default Giveaways/Discussions/Tickets/Trades Tracker behavior of marking the pages as visited when visiting them into an option (1.16.2). With this option disabled, the only way to mark them as visited is manually through the check button.
+* Fixed a bug in Giveaway Winners Link that was not enabling it everywhere.
+* Fixed a bug in Unsent Gifts Sender that was not sending all gifts if a winner was being rerolled.
+
+/*
  * August 15, 2017 - v6.Beta.26.8
  */
 

@@ -3,7 +3,7 @@
 // @namespace ESGST
 // @description Enhances SteamGifts and SteamTrades by adding some cool features to them.
 // @icon https://github.com/revilheart/ESGST/raw/master/Resources/esgstIcon.ico
-// @version 6.Beta.26.8
+// @version 6.Beta.26.9
 // @author revilheart
 // @downloadURL https://github.com/revilheart/ESGST/raw/master/ESGST.user.js
 // @updateURL https://github.com/revilheart/ESGST/raw/master/ESGST.meta.js
@@ -889,6 +889,11 @@
                                     id: `gdttt_g`,
                                     name: `Fade visited giveaways.`,
                                     sg: true
+                                },
+                                {
+                                    id: `gdttt_v`,
+                                    name: `Mark the pages as visited when visiting them.`,
+                                    sg: true
                                 }
                             ],
                             id: `gdttt`,
@@ -1208,7 +1213,6 @@
                                 <img src="https://camo.githubusercontent.com/c7253c39157cbde30b3337b90267260de33e4cab/687474703a2f2f692e696d6775722e636f6d2f67326b614644392e706e67"/>
                             `,
                             id: `gwl`,
-                            load: loadGwl,
                             name: `Giveaway Winners Link`,
                             sg: true,
                             type: `giveaways`
@@ -2099,7 +2103,7 @@
                                 {
                                     colors: true,
                                     id: `wbh_b`,
-                                    name: `Color blacklisted users instead of adding a heart icon next to their username.`,
+                                    name: `Color blacklisted users instead of adding a ban icon next to their username.`,
                                     sg: true,
                                     st: true
                                 }
@@ -5764,7 +5768,7 @@
             esgst.endlessFeatures.push(addCtDiscussionPanels);
             addCtDiscussionPanels(document);
         }
-        if (esgst.commentsPath && !esgst.ct) {
+        if (esgst.gdttt_v && esgst.commentsPath && !esgst.ct) {
             createLock(`commentLock`, 300, function (deleteLock) {
                 var match = window.location.pathname.match(/(giveaway|discussion|ticket|trade)\/(.+?)\//);
                 var type = `${match[1]}s`;
@@ -8644,26 +8648,20 @@ ${avatar.outerHTML}
 
     /* [GWL] Giveaway Winners Link */
 
-    function loadGwl() {
-        if (esgst.userPath) {
-            esgst.giveawayFeatures.push(addGwlLinks);
-        }
-    }
-
     function addGwlLinks(giveaways) {
         var giveaway, i, link, n;
         for (i = 0, n = giveaways.length; i < n; ++i) {
             giveaway = giveaways[i];
             if (!giveaway.innerWrap.getElementsByClassName(`esgst-gwl`)[0]) {
-            if (giveaway.ended) {
-                link = giveaway.url ? `href="${giveaway.url}/winners"` : ``;
-                giveaway.entriesLink.insertAdjacentHTML(`afterEnd`, `
-                    <a class="esgst-gwl" ${link}>
-                        <i class="fa fa-trophy"></i>
-                        <span>${giveaway.winners} winners</span>
-                    </a>
-                `);
-            }
+                if (giveaway.ended) {
+                    link = giveaway.url ? `href="${giveaway.url}/winners"` : ``;
+                    giveaway.entriesLink.insertAdjacentHTML(`afterEnd`, `
+                        <a class="esgst-gwl" ${link}>
+                            <i class="fa fa-trophy"></i>
+                            <span>${giveaway.winners} winners</span>
+                        </a>
+                    `);
+                }
             }
         }
     }
@@ -10284,6 +10282,7 @@ ${avatar.outerHTML}
                     });
                 } else {
                     winner.error = `${winner.username} is currently being rerolled.`;
+                    setTimeout(checkUgsRules, 0, code, ugs, ++i, n, callback);
                 }
             } else {
                 callback();
@@ -20666,7 +20665,9 @@ ${avatar.outerHTML}
                     if (count > 0) {
                         saved[comment.type][comment.code].count = count;
                     }
-                    saved[comment.type][comment.code].visited = true;
+                    if (esgst.gdttt && esgst.gdttt_v) {
+                        saved[comment.type][comment.code].visited = true;
+                    }
                     if (!esgst.ct_s) {
                         button = comment.comment.getElementsByClassName(`esgst-ct-comment-button`)[0];
                         if (comment.author === esgst.username) {
@@ -25690,6 +25691,9 @@ ${avatar.outerHTML}
             for (i = 0, n = giveaways.length; i < n; ++i) {
                 esgst.currentGiveaways.push(giveaways[i]);
             }
+        }
+        if (esgst.gwl) {
+            addGwlLinks(giveaways);
         }
         for (i = 0, n = esgst.giveawayFeatures.length; i < n; ++i) {
             esgst.giveawayFeatures[i](giveaways, main, source);
