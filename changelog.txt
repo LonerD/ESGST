@@ -1,4 +1,10 @@
 /*
+ * August 15, 2017 - v6.Beta.26.8
+ */
+
+* Fixed a bug that was not showing "Rating" category in Game Categories.
+
+/*
  * August 15, 2017 - v6.Beta.26.7
  */
 

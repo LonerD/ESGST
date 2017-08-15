@@ -3,7 +3,7 @@
 // @namespace ESGST
 // @description Enhances SteamGifts and SteamTrades by adding some cool features to them.
 // @icon https://github.com/revilheart/ESGST/raw/master/Resources/esgstIcon.ico
-// @version 6.Beta.26.7
+// @version 6.Beta.26.8
 // @author revilheart
 // @downloadURL https://github.com/revilheart/ESGST/raw/master/ESGST.user.js
 // @updateURL https://github.com/revilheart/ESGST/raw/master/ESGST.meta.js
@@ -24221,7 +24221,7 @@ ${avatar.outerHTML}
             request(null, false, `http://store.steampowered.com/${type.slice(0, -1)}/${id}`, function (response) {
                 responseHtml = DOM.parse(response.responseText);
                 if (response.finalUrl.match(id)) {
-                    elements = document.getElementsByClassName(`user_reviews_summary_row`);
+                    elements = responseHtml.getElementsByClassName(`user_reviews_summary_row`);
                     n = elements.length;
                     if (n > 0) {
                         match = elements[n - 1].getAttribute(`data-store-tooltip`).replace(/,/g, ``).match(/(\d+)%.*?(\d+)/);
