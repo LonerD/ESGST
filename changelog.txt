@@ -1,4 +1,11 @@
 /*
+ * August 15, 2017 - v6.Beta.26.6
+ */
+
+* Fixed a style issue that was blurring popups (closes #347).
+* Rolled Game Categories back to retrieving the categories manually, since Google Sheets was not able to handle the quota, but kept the 24-hour cache.
+
+/*
  * August 14, 2017 - v6.Beta.26.5
  */
 

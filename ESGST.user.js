@@ -3,7 +3,7 @@
 // @namespace ESGST
 // @description Enhances SteamGifts and SteamTrades by adding some cool features to them.
 // @icon https://github.com/revilheart/ESGST/raw/master/Resources/esgstIcon.ico
-// @version 6.Beta.26.5
+// @version 6.Beta.26.6
 // @author revilheart
 // @downloadURL https://github.com/revilheart/ESGST/raw/master/ESGST.user.js
 // @updateURL https://github.com/revilheart/ESGST/raw/master/ESGST.meta.js
@@ -4094,15 +4094,6 @@
                             ++owned;
                             newOwned[mainKey].push(id.toString());
                         }
-                        if (key === `wishlisted` && savedGames[mainKey][id].subs) {
-                            for (var k = 0, numPackages = savedGames[mainKey][id].subs.length; k < numPackages; ++k) {
-                                var subid = savedGames[mainKey][id].subs[k];
-                                if (!savedGames.subs[subid]) {
-                                    savedGames.subs[subid] = {};
-                                }
-                                savedGames.subs[subid].wishlisted = true;
-                            }
-                        }
                     }
                 }
             }
@@ -4388,25 +4379,28 @@
         popup = {
             temp: temp
         };
-        popup.popup = insertHtml(document.body, `beforeEnd`, `
-            <div class="esgst-hidden esgst-popup">
-                <div class="popup_summary">
-                    <div class="popup_icon">
-                        <i class="popup__icon fa ${icon} esgst-popup-icon"></i>
+        popup.wrapper = insertHtml(document.body, `beforeEnd`, `
+            <div class="esgst-hidden esgst-popup-wrapper">
+                <div class="esgst-popup">
+                    <div class="popup_summary">
+                        <div class="popup_icon">
+                            <i class="popup__icon fa ${icon} esgst-popup-icon"></i>
+                        </div>
+                        <div class="popup__heading popup_heading">
+                            <div class="popup_heading_h2 esgst-popup-title">${title}</div>
+                        </div>
                     </div>
-                    <div class="popup__heading popup_heading">
-                        <div class="popup_heading_h2 esgst-popup-title">${title}</div>
+                    <div class="popup_description esgst-popup-description">
+                        <div class="esgst-popup-scrollable"></div>
                     </div>
-                </div>
-                <div class="popup_description esgst-popup-description">
-                    <div class="esgst-popup-scrollable"></div>
-                </div>
-                <div class="popup__actions popup_actions">
-                    <span class="esgst-hidden">Settings</span>
-                    <span>Close</span>
+                    <div class="popup__actions popup_actions">
+                        <span class="esgst-hidden">Settings</span>
+                        <span>Close</span>
+                    </div>
                 </div>
             </div>
         `);
+        popup.popup = popup.wrapper.firstElementChild;
         popup.description = popup.popup.firstElementChild.nextElementSibling;
         popup.scrollable = popup.description.firstElementChild;
         if (!settings) {
@@ -4429,11 +4423,11 @@
     }
 
     function repositionPopup(popup) {
-        popup.scrollable.style.maxHeight = `${window.innerHeight * 0.9 - (popup.popup.offsetHeight - popup.scrollable.offsetHeight)}px`;
+        popup.scrollable.style.maxHeight = `${window.innerHeight * 0.9 - (popup.wrapper.offsetHeight - popup.scrollable.offsetHeight)}px`;
     }
 
     function openPopup(popup, callback) {
-        popup.popup.classList.remove(`esgst-hidden`);
+        popup.wrapper.classList.remove(`esgst-hidden`);
         popup.modal = insertHtml(document.body, `beforeEnd`, `
             <div class="esgst-popup-modal"></div>
         `);
@@ -4447,9 +4441,9 @@
     function closePopup(popup) {
         popup.modal.remove();
         if (popup.temp) {
-            popup.popup.remove();
+            popup.wrapper.remove();
         } else {
-            popup.popup.classList.add(`esgst-hidden`);
+            popup.wrapper.classList.add(`esgst-hidden`);
         }
         if (popup.onClose) {
             popup.onClose();
@@ -24076,86 +24070,217 @@ ${avatar.outerHTML}
     /* [GC] Game Categories */
 
     function getGcGames(games) {
-        var apps, gcCache, i, id, ids, missingApps, missingSubs, n, savedGames, subs;
+        var gc, element, elements, i, id, missingApps, missingSubs, n, numApps, numSubs, savedGames;
+        gc = {
+            apps: Object.keys(games.apps),
+            cache: {
+                apps: {},
+                subs: {}
+            },
+            subs: Object.keys(games.subs)            
+        };
         for (id in games.apps) {
-            for (i = 0, n = games.apps[id].length; i < n; ++i) {
-                if (!games.apps[id][i].container.getElementsByClassName(`esgst-gc-panel`)[0] && ((games.apps[id][i].table && esgst.gc_t) || !games.apps[id][i].table)) {
-                    games.apps[id][i].heading.insertAdjacentHTML(`afterEnd`, `<div class="esgst-gc-panel"></div>`);
+            elements = games.apps[id];
+            for (i = 0, n = elements.length; i < n; ++i) {
+                element = elements[i];
+                if (!element.container.getElementsByClassName(`esgst-gc-panel`)[0] && ((element.table && esgst.gc_t) || !element.table)) {
+                    element.heading.insertAdjacentHTML(`afterEnd`, `<div class="esgst-gc-panel"></div>`);
                 }
             }
         }
         for (id in games.subs) {
-            for (i = 0, n = games.subs[id].length; i < n; ++i) {
-                if (!games.subs[id][i].container.getElementsByClassName(`esgst-gc-panel`)[0] && ((games.subs[id][i].table && esgst.gc_t) || !games.subs[id][i].table)) {
-                    games.subs[id][i].heading.insertAdjacentHTML(`afterEnd`, `<div class="esgst-gc-panel"></div>`);
+            elements = games.subs[id];
+            for (i = 0, n = elements.length; i < n; ++i) {
+                element = elements[i];
+                if (!element.container.getElementsByClassName(`esgst-gc-panel`)[0] && ((element.table && esgst.gc_t) || !element.table)) {
+                    element.heading.insertAdjacentHTML(`afterEnd`, `<div class="esgst-gc-panel"></div>`);
                 }
             }
         }
-        apps = Object.keys(games.apps);
-        subs = Object.keys(games.subs);
         if (esgst.gc_gi || esgst.gc_r || esgst.gc_a || esgst.gc_mp || esgst.gc_sc || esgst.gc_tc || esgst.gc_l || esgst.gc_m || esgst.gc_dlc || esgst.gc_ea || esgst.gc_rm || esgst.gc_g) {
-            gcCache = JSON.parse(GM_getValue(`gcCache`, `{"apps":{},"subs":{},"timestamp":0}`));
-            if (Date.now() - gcCache.timestamp > 86400000) {
-                gcCache = {
+            gc.cache = JSON.parse(localStorage.esgst_gcCache || `{ "apps": {}, "subs": {}, "timestamp": 0 }`);
+            if (Date.now() - gc.cache.timestamp > 86400000) {
+                gc.cache = {
                     apps: {},
                     subs: {},
-                    timestamp: 0
+                    timestamp: Date.now()
                 };
-                request(null, false, `https://script.google.com/macros/s/AKfycbwQgqhHHYlFCajD_K4K1Qhz33CzGbSRiwCSTPWkJcVabrCNNkMm/exec?apps=${apps.join(`,`)}&subs=${subs.join(`,`)}`, addGcCategories.bind(null, apps, games, gcCache, subs));
+                numApps = gc.apps.length;
+                numSubs = gc.subs.length;
+                gc.count = 0;
+                gc.total = numApps + numSubs;
+                for (i = 0; i < numApps; ++i) {
+                    getGcCategories(gc, gc.apps[i], `apps`);
+                }
+                for (i = 0; i < numSubs; ++i) {
+                    getGcCategories(gc, gc.subs[i], `subs`);
+                }
+                setTimeout(checkGcComplete, 1000, games, gc);
             } else {
                 missingApps = [];
                 missingSubs = [];
-                for (i = 0, n = apps.length; i < n; ++i) {
-                    id = apps[i];
-                    if (!gcCache.apps[id]) {
+                for (i = 0, n = gc.apps.length; i < n; ++i) {
+                    id = gc.apps[i];
+                    if (!gc.cache.apps[id]) {
                         missingApps.push(id);
                     }
                 }
-                for (i = 0, n = subs.length; i < n; ++i) {
-                    id = subs[i];
-                    if (!gcCache.subs[id]) {
+                for (i = 0, n = gc.subs.length; i < n; ++i) {
+                    id = gc.subs[i];
+                    if (!gc.cache.subs[id]) {
                         missingSubs.push(id);
                     }
                 }
-                if (missingApps.length > 0 || missingSubs.length > 0) {
-                    request(null, false, `https://script.google.com/macros/s/AKfycbwQgqhHHYlFCajD_K4K1Qhz33CzGbSRiwCSTPWkJcVabrCNNkMm/exec?apps=${missingApps.join(`,`)}&subs=${missingSubs.join(`,`)}`, addGcCategories.bind(null, apps, games, gcCache, subs));
+                numApps = missingApps.length;
+                numSubs = missingSubs.length;
+                if (numApps || numSubs) {
+                    gc.count = 0;
+                    gc.total = numApps + numSubs;
+                    for (i = 0, n = missingApps.length; i < n; ++i) {
+                        getGcCategories(gc, missingApps[i], `apps`);
+                    }
+                    for (i = 0, n = missingSubs.length; i < n; ++i) {
+                        getGcCategories(gc, missingSubs[i], `subs`);
+                    }
+                    setTimeout(checkGcComplete, 1000, games, gc);
                 } else {
-                    addGcCategories(apps, games, gcCache, subs);
+                    addGcCategories(games, gc);
                 }
             }
         } else {
-            savedGames = JSON.parse(GM_getValue(`games`));
-            for (id in games.apps) {
-                addGcCategory(null, games.apps[id], savedGames.apps[id], id, games.apps[id][0].name, `apps`);
-            }
-            for (id in games.subs) {
-                addGcCategory(null, games.subs[id], savedGames.subs[id], id, games.subs[id][0].name, `subs`);
-            }
+            addGcCategories(games, gc);
         }
     }
-    
-    function addGcCategories(apps, games, gcCache, subs, response) {
-        var category, categories, giveaway, i, j, id, n, numCategories, responseJson, savedGames;
-        savedGames = JSON.parse(GM_getValue(`games`));
-        if (response) {
+
+    function getGcCategories(gc, id, type) {
+        var categories, data, elements, genres, i, match, n, platforms, price, response, responseHtml, responseJson, tags;
+        request(null, false, `http://store.steampowered.com/api/${type === `apps` ? `appdetails?appids=` : `packagedetails?packageids=`}${id}&filters=basic,categories,genres,name,platforms,price,price_overview&cc=us&l=en`, function (response) {
+            categories = {
+                achievements: 0,
+                dlc: 0,
+                earlyAccess: 0,
+                genres: ``,
+                linux: 0,
+                mac: 0,
+                multiplayer: 0,
+                name: ``,
+                price: -1,
+                rating: ``,
+                ratingType: ``,
+                removed: 1,
+                steamCloud: 0,
+                tags: ``,
+                tradingCards: 0            
+            };
             responseJson = JSON.parse(response.responseText);
-            for (id in responseJson.apps) {
-                gcCache.apps[id] = responseJson.apps[id];
+            if (responseJson[id]) {
+                data = responseJson[id].data;
+                if (data) {
+                    if (data.categories) {
+                        for (i = 0, n = data.categories.length; i < n; ++i) {
+                            switch (data.categories[i].description) {
+                                case "Steam Achievements":
+                                    categories.achievements = 1;
+                                    break;
+                                case "Multi-player":
+                                    categories.multiplayer = 1;
+                                    break;
+                                case "Steam Cloud":
+                                    categories.steamCloud = 1;
+                                    break;
+                                case "Steam Trading Cards":
+                                    categories.tradingCards = 1;
+                                    break;
+                                default:
+                                    break;
+                            }
+                        }
+                    }
+                    categories.dlc = data.type === `dlc` ? 1 : 0;
+                    genres = [];
+                    if (data.genres) {
+                        for (i = 0, n = data.genres.length; i < n; ++i) {
+                            genres.push(data.genres[i].description.trim());
+                        }
+                    }
+                    genres.sort(function (a, b) {
+                        return a.localeCompare(b, {
+                            sensitivity: `base`
+                        });
+                    });
+                    categories.earlyAccess = genres.indexOf(`Early Access`) >= 0 ? 1 : 0;
+                    categories.genres = genres.join(`, `);
+                    platforms = data.platforms;
+                    categories.linux = platforms.linux ? 1 : 0;
+                    categories.mac = platforms.mac ? 1 : 0;
+                    categories.name = data.name;
+                    price = data.price || data.price_overview;
+                    categories.price = price ? (price.currency === `USD` ? Math.ceil(price.initial / 100) : -1) : 0;
+                }
             }
-            for (id in responseJson.subs) {
-                gcCache.subs[id] = responseJson.subs[id];
-            }
+            request(null, false, `http://store.steampowered.com/${type.slice(0, -1)}/${id}`, function (response) {
+                responseHtml = DOM.parse(response.responseText);
+                if (response.finalUrl.match(id)) {
+                    elements = document.getElementsByClassName(`user_reviews_summary_row`);
+                    n = elements.length;
+                    if (n > 0) {
+                        match = elements[n - 1].getAttribute(`data-store-tooltip`).replace(/,/g, ``).match(/(\d+)%.*?(\d+)/);
+                        if (match) {
+                            categories.rating = `${match[1]}% (${match[2]} Reviews)`;
+                            rating = parseInt(match[1]);
+                            if (rating >= 0) {
+                                if (rating < 40) {
+                                    categories.ratingType = `Negative`;
+                                } else if (rating < 70) {
+                                    categories.ratingType = `Mixed`;
+                                } else {
+                                    categories.ratingType = `Positive`;
+                                }
+                            } else {
+                                categories.ratingType = `?`;
+                            }
+                        }
+                    }
+                    categories.removed = 0;
+                    tags = [];
+                    elements = responseHtml.querySelectorAll(`a.app_tag`);
+                    for (i = 0, n = elements.length; i < n; ++i) {
+                        tags.push(elements[i].textContent.trim());
+                    }
+                    tags.sort(function (a, b) {
+                        return a.localeCompare(b, {
+                            sensitivity: `base`
+                        });
+                    });
+                    categories.tags = tags.join(`, `);
+                }
+                gc.cache[type][id] = categories;
+                gc.count += 1;
+            });
+        });
+    }
+
+    function checkGcComplete(games, gc) {
+        if (gc.count >= gc.total) {
+            localStorage.esgst_gcCache = JSON.stringify(gc.cache);
+            addGcCategories(games, gc);
+        } else {
+            setTimeout(checkGcComplete, 1000, games, gc);
         }
-        GM_setValue(`gcCache`, JSON.stringify(gcCache));
-        for (i = 0, n = apps.length; i < n; ++i) {
-            id = apps[i];
-            addGcCategory(gcCache.apps[id], games.apps[id], savedGames.apps[id], id, gcCache.apps[id].name, `apps`);
+    }
+
+    function addGcCategories(games, gc) {
+        var category, categories, giveaway, i, j, id, n, numCategories, savedGames;
+        savedGames = JSON.parse(GM_getValue(`games`));
+        for (i = 0, n = gc.apps.length; i < n; ++i) {
+            id = gc.apps[i];
+            addGcCategory(gc.cache.apps[id], games.apps[id], id, savedGames.apps[id], `apps`);
         }
-        for (i = 0, n = subs.length; i < n; ++i) {
-            id = subs[i];
-            addGcCategory(gcCache.subs[id], games.subs[id], savedGames.subs[id], id, gcCache.subs[id].name, `subs`);
+        for (i = 0, n = gc.subs.length; i < n; ++i) {
+            id = gc.subs[i];
+            addGcCategory(gc.cache.subs[id], games.subs[id], id, savedGames.subs[id], `subs`);
         }
-        categories = [`removed`, `tradingCards`, `achievements`, `multiplayer`, `steamCloud`, `linux`, `mac`, `dlc`, `package`, `genres`, `rating`];
+        categories = [`achievements`, `dlc`, `genres`, `linux`, `mac`, `multiplayer`, `package`, `rating`, `removed`, `steamCloud`, `tradingCards`];
         for (i = 0, n = esgst.currentGiveaways.length; i < n; ++i) {
             giveaway = esgst.currentGiveaways[i];
             if (!giveaway.gcReady) {
@@ -24164,14 +24289,14 @@ ${avatar.outerHTML}
                     category = giveaway.outerWrap.getElementsByClassName(`esgst-gc-${id}`)[0];
                     if (category) {
                         if (id === `genres`) {
-                            giveaway[id] = category.textContent.toLowerCase().split(/,\s/);
+                            giveaway.genres = category.textContent.toLowerCase().split(/,\s/);
                         } else if (id === `rating`) {
-                            giveaway[id] = parseInt(category.title.match(/(\d+)%/)[1]);
+                            giveaway.rating = parseInt(category.title.match(/(\d+)%/)[1]);
                         } else {
                             giveaway[id] = true;
                         }
                     } else if (id === `rating`) {
-                        giveaway[id] = 0;
+                        giveaway.rating = 0;
                     }
                     giveaway.gcReady = true;
                 }
@@ -24185,14 +24310,14 @@ ${avatar.outerHTML}
                     category = giveaway.outerWrap.getElementsByClassName(`esgst-gc-${id}`)[0];
                     if (category) {
                         if (id === `genres`) {
-                            giveaway[id] = category.textContent.toLowerCase().split(/,\s/);
+                            giveaway.genres = category.textContent.toLowerCase().split(/,\s/);
                         } else if (id === `rating`) {
-                            giveaway[id] = parseInt(category.title.match(/(\d+)%/)[1]);
+                            giveaway.rating = parseInt(category.title.match(/(\d+)%/)[1]);
                         } else {
                             giveaway[id] = true;
                         }
                     } else if (id === `rating`) {
-                        giveaway[id] = 0;
+                        giveaway.rating = 0;
                     }
                     giveaway.gcReady = true;
                 }
@@ -24206,10 +24331,11 @@ ${avatar.outerHTML}
         }
     }
 
-    function addGcCategory(data, games, savedGame, id, name, type) {
-        var category, html, i, icon, j, n, numGames, panel, text, nname, ttype, value;
-        ttype = type.slice(0, -1);
-        nname = encodeURIComponent(name.replace(/\.\.\.$/, ``));
+    function addGcCategory(cache, games, id, savedGame, type) {
+        var category, count, cv, elements, encodedName, giveaway, giveaways, html, i, icons, n, panel, name, ratingType, sent, singularType, ugd, user, value;
+        singularType = type.slice(0, -1);
+        name = cache ? cache.name : games[0].name;
+        encodedName = encodeURIComponent(name.replace(/\.\.\.$/, ``));
         elements = [];
         for (i = 0, n = esgst.gc_categories.length; i < n; ++i) {
             category = esgst.gc_categories[i];
@@ -24218,54 +24344,54 @@ ${avatar.outerHTML}
                     case `gc_fcv`:
                         if (savedGame && !savedGame.reducedCV) {
                             elements.push(`
-                                <a class="esgst-gc esgst-gc-fullCV" href="https://www.steamgifts.com/bundle-games/search?q=${nname}" title="Full CV">${esgst.gc_s ? (esgst.gc_s_i ? `<i class="fa fa-calendar"></i>` : `FCV`) : `Full CV`}</a>
+                                <a class="esgst-gc esgst-gc-fullCV" href="https://www.steamgifts.com/bundle-games/search?q=${encodedName}" title="Full CV">${esgst.gc_s ? (esgst.gc_s_i ? `<i class="fa fa-calendar"></i>` : `FCV`) : `Full CV`}</a>
                             `);
                         }
                         break;
                     case `gc_rcv`:
                         if (savedGame && savedGame.reducedCV && !location.pathname.match(/^\/bundle-games/)) {
                             elements.push(`
-                                <a class="esgst-gc esgst-gc-reducedCV" href="https://www.steamgifts.com/bundle-games/search?q=${nname}" title="Reduced CV since ${savedGame.reducedCV}">${esgst.gc_s ? (esgst.gc_s_i ? `<i class="fa fa-calendar-minus-o"></i>` : `RCV`) : `Reduced CV`}</a>
+                                <a class="esgst-gc esgst-gc-reducedCV" href="https://www.steamgifts.com/bundle-games/search?q=${encodedName}" title="Reduced CV since ${savedGame.reducedCV}">${esgst.gc_s ? (esgst.gc_s_i ? `<i class="fa fa-calendar-minus-o"></i>` : `RCV`) : `Reduced CV`}</a>
                             `);
                         }
                         break;
                     case `gc_ncv`:
                         if (savedGame && savedGame.noCV) {
                             elements.push(`
-                                <a class="esgst-gc esgst-gc-noCV" href="https://www.steamgifts.com/bundle-games/search?q=${nname}" title="No CV since ${savedGame.noCV}">${esgst.gc_s ? (esgst.gc_s_i ? `<i class="fa fa-calendar-times-o"></i>` : `NCV`) : `No CV`}</a>
+                                <a class="esgst-gc esgst-gc-noCV" href="https://www.steamgifts.com/bundle-games/search?q=${encodedName}" title="No CV since ${savedGame.noCV}">${esgst.gc_s ? (esgst.gc_s_i ? `<i class="fa fa-calendar-times-o"></i>` : `NCV`) : `No CV`}</a>
                             `);
                         }
                         break;
                     case `gc_h`:
                         if (savedGame && savedGame.hidden) {
                             elements.push(`
-                                <a class="esgst-gc esgst-gc-hidden" href="https://www.steamgifts.com/account/settings/giveaways/filters/search?q=${nname}" title="Hidden">${esgst.gc_s ? (esgst.gc_s_i ? `<i class="fa fa-eye-slash"></i>` : `H`) : `Hidden`}</a>
+                                <a class="esgst-gc esgst-gc-hidden" href="https://www.steamgifts.com/account/settings/giveaways/filters/search?q=${encodedName}" title="Hidden">${esgst.gc_s ? (esgst.gc_s_i ? `<i class="fa fa-eye-slash"></i>` : `H`) : `Hidden`}</a>
                             `);
                         }
                         break;
                     case `gc_i`:
                         if (savedGame && savedGame.ignored) {
                             elements.push(`
-                                <a class="esgst-gc esgst-gc-ignored" href="http://store.steampowered.com/${ttype}/${id}" title="Ignored">${esgst.gc_s ? (esgst.gc_s_i ? `<i class="fa fa-ban"></i>` : `I`) : `Ignored`}</a>
+                                <a class="esgst-gc esgst-gc-ignored" href="http://store.steampowered.com/${singularType}/${id}" title="Ignored">${esgst.gc_s ? (esgst.gc_s_i ? `<i class="fa fa-ban"></i>` : `I`) : `Ignored`}</a>
                             `);
                         }
                         break;
                     case `gc_o`:
                         if (savedGame && savedGame.owned) {
                             elements.push(`
-                                <a class="esgst-gc esgst-gc-owned" href="https://www.steamgifts.com/account/steam/games/search?q=${nname}" title="Owned">${esgst.gc_s ? (esgst.gc_s_i ? `<i class="fa fa-folder"></i>` : `O`) : `Owned`}</a>
+                                <a class="esgst-gc esgst-gc-owned" href="https://www.steamgifts.com/account/steam/games/search?q=${encodedName}" title="Owned">${esgst.gc_s ? (esgst.gc_s_i ? `<i class="fa fa-folder"></i>` : `O`) : `Owned`}</a>
                             `);
                         }
                         break;
                     case `gc_w`:
                         if (savedGame && savedGame.wishlisted) {
                             elements.push(`
-                                <a class="esgst-gc esgst-gc-wishlisted" href="https://www.steamgifts.com/account/steam/wishlist/search?q=${nname}" title="Wishlisted">${esgst.gc_s ? (esgst.gc_s_i ? `<i class="fa fa-heart"></i>` : `W`) : `Wishlisted`}</a>
+                                <a class="esgst-gc esgst-gc-wishlisted" href="https://www.steamgifts.com/account/steam/wishlist/search?q=${encodedName}" title="Wishlisted">${esgst.gc_s ? (esgst.gc_s_i ? `<i class="fa fa-heart"></i>` : `W`) : `Wishlisted`}</a>
                             `);
                         }
                         break;
                     case `gc_gi`:
-                        if (data && data.price) {
+                        if (cache && cache.price) {
                             user = esgst.users.users[esgst.steamId];
                             if (user) {
                                 ugd = user.ugd;
@@ -24283,7 +24409,7 @@ ${avatar.outerHTML}
                                                 count += giveaway.winners;
                                             }
                                         }
-                                        value = data.price;
+                                        value = cache.price;
                                         if (savedGame) {
                                             if (savedGame.noCV) {
                                                 value = 0;
@@ -24298,14 +24424,8 @@ ${avatar.outerHTML}
                                         }
                                         cv = (sent + 1) > 5 ? value * 0.90 : value;
                                         cv = Math.round(cv * 100) / 100;
-                                        text = `
-                                            <i class="fa fa-info"></i> ${count}
-                                            <i class="fa fa-dollar"></i> ${cv}
-                                        `;
-                                        title = `You have made ${count} giveaways for this game.`;
-                                        title += ` You should get \$${cv} real CV if you make a giveaway for this game.`;
                                     } else {
-                                        value = data.price;
+                                        value = cache.price;
                                         if (savedGame) {
                                             if (savedGame.noCV) {
                                                 value = 0;
@@ -24323,93 +24443,93 @@ ${avatar.outerHTML}
                         }
                         break;
                     case `gc_r`:
-                        if (data && data.rating) {
-                            ratingType = data.ratingType.toLowerCase();
+                        if (cache && cache.rating) {
                             icons = {
                                 positive: `thumbs-up`,
                                 negative: `thumbs-down`,
                                 mixed: `minus-circle`
                             };
+                            ratingType = cache.ratingType.toLowerCase();
                             elements.push(`
-                                <a class="esgst-gc esgst-gc-rating esgst-gc-rating-${ratingType}" href="http://store.steampowered.com/${ttype}/${id}" title="${data.rating}"><i class="fa fa-${icons[ratingType]}"></i>${esgst.gc_r_s ? ` ${data.rating}` : ``}</a>
+                                <a class="esgst-gc esgst-gc-rating esgst-gc-rating-${ratingType}" href="http://store.steampowered.com/${singularType}/${id}" title="${cache.rating}"><i class="fa fa-${icons[ratingType]}"></i>${esgst.gc_r_s ? ` ${cache.rating}` : ``}</a>
                             `);
                         }
                         break;
                     case `gc_a`:
-                        if (data && data.achievements) {
+                        if (cache && cache.achievements) {
                             elements.push(`
                                 <a class="esgst-gc esgst-gc-achievements" href="http://steamcommunity.com/stats/${id}/achievements" title="Achievements">${esgst.gc_s ? (esgst.gc_s_i ? `<i class="fa fa-trophy"></i>` : `A`) : `Achievements`}</a>
                             `);
                         }
                         break;
                     case `gc_mp`:
-                        if (data && data.multiplayer) {
+                        if (cache && cache.multiplayer) {
                             elements.push(`
-                                <a class="esgst-gc esgst-gc-dlc" href="http://store.steampowered.com/${ttype}/${id}" title="Multiplayer">${esgst.gc_s ? (esgst.gc_s_i ? `<i class="fa fa-users"></i>` : `MP`) : `Multiplayer`}</a>
+                                <a class="esgst-gc esgst-gc-dlc" href="http://store.steampowered.com/${singularType}/${id}" title="Multiplayer">${esgst.gc_s ? (esgst.gc_s_i ? `<i class="fa fa-users"></i>` : `MP`) : `Multiplayer`}</a>
                             `);
                         }
                         break;
                     case `gc_sc`:
-                        if (data && data.steamCloud) {
+                        if (cache && cache.steamCloud) {
                             elements.push(`
-                                <a class="esgst-gc esgst-gc-steamCloud" href="http://store.steampowered.com/${ttype}/${id}" title="Steam Cloud">${esgst.gc_s ? (esgst.gc_s_i ? `<i class="fa fa-cloud"></i>` : `SC`) : `Steam Cloud`}</a>
+                                <a class="esgst-gc esgst-gc-steamCloud" href="http://store.steampowered.com/${singularType}/${id}" title="Steam Cloud">${esgst.gc_s ? (esgst.gc_s_i ? `<i class="fa fa-cloud"></i>` : `SC`) : `Steam Cloud`}</a>
                             `);
                         }
                         break;
                     case `gc_tc`:
-                        if (data && data.tradingCards) {
+                        if (cache && cache.tradingCards) {
                             elements.push(`
-                                <a class="esgst-gc esgst-gc-tradingCards" href="http://www.steamcardexchange.net/index.php?gamepage-${ttype}id-${id}" title="Trading Cards">${esgst.gc_s ? (esgst.gc_s_i ? `<i class="fa fa-clone"></i>` : `TC`) : `Trading Cards`}</a>
+                                <a class="esgst-gc esgst-gc-tradingCards" href="http://www.steamcardexchange.net/index.php?gamepage-${singularType}id-${id}" title="Trading Cards">${esgst.gc_s ? (esgst.gc_s_i ? `<i class="fa fa-clone"></i>` : `TC`) : `Trading Cards`}</a>
                             `);
                         }
                         break;
                     case `gc_l`:
-                        if (data && data.linux) {
+                        if (cache && cache.linux) {
                             elements.push(`
-                                <a class="esgst-gc esgst-gc-linux" href="http://store.steampowered.com/${ttype}/${id}" title="Linux">${esgst.gc_s ? (esgst.gc_s_i ? `<i class="fa fa-linux"></i>` : `L`) : `Linux`}</a>
+                                <a class="esgst-gc esgst-gc-linux" href="http://store.steampowered.com/${singularType}/${id}" title="Linux">${esgst.gc_s ? (esgst.gc_s_i ? `<i class="fa fa-linux"></i>` : `L`) : `Linux`}</a>
                             `);
                         }
                         break;
                     case `gc_m`:
-                        if (data && data.mac) {
+                        if (cache && cache.mac) {
                             elements.push(`
-                                <a class="esgst-gc esgst-gc-mac" href="http://store.steampowered.com/${ttype}/${id}" title="Mac">${esgst.gc_s ? (esgst.gc_s_i ? `<i class="fa fa-apple"></i>` : `M`) : `Mac`}</a>
+                                <a class="esgst-gc esgst-gc-mac" href="http://store.steampowered.com/${singularType}/${id}" title="Mac">${esgst.gc_s ? (esgst.gc_s_i ? `<i class="fa fa-apple"></i>` : `M`) : `Mac`}</a>
                             `);
                         }
                         break;
                     case `gc_dlc`:
-                        if (data && data.dlc) {
+                        if (cache && cache.dlc) {
                             elements.push(`
-                                <a class="esgst-gc esgst-gc-dlc" href="http://store.steampowered.com/${ttype}/${id}" title="DLC">${esgst.gc_s ? (esgst.gc_s_i ? `<i class="fa fa-download"></i>` : `DLC`) : `DLC`}</a>
+                                <a class="esgst-gc esgst-gc-dlc" href="http://store.steampowered.com/${singularType}/${id}" title="DLC">${esgst.gc_s ? (esgst.gc_s_i ? `<i class="fa fa-download"></i>` : `DLC`) : `DLC`}</a>
                             `);
                         }
                         break;
                     case `gc_p`:
                         if (type === `subs`) {
                             elements.push(`
-                                <a class="esgst-gc esgst-gc-package" href="http://store.steampowered.com/${ttype}/${id}" title="Package">${esgst.gc_s ? (esgst.gc_s_i ? `<i class="fa fa-suitcase"></i>` : `P`) : `Package`}</a>
+                                <a class="esgst-gc esgst-gc-package" href="http://store.steampowered.com/${singularType}/${id}" title="Package">${esgst.gc_s ? (esgst.gc_s_i ? `<i class="fa fa-suitcase"></i>` : `P`) : `Package`}</a>
                             `);
                         }
                         break;
                     case `gc_ea`:
-                        if (data && data.earlyAccess) {
+                        if (cache && cache.earlyAccess) {
                             elements.push(`
-                                <a class="esgst-gc esgst-gc-earlyAccess" href="http://store.steampowered.com/${ttype}/${id}" title="Early Access">${esgst.gc_s ? (esgst.gc_s_i ? `<i class="fa fa-unlock"></i>` : `EA`) : `Early Access`}</a>
+                                <a class="esgst-gc esgst-gc-earlyAccess" href="http://store.steampowered.com/${singularType}/${id}" title="Early Access">${esgst.gc_s ? (esgst.gc_s_i ? `<i class="fa fa-unlock"></i>` : `EA`) : `Early Access`}</a>
                             `);
                         }
                         break;
                     case `gc_rm`:
-                        if (data && data.removed) {
+                        if (cache && cache.removed) {
                             elements.push(`
-                                <a class="esgst-gc esgst-gc-removed" href="http://steamdb.info/${ttype}/${id}" title="Removed">${esgst.gc_s ? (esgst.gc_s_i ? `<i class="fa fa-trash"></i>` : `RM`) : `Removed`}</a>
+                                <a class="esgst-gc esgst-gc-removed" href="http://steamdb.info/${singularType}/${id}" title="Removed">${esgst.gc_s ? (esgst.gc_s_i ? `<i class="fa fa-trash"></i>` : `RM`) : `Removed`}</a>
                             `);
                         }
                         break;
                     case `gc_g`:
-                        if (data && data.genres) {
-                            genres = esgst.gc_g_udt && data.tags ? `${data.genres}, ${data.tags}` : data.genres;
+                        if (cache && cache.genres) {
+                            genres = esgst.gc_g_udt && cache.tags ? `${cache.genres}, ${cache.tags}` : cache.genres;
                             elements.push(`
-                                <a class="esgst-gc esgst-gc-genres" href="http://store.steampowered.com/${ttype}/${id}" title="${genres}">${genres}</a>
+                                <a class="esgst-gc esgst-gc-genres" href="http://store.steampowered.com/${singularType}/${id}" title="${genres}">${genres}</a>
                             `);
                         }
                         break;
@@ -24417,8 +24537,8 @@ ${avatar.outerHTML}
             }
         }
         html = elements.join(``);
-        for (j = 0, numGames = games.length; j < numGames; ++j) {
-            panel = games[j].container.getElementsByClassName(`esgst-gc-panel`)[0];
+        for (i = 0, n = games.length; i < n; ++i) {
+            panel = games[i].container.getElementsByClassName(`esgst-gc-panel`)[0];
             if (panel && !panel.innerHTML) {
                 if (esgst.gc_s && !esgst.giveawayPath) {
                     panel.previousElementSibling.style.display = `inline-block`;
@@ -27508,7 +27628,7 @@ ${avatar.outerHTML}
                                 newData = dm.data[optionKey];
                                 if (newData) {
                                     if (esgst.settings.importAndMerge) {
-                                        dataKey = key === `entries` ? `timestamp` : `name`;
+                                        dataKey = optionKey === `entries` ? `timestamp` : `name`;
                                         mergedData = data[optionKey];
                                         for (j = 0, numNew = newData.length; j < numNew; ++j) {
                                             newDataValue = newData[j];
@@ -27522,7 +27642,7 @@ ${avatar.outerHTML}
                                         if (optionKey === `savedReplies`) {
                                             GM_setValue(optionKey, JSON.stringify(mergedData));
                                         } else {
-                                            if (key === `entries`) {
+                                            if (optionKey === `entries`) {
                                                 mergedData = sortArrayByNumberKey(mergedData, `timestamp`);
                                             }
                                             localStorage[`esgst_${optionKey}`] = JSON.stringify(mergedData);
@@ -27539,7 +27659,7 @@ ${avatar.outerHTML}
                                 if (optionKey === `savedReplies`) {
                                     GM_deleteValue(`savedReplies`);
                                 } else {
-                                    localStorage.removeItem(`esgst_${key}`);
+                                    localStorage.removeItem(`esgst_${optionKey}`);
                                 }
                             }
                             break;
@@ -28855,22 +28975,29 @@ ${avatar.outerHTML}
                 position: fixed;
                 right: 0;
                 top: 0;
-                z-index: 9998; 
+                z-index: 9998;
+            }
+
+            .esgst-popup-wrapper {
+                left: 50%;
+                position: fixed;
+                top: 50%;
+                z-index: 9999;
             }
 
             .esgst-popup {
-                color: #465670;
-                max-width: 75%;
-                padding: 35px 100px;
-                position: fixed;
                 background-color: #f0f2f5;
                 border-radius: 4px;
+                color: #465670;
+                left: -50%;
+                max-width: 75%;
+                padding: 35px 100px;
+                position: relative;
                 text-align: center;
                 text-shadow: 1px 1px rgba(255,255,255,0.94);
-                top: 50%;
-                left: 50%;
-                transform: translate(-50%, -50%);
-                z-index: 9999;
+                transform: translateY(-50%);
+                -webkit-transform: translateY(-50%);
+                -ms-transform: translateY(-50%);
             }
 
             .esgst-popup li:before {
