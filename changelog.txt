@@ -5,15 +5,15 @@
 * Fixed a returning style issue that was not centering the outdated version popup.
 * Added 3 buttons below the comments in Comment Tracker: "mark this comment as read and go to the next unread comment", "mark all comments from this comment upwards as read" and "mark all comments from this comment upwards as unread".
 * Fixed a bug in Game Categories that was happening when making too many requests to the Steam store in a short amount of time (closes #352).
-* Fixed a bug in Game Categories that was breaking polls (closes #342).
-* Added an option (7.4.2 - SG / 8.4.2 - ST) to Comment Tracker that allows you to decide whether to show the categories next to the game name or below it.
-* Added an option (7.4.4.1 - SG / 8.4.4.1 - ST) to Comment Tracker to only show "Giveaway Info" category in discussion tables (closes #265).
+* Fixed a style issue in Game Categories that was breaking polls (closes #342).
+* Added an option (7.4.2 - SG / 8.4.2 - ST) to Game Categories that allows you to decide whether to show the categories next to the game name or below it.
+* Added an option (7.4.4.1 - SG / 8.4.4.1 - ST) to Game Categories to only show the "Giveaway Info" category in discussion tables (closes #265).
 
 /*
  * August 16, 2017 - v6.Beta.27.2
  */
 
-* Fixed some style issues in popups (close #347 and #350).
+* Fixed some style issues in popups (closes #347 and #350).
 * You can now use custom icons/labels for Game Categories.
 
 /*
