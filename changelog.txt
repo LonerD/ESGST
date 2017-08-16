@@ -1,4 +1,11 @@
 /*
+ * August 16, 2017 - v6.Beta.27.2
+ */
+
+* Fixed some style issues in popups (close #347 and #350).
+* You can now use custom icons/labels for Game Categories.
+
+/*
  * August 16, 2017 - v6.Beta.27.1
  */
 

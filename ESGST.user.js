@@ -3,7 +3,7 @@
 // @namespace ESGST
 // @description Enhances SteamGifts and SteamTrades by adding some cool features to them.
 // @icon https://github.com/revilheart/ESGST/raw/master/Resources/esgstIcon.ico
-// @version 6.Beta.27.1
+// @version 6.Beta.27.2
 // @author revilheart
 // @downloadURL https://github.com/revilheart/ESGST/raw/master/ESGST.user.js
 // @updateURL https://github.com/revilheart/ESGST/raw/master/ESGST.meta.js
@@ -244,6 +244,40 @@
                         ugs_checkMember: `UGS_G`
                     };
                     esgst.defaultValues = {
+                        gc_fcvIcon: `calendar`,
+                        gc_rcvIcon: `calendar-minus-o`,
+                        gc_ncvIcon: `calendar-times-o`,
+                        gc_hIcon: `eye-slash`,
+                        gc_iIcon: `ban`,
+                        gc_oIcon: `folder`,
+                        gc_wIcon: `heart`,
+                        gc_aIcon: `trophy`,
+                        gc_mpIcon: `users`,
+                        gc_scIcon: `cloud`,
+                        gc_tcIcon: `clone`,
+                        gc_lIcon: `linux`,
+                        gc_mIcon: `apple`,
+                        gc_eaIcon: `unlock`,
+                        gc_rmIcon: `trash`,
+                        gc_dlcIcon: `download`,
+                        gc_pIcon: `suitcase`,
+                        gc_fcvLabel: `Full CV`,
+                        gc_rcvLabel: `Reduced CV`,
+                        gc_ncvLabel: `No CV`,
+                        gc_hLabel: `Hidden`,
+                        gc_iLabel: `Ignored`,
+                        gc_oLabel: `Owned`,
+                        gc_wLabel: `Wishlisted`,
+                        gc_aLabel: `Achievements`,
+                        gc_mpLabel: `Multiplayer`,
+                        gc_scLabel: `Steam Cloud`,
+                        gc_tcLabel: `Trading Cards`,
+                        gc_lLabel: `Linux`,
+                        gc_mLabel: `Mac`,
+                        gc_eaLabel: `Early Access`,
+                        gc_rmLabel: `Removed`,
+                        gc_dlcLabel: `DLC`,
+                        gc_pLabel: `Package`,
                         sk_closePopups: `escape`,
                         sk_searchBox: `ctrlKey + q`,
                         sk_firstPage: `ctrlKey + arrowup`,
@@ -418,7 +452,7 @@
                     if (esgst.sg) {
                         esgst.giveaways = localStorage.esgst_giveaways;
                         if (typeof esgst.giveaways === `undefined`) {
-                            localStorage.esgst_giveaways = GM_getValue(`giveaways`) || `{}`;
+                            localStorage.esgst_giveaways = GM_getValue(`giveaways`, `{}`);
                             esgst.giveaways = {};
                         } else {
                             esgst.giveaways = JSON.parse(esgst.giveaways);
@@ -485,9 +519,9 @@
                                     giveaways[key] = comments.giveaways[key];
                                 }
                             }
-                            localStorage.esgst_giveaways = JSON.stringify(giveaways);
-                            localStorage.esgst_discussions = JSON.stringify(comments.discussions);
-                            localStorage.esgst_tickets = JSON.stringify(comments.tickets);
+                            localStorage.esgst_giveaways = JSON.stringify(giveaways || {});
+                            localStorage.esgst_discussions = JSON.stringify(comments.discussions || {});
+                            localStorage.esgst_tickets = JSON.stringify(comments.tickets || {});
                         }
                         esgst.groups = localStorage.esgst_groups;
                         if (typeof esgst.groups === `undefined`) {
@@ -502,12 +536,12 @@
                         esgst.rerolls = localStorage.esgst_rerolls;;
                         if (typeof esgst.rerolls === `undefined`) {
                             var oldRerolls = GM_getValue(`rerolls`);
-                            if (oldRerolls) {
+                            if (typeof oldRerolls !== `undefined`) {
                                 localStorage.esgst_rerolls = oldRerolls;
                                 esgst.rerolls = JSON.parse(oldRerolls);
                             } else {
                                 oldRerolls = GM_getValue(`Rerolls`);
-                                if (oldRerolls) {
+                                if (typeof oldRerolls !== `undefined`) {
                                     localStorage.esgst_rerolls = JSON.stringify(oldRerolls);
                                     esgst.rerolls = oldRerolls;
                                 } else {
@@ -525,12 +559,12 @@
                         esgst.winners = localStorage.esgst_winners;
                         if (typeof esgst.winners === `undefined`) {
                             var oldWinners = GM_getValue(`winners`);
-                            if (oldWinners) {
+                            if (typeof oldWinners !== `undefined`) {
                                 localStorage.esgst_winners = oldWinners;
                                 esgst.winners = JSON.parse(oldWinners);
                             } else {
                                 oldWinners = GM_getValue(`Winners`);
-                                if (oldWinners) {
+                                if (typeof oldWinners !== `undefined`) {
                                     localStorage.esgst_winners = JSON.stringify(oldWinners);
                                     esgst.winners = oldWinners;
                                 } else {
@@ -557,7 +591,7 @@
                                     }
                                 }
                             }
-                            localStorage.esgst_trades = JSON.stringify(trades);
+                            localStorage.esgst_trades = JSON.stringify(trades || {});
                             localStorage.esgst_tFix = 1;
                         }
                     } else {
@@ -2255,6 +2289,7 @@
                                 {
                                     colors: true,
                                     id: `gc_h`,
+                                    input: true,
                                     name: `Hidden`,
                                     sg: true
                                 },
@@ -2286,96 +2321,112 @@
                                 {
                                     colors: true,
                                     id: `gc_fcv`,
+                                    input: true,
                                     name: `Full CV`,
                                     sg: true
                                 },
                                 {
                                     colors: true,
                                     id: `gc_rcv`,
+                                    input: true,
                                     name: `Reduced CV`,
                                     sg: true
                                 },
                                 {
                                     colors: true,
                                     id: `gc_ncv`,
+                                    input: true,
                                     name: `No CV`,
                                     sg: true
                                 },
                                 {
                                     colors: true,
                                     id: `gc_o`,
+                                    input: true,
                                     name: `Owned`,
                                     sg: true
                                 },
                                 {
                                     colors: true,
                                     id: `gc_w`,
+                                    input: true,
                                     name: `Wishlisted`,
                                     sg: true
                                 },
                                 {
                                     colors: true,
                                     id: `gc_i`,
+                                    input: true,
                                     name: `Ignored`,
                                     sg: true
                                 },
                                 {
                                     colors: true,
                                     id: `gc_rm`,
+                                    input: true,
                                     name: `Removed`,
                                     sg: true
                                 },
                                 {
                                     colors: true,
                                     id: `gc_ea`,
+                                    input: true,
                                     name: `Early Access`,
                                     sg: true
                                 },
                                 {
                                     colors: true,
                                     id: `gc_tc`,
+                                    input: true,
                                     name: `Trading Cards`,
                                     sg: true
                                 },
                                 {
                                     colors: true,
                                     id: `gc_a`,
+                                    input: true,
                                     name: `Achievements`,
                                     sg: true
                                 },
                                 {
                                     colors: true,
                                     id: `gc_mp`,
+                                    input: true,
                                     name: `Multiplayer`,
                                     sg: true
                                 },
                                 {
                                     colors: true,
                                     id: `gc_sc`,
+                                    input: true,
                                     name: `Steam Cloud`,
                                     sg: true
                                 },
                                 {
                                     colors: true,
                                     id: `gc_l`,
+                                    input: true,
                                     name: `Linux`,
                                     sg: true
                                 },
                                 {
                                     colors: true,
                                     id: `gc_m`,
+                                    input: true,
                                     name: `Mac`,
                                     sg: true
                                 },
                                 {
                                     colors: true,
                                     id: `gc_dlc`,
+                                    input: true,
                                     name: `DLC`,
                                     sg: true
                                 },
                                 {
                                     colors: true,
                                     id: `gc_p`,
+                                    input: true,
                                     name: `Package`,
                                     sg: true
                                 },
@@ -4430,28 +4481,25 @@
         popup = {
             temp: temp
         };
-        popup.wrapper = insertHtml(document.body, `beforeEnd`, `
-            <div class="esgst-hidden esgst-popup-wrapper">
-                <div class="esgst-popup">
-                    <div class="popup_summary">
-                        <div class="popup_icon">
-                            <i class="popup__icon fa ${icon} esgst-popup-icon"></i>
-                        </div>
-                        <div class="popup__heading popup_heading">
-                            <div class="popup_heading_h2 esgst-popup-title">${title}</div>
-                        </div>
+        popup.popup = insertHtml(document.body, `beforeEnd`, `
+            <div class="esgst-popup">
+                <div class="popup_summary">
+                    <div class="popup_icon">
+                        <i class="popup__icon fa ${icon} esgst-popup-icon"></i>
                     </div>
-                    <div class="popup_description esgst-popup-description">
-                        <div class="esgst-popup-scrollable"></div>
+                    <div class="popup__heading popup_heading">
+                        <div class="popup_heading_h2 esgst-popup-title">${title}</div>
                     </div>
-                    <div class="popup__actions popup_actions">
-                        <span class="esgst-hidden">Settings</span>
-                        <span class="esgst-popup-close">Close</span>
-                    </div>
+                </div>
+                <div class="popup_description esgst-popup-description">
+                    <div class="esgst-popup-scrollable"></div>
+                </div>
+                <div class="popup__actions popup_actions">
+                    <span class="esgst-hidden">Settings</span>
+                    <span class="esgst-popup-close">Close</span>
                 </div>
             </div>
         `);
-        popup.popup = popup.wrapper.firstElementChild;
         popup.description = popup.popup.firstElementChild.nextElementSibling;
         popup.scrollable = popup.description.firstElementChild;
         if (!settings) {
@@ -4474,11 +4522,13 @@
     }
 
     function repositionPopup(popup) {
-        popup.scrollable.style.maxHeight = `${window.innerHeight * 0.9 - (popup.wrapper.offsetHeight - popup.scrollable.offsetHeight)}px`;
+        popup.scrollable.style.maxHeight = `${window.innerHeight * 0.9 - (popup.popup.offsetHeight - popup.scrollable.offsetHeight)}px`;
+        popup.popup.style.left = `${(window.innerWidth - popup.popup.offsetWidth) / 2}px`;
+        popup.popup.style.top = `${(window.innerHeight - popup.popup.offsetHeight) / 2}px`;
     }
 
     function openPopup(popup, callback) {
-        popup.wrapper.classList.remove(`esgst-hidden`);
+        popup.popup.classList.remove(`esgst-hidden`);
         popup.modal = insertHtml(document.body, `beforeEnd`, `
             <div class="esgst-popup-modal"></div>
         `);
@@ -4493,9 +4543,9 @@
         if (popup.modal) {
             popup.modal.remove();
             if (popup.temp) {
-                popup.wrapper.remove();
+                popup.popup.remove();
             } else {
-                popup.wrapper.classList.add(`esgst-hidden`);
+                popup.popup.classList.add(`esgst-hidden`);
             }
             if (popup.onClose) {
                 popup.onClose();
@@ -24573,49 +24623,49 @@ ${avatar.outerHTML}
                     case `gc_fcv`:
                         if (savedGame && !savedGame.reducedCV) {
                             elements.push(`
-                                <a class="esgst-gc esgst-gc-fullCV" href="https://www.steamgifts.com/bundle-games/search?q=${encodedName}" title="Full CV">${esgst.gc_s ? (esgst.gc_s_i ? `<i class="fa fa-calendar"></i>` : `FCV`) : `Full CV`}</a>
+                                <a class="esgst-gc esgst-gc-fullCV" href="https://www.steamgifts.com/bundle-games/search?q=${encodedName}" title="Full CV">${esgst.gc_s ? (esgst.gc_s_i ? `<i class="fa fa-${esgst.gc_fcvIcon}"></i>` : `FCV`) : esgst.gc_fcvLabel}</a>
                             `);
                         }
                         break;
                     case `gc_rcv`:
                         if (savedGame && savedGame.reducedCV && !location.pathname.match(/^\/bundle-games/)) {
                             elements.push(`
-                                <a class="esgst-gc esgst-gc-reducedCV" href="https://www.steamgifts.com/bundle-games/search?q=${encodedName}" title="Reduced CV since ${savedGame.reducedCV}">${esgst.gc_s ? (esgst.gc_s_i ? `<i class="fa fa-calendar-minus-o"></i>` : `RCV`) : `Reduced CV`}</a>
+                                <a class="esgst-gc esgst-gc-reducedCV" href="https://www.steamgifts.com/bundle-games/search?q=${encodedName}" title="Reduced CV since ${savedGame.reducedCV}">${esgst.gc_s ? (esgst.gc_s_i ? `<i class="fa fa-${esgst.gc_rcvIcon}"></i>` : `RCV`) : esgst.gc_rcvLabel}</a>
                             `);
                         }
                         break;
                     case `gc_ncv`:
                         if (savedGame && savedGame.noCV) {
                             elements.push(`
-                                <a class="esgst-gc esgst-gc-noCV" href="https://www.steamgifts.com/bundle-games/search?q=${encodedName}" title="No CV since ${savedGame.noCV}">${esgst.gc_s ? (esgst.gc_s_i ? `<i class="fa fa-calendar-times-o"></i>` : `NCV`) : `No CV`}</a>
+                                <a class="esgst-gc esgst-gc-noCV" href="https://www.steamgifts.com/bundle-games/search?q=${encodedName}" title="No CV since ${savedGame.noCV}">${esgst.gc_s ? (esgst.gc_s_i ? `<i class="fa fa-${esgst.gc_ncvIcon}"></i>` : `NCV`) : esgst.gc_ncvLabel}</a>
                             `);
                         }
                         break;
                     case `gc_h`:
                         if (savedGame && savedGame.hidden) {
                             elements.push(`
-                                <a class="esgst-gc esgst-gc-hidden" href="https://www.steamgifts.com/account/settings/giveaways/filters/search?q=${encodedName}" title="Hidden">${esgst.gc_s ? (esgst.gc_s_i ? `<i class="fa fa-eye-slash"></i>` : `H`) : `Hidden`}</a>
+                                <a class="esgst-gc esgst-gc-hidden" href="https://www.steamgifts.com/account/settings/giveaways/filters/search?q=${encodedName}" title="Hidden">${esgst.gc_s ? (esgst.gc_s_i ? `<i class="fa fa-${esgst.gc_hIcon}"></i>` : `H`) : esgst.gc_hLabel}</a>
                             `);
                         }
                         break;
                     case `gc_i`:
                         if (savedGame && savedGame.ignored) {
                             elements.push(`
-                                <a class="esgst-gc esgst-gc-ignored" href="http://store.steampowered.com/${singularType}/${id}" title="Ignored">${esgst.gc_s ? (esgst.gc_s_i ? `<i class="fa fa-ban"></i>` : `I`) : `Ignored`}</a>
+                                <a class="esgst-gc esgst-gc-ignored" href="http://store.steampowered.com/${singularType}/${id}" title="Ignored">${esgst.gc_s ? (esgst.gc_s_i ? `<i class="fa fa-${esgst.gc_iIcon}"></i>` : `I`) : esgst.gc_iLabel}</a>
                             `);
                         }
                         break;
                     case `gc_o`:
                         if (savedGame && savedGame.owned) {
                             elements.push(`
-                                <a class="esgst-gc esgst-gc-owned" href="https://www.steamgifts.com/account/steam/games/search?q=${encodedName}" title="Owned">${esgst.gc_s ? (esgst.gc_s_i ? `<i class="fa fa-folder"></i>` : `O`) : `Owned`}</a>
+                                <a class="esgst-gc esgst-gc-owned" href="https://www.steamgifts.com/account/steam/games/search?q=${encodedName}" title="Owned">${esgst.gc_s ? (esgst.gc_s_i ? `<i class="fa fa-${esgst.gc_oIcon}"></i>` : `O`) : esgst.gc_oLabel}</a>
                             `);
                         }
                         break;
                     case `gc_w`:
                         if (savedGame && savedGame.wishlisted) {
                             elements.push(`
-                                <a class="esgst-gc esgst-gc-wishlisted" href="https://www.steamgifts.com/account/steam/wishlist/search?q=${encodedName}" title="Wishlisted">${esgst.gc_s ? (esgst.gc_s_i ? `<i class="fa fa-heart"></i>` : `W`) : `Wishlisted`}</a>
+                                <a class="esgst-gc esgst-gc-wishlisted" href="https://www.steamgifts.com/account/steam/wishlist/search?q=${encodedName}" title="Wishlisted">${esgst.gc_s ? (esgst.gc_s_i ? `<i class="fa fa-${esgst.gc_hIcon}"></i>` : `W`) : esgst.gc_wLabel}</a>
                             `);
                         }
                         break;
@@ -24687,70 +24737,70 @@ ${avatar.outerHTML}
                     case `gc_a`:
                         if (cache && cache.achievements) {
                             elements.push(`
-                                <a class="esgst-gc esgst-gc-achievements" href="http://steamcommunity.com/stats/${id}/achievements" title="Achievements">${esgst.gc_s ? (esgst.gc_s_i ? `<i class="fa fa-trophy"></i>` : `A`) : `Achievements`}</a>
+                                <a class="esgst-gc esgst-gc-achievements" href="http://steamcommunity.com/stats/${id}/achievements" title="Achievements">${esgst.gc_s ? (esgst.gc_s_i ? `<i class="fa fa-${esgst.gc_aIcon}"></i>` : `A`) : esgst.gc_aLabel}</a>
                             `);
                         }
                         break;
                     case `gc_mp`:
                         if (cache && cache.multiplayer) {
                             elements.push(`
-                                <a class="esgst-gc esgst-gc-dlc" href="http://store.steampowered.com/${singularType}/${id}" title="Multiplayer">${esgst.gc_s ? (esgst.gc_s_i ? `<i class="fa fa-users"></i>` : `MP`) : `Multiplayer`}</a>
+                                <a class="esgst-gc esgst-gc-dlc" href="http://store.steampowered.com/${singularType}/${id}" title="Multiplayer">${esgst.gc_s ? (esgst.gc_s_i ? `<i class="fa fa-${esgst.gc_mpIcon}"></i>` : `MP`) : esgst.gc_mLabel}</a>
                             `);
                         }
                         break;
                     case `gc_sc`:
                         if (cache && cache.steamCloud) {
                             elements.push(`
-                                <a class="esgst-gc esgst-gc-steamCloud" href="http://store.steampowered.com/${singularType}/${id}" title="Steam Cloud">${esgst.gc_s ? (esgst.gc_s_i ? `<i class="fa fa-cloud"></i>` : `SC`) : `Steam Cloud`}</a>
+                                <a class="esgst-gc esgst-gc-steamCloud" href="http://store.steampowered.com/${singularType}/${id}" title="Steam Cloud">${esgst.gc_s ? (esgst.gc_s_i ? `<i class="fa fa-${esgst.gc_scIcon}"></i>` : `SC`) : esgst.gc_scLabel}</a>
                             `);
                         }
                         break;
                     case `gc_tc`:
                         if (cache && cache.tradingCards) {
                             elements.push(`
-                                <a class="esgst-gc esgst-gc-tradingCards" href="http://www.steamcardexchange.net/index.php?gamepage-${singularType}id-${id}" title="Trading Cards">${esgst.gc_s ? (esgst.gc_s_i ? `<i class="fa fa-clone"></i>` : `TC`) : `Trading Cards`}</a>
+                                <a class="esgst-gc esgst-gc-tradingCards" href="http://www.steamcardexchange.net/index.php?gamepage-${singularType}id-${id}" title="Trading Cards">${esgst.gc_s ? (esgst.gc_s_i ? `<i class="fa fa-${esgst.gc_tcIcon}"></i>` : `TC`) : esgst.gc_tcLabel}</a>
                             `);
                         }
                         break;
                     case `gc_l`:
                         if (cache && cache.linux) {
                             elements.push(`
-                                <a class="esgst-gc esgst-gc-linux" href="http://store.steampowered.com/${singularType}/${id}" title="Linux">${esgst.gc_s ? (esgst.gc_s_i ? `<i class="fa fa-linux"></i>` : `L`) : `Linux`}</a>
+                                <a class="esgst-gc esgst-gc-linux" href="http://store.steampowered.com/${singularType}/${id}" title="Linux">${esgst.gc_s ? (esgst.gc_s_i ? `<i class="fa fa-${esgst.gc_lIcon}"></i>` : `L`) : esgst.gc_lLabel}</a>
                             `);
                         }
                         break;
                     case `gc_m`:
                         if (cache && cache.mac) {
                             elements.push(`
-                                <a class="esgst-gc esgst-gc-mac" href="http://store.steampowered.com/${singularType}/${id}" title="Mac">${esgst.gc_s ? (esgst.gc_s_i ? `<i class="fa fa-apple"></i>` : `M`) : `Mac`}</a>
+                                <a class="esgst-gc esgst-gc-mac" href="http://store.steampowered.com/${singularType}/${id}" title="Mac">${esgst.gc_s ? (esgst.gc_s_i ? `<i class="fa fa-${esgst.gc_mIcon}"></i>` : `M`) : esgst.gc_mLabel}</a>
                             `);
                         }
                         break;
                     case `gc_dlc`:
                         if (cache && cache.dlc) {
                             elements.push(`
-                                <a class="esgst-gc esgst-gc-dlc" href="http://store.steampowered.com/${singularType}/${id}" title="DLC">${esgst.gc_s ? (esgst.gc_s_i ? `<i class="fa fa-download"></i>` : `DLC`) : `DLC`}</a>
+                                <a class="esgst-gc esgst-gc-dlc" href="http://store.steampowered.com/${singularType}/${id}" title="DLC">${esgst.gc_s ? (esgst.gc_s_i ? `<i class="fa fa-${esgst.gc_dlcIcon}"></i>` : `DLC`) : esgst.gc_dlcLabel}</a>
                             `);
                         }
                         break;
                     case `gc_p`:
                         if (type === `subs`) {
                             elements.push(`
-                                <a class="esgst-gc esgst-gc-package" href="http://store.steampowered.com/${singularType}/${id}" title="Package">${esgst.gc_s ? (esgst.gc_s_i ? `<i class="fa fa-suitcase"></i>` : `P`) : `Package`}</a>
+                                <a class="esgst-gc esgst-gc-package" href="http://store.steampowered.com/${singularType}/${id}" title="Package">${esgst.gc_s ? (esgst.gc_s_i ? `<i class="fa fa-${esgst.gc_pIcon}"></i>` : `P`) : esgst.gc_pLabel}</a>
                             `);
                         }
                         break;
                     case `gc_ea`:
                         if (cache && cache.earlyAccess) {
                             elements.push(`
-                                <a class="esgst-gc esgst-gc-earlyAccess" href="http://store.steampowered.com/${singularType}/${id}" title="Early Access">${esgst.gc_s ? (esgst.gc_s_i ? `<i class="fa fa-unlock"></i>` : `EA`) : `Early Access`}</a>
+                                <a class="esgst-gc esgst-gc-earlyAccess" href="http://store.steampowered.com/${singularType}/${id}" title="Early Access">${esgst.gc_s ? (esgst.gc_s_i ? `<i class="fa fa-${esgst.gc_eaIcon}"></i>` : `EA`) : esgst.gc_eaLabel}</a>
                             `);
                         }
                         break;
                     case `gc_rm`:
                         if (cache && cache.removed) {
                             elements.push(`
-                                <a class="esgst-gc esgst-gc-removed" href="http://steamdb.info/${singularType}/${id}" title="Removed">${esgst.gc_s ? (esgst.gc_s_i ? `<i class="fa fa-trash"></i>` : `RM`) : `Removed`}</a>
+                                <a class="esgst-gc esgst-gc-removed" href="http://steamdb.info/${singularType}/${id}" title="Removed">${esgst.gc_s ? (esgst.gc_s_i ? `<i class="fa fa-${esgst.gc_rmIcon}"></i>` : `RM`) : esgst.gc_rmLabel}</a>
                             `);
                         }
                         break;
@@ -25293,37 +25343,37 @@ ${avatar.outerHTML}
                 switch (esgst.gc_categories[i]) {
                     case `gc_fcv`:
                         elements.push(`
-                            <div class="esgst-clickable esgst-gc esgst-gc-fullCV ${esgst.gc_fcv ? `` : `esgst-hidden`}" draggable="true" id="gc_fcv" title="Full CV">${esgst.gc_s ? (esgst.gc_s_i ? `<i class="fa fa-calendar"></i>` : `FCV`) : `Full CV`}</div>
+                            <div class="esgst-clickable esgst-gc esgst-gc-fullCV ${esgst.gc_fcv ? `` : `esgst-hidden`}" draggable="true" id="gc_fcv" title="Full CV">${esgst.gc_s ? (esgst.gc_s_i ? `<i class="fa fa-${esgst.gc_fcvIcon}"></i>` : `FCV`) : esgst.gc_fcvLabel}</div>
                         `);
                         break;
                     case `gc_rcv`:
                         elements.push(`
-                            <div class="esgst-clickable esgst-gc esgst-gc-reducedCV ${esgst.gc_rcv ? `` : `esgst-hidden`}" draggable="true" id="gc_rcv" title="Reduced CV">${esgst.gc_s ? (esgst.gc_s_i ? `<i class="fa fa-calendar-minus-o"></i>` : `RCV`) : `Reduced CV`}</div>
+                            <div class="esgst-clickable esgst-gc esgst-gc-reducedCV ${esgst.gc_rcv ? `` : `esgst-hidden`}" draggable="true" id="gc_rcv" title="Reduced CV">${esgst.gc_s ? (esgst.gc_s_i ? `<i class="fa fa-${esgst.gc_rcvIcon}"></i>` : esgst.gc_rcvLabel) : `Reduced CV`}</div>
                         `);
                         break;
                     case `gc_ncv`:
                         elements.push(`
-                            <div class="esgst-clickable esgst-gc esgst-gc-noCV ${esgst.gc_ncv ? `` : `esgst-hidden`}" draggable="true" id="gc_ncv" title="No CV">${esgst.gc_s ? (esgst.gc_s_i ? `<i class="fa fa-calendar-times-o"></i>` : `NCV`) : `No CV`}</div>
+                            <div class="esgst-clickable esgst-gc esgst-gc-noCV ${esgst.gc_ncv ? `` : `esgst-hidden`}" draggable="true" id="gc_ncv" title="No CV">${esgst.gc_s ? (esgst.gc_s_i ? `<i class="fa fa-${esgst.gc_ncvIcon}"></i>` : esgst.gc_ncvLabel) : `No CV`}</div>
                         `);
                         break;
                     case `gc_h`:
                         elements.push(`
-                            <div class="esgst-clickable esgst-gc esgst-gc-hidden ${esgst.gc_h ? `` : `esgst-hidden`}" draggable="true" id="gc_h" title="Hidden">${esgst.gc_s ? (esgst.gc_s_i ? `<i class="fa fa-eye-slash"></i>` : `H`) : `Hidden`}</div>
+                            <div class="esgst-clickable esgst-gc esgst-gc-hidden ${esgst.gc_h ? `` : `esgst-hidden`}" draggable="true" id="gc_h" title="Hidden">${esgst.gc_s ? (esgst.gc_s_i ? `<i class="fa fa-${esgst.gc_hIcon}"></i>` : `H`) : esgst.gc_hLabel}</div>
                         `);
                         break;
                     case `gc_i`:
                         elements.push(`
-                            <div class="esgst-clickable esgst-gc esgst-gc-ignored ${esgst.gc_i ? `` : `esgst-hidden`}" draggable="true" id="gc_i" title="Ignored">${esgst.gc_s ? (esgst.gc_s_i ? `<i class="fa fa-ban"></i>` : `I`) : `Ignored`}</div>
+                            <div class="esgst-clickable esgst-gc esgst-gc-ignored ${esgst.gc_i ? `` : `esgst-hidden`}" draggable="true" id="gc_i" title="Ignored">${esgst.gc_s ? (esgst.gc_s_i ? `<i class="fa fa-${esgst.gc_iIcon}"></i>` : `I`) : esgst.gc_iLabel}</div>
                         `);
                         break;
                     case `gc_o`:
                         elements.push(`
-                            <div class="esgst-clickable esgst-gc esgst-gc-owned ${esgst.gc_o ? `` : `esgst-hidden`}" draggable="true" id="gc_o" title="Owned">${esgst.gc_s ? (esgst.gc_s_i ? `<i class="fa fa-folder"></i>` : `O`) : `Owned`}</div>
+                            <div class="esgst-clickable esgst-gc esgst-gc-owned ${esgst.gc_o ? `` : `esgst-hidden`}" draggable="true" id="gc_o" title="Owned">${esgst.gc_s ? (esgst.gc_s_i ? `<i class="fa fa-${esgst.gc_oIcon}"></i>` : `O`) : esgst.gc_oLabel}</div>
                         `);
                         break;
                     case `gc_w`:
                         elements.push(`
-                            <div class="esgst-clickable esgst-gc esgst-gc-wishlisted ${esgst.gc_w ? `` : `esgst-hidden`}" draggable="true" id="gc_w" title="Wishlisted">${esgst.gc_s ? (esgst.gc_s_i ? `<i class="fa fa-heart"></i>` : `W`) : `Wishlisted`}</div>
+                            <div class="esgst-clickable esgst-gc esgst-gc-wishlisted ${esgst.gc_w ? `` : `esgst-hidden`}" draggable="true" id="gc_w" title="Wishlisted">${esgst.gc_s ? (esgst.gc_s_i ? `<i class="fa fa-${esgst.gc_wIcon}"></i>` : `W`) : esgst.gc_wLabel}</div>
                         `);
                         break;
                     case `gc_gi`:
@@ -25338,52 +25388,52 @@ ${avatar.outerHTML}
                         break;
                     case `gc_a`:
                         elements.push(`
-                            <div class="esgst-clickable esgst-gc esgst-gc-achievements ${esgst.gc_a ? `` : `esgst-hidden`}" draggable="true" id="gc_a" title="Achievements">${esgst.gc_s ? (esgst.gc_s_i ? `<i class="fa fa-trophy"></i>` : `A`) : `Achievements`}</div>
+                            <div class="esgst-clickable esgst-gc esgst-gc-achievements ${esgst.gc_a ? `` : `esgst-hidden`}" draggable="true" id="gc_a" title="Achievements">${esgst.gc_s ? (esgst.gc_s_i ? `<i class="fa fa-${esgst.gc_aIcon}"></i>` : `A`) : esgst.gc_aLabel}</div>
                         `);
                         break;
                     case `gc_mp`:
                         elements.push(`
-                            <div class="esgst-clickable esgst-gc esgst-gc-multiplayer ${esgst.gc_mp ? `` : `esgst-hidden`}" draggable="true" id="gc_mp" title="Multiplayer">${esgst.gc_s ? (esgst.gc_s_i ? `<i class="fa fa-users"></i>` : `MP`) : `Multiplayer`}</div>
+                            <div class="esgst-clickable esgst-gc esgst-gc-multiplayer ${esgst.gc_mp ? `` : `esgst-hidden`}" draggable="true" id="gc_mp" title="Multiplayer">${esgst.gc_s ? (esgst.gc_s_i ? `<i class="fa fa-${esgst.gc_mpIcon}"></i>` : `MP`) : esgst.gc_mpLabel}</div>
                         `);
                         break;
                     case `gc_sc`:
                         elements.push(`
-                            <div class="esgst-clickable esgst-gc esgst-gc-steamCloud ${esgst.gc_sc ? `` : `esgst-hidden`}" draggable="true" id="gc_sc" title="Steam Cloud">${esgst.gc_s ? (esgst.gc_s_i ? `<i class="fa fa-cloud"></i>` : `SC`) : `Steam Cloud`}</div>
+                            <div class="esgst-clickable esgst-gc esgst-gc-steamCloud ${esgst.gc_sc ? `` : `esgst-hidden`}" draggable="true" id="gc_sc" title="Steam Cloud">${esgst.gc_s ? (esgst.gc_s_i ? `<i class="fa fa-${esgst.gc_scIcon}"></i>` : `SC`) : esgst.gc_scLabel}</div>
                         `);
                         break;
                     case `gc_tc`:
                         elements.push(`
-                            <div class="esgst-clickable esgst-gc esgst-gc-tradingCards ${esgst.gc_tc ? `` : `esgst-hidden`}" draggable="true" id="gc_tc" title="Trading Cards">${esgst.gc_s ? (esgst.gc_s_i ? `<i class="fa fa-clone"></i>` : `TC`) : `Trading Cards`}</div>
+                            <div class="esgst-clickable esgst-gc esgst-gc-tradingCards ${esgst.gc_tc ? `` : `esgst-hidden`}" draggable="true" id="gc_tc" title="Trading Cards">${esgst.gc_s ? (esgst.gc_s_i ? `<i class="fa fa-${esgst.gc_tcIcon}"></i>` : `TC`) : esgst.gc_tcLabel}</div>
                         `);
                         break;
                     case `gc_l`:
                         elements.push(`
-                            <div class="esgst-clickable esgst-gc esgst-gc-linux ${esgst.gc_l ? `` : `esgst-hidden`}" draggable="true" id="gc_l" title="Linux">${esgst.gc_s ? (esgst.gc_s_i ? `<i class="fa fa-linux"></i>` : `L`) : `Linux`}</div>
+                            <div class="esgst-clickable esgst-gc esgst-gc-linux ${esgst.gc_l ? `` : `esgst-hidden`}" draggable="true" id="gc_l" title="Linux">${esgst.gc_s ? (esgst.gc_s_i ? `<i class="fa fa-${esgst.gc_lIcon}"></i>` : `L`) : esgst.gc_lLabel}</div>
                         `);
                         break;
                     case `gc_m`:
                         elements.push(`
-                            <div class="esgst-clickable esgst-gc esgst-gc-mac ${esgst.gc_m ? `` : `esgst-hidden`}" draggable="true" id="gc_m" title="Mac">${esgst.gc_s ? (esgst.gc_s_i ? `<i class="fa fa-apple"></i>` : `M`) : `Mac`}</div>
+                            <div class="esgst-clickable esgst-gc esgst-gc-mac ${esgst.gc_m ? `` : `esgst-hidden`}" draggable="true" id="gc_m" title="Mac">${esgst.gc_s ? (esgst.gc_s_i ? `<i class="fa fa-${esgst.gc_mIcon}"></i>` : `M`) : esgst.gc_mLabel}</div>
                         `);
                         break;
                     case `gc_dlc`:
                         elements.push(`
-                            <div class="esgst-clickable esgst-gc esgst-gc-dlc ${esgst.gc_dlc ? `` : `esgst-hidden`}" draggable="true" id="gc_dlc" title="DLC">${esgst.gc_s ? (esgst.gc_s_i ? `<i class="fa fa-download"></i>` : `DLC`) : `DLC`}</div>
+                            <div class="esgst-clickable esgst-gc esgst-gc-dlc ${esgst.gc_dlc ? `` : `esgst-hidden`}" draggable="true" id="gc_dlc" title="DLC">${esgst.gc_s ? (esgst.gc_s_i ? `<i class="fa fa-${esgst.gc_dlcIcon}"></i>` : `DLC`) : esgst.gc_dlcLabel}</div>
                         `);
                         break;
                     case `gc_p`:
                         elements.push(`
-                            <div class="esgst-clickable esgst-gc esgst-gc-package ${esgst.gc_p ? `` : `esgst-hidden`}" draggable="true" id="gc_p" title="Package">${esgst.gc_s ? (esgst.gc_s_i ? `<i class="fa fa-suitcase"></i>` : `P`) : `Package`}</div>
+                            <div class="esgst-clickable esgst-gc esgst-gc-package ${esgst.gc_p ? `` : `esgst-hidden`}" draggable="true" id="gc_p" title="Package">${esgst.gc_s ? (esgst.gc_s_i ? `<i class="fa fa-${esgst.gc_pIcon}"></i>` : `P`) : esgst.gc_pLabel}</div>
                         `);
                         break;
                     case `gc_ea`:
                         elements.push(`
-                            <div class="esgst-clickable esgst-gc esgst-gc-earlyAccess ${esgst.gc_ea ? `` : `esgst-hidden`}" draggable="true" id="gc_ea" title="Early Access">${esgst.gc_s ? (esgst.gc_s_i ? `<i class="fa fa-unlock"></i>` : `EA`) : `Early Access`}</div>
+                            <div class="esgst-clickable esgst-gc esgst-gc-earlyAccess ${esgst.gc_ea ? `` : `esgst-hidden`}" draggable="true" id="gc_ea" title="Early Access">${esgst.gc_s ? (esgst.gc_s_i ? `<i class="fa fa-${esgst.gc_eaIcon}"></i>` : `EA`) : esgst.gc_eaLabel}</div>
                         `);
                         break;
                     case `gc_rm`:
                         elements.push(`
-                            <div class="esgst-clickable esgst-gc esgst-gc-removed ${esgst.gc_rm ? `` : `esgst-hidden`}" draggable="true" id="gc_rm" title="Removed">${esgst.gc_s ? (esgst.gc_s_i ? `<i class="fa fa-trash"></i>` : `RM`) : `Removed`}</div>
+                            <div class="esgst-clickable esgst-gc esgst-gc-removed ${esgst.gc_rm ? `` : `esgst-hidden`}" draggable="true" id="gc_rm" title="Removed">${esgst.gc_s ? (esgst.gc_s_i ? `<i class="fa fa-${esgst.gc_rmIcon}"></i>` : `RM`) : esgst.gc_rmLabel}</div>
                         `);
                         break;
                     case `gc_g`:
@@ -25431,6 +25481,25 @@ ${avatar.outerHTML}
                 bgColorContext.value = esgst.defaultValues[`${Feature.id}_bgColor`];
                 setValue(`${Feature.id}_bgColor`, bgColorContext.value);
             });
+            if (Feature.input) {
+                input = insertHtml(SMFeatures, `beforeEnd`, `
+                    <div class="esgst-sm-colors">
+                        Icon: <input type="text" value="${esgst[`${Feature.id}Icon`]}">
+                        <br/>
+                        The name of the icon must be any name in this page: <a href="http://fontawesome.io/icons/" target="_blank">http://fontawesome.io/icons/</a>
+                        <br/>
+                        Label: <input type="text" value="${esgst[`${Feature.id}Label`]}">
+                    </div>
+                `);
+                input.firstElementChild.addEventListener(`change`, function() {
+                    setValue(`${Feature.id}Icon`, input.firstElementChild.value);
+                    esgst[`${Feature.id}Icon`] = input.firstElementChild.value;
+                });
+                input.lastElementChild.addEventListener(`change`, function() {
+                    setValue(`${Feature.id}Label`, input.lastElementChild.value);
+                    esgst[`${Feature.id}Label`] = input.lastElementChild.value;
+                });
+            }
             if (siwtchSg) {
                 siwtchSg.dependencies.push(SMFeatures);
             }
@@ -29311,26 +29380,16 @@ ${avatar.outerHTML}
                 z-index: 9998;
             }
 
-            .esgst-popup-wrapper {
-                left: 50%;
-                position: fixed;
-                top: 50%;
-                z-index: 9999;
-            }
-
             .esgst-popup {
                 background-color: #f0f2f5;
                 border-radius: 4px;
                 color: #465670;
-                left: -50%;
                 max-width: 75%;
                 padding: 35px 100px;
-                position: relative;
+                position: fixed;
                 text-align: center;
                 text-shadow: 1px 1px rgba(255,255,255,0.94);
-                transform: translateY(-50%);
-                -webkit-transform: translateY(-50%);
-                -ms-transform: translateY(-50%);
+                z-index: 9999;
             }
 
             .esgst-popup li:before {
