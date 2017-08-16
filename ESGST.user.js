@@ -3,7 +3,7 @@
 // @namespace ESGST
 // @description Enhances SteamGifts and SteamTrades by adding some cool features to them.
 // @icon https://github.com/revilheart/ESGST/raw/master/Resources/esgstIcon.ico
-// @version 6.Beta.27.0
+// @version 6.Beta.27.1
 // @author revilheart
 // @downloadURL https://github.com/revilheart/ESGST/raw/master/ESGST.user.js
 // @updateURL https://github.com/revilheart/ESGST/raw/master/ESGST.meta.js
@@ -2769,38 +2769,40 @@
                     addGwcrHeading(document, true);
                 }
             } else if (esgst.giveawayPath) {
-                var entryButton = esgst.sidebar.getElementsByClassName(`sidebar__entry-insert`)[0];
-                var deleteButton = esgst.sidebar.getElementsByClassName(`sidebar__entry-delete`)[0];
-                var code = location.pathname.match(/^\/giveaway\/(.+?)\//)[1];
-                var name = document.getElementsByClassName(`featured__heading__medium`)[0].textContent;
-                if (esgst.hgebd) {
-                    var errorButton = esgst.sidebar.getElementsByClassName(`sidebar__error`)[0];
-                    var hideButton = document.getElementsByClassName(`featured__giveaway__hide`)[0];
-                    if ((entryButton || errorButton) && !hideButton) {
-                        var parent = (entryButton || errorButton).parentElement;
-                        if (entryButton) {
-                            entryButton.remove();
+                if (!document.getElementsByClassName(`table--summary`)[0]) {
+                    var entryButton = esgst.sidebar.getElementsByClassName(`sidebar__entry-insert`)[0];
+                    var deleteButton = esgst.sidebar.getElementsByClassName(`sidebar__entry-delete`)[0];
+                    var code = location.pathname.match(/^\/giveaway\/(.+?)\//)[1];
+                    var name = document.getElementsByClassName(`featured__heading__medium`)[0].textContent;
+                    if (esgst.hgebd) {
+                        var errorButton = esgst.sidebar.getElementsByClassName(`sidebar__error`)[0];
+                        var hideButton = document.getElementsByClassName(`featured__giveaway__hide`)[0];
+                        if ((entryButton || errorButton) && !hideButton) {
+                            var parent = (entryButton || errorButton).parentElement;
+                            if (entryButton) {
+                                entryButton.remove();
+                            }
+                            if (errorButton) {
+                                errorButton.remove();
+                            }
+                            parent.insertAdjacentHTML(`afterBegin`, `
+                                <div class="sidebar__error is-disabled">
+                                    <i class="fa fa-exclamation-circle"></i> Hidden Game
+                                </div>
+                            `);
                         }
-                        if (errorButton) {
-                            errorButton.remove();
+                    }
+                    if (entryButton) {
+                        esgst.enterGiveawayButton = entryButton;
+                        if (esgst.et) {
+                            entryButton.addEventListener(`click`, setEtEntry.bind(null, code, true, name));
                         }
-                        parent.insertAdjacentHTML(`afterBegin`, `
-                            <div class="sidebar__error is-disabled">
-                                <i class="fa fa-exclamation-circle"></i> Hidden Game
-                            </div>
-                        `);
                     }
-                }
-                if (entryButton) {
-                    esgst.enterGiveawayButton = entryButton;
-                    if (esgst.et) {
-                        entryButton.addEventListener(`click`, setEtEntry.bind(null, code, true, name));
-                    }
-                }
-                if (deleteButton) {
-                    esgst.leaveGiveawayButton = deleteButton;
-                    if (esgst.et) {
-                        deleteButton.addEventListener(`click`, setEtEntry.bind(null, code, false, name));
+                    if (deleteButton) {
+                        esgst.leaveGiveawayButton = deleteButton;
+                        if (esgst.et) {
+                            deleteButton.addEventListener(`click`, setEtEntry.bind(null, code, false, name));
+                        }
                     }
                 }
             } else if (esgst.discussionsPath) {
@@ -2810,18 +2812,20 @@
             }
             if (esgst.commentsPath) {
                 if (esgst.giveawayCommentsPath) {
-                    if (esgst.tge && document.querySelector(`[href*="/giveaway/"]`)) {
-                        button = document.createElement(`div`);
-                        button.className = `esgst-heading-button`;
-                        button.title = `Extract train giveaways.`;
-                        button.innerHTML = `
-                            <i class="fa fa-train"></i>
-                            <i class="fa fa-search"></i>
-                        `;
-                        mainPageHeadingBefore.appendChild(button);
-                        button.addEventListener(`click`, extractTgeGiveaways.bind(null, {
-                            button: button
-                        }));
+                    if (!document.getElementsByClassName(`table--summary`)[0]) {
+                        if (esgst.tge && document.querySelector(`[href*="/giveaway/"]`)) {
+                            button = document.createElement(`div`);
+                            button.className = `esgst-heading-button`;
+                            button.title = `Extract train giveaways.`;
+                            button.innerHTML = `
+                                <i class="fa fa-train"></i>
+                                <i class="fa fa-search"></i>
+                            `;
+                            mainPageHeadingBefore.appendChild(button);
+                            button.addEventListener(`click`, extractTgeGiveaways.bind(null, {
+                                button: button
+                            }));
+                        }
                     }
                 } else if (esgst.discussionPath) {
                     if (esgst.tge && document.querySelector(`[href*="/giveaway/"]`)) {
@@ -2848,52 +2852,54 @@
                         loadMpp(button);
                     }
                 }
-                if (esgst.cs) {
-                    button = document.createElement(`div`);
-                    button.className = `esgst-heading-button`;
-                    button.title = `Search comments from specific users.`;
-                    button.innerHTML = `
-                        <i class="fa fa-comments"></i>
-                        <i class="fa fa-search"></i>
-                    `;
-                    mainPageHeadingBefore.appendChild(button);
-                    button.addEventListener(`click`, openCsPopup.bind(null, {
-                        button: button
-                    }));
-                }
-                if (esgst.rbp && esgst.replyBox) {
-                    button = document.createElement(`div`);
-                    button.className = `esgst-heading-button`;
-                    button.title = `Add a comment.`;
-                    button.innerHTML = `
-                        <i class="fa fa-comment"></i>
-                    `;
-                    mainPageHeadingBefore.appendChild(button);
-                    loadRbp(button);
-                }
-                if (esgst.ct && !esgst.ct_s) {
-                    button1 = document.createElement(`div`);
-                    button1.className = `esgst-heading-button`;
-                    button1.title = `Go to the first unread comment of this page.`;
-                    button1.innerHTML = `
-                        <i class="fa fa-comments-o"></i>
-                    `;
-                    mainPageHeadingBefore.appendChild(button1);
-                    button2 = document.createElement(`div`);
-                    button2.className = `esgst-heading-button`;
-                    button2.title = `Mark all comments in this page as read.`;
-                    button2.innerHTML = `
-                        <i class="fa fa-eye"></i>
-                    `;
-                    mainPageHeadingBefore.appendChild(button2);
-                    button3 = document.createElement(`div`);
-                    button3.className = `esgst-heading-button`;
-                    button3.title = `Mark all comments in this page as unread.`;
-                    button3.innerHTML = `
-                        <i class="fa fa-eye-slash"></i>
-                    `;
-                    mainPageHeadingBefore.appendChild(button3);
-                    addCtCommentPanel(button1, button2, button3);
+                if ((esgst.giveawayPath && !document.getElementsByClassName(`table--summary`)[0]) || !esgst.giveawayPath) {
+                    if (esgst.cs) {
+                        button = document.createElement(`div`);
+                        button.className = `esgst-heading-button`;
+                        button.title = `Search comments from specific users.`;
+                        button.innerHTML = `
+                            <i class="fa fa-comments"></i>
+                            <i class="fa fa-search"></i>
+                        `;
+                        mainPageHeadingBefore.appendChild(button);
+                        button.addEventListener(`click`, openCsPopup.bind(null, {
+                            button: button
+                        }));
+                    }
+                    if (esgst.rbp && esgst.replyBox) {
+                        button = document.createElement(`div`);
+                        button.className = `esgst-heading-button`;
+                        button.title = `Add a comment.`;
+                        button.innerHTML = `
+                            <i class="fa fa-comment"></i>
+                        `;
+                        mainPageHeadingBefore.appendChild(button);
+                        loadRbp(button);
+                    }
+                    if (esgst.ct && !esgst.ct_s) {
+                        button1 = document.createElement(`div`);
+                        button1.className = `esgst-heading-button`;
+                        button1.title = `Go to the first unread comment of this page.`;
+                        button1.innerHTML = `
+                            <i class="fa fa-comments-o"></i>
+                        `;
+                        mainPageHeadingBefore.appendChild(button1);
+                        button2 = document.createElement(`div`);
+                        button2.className = `esgst-heading-button`;
+                        button2.title = `Mark all comments in this page as read.`;
+                        button2.innerHTML = `
+                            <i class="fa fa-eye"></i>
+                        `;
+                        mainPageHeadingBefore.appendChild(button2);
+                        button3 = document.createElement(`div`);
+                        button3.className = `esgst-heading-button`;
+                        button3.title = `Mark all comments in this page as unread.`;
+                        button3.innerHTML = `
+                            <i class="fa fa-eye-slash"></i>
+                        `;
+                        mainPageHeadingBefore.appendChild(button3);
+                        addCtCommentPanel(button1, button2, button3);
+                    }
                 }
             } else if (esgst.inboxPath) {
                 if (esgst.ct && !esgst.ct_s) {
@@ -6807,7 +6813,7 @@
         applyButton = preset.firstElementChild;
         deleteButton = applyButton.nextElementSibling;
         applyButton.addEventListener(`click`, function () {
-            keys = [`maxLevel`, `minLevel`, `maxEntries`, `minEntries`, `maxCopies`, `minCopies`, `maxPoints`, `minPoints`, `maxChance`, `minChance`, `maxRating`, `minRating`, `pinned`, `group`, `whitelist`, `regionRestricted`, `created`, `entered`, `hidden`, `fullCV`, `reducedCV`, `noCV`, `owned`, `wishlisted`, `ignored`, `removed`, `tradingCards`, `achievements`, `multiplayer`, `steamCloud`, `linux`, `mac`, `dlc`, `package`, `genres`, `genreList`, `exceptionPinned`, `exceptionWishlist`, `exceptionGroup`, `exceptionWhitelist`, `exceptionRegionRestricted`, `exceptionMultiple`, `exceptionMultipleCopies`];
+            keys = [`maxLevel`, `minLevel`, `maxEntries`, `minEntries`, `maxCopies`, `minCopies`, `maxPoints`, `minPoints`, `maxChance`, `minChance`, `maxRating`, `minRating`, `pinned`, `group`, `whitelist`, `regionRestricted`, `created`, `entered`, `started`, `ended`, `hidden`, `fullCV`, `reducedCV`, `noCV`, `owned`, `wishlisted`, `ignored`, `removed`, `tradingCards`, `achievements`, `multiplayer`, `steamCloud`, `linux`, `mac`, `dlc`, `package`, `genres`, `genreList`, `exceptionPinned`, `exceptionWishlist`, `exceptionGroup`, `exceptionWhitelist`, `exceptionRegionRestricted`, `exceptionMultiple`, `exceptionMultipleCopies`];
             for (i = 0, n = keys.length; i < n; ++i) {
                 key = keys[i];
                 checkbox = gf[`${key}Checkbox`];
@@ -6900,7 +6906,7 @@
         var i, key, keys, n, preset, savedPresets;
         if (input.value) {
             warning.classList.add(`esgst-hidden`);
-            keys = [`maxLevel`, `minLevel`, `maxEntries`, `minEntries`, `maxCopies`, `minCopies`, `maxPoints`, `minPoints`, `maxChance`, `minChance`, `maxRating`, `minRating`, `pinned`, `group`, `whitelist`, `regionRestricted`, `created`, `entered`, `hidden`, `fullCV`, `reducedCV`, `noCV`, `owned`, `wishlisted`, `ignored`, `removed`, `tradingCards`, `achievements`, `multiplayer`, `steamCloud`, `linux`, `mac`, `dlc`, `package`, `genres`, `genreList`, `exceptionPinned`, `exceptionWishlist`, `exceptionGroup`, `exceptionWhitelist`, `exceptionRegionRestricted`, `exceptionMultiple`, `exceptionMultipleCopies`];
+            keys = [`maxLevel`, `minLevel`, `maxEntries`, `minEntries`, `maxCopies`, `minCopies`, `maxPoints`, `minPoints`, `maxChance`, `minChance`, `maxRating`, `minRating`, `pinned`, `group`, `whitelist`, `regionRestricted`, `created`, `entered`, `started`, `ended`, `hidden`, `fullCV`, `reducedCV`, `noCV`, `owned`, `wishlisted`, `ignored`, `removed`, `tradingCards`, `achievements`, `multiplayer`, `steamCloud`, `linux`, `mac`, `dlc`, `package`, `genres`, `genreList`, `exceptionPinned`, `exceptionWishlist`, `exceptionGroup`, `exceptionWhitelist`, `exceptionRegionRestricted`, `exceptionMultiple`, `exceptionMultipleCopies`];
             preset = {
                 name: input.value
             };
@@ -7247,7 +7253,7 @@
             }
         }
         if (!preset) {
-            var keys = [`maxLevel`, `minLevel`, `maxEntries`, `minEntries`, `maxCopies`, `minCopies`, `maxPoints`, `minPoints`, `maxChance`, `minChance`, `maxRating`, `minRating`, `pinned`, `group`, `whitelist`, `regionRestricted`, `created`, `entered`, `hidden`, `fullCV`, `reducedCV`, `noCV`, `owned`, `wishlisted`, `ignored`, `removed`, `tradingCards`, `achievements`, `multiplayer`, `steamCloud`, `linux`, `mac`, `dlc`, `package`, `genres`, `genreList`, `exceptionPinned`, `exceptionWishlist`, `exceptionGroup`, `exceptionWhitelist`, `exceptionRegionRestricted`, `exceptionMultiple`, `exceptionMultipleCopies`];
+            var keys = [`maxLevel`, `minLevel`, `maxEntries`, `minEntries`, `maxCopies`, `minCopies`, `maxPoints`, `minPoints`, `maxChance`, `minChance`, `maxRating`, `minRating`, `pinned`, `group`, `whitelist`, `regionRestricted`, `created`, `entered`, `started`, `ended`, `hidden`, `fullCV`, `reducedCV`, `noCV`, `owned`, `wishlisted`, `ignored`, `removed`, `tradingCards`, `achievements`, `multiplayer`, `steamCloud`, `linux`, `mac`, `dlc`, `package`, `genres`, `genreList`, `exceptionPinned`, `exceptionWishlist`, `exceptionGroup`, `exceptionWhitelist`, `exceptionRegionRestricted`, `exceptionMultiple`, `exceptionMultipleCopies`];
             preset = {
                 name: `Default${gf.type}`
             };
@@ -8496,7 +8502,7 @@ ${avatar.outerHTML}
                     popup = createPopup(`fa-file-text-o`, `<a href="${giveaway.url}"><span>${giveaway.name}</span></a> by <a href="/user/${giveaway.creator}">${giveaway.creator}</a>`, true);
                     description.classList.add(`esgst-text-left`);
                     popup.scrollable.insertAdjacentHTML(`beforeEnd`, description.outerHTML);
-                    set = createButtonSet(`yellow`, `grey`, `fa-plus-circle`, `fa-circle-o-notch fa-spin`, `Leave Giveaway`, `Leaving...`, function (callback) {
+                    set = createButtonSet(`yellow`, `grey`, `fa-minus-circle`, `fa-circle-o-notch fa-spin`, `Leave Giveaway`, `Leaving...`, function (callback) {
                         leaveElgbGiveaway(giveaway, main, source, function () {
                             callback();
                             popup.close();
@@ -11109,7 +11115,7 @@ ${avatar.outerHTML}
         } else {
             type = `Public`;
         }
-        giveaway.panel.insertAdjacentHTML(`afterEnd`, `
+        (giveaway.panel || giveaway.innerWrap.firstElementChild.nextElementSibling).insertAdjacentHTML(`afterEnd`, `
             <div class="table__column--width-small text-center">${type}</div>
             <div class="table__column--width-small text-center">${details.level}+</div>
         `);
@@ -11556,10 +11562,9 @@ ${avatar.outerHTML}
     /* [GESL] Giveaway Error Search Links (by Royalgamer06) */
 
     function loadGesl() {
-        var Context, Term;
-        if (esgst.giveawayPath && document.querySelector(".table.table--summary")) {
-            Context = document.getElementsByClassName("table__column__secondary-link")[0];
-            Term = encodeURIComponent(Context.innerHTML);
+        var name;
+        if (esgst.giveawayPath && document.getElementsByClassName(`table--summary`)[0]) {
+            name = encodeURIComponent(document.getElementsByClassName(`table__column__secondary-link`)[0].textContent);
             document.getElementsByClassName("table__row-outer-wrap")[0].insertAdjacentHTML(
                 "afterEnd",
                 `<div class="table__row-outer-wrap">
@@ -11568,14 +11573,14 @@ ${avatar.outerHTML}
                             <strong>Search Links</strong>
                         </div>
                         <div class="table__column--width-fill">
-                            <a href="https://www.steamgifts.com/giveaways/search?q=` + Term + `" target="_blank">
+                            <a href="https://www.steamgifts.com/giveaways/search?q=${name}" target="_blank" title="Search for active giveaways">
                                 <i class="fa"><img src="https://dl.dropboxusercontent.com/s/mah4e6dpv8v771n/sgIcon.ico?raw=1"></i>
-                            </a>&nbsp;
-                            <a href="https://steamdb.info/search/?a=app&amp;q=` + Term + `" target="_blank">
-                                <i class="fa"><img src="https://steamdb.info/static/logos/favicon-16x16.png"></i>
-                            </a>&nbsp;
-                            <a href="http://store.steampowered.com/search/?term=` + Term + `" target="_blank">
+                            </a>
+                            <a href="http://store.steampowered.com/search/?term=${name}" target="_blank" title="Search on Steam">
                                 <i class="fa fa-steam"></i>
+                            </a>
+                            <a href="https://steamdb.info/search/?a=app&q=${name}" target="_blank" title="Search on SteamDB">
+                                <i class="fa"><img src="https://steamdb.info/static/logos/favicon-16x16.png"></i>
                             </a>
                         </div>
                     </div>
@@ -26016,7 +26021,7 @@ ${avatar.outerHTML}
                 esgst.currentGiveaways.push(giveaways[i]);
             }
         }
-        if (esgst.gwl) {
+        if (esgst.gwl && ((esgst.giveawayPath && !main) || !esgst.giveawayPath)) {
             addGwlLinks(giveaways);
         }
         for (i = 0, n = esgst.giveawayFeatures.length; i < n; ++i) {
@@ -26214,7 +26219,7 @@ ${avatar.outerHTML}
                 }
             } else if (giveaway.columns) {
                 giveaway.panel = insertHtml(giveaway.columns, `afterEnd`, `<div class="featured__columns esgst-giveaway-panel"></div>`);
-            } else {
+            } else if (esgst.enteredPath && (esgst.gwc || esgst.gwr)) {
                 giveaway.panel = insertHtml(giveaway.innerWrap.firstElementChild.nextElementSibling, `afterEnd`, `<div class="table__column--width-small text-center esgst-giveaway-panel"></div>`);
             }
         }

@@ -1,4 +1,14 @@
 /*
+ * August 16, 2017 - v6.Beta.27.1
+ */
+
+* Fixed a style issue that was adding an additional column to created/won pages.
+* Fixed a bug in Giveaway Filters that was not saving started/ended filter settings.
+* Fixed a style issue that was adding a plus sign instead of a minus sign to Enter/Leave Giveaway Button inside of popups.
+* Fixed a bug that was running Giveaway Winners Link inside of giveaways (closes #351).
+* Fixed a bug that was preventing Giveaway Error Search Links from running.
+
+/*
  * August 15, 2017 - v6.Beta.27.0
  */
 
