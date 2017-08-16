@@ -4482,7 +4482,7 @@
             temp: temp
         };
         popup.popup = insertHtml(document.body, `beforeEnd`, `
-            <div class="esgst-popup">
+            <div class="esgst-hidden esgst-popup">
                 <div class="popup_summary">
                     <div class="popup_icon">
                         <i class="popup__icon fa ${icon} esgst-popup-icon"></i>
