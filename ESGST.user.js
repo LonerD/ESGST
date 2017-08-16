@@ -3,7 +3,7 @@
 // @namespace ESGST
 // @description Enhances SteamGifts and SteamTrades by adding some cool features to them.
 // @icon https://github.com/revilheart/ESGST/raw/master/Resources/esgstIcon.ico
-// @version 6.Beta.27.3
+// @version 6.Beta.27.4
 // @author revilheart
 // @downloadURL https://github.com/revilheart/ESGST/raw/master/ESGST.user.js
 // @updateURL https://github.com/revilheart/ESGST/raw/master/ESGST.meta.js
@@ -24132,16 +24132,16 @@ ${avatar.outerHTML}
             if (savedGames[id].entered && games[id]) {
                 for (i = 0, n = games[id].length; i < n; ++i) {
                     if (!games[id][i].container.getElementsByClassName(`esgst-egh-button`)[0] && ((games[id][i].table && esgst.egh_t) || !games[id][i].table)) {
-                        addEghIcon(games[id][i].headingName, id, type);
+                        addEghIcon(games[id][i], id, type);
                     }
                 }
             }
         }
     }
 
-    function addEghIcon(headingName, id, type) {
+    function addEghIcon(game, id, type) {
         var icon;
-        icon = insertHtml((game.container.closest(`.poll`) && game.container.getElementsByClassName(`table__column__heading`)[0]) || headingName, `beforeBegin`, `
+        icon = insertHtml((game.container.closest(`.poll`) && game.container.getElementsByClassName(`table__column__heading`)[0]) || game.headingName, `beforeBegin`, `
             <a class="esgst-egh-button">
                 <i class="fa fa-star esgst-egh-icon" title="You have entered giveaways for this game before. Click to unhighlight it"></i>
             </a>
@@ -24456,53 +24456,54 @@ ${avatar.outerHTML}
         }
         if (esgst.gc_gi || esgst.gc_r || esgst.gc_a || esgst.gc_mp || esgst.gc_sc || esgst.gc_tc || esgst.gc_l || esgst.gc_m || esgst.gc_dlc || esgst.gc_ea || esgst.gc_rm || esgst.gc_g) {
             gc.cache = JSON.parse(localStorage.esgst_gcCache || `{ "apps": {}, "subs": {}, "timestamp": 0 }`);
-            if (Date.now() - gc.cache.timestamp > 86400000) {
-                gc.cache = {
-                    apps: {},
-                    subs: {},
-                    timestamp: Date.now()
-                };
-                numApps = gc.apps.length;
-                numSubs = gc.subs.length;
+            var currentTime = Date.now();
+            for (id in gc.cache.apps) {
+                if (gc.cache.apps[id].lastCheck) {
+                    if (currentTime - gc.cache.apps[id].lastCheck > 604800000) {
+                        delete gc.cache.apps[id];
+                    }
+                } else {
+                    gc.cache.apps[id].lastCheck = currentTime;
+                }
+            }
+            for (id in gc.cache.subs) {
+                if (gc.cache.subs[id].lastCheck) {
+                    if (currentTime - gc.cache.subs[id].lastCheck > 604800000) {
+                        delete gc.cache.subs[id];
+                    }
+                } else {
+                    gc.cache.subs[id].lastCheck = currentTime;
+                }
+            }
+            localStorage.esgst_gcCache = JSON.stringify(gc.cache);
+            missingApps = [];
+            missingSubs = [];
+            for (i = 0, n = gc.apps.length; i < n; ++i) {
+                id = gc.apps[i];
+                if (!gc.cache.apps[id]) {
+                    missingApps.push(id);
+                }
+            }
+            for (i = 0, n = gc.subs.length; i < n; ++i) {
+                id = gc.subs[i];
+                if (!gc.cache.subs[id]) {
+                    missingSubs.push(id);
+                }
+            }
+            numApps = missingApps.length;
+            numSubs = missingSubs.length;
+            if (numApps || numSubs) {
                 gc.count = 0;
                 gc.total = numApps + numSubs;
-                for (i = 0; i < numApps; ++i) {
-                    getGcCategories(gc, gc.apps[i], `apps`);
+                for (i = 0, n = missingApps.length; i < n; ++i) {
+                    getGcCategories(gc, missingApps[i], `apps`);
                 }
-                for (i = 0; i < numSubs; ++i) {
-                    getGcCategories(gc, gc.subs[i], `subs`);
+                for (i = 0, n = missingSubs.length; i < n; ++i) {
+                    getGcCategories(gc, missingSubs[i], `subs`);
                 }
                 setTimeout(checkGcComplete, 1000, games, gc);
             } else {
-                missingApps = [];
-                missingSubs = [];
-                for (i = 0, n = gc.apps.length; i < n; ++i) {
-                    id = gc.apps[i];
-                    if (!gc.cache.apps[id]) {
-                        missingApps.push(id);
-                    }
-                }
-                for (i = 0, n = gc.subs.length; i < n; ++i) {
-                    id = gc.subs[i];
-                    if (!gc.cache.subs[id]) {
-                        missingSubs.push(id);
-                    }
-                }
-                numApps = missingApps.length;
-                numSubs = missingSubs.length;
-                if (numApps || numSubs) {
-                    gc.count = 0;
-                    gc.total = numApps + numSubs;
-                    for (i = 0, n = missingApps.length; i < n; ++i) {
-                        getGcCategories(gc, missingApps[i], `apps`);
-                    }
-                    for (i = 0, n = missingSubs.length; i < n; ++i) {
-                        getGcCategories(gc, missingSubs[i], `subs`);
-                    }
-                    setTimeout(checkGcComplete, 1000, games, gc);
-                } else {
-                    addGcCategories(games, gc);
-                }
+                addGcCategories(games, gc);
             }
         } else {
             addGcCategories(games, gc);
@@ -25431,12 +25432,12 @@ ${avatar.outerHTML}
                         break;
                     case `gc_rcv`:
                         elements.push(`
-                            <div class="esgst-clickable esgst-gc esgst-gc-reducedCV ${esgst.gc_rcv ? `` : `esgst-hidden`}" draggable="true" id="gc_rcv" title="Reduced CV">${esgst.gc_s ? (esgst.gc_s_i ? `<i class="fa fa-${esgst.gc_rcvIcon}"></i>` : esgst.gc_rcvLabel) : `Reduced CV`}</div>
+                            <div class="esgst-clickable esgst-gc esgst-gc-reducedCV ${esgst.gc_rcv ? `` : `esgst-hidden`}" draggable="true" id="gc_rcv" title="Reduced CV">${esgst.gc_s ? (esgst.gc_s_i ? `<i class="fa fa-${esgst.gc_rcvIcon}"></i>` : `RCV`) : esgst.gc_rcvLabel}</div>
                         `);
                         break;
                     case `gc_ncv`:
                         elements.push(`
-                            <div class="esgst-clickable esgst-gc esgst-gc-noCV ${esgst.gc_ncv ? `` : `esgst-hidden`}" draggable="true" id="gc_ncv" title="No CV">${esgst.gc_s ? (esgst.gc_s_i ? `<i class="fa fa-${esgst.gc_ncvIcon}"></i>` : esgst.gc_ncvLabel) : `No CV`}</div>
+                            <div class="esgst-clickable esgst-gc esgst-gc-noCV ${esgst.gc_ncv ? `` : `esgst-hidden`}" draggable="true" id="gc_ncv" title="No CV">${esgst.gc_s ? (esgst.gc_s_i ? `<i class="fa fa-${esgst.gc_ncvIcon}"></i>` : `NCV`) : esgst.gc_ncvLabel}</div>
                         `);
                         break;
                     case `gc_h`:

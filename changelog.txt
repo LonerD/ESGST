@@ -1,4 +1,12 @@
 /*
+ * August 16, 2017 - v6.Beta.27.4
+ */
+
+* Fixed a bug that was happening in Entered Games Highlighter.
+* Fixed a bug in Game Categories that was showing the default label for some categories in the settings menu instead of the custom one.
+* Increased the Game Categories cache from 24 hours to 1 week and separated the cache for each game.
+
+/*
  * August 16, 2017 - v6.Beta.27.3
  */
 
