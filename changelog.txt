@@ -1,4 +1,15 @@
 /*
+ * August 15, 2017 - v6.Beta.27.0
+ */
+
+* Fixed a bug in Giveaway Templates that was not closing the template popup when applying a template (closes #349).
+* Giveaway Templates no longer displays "?-?" if a template does not have precise start and end times (closes #339).
+
+Added the following features:
+
+* Shortcut Keys (closes #348)
+
+/*
  * August 15, 2017 - v6.Beta.26.10
  */
 

@@ -3,7 +3,7 @@
 // @namespace ESGST
 // @description Enhances SteamGifts and SteamTrades by adding some cool features to them.
 // @icon https://github.com/revilheart/ESGST/raw/master/Resources/esgstIcon.ico
-// @version 6.Beta.26.10
+// @version 6.Beta.27.0
 // @author revilheart
 // @downloadURL https://github.com/revilheart/ESGST/raw/master/ESGST.user.js
 // @updateURL https://github.com/revilheart/ESGST/raw/master/ESGST.meta.js
@@ -244,6 +244,20 @@
                         ugs_checkMember: `UGS_G`
                     };
                     esgst.defaultValues = {
+                        sk_closePopups: `escape`,
+                        sk_searchBox: `ctrlKey + q`,
+                        sk_firstPage: `ctrlKey + arrowup`,
+                        sk_previousPage: `ctrlKey + arrowleft`,
+                        sk_nextPage: `ctrlKey + arrowright`,
+                        sk_lastPage: `ctrlKey + arrowdown`,
+                        sk_toggleFilters: `altKey + q`,
+                        sk_hideGame: `altKey + g`,
+                        sk_hideGiveaway: `altKey + h`,
+                        sk_giveawayEntry: `ctrlKey + enter`,
+                        sk_creator: `altKey + c`,
+                        sk_replyBox: `ctrlKey +  `,
+                        sk_replyUser: `altKey + u`,
+                        sk_submitReply: `ctrlKey + enter`,
                         gc_categories: [`gc_gi`, `gc_r`, `gc_fcv`, `gc_rcv`, `gc_ncv`, `gc_h`, `gc_i`, `gc_o`, `gc_w`, `gc_a`, `gc_mp`, `gc_sc`, `gc_tc`, `gc_l`, `gc_m`, `gc_ea`, `gc_rm`, `gc_dlc`, `gc_p`, `gc_g`],
                         gas_auto: false,
                         gas_option: `name_asc`,
@@ -610,6 +624,18 @@
                             sg: true,
                             st: true,
                             type: `other`
+                        },
+                        {
+                            description: `
+                                <ul>
+                                    <li>Performs specific tasks when certain keys are pressed.</li>
+                                </ul>
+                            `,
+                            id: `sk`,
+                            input: true,
+                            name: `Shortcut Keys`,
+                            sg: true,
+                            type: `general`
                         },
                         {
                             description: `
@@ -2515,6 +2541,9 @@
                         addHeaderMenu();
                         checkNewVersion();
                         esgst.esCheck = esgst.es && ((esgst.es_g && esgst.giveawaysPath) || (esgst.es_d && esgst.discussionsTicketsPath) || (esgst.es_t && esgst.tradesPath) || (esgst.es_c && esgst.commentsPath) || (esgst.es_l && !esgst.giveawaysPath && !esgst.discussionsTicketsPath && !esgst.tradesPath && !esgst.commentsPath));
+                        if (esgst.sk) {
+                            document.addEventListener(`keydown`, loadSk);
+                        }
                         if (esgst.ib) {
                             esgst.endlessFeatures.push(addIbBorders);
                             addIbBorders(document);
@@ -2763,11 +2792,13 @@
                     }
                 }
                 if (entryButton) {
+                    esgst.enterGiveawayButton = entryButton;
                     if (esgst.et) {
                         entryButton.addEventListener(`click`, setEtEntry.bind(null, code, true, name));
                     }
                 }
                 if (deleteButton) {
+                    esgst.leaveGiveawayButton = deleteButton;
                     if (esgst.et) {
                         deleteButton.addEventListener(`click`, setEtEntry.bind(null, code, false, name));
                     }
@@ -4409,7 +4440,7 @@
                     </div>
                     <div class="popup__actions popup_actions">
                         <span class="esgst-hidden">Settings</span>
-                        <span>Close</span>
+                        <span class="esgst-popup-close">Close</span>
                     </div>
                 </div>
             </div>
@@ -4453,14 +4484,16 @@
     }
 
     function closePopup(popup) {
-        popup.modal.remove();
-        if (popup.temp) {
-            popup.wrapper.remove();
-        } else {
-            popup.wrapper.classList.add(`esgst-hidden`);
-        }
-        if (popup.onClose) {
-            popup.onClose();
+        if (popup.modal) {
+            popup.modal.remove();
+            if (popup.temp) {
+                popup.wrapper.remove();
+            } else {
+                popup.wrapper.classList.add(`esgst-hidden`);
+            }
+            if (popup.onClose) {
+                popup.onClose();
+            }
         }
     }
 
@@ -5168,6 +5201,162 @@
                 sibling.style.marginLeft = `25px`;
                 document.addEventListener(`scroll`, fixSidebar);
             }
+        }
+    }
+
+    /* [SK] Shortcut Keys */
+
+    function loadSk(event) {
+        var button, closeButtons, creator, end, i, j, key, keys, n, n2, range, reply, search, shortcut, start, text, toggle, user, value, values;
+        event.stopPropagation();
+        key = event.key.toLowerCase();
+        values = [`closePopups`, `searchBox`, `firstPage`, `previousPage`, `nextPage`, `lastPage`, `toggleFilters`, `hideGame`, `hideGiveaway`, `giveawayEntry`, `creator`, `replyBox`, `replyUser`, `submitReply`];
+        for (i = 0, n = values.length; i < n; ++i) {
+            value = values[i];
+            shortcut = esgst[`sk_${value}`];
+            keys = shortcut.match(/(.+?)\s\+\s(.+)/);
+            if ((keys && event[keys[1]] && key === keys[2]) || key === shortcut) {
+                switch (value) {
+                    case `closePopups`:
+                        closeButtons = document.querySelectorAll(`.b-close, .esgst-popup-close`);
+                        for (j = 0, n2 = closeButtons.length; j < n2; ++j) {
+                            closeButtons[j].click();
+                        }
+                        event.preventDefault();
+                        return;
+                        break;
+                    case `searchBox`:
+                        search = document.getElementsByClassName(`sidebar__search-input`)[0];
+                        if (search) {
+                            search.focus();
+                            event.preventDefault();
+                            return;
+                        }
+                        break;
+                    case `firstPage`:
+                        if (esgst.paginationNavigation && esgst.currentPage > 1) {
+                            location.href = `${esgst.searchUrl}1`;
+                            event.preventDefault();
+                            return;
+                        }
+                        break;
+                    case `previousPage`:
+                        if (esgst.paginationNavigation && esgst.currentPage > 1) {
+                            location.href = `${esgst.searchUrl}${esgst.currentPage - 1}`;
+                            event.preventDefault();
+                            return;
+                        }
+                        break;
+                    case `nextPage`:
+                        if (esgst.paginationNavigation && esgst.currentPage < esgst.lastPage) {
+                            location.href = `${esgst.searchUrl}${esgst.currentPage + 1}`;
+                            event.preventDefault();
+                            return;
+                        }
+                        break;
+                    case `lastPage`:
+                        if (esgst.paginationNavigation && esgst.currentPage < esgst.lastPage && esgst.lastPage !== 999999999) {
+                            location.href = `${esgst.searchUrl}${esgst.lastPage}`;
+                            event.preventDefault();
+                            return;
+                        }
+                        break;
+                    case `toggleFilters`:
+                        toggle = document.querySelector(`.esgst-gf-toggle .esgst-toggle-switch`);
+                        if (toggle) {
+                            toggle.click();
+                            event.preventDefault();
+                            return;
+                        }
+                        break;
+                    case `hideGame`:
+                        if (esgst.giveawayPath) {
+                            button = (document.getElementsByClassName(`popup--hide-games`)[0].style.display && document.getElementsByClassName(`popup--hide-games`)[0].style.display !== `none` && document.getElementsByClassName(`js__submit-hide-games`)[0]) || document.querySelector(`.esgst-ochgb, .giveaway__hide, .featured__giveaway__hide`);
+                            if (button) {
+                                button.click();
+                                event.preventDefault();
+                                return;
+                            }
+                        }
+                        break;
+                    case `hideGiveaway`:
+                        if (esgst.giveawayPath) {
+                            button = document.querySelector(`.esgst-gf-hide-button, .esgst-gf-unhide-button`);
+                            if (button) {
+                                button.firstElementChild.click();
+                                event.preventDefault();
+                                return;
+                            }
+                        }
+                        break;
+                    case `giveawayEntry`:
+                        if (event.target.tagName !== `TEXTAREA` && esgst.enterGiveawayButton) {
+                            if (esgst.enterGiveawayButton.classList.contains(`is-hidden`)) {
+                                esgst.leaveGiveawayButton.click();
+                            } else {
+                                esgst.enterGiveawayButton.click();
+                            }
+                            event.preventDefault();
+                            return;
+                        }
+                        break;
+                    case `creator`:
+                        if (event.target.tagName.match(/^(INPUT|TEXTAREA)$/)) {
+                            text = event.target.value;
+                            start = event.target.selectionStart;
+                            end = event.target.selectionEnd;
+                            creator = document.querySelector(`.featured__column--width-fill.text-right a, .comment__username, .author_name`);
+                            if (creator) {
+                                creator = creator.textContent;
+                                range = end + creator.length;
+                                event.target.value = `${text.slice(0, start)}${creator}${text.slice(end)}`;
+                                event.target.setSelectionRange(range, range);
+                                event.target.focus();
+                                event.preventDefault();
+                                return;
+                            }
+                        }
+                        break;
+                    case `replyBox`:
+                        if (esgst.replyBox) {
+                            esgst.replyBox.getElementsByTagName(`textarea`)[0].focus();
+                            event.preventDefault();
+                            return;
+                        }
+                        break;
+                    case `replyUser`:
+                        if (event.target.tagName === `TEXTAREA`) {
+                            text = event.target.value;
+                            start = event.target.selectionStart;
+                            end = event.target.selectionEnd;
+                            user = event.target.closest(`.comment__children, .comment_children`);
+                            user = (user && user.closest(`.comment, .comment_outer`).querySelector(`.comment__username, .author_name`)) || document.querySelector(`.featured__column--width-fill.text-right a, .comment__username, .author_name`);
+                            if (user) {
+                                user = user.textContent;
+                                range = end + user.length;
+                                event.target.value = `${text.slice(0, start)}${user}${text.slice(end)}`;
+                                event.target.setSelectionRange(range, range);
+                                event.target.focus();
+                                event.preventDefault();
+                                return;
+                            }
+                        }
+                        break;
+                    case `submitReply`:
+                        if (event.target.tagName === `TEXTAREA`) {
+                            reply = event.target.closest(`.comment, .reply_form, .esgst-popup`);
+                            if (reply) {
+                                button = reply.querySelector(`.esgst-button-set >:first-child, .DEDButton .rhDefaultButton, .js_submit`);
+                                if (button) {
+                                    button.click();
+                                    event.preventDefault();
+                                    return;
+                                }
+                            }
+                        }
+                        break;                        
+                }
+            } 
         }
     }
 
@@ -6339,20 +6528,21 @@
         for (i = 0, n = giveaways.length; i < n; ++i) {
             giveaway = giveaways[i];
             if (giveaway.creator !== esgst.username && !giveaway.ended && !giveaway.entered && giveaway.url) {
-                if (source === `gf`) {
+                if (source === `gf` || esgst.giveawayPath) {
                     if (!giveaway.innerWrap.getElementsByClassName(`esgst-gf-unhide-button`)[0] && savedGiveaways[giveaway.code] && savedGiveaways[giveaway.code].hidden) {
-                        addGfUnhideButton(giveaway);
+                        addGfUnhideButton(giveaway, main);
                     }
-                } else if (esgst.giveawaysPath) {
+                }
+                if ((source !== `gc` && esgst.giveawaysPath) || esgst.giveawayPath) {
                     if (!giveaway.innerWrap.getElementsByClassName(`esgst-gf-hide-button`)[0] && (!savedGiveaways[giveaway.code] || !savedGiveaways[giveaway.code].hidden || !savedGiveaways[giveaway.code].code)) {
-                        addGfHideButton(giveaway);
+                        addGfHideButton(giveaway, main);
                     }
                 }
             }
         }
     }
 
-    function addGfHideButton(giveaway) {
+    function addGfHideButton(giveaway, main) {
         var button;
         button = insertHtml(giveaway.headingName, `beforeBegin`, `
             <div class="esgst-gf-hide-button" title="Hide giveaway.">
@@ -6362,7 +6552,10 @@
         button.firstElementChild.addEventListener(`click`, function() {
             button.innerHTML = `<i class="fa fa-circle-o-notch fa-spin"></i>`;
             hideGfGiveaway(giveaway, function() {
-                giveaway.outerWrap.remove();
+                button.remove();
+                if ((esgst.giveawayPath && !main) || !esgst.giveawayPath) {
+                    giveaway.outerWrap.remove();
+                }
             });
         });
     }
@@ -6385,7 +6578,7 @@
         });
     }
 
-    function addGfUnhideButton(giveaway) {
+    function addGfUnhideButton(giveaway, main) {
         var button;
         button = insertHtml(giveaway.headingName, `beforeBegin`, `
             <div class="esgst-gf-unhide-button" title="Unhide giveaway.">
@@ -6395,7 +6588,10 @@
         button.firstElementChild.addEventListener(`click`, function() {
             button.innerHTML = `<i class="fa fa-circle-o-notch fa-spin"></i>`;
             unhideGfGiveaway(giveaway, function() {
-                giveaway.outerWrap.remove();
+                button.remove();
+                if ((esgst.giveawayPath && !main) || !esgst.giveawayPath) {
+                    giveaway.outerWrap.remove();
+                }
             });
         });
     }
@@ -6954,7 +7150,7 @@
             esgst.gf = gf;
         }
         var gfButton = document.createElement(`div`);
-        gfButton.className = `esgst-heading-button`;
+        gfButton.className = `esgst-heading-button esgst-gf-toggle`;
         gfButton.innerHTML = `
             <span></span>
             <i class="fa fa-sliders" title="View/apply presets"></i>
@@ -8032,17 +8228,17 @@ ${avatar.outerHTML}
     function addOchgbHideButton(giveaway, main) {
         var button, i, matches, n, newButton;
         giveaway.ochgbButton.innerHTML = `
-            <i class="${esgst.giveawayPath && main ? `` : `giveaway__icon`} fa fa-eye-slash" title="Hide giveaway"></i>        
+            <i class="esgst-ochgb ${esgst.giveawayPath && main ? `` : `giveaway__icon`} fa fa-eye-slash" title="Hide giveaway"></i>        
         `;
-        giveaway.ochgbButton.firstElementChild.addEventListener(`click`, hideOchgbGiveaway.bind(null, giveaway));
+        giveaway.ochgbButton.firstElementChild.addEventListener(`click`, hideOchgbGiveaway.bind(null, giveaway, main));
     }
 
     function addOchgbUnhideButton(giveaway, main) {
         var button, i, matches, n, newButton;
         giveaway.ochgbButton.innerHTML = `
-            <i class="${esgst.giveawayPath && main ? `` : `giveaway__icon`} fa fa-eye" title="Unhide giveaway"></i>        
+            <i class="esgst-ochgb ${esgst.giveawayPath && main ? `` : `giveaway__icon`} fa fa-eye" title="Unhide giveaway"></i>        
         `;
-        giveaway.ochgbButton.firstElementChild.addEventListener(`click`, unhideOchgbGiveaway.bind(null, giveaway));
+        giveaway.ochgbButton.firstElementChild.addEventListener(`click`, unhideOchgbGiveaway.bind(null, giveaway, main));
     }
 
     function fadeOchgbGiveaway(giveaway, main) {
@@ -8059,30 +8255,34 @@ ${avatar.outerHTML}
         addOchgbHideButton(giveaway);
     }
 
-    function hideOchgbGiveaway(giveaway, event) {
+    function hideOchgbGiveaway(giveaway, main, event) {
         event.currentTarget.className = `giveaway__icon fa fa-circle-o-notch fa-spin`;
-        request(`xsrf_token=${esgst.xsrfToken}&do=hide_giveaways_by_game_id&game_id=${giveaway.gameId}`, false, `/ajax.php`, completeOchgbProcess.bind(null, giveaway, `fade`));
+        request(`xsrf_token=${esgst.xsrfToken}&do=hide_giveaways_by_game_id&game_id=${giveaway.gameId}`, false, `/ajax.php`, completeOchgbProcess.bind(null, event.currentTarget, giveaway, `fade`, main));
     }
 
-    function unhideOchgbGiveaway(giveaway, event) {
+    function unhideOchgbGiveaway(giveaway, main, event) {
         event.currentTarget.className = `giveaway__icon fa fa-circle-o-notch fa-spin`;
-        request(`xsrf_token=${esgst.xsrfToken}&do=remove_filter&game_id=${giveaway.gameId}`, false, `/ajax.php`, completeOchgbProcess.bind(null, giveaway, `unfade`));
+        request(`xsrf_token=${esgst.xsrfToken}&do=remove_filter&game_id=${giveaway.gameId}`, false, `/ajax.php`, completeOchgbProcess.bind(null, event.currentTarget, giveaway, `unfade`, main));
     }
 
-    function completeOchgbProcess(giveaway, key) {
+    function completeOchgbProcess(button, giveaway, key, main) {
         var i, n;
-        if (esgst.ochgb_f) {
-            for (i = 0, n = esgst.currentGiveaways.length; i < n; ++i) {
-                if (esgst.currentGiveaways[i].gameId === giveaway.gameId) {
-                    esgst.currentGiveaways[i][key]();
+        if ((esgst.giveawayPath && !main) || !esgst.giveawayPath) {
+            if (esgst.ochgb_f) {
+                for (i = 0, n = esgst.currentGiveaways.length; i < n; ++i) {
+                    if (esgst.currentGiveaways[i].gameId === giveaway.gameId) {
+                        esgst.currentGiveaways[i][key]();
+                    }
+                }
+            } else {
+                for (i = 0, n = esgst.currentGiveaways.length; i < n; ++i) {
+                    if (esgst.currentGiveaways[i].gameId === giveaway.gameId) {
+                        esgst.currentGiveaways[i].outerWrap.remove();
+                    }
                 }
             }
         } else {
-            for (i = 0, n = esgst.currentGiveaways.length; i < n; ++i) {
-                if (esgst.currentGiveaways[i].gameId === giveaway.gameId) {
-                    esgst.currentGiveaways[i].outerWrap.remove();
-                }
-            }
+            button.remove();
         }
     }
 
@@ -8299,7 +8499,7 @@ ${avatar.outerHTML}
                     set = createButtonSet(`yellow`, `grey`, `fa-plus-circle`, `fa-circle-o-notch fa-spin`, `Leave Giveaway`, `Leaving...`, function (callback) {
                         leaveElgbGiveaway(giveaway, main, source, function () {
                             callback();
-                            popup.opened.close();
+                            popup.close();
                         });
                     });
                     if (esgst.elgb_r) {
@@ -8310,11 +8510,11 @@ ${avatar.outerHTML}
                             if (box.value) {
                                 request(`xsrf_token=${esgst.xsrfToken}&do=comment_new&description=${box.value}`, false, giveaway.url, function() {
                                     callback();
-                                    popup.opened.close();
+                                    popup.close();
                                 });
                             } else {
                                 callback();
-                                popup.opened.close();
+                                popup.close();
                             }
                         }).set);
                         popup.open(function () {
@@ -8332,11 +8532,11 @@ ${avatar.outerHTML}
                         if (box.value) {
                             request(`xsrf_token=${esgst.xsrfToken}&do=comment_new&description=${box.value}`, false, giveaway.url, function() {
                                 callback();
-                                popup.opened.close();
+                                popup.close();
                             });
                         } else {
                             callback();
-                            popup.opened.close();
+                            popup.close();
                         }
                     }).set);
                     popup.open(function () {
@@ -8352,11 +8552,11 @@ ${avatar.outerHTML}
                 if (box.value) {
                     request(`xsrf_token=${esgst.xsrfToken}&do=comment_new&description=${box.value}`, false, giveaway.url, function() {
                         callback();
-                        popup.opened.close();
+                        popup.close();
                     });
                 } else {
                     callback();
-                    popup.opened.close();
+                    popup.close();
                 }
             }).set);
             popup.open(function () {
@@ -8728,17 +8928,20 @@ ${avatar.outerHTML}
                 for (i = 0, n = savedTemplates.length; i < n; ++i) {
                     savedTemplate = savedTemplates[i];
                     details = ``;
-                    if (savedTemplate.startTime) {
-                        time = new Date(savedTemplate.startTime);
-                        details += `${`0${time.getHours()}`.slice(-2)}:${`0${time.getMinutes()}`.slice(-2)}`;
-                    } else {
-                        details += `?`;
-                    }
-                    if (savedTemplate.endTime) {
-                        time = new Date(savedTemplate.endTime);
-                        details += `-${`0${time.getHours()}`.slice(-2)}:${`0${time.getMinutes()}`.slice(-2)}`;
-                    } else {
-                        details += `-?`;
+                    if (savedTemplate.startTime || savedTemplate.endTime) {
+                        if (savedTemplate.startTime) {
+                            time = new Date(savedTemplate.startTime);
+                            details += `${`0${time.getHours()}`.slice(-2)}:${`0${time.getMinutes()}`.slice(-2)}`;
+                        } else {
+                            details += `?`;
+                        }
+                        if (savedTemplate.endTime) {
+                            time = new Date(savedTemplate.endTime);
+                            details += `-${`0${time.getHours()}`.slice(-2)}:${`0${time.getMinutes()}`.slice(-2)}`;
+                        } else {
+                            details += `-?`;
+                        }
+                        details += `, `;
                     }
                     hours = Math.floor(savedTemplate.duration / 3600000);
                     if (hours > 23) {
@@ -8746,19 +8949,19 @@ ${avatar.outerHTML}
                         if (days > 6) {
                             weeks = Math.floor(days / 7);
                             if (weeks === 1) {
-                                details += `, 1 week`;
+                                details += `1 week`;
                             } else {
-                                details += `, ${weeks} weeks`;
+                                details += `${weeks} weeks`;
                             }
                         } else if (days === 1) {
-                            details += `, 1 day`;
+                            details += `1 day`;
                         } else {
-                            details += `, ${days} days`;
+                            details += `${days} days`;
                         }
                     } else if (hours === 1) {
-                        details += `, 1 hour`;
+                        details += `1 hour`;
                     } else {
-                        details += `, ${hours} hours`;
+                        details += `${hours} hours`;
                     }
                     if (savedTemplate.region !== `0`) {
                         details += `, region restricted`;
@@ -9010,7 +9213,7 @@ ${avatar.outerHTML}
                 document.querySelector(`[name="description"]`).value = savedTemplate.description;
                 input.value = savedTemplate.name;
                 edit = true;
-                popup.opened.close();
+                popup.close();
             });
             deleteButton.addEventListener(`click`, function () {
                 if (window.confirm(`Are you sure you want to delete this template?`)) {
@@ -20679,6 +20882,8 @@ ${avatar.outerHTML}
                         saved[comment.type][comment.code] = {
                             readComments: {}
                         };
+                    } else if (!saved[comment.type][comment.code].readComments) {
+                        saved[comment.type][comment.code].readComments = {};
                     }
                     if (count > 0) {
                         saved[comment.type][comment.code].count = count;
@@ -25254,6 +25459,14 @@ ${avatar.outerHTML}
                     esgst.npth_nextKey = e.key;
                     next.value = e.key;
                 });
+            } else if (Feature.id === `sk`) {
+                input = insertHtml(SMFeatures, `beforeEnd`, `
+                    <div class="esgst-sm-colors">
+                        Enter the keys you want to use for each task:
+                        <br/>
+                    </div>`
+                );
+                setSkMenu(input);
             } else if (Feature.id === `gb_h`) {
                 var hours = esgst.gb_hours;
                 input = insertHtml(SMFeatures, `beforeEnd`, `
@@ -25309,6 +25522,99 @@ ${avatar.outerHTML}
             Menu.lastElementChild.remove();
             return null;
         }
+    }
+
+    function setSkMenu(input) {
+        var context, i, key, keys, n, sk;
+        keys = [
+            {
+                key: `closePopups`,
+                name: `Close all currently opened popups`
+            },
+            {
+                key: `searchBox`,
+                name: `Focus on the search box`
+            },
+            {
+                key: `firstPage`,
+                name: `Go to the first page`
+            },
+            {
+                key: `previousPage`,
+                name: `Go to the previous page`
+            },
+            {
+                key: `nextPage`,
+                name: `Go to the next page`
+            },
+            {
+                key: `lastPage`,
+                name: `Go to the last page`
+            },
+            {
+                key: `toggleFilters`,
+                name: `Toggle the giveaway filters`
+            },
+            {
+                key: `hideGame`,
+                name: `Hide the game when inside of a giveaway`
+            },
+            {
+                key: `hideGiveaway`,
+                name: `Hide the giveaway when inside of a giveaway`
+            },
+            {
+                key: `giveawayEntry`,
+                name: `Enter/leave the giveaway when inside of a giveaway`
+            },
+            {
+                key: `creator`,
+                name: `Insert the username of the creator of the giveaway/discussion/trade to the current reply box`
+            },
+            {
+                key: `replyBox`,
+                name: `Focus on the reply box`
+            },
+            {
+                key: `replyUser`,
+                name: `Insert the username of the user to whom you are replying to the current reply box`
+            },
+            {
+                key: `submitReply`,
+                name: `Submit the current reply`
+            }
+        ];
+        sk = {};
+        for (i = 0, n = keys.length; i < n; ++i) {
+            key = keys[i];
+            context = insertHtml(input, `beforeEnd`, `
+                <br/>${key.name}: <input type="text" value="${esgst[`sk_${key.key}`]}">
+            `);
+            context.addEventListener(`keydown`, getSkMenuKey.bind(null, sk), true);
+            context.addEventListener(`keyup`, setSkMenuKey.bind(null, sk, `sk_${key.key}`));
+        }
+    }
+
+    function getSkMenuKey(sk, event) {
+        event.preventDefault();
+        event.stopPropagation();
+        if (!event.repeat) {
+            sk.value = ``;
+            if (event.ctrlKey) {
+                sk.value += `ctrlKey + `;
+            } else if (event.shiftKey) {
+                sk.value += `shiftKey + `;
+            } else if (event.altKey) {
+                sk.value += `altKey + `;
+            }
+            sk.value += event.key.toLowerCase();
+        }
+    }
+
+    function setSkMenuKey(sk, key) {
+        setValue(key, sk.value);
+        esgst[key] = sk.value;
+        event.currentTarget.value = sk.value;
     }
 
     function setSmSource(child, sm) {
@@ -29290,7 +29596,7 @@ ${avatar.outerHTML}
             .esgst-sm-colors input {
                 display: inline-block;
                 padding: 0;
-                width: 100px;
+                width: 200px;
             }
 
             .esgst-sm-colors select {
