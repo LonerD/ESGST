@@ -3,7 +3,7 @@
 // @namespace ESGST
 // @description Enhances SteamGifts and SteamTrades by adding some cool features to them.
 // @icon https://github.com/revilheart/ESGST/raw/master/Resources/esgstIcon.ico
-// @version 6.Beta.27.2
+// @version 6.Beta.27.3
 // @author revilheart
 // @downloadURL https://github.com/revilheart/ESGST/raw/master/ESGST.user.js
 // @updateURL https://github.com/revilheart/ESGST/raw/master/ESGST.meta.js
@@ -70,11 +70,6 @@
                 if (esgst.sg || esgst.st) {
                     if (esgst.menuPath) {
                         document.head.insertAdjacentHTML(`beforeEnd`, `<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.1/css/font-awesome.min.css"><link rel="stylesheet" type="text/css" href="https://cdn.steamgifts.com/css/minified_v27.css">`);
-                    }
-                    if (window.location.pathname.match(/^\/discussion\/TDyzv\//)) {
-                        if (document.querySelector(`[href*="ESGST-currentVersion"]`).getAttribute(`href`).match(/currentVersion-(.+)/)[1] !== GM_info.script.version) {
-                            createAlert(`You are not using the latest ESGST version. Please update before reporting any bugs and make sure the bugs still exist in the latest version.`);
-                        }
                     }
                     if (esgst.sg) {
                         esgst.pageOuterWrapClass = `page__outer-wrap`;
@@ -2275,6 +2270,11 @@
                                     sg: true
                                 },
                                 {
+                                    id: `gc_il`,
+                                    name: `Show the panel inline (next to the game name instead of below it).`,
+                                    sg: true
+                                },
+                                {
                                     features: [
                                         {
                                             id: `gc_s_i`,
@@ -2288,13 +2288,6 @@
                                 },
                                 {
                                     colors: true,
-                                    id: `gc_h`,
-                                    input: true,
-                                    name: `Hidden`,
-                                    sg: true
-                                },
-                                {
-                                    colors: true,
                                     description: `
                                         <ul>
                                             <li>Shows how many giveaways you have already made for a game and how much CV you should get for a new giveaway.</li>
@@ -2302,6 +2295,13 @@
                                             <li>The information is not 100% accurate because it cannot know if all the copies were sent when it comes to giveaways with multiple copies, at the moment.</li>
                                         </ul>
                                     `,
+                                    features: [
+                                        {
+                                            id: `gc_gi_t`,
+                                            name: `Only show in discussion tables.`,
+                                            sg: true
+                                        }
+                                    ],
                                     id: `gc_gi`,
                                     name: `Giveaway Info`,
                                     sg: true
@@ -2341,16 +2341,9 @@
                                 },
                                 {
                                     colors: true,
-                                    id: `gc_o`,
+                                    id: `gc_h`,
                                     input: true,
-                                    name: `Owned`,
-                                    sg: true
-                                },
-                                {
-                                    colors: true,
-                                    id: `gc_w`,
-                                    input: true,
-                                    name: `Wishlisted`,
+                                    name: `Hidden`,
                                     sg: true
                                 },
                                 {
@@ -2362,23 +2355,16 @@
                                 },
                                 {
                                     colors: true,
-                                    id: `gc_rm`,
+                                    id: `gc_o`,
                                     input: true,
-                                    name: `Removed`,
+                                    name: `Owned`,
                                     sg: true
                                 },
                                 {
                                     colors: true,
-                                    id: `gc_ea`,
+                                    id: `gc_w`,
                                     input: true,
-                                    name: `Early Access`,
-                                    sg: true
-                                },
-                                {
-                                    colors: true,
-                                    id: `gc_tc`,
-                                    input: true,
-                                    name: `Trading Cards`,
+                                    name: `Wishlisted`,
                                     sg: true
                                 },
                                 {
@@ -2404,6 +2390,13 @@
                                 },
                                 {
                                     colors: true,
+                                    id: `gc_tc`,
+                                    input: true,
+                                    name: `Trading Cards`,
+                                    sg: true
+                                },
+                                {
+                                    colors: true,
                                     id: `gc_l`,
                                     input: true,
                                     name: `Linux`,
@@ -2414,6 +2407,20 @@
                                     id: `gc_m`,
                                     input: true,
                                     name: `Mac`,
+                                    sg: true
+                                },
+                                {
+                                    colors: true,
+                                    id: `gc_ea`,
+                                    input: true,
+                                    name: `Early Access`,
+                                    sg: true
+                                },
+                                {
+                                    colors: true,
+                                    id: `gc_rm`,
+                                    input: true,
+                                    name: `Removed`,
                                     sg: true
                                 },
                                 {
@@ -3101,6 +3108,11 @@
         window.addEventListener("hashchange", function () {
             goToComment();
         });
+        if (window.location.pathname.match(/^\/discussion\/TDyzv\//)) {
+            if (document.querySelector(`[href*="ESGST-currentVersion"]`).getAttribute(`href`).match(/currentVersion-(.+)/)[1] !== GM_info.script.version) {
+                createAlert(`You are not using the latest ESGST version. Please update before reporting any bugs and make sure the bugs still exist in the latest version.`);
+            }
+        }
     }
 
     function loadFeature(feature) {
@@ -20903,18 +20915,18 @@ ${avatar.outerHTML}
         }
     }
 
-    function getCtComments(count, comments, goToUnread, markRead, markUnread, callback) {
+    function getCtComments(count, comments, index, goToUnread, markRead, markUnread, callback) {
         if (goToUnread) {
-            checkCtComments(count, comments, true, false, false, callback);
+            checkCtComments(count, comments, index, true, false, false, callback);
         } else {
             createLock(`commentLock`, 300, function(deleteLock) {
-                checkCtComments(count, comments, false, markRead, markUnread, callback);
+                checkCtComments(count, comments, index, false, markRead, markUnread, callback);
                 deleteLock();
             });
         }
     }
 
-    function checkCtComments(count, comments, goToUnread, markRead, markUnread, callback) {
+    function checkCtComments(count, comments, index, goToUnread, markRead, markUnread, callback) {
         var button, code, comment, found, i, n, saved, source, type, unread;
         if (esgst.sg) {
             saved = {
@@ -20930,7 +20942,7 @@ ${avatar.outerHTML}
         n = comments.length;
         if (n > 0) {
             found = false;
-            for (i = 0; i < n; ++i) {
+            for (i = index || 0; i < n; ++i) {
                 comment = comments[i];
                 if (comment.id || comment.id.match(/^$/)) {
                     if (!saved[comment.type][comment.code]) {
@@ -20947,7 +20959,7 @@ ${avatar.outerHTML}
                         saved[comment.type][comment.code].visited = true;
                     }
                     if (!esgst.ct_s) {
-                        button = comment.comment.getElementsByClassName(`esgst-ct-comment-button`)[0];
+                        buttons = comment.comment.getElementsByClassName(`esgst-ct-comment-button`);
                         if (comment.author === esgst.username) {
                             markCtCommentRead(comment, saved);
                         } else if (!saved[comment.type][comment.code].readComments[comment.id] || comment.timestamp !== saved[comment.type][comment.code].readComments[comment.id]) {
@@ -20977,19 +20989,27 @@ ${avatar.outerHTML}
                                     found = true;
                                     break;
                                 }
-                            } else if (markRead) {
-                                markCtCommentRead(comment, saved);
-                                addCtUnreadCommentButton(button, comment);
                             } else {
-                                markCtCommentUnread(comment, saved);
-                                addCtReadCommentButton(button, comment);
+                                if (markRead) {
+                                    markCtCommentRead(comment, saved);
+                                    addCtUnreadCommentButton(buttons[0], comment);
+                                } else {
+                                    markCtCommentUnread(comment, saved);
+                                    addCtReadCommentButton(buttons[0], comment);
+                                }
+                                addCtReadUntilHereButton(buttons[1], comment);
+                                addCtUnreadUntilHereButton(buttons[2], comment);
                             }
-                        } else if (markUnread) {
-                            markCtCommentUnread(comment, saved);
-                            addCtReadCommentButton(button, comment);
                         } else {
-                            markCtCommentRead(comment, saved);
-                            addCtUnreadCommentButton(button, comment);
+                            if (markUnread) {
+                                markCtCommentUnread(comment, saved);
+                                addCtReadCommentButton(buttons[0], comment);
+                            } else {
+                                markCtCommentRead(comment, saved);
+                                addCtUnreadCommentButton(buttons[0], comment);
+                            }
+                            addCtReadUntilHereButton(buttons[1], comment);
+                            addCtUnreadUntilHereButton(buttons[2], comment);
                         }
                     }
                 }
@@ -21100,16 +21120,66 @@ ${avatar.outerHTML}
         }
     }
 
+    function addCtReadUntilHereButton(button, comment) {
+        if (!button) {
+            button = insertHtml(comment.actions, `beforeEnd`, `<div class="esgst-ct-comment-button" title="Mark all comments from this comment upwards as read"></div>`);
+        }
+        button.innerHTML = `
+            <span>
+                <i class="fa fa-eye"></i>
+                <i class="fa fa-angle-up"></i>
+            </span>        
+        `;
+        button.firstElementChild.addEventListener(`click`, function () {
+            button.innerHTML = `<i class="fa fa-circle-o-notch fa-spin"></i>`;
+            getCtComments(0, esgst.currentComments, comment.index, false, true, false, function () {
+                addCtReadUntilHereButton(button, comment);
+            });
+        });
+    }
+
+    function addCtUnreadUntilHereButton(button, comment) {
+        if (!button) {
+            button = insertHtml(comment.actions, `beforeEnd`, `<div class="esgst-ct-comment-button" title="Mark all comments from this comment upwards as unread"></div>`);
+        }
+        button.innerHTML = `
+            <span>
+                <i class="fa fa-eye-slash"></i>
+                <i class="fa fa-angle-up"></i>
+            </span>        
+        `;
+        button.firstElementChild.addEventListener(`click`, function () {
+            button.innerHTML = `<i class="fa fa-circle-o-notch fa-spin"></i>`;
+            getCtComments(0, esgst.currentComments, comment.index, false, false, true, function () {
+                addCtReadUntilHereButton(button, comment);
+            });
+        });
+    }
+
     function addCtReadCommentButton(button, comment) {
         if (!button) {
             button = insertHtml(comment.actions, `beforeEnd`, `<div class="esgst-ct-comment-button"></div>`);
         }
-        button.innerHTML = `<i class="fa fa-eye" title="Mark comment as read">`;
-        button.firstElementChild.addEventListener(`click`, function() {
+        button.innerHTML = `
+            <i class="fa fa-eye" title="Mark this comment as read"></i>
+            <span title="Mark this comment as read and go to the next unread comment">
+                <i class="fa fa-eye"></i>
+                <i class="fa fa-angle-double-right"></i>
+            </span>
+        `;
+        button.firstElementChild.addEventListener(`click`, function () {
             button.innerHTML = `<i class="fa fa-circle-o-notch fa-spin"></i>`;
-            markCtCommentRead(comment, null, true, function() {
+            markCtCommentRead(comment, null, true, function () {
                 button.innerHTML = ``;
                 addCtUnreadCommentButton(button, comment);
+            });
+        });
+        button.lastElementChild.addEventListener(`click`, function () {
+            button.innerHTML = `<i class="fa fa-circle-o-notch fa-spin"></i>`;
+            markCtCommentRead(comment, null, true, function () {
+                button.innerHTML = ``;
+                addCtUnreadCommentButton(button, comment);
+                getCtComments(0, esgst.currentComments, null, true);
             });
         });
     }
@@ -21173,7 +21243,7 @@ ${avatar.outerHTML}
         goToUnread.innerHTML = `
             <i class="fa fa-circle-o-notch fa-spin"></i>
         `;
-        getCtComments(0, esgst.currentComments, true, false, false, function (found) {
+        getCtComments(0, esgst.currentComments, null, true, false, false, function (found) {
             goToUnread.innerHTML = `
                 <i class="fa fa-comments-o"></i>
             `;
@@ -21187,7 +21257,7 @@ ${avatar.outerHTML}
         markRead.innerHTML = `
             <i class="fa fa-circle-o-notch fa-spin"></i>
         `;
-        getCtComments(0, esgst.currentComments, false, true, false, function () {
+        getCtComments(0, esgst.currentComments, null, false, true, false, function () {
             markRead.innerHTML = `
                 <i class="fa fa-eye"></i>
             `;
@@ -21201,7 +21271,7 @@ ${avatar.outerHTML}
         markUnread.innerHTML = `
             <i class="fa fa-circle-o-notch fa-spin"></i>
         `;
-        getCtComments(0, esgst.currentComments, false, false, true, function () {
+        getCtComments(0, esgst.currentComments, null, false, false, true, function () {
             markUnread.innerHTML = `
                 <i class="fa fa-eye-slash"></i>
             `;
@@ -21420,7 +21490,7 @@ ${avatar.outerHTML}
         request(null, true, `${url}${nextPage}`, function(response) {
             var context, lastLink, pagination;
             context = DOM.parse(response.responseText);
-            getCtComments(0, getComments(context, context), goToUnread, markRead, markUnread);
+            getCtComments(0, getComments(context, context), null, goToUnread, markRead, markUnread);
             if ((goToUnread && !esgst.ctUnreadFound) || !goToUnread) {
                 pagination = context.getElementsByClassName(`pagination__navigation`)[0];
                 ++nextPage;
@@ -24071,7 +24141,7 @@ ${avatar.outerHTML}
 
     function addEghIcon(headingName, id, type) {
         var icon;
-        icon = insertHtml(headingName, `beforeBegin`, `
+        icon = insertHtml((game.container.closest(`.poll`) && game.container.getElementsByClassName(`table__column__heading`)[0]) || headingName, `beforeBegin`, `
             <a class="esgst-egh-button">
                 <i class="fa fa-star esgst-egh-icon" title="You have entered giveaways for this game before. Click to unhighlight it"></i>
             </a>
@@ -24121,7 +24191,7 @@ ${avatar.outerHTML}
 
     function addGtButton(game, id, type) {
         if (!game.container.getElementsByClassName(`esgst-gt-button`)[0]) {
-            insertHtml(game.heading.lastElementChild || game.heading, `afterEnd`, `
+            insertHtml((game.container.closest(`.poll`) && game.container.getElementsByClassName(`table__column__heading`)[0]) || game.heading.lastElementChild || game.heading, `afterEnd`, `
                 <a class="esgst-faded esgst-gt-button" title="Edit game tags">
                     <i class="fa fa-tag"></i>
                     <span class="esgst-gt-tags"></span>
@@ -24363,7 +24433,11 @@ ${avatar.outerHTML}
             for (i = 0, n = elements.length; i < n; ++i) {
                 element = elements[i];
                 if (!element.container.getElementsByClassName(`esgst-gc-panel`)[0] && ((element.table && esgst.gc_t) || !element.table)) {
-                    element.heading.insertAdjacentHTML(`afterEnd`, `<div class="esgst-gc-panel"></div>`);
+                    if (element.container.closest(`.poll`)) {
+                        element.container.getElementsByClassName(`table__column__heading`)[0].insertAdjacentHTML(`afterEnd`, `<div class="esgst-gc-panel"></div>`);
+                    } else {
+                        element.heading.insertAdjacentHTML(`afterEnd`, `<div class="esgst-gc-panel"></div>`);
+                    }
                 }
             }
         }
@@ -24372,7 +24446,11 @@ ${avatar.outerHTML}
             for (i = 0, n = elements.length; i < n; ++i) {
                 element = elements[i];
                 if (!element.container.getElementsByClassName(`esgst-gc-panel`)[0] && ((element.table && esgst.gc_t) || !element.table)) {
-                    element.heading.insertAdjacentHTML(`afterEnd`, `<div class="esgst-gc-panel"></div>`);
+                    if (element.container.closest(`.poll`)) {
+                        element.container.getElementsByClassName(`table__column__heading`)[0].insertAdjacentHTML(`afterEnd`, `<div class="esgst-gc-panel"></div>`);
+                    } else {
+                        element.heading.insertAdjacentHTML(`afterEnd`, `<div class="esgst-gc-panel"></div>`);
+                    }
                 }
             }
         }
@@ -24434,108 +24512,113 @@ ${avatar.outerHTML}
     function getGcCategories(gc, id, type) {
         var categories, data, elements, genres, i, match, n, platforms, price, response, responseHtml, responseJson, tags;
         request(null, false, `http://store.steampowered.com/api/${type === `apps` ? `appdetails?appids=` : `packagedetails?packageids=`}${id}&filters=basic,categories,genres,name,platforms,price,price_overview&cc=us&l=en`, function (response) {
-            categories = {
-                achievements: 0,
-                dlc: 0,
-                earlyAccess: 0,
-                genres: ``,
-                linux: 0,
-                mac: 0,
-                multiplayer: 0,
-                name: ``,
-                price: -1,
-                rating: ``,
-                ratingType: ``,
-                removed: 1,
-                steamCloud: 0,
-                tags: ``,
-                tradingCards: 0            
-            };
-            responseJson = JSON.parse(response.responseText);
-            if (responseJson[id]) {
-                data = responseJson[id].data;
-                if (data) {
-                    if (data.categories) {
-                        for (i = 0, n = data.categories.length; i < n; ++i) {
-                            switch (data.categories[i].description) {
-                                case "Steam Achievements":
-                                    categories.achievements = 1;
-                                    break;
-                                case "Multi-player":
-                                    categories.multiplayer = 1;
-                                    break;
-                                case "Steam Cloud":
-                                    categories.steamCloud = 1;
-                                    break;
-                                case "Steam Trading Cards":
-                                    categories.tradingCards = 1;
-                                    break;
-                                default:
-                                    break;
-                            }
-                        }
-                    }
-                    categories.dlc = data.type === `dlc` ? 1 : 0;
-                    genres = [];
-                    if (data.genres) {
-                        for (i = 0, n = data.genres.length; i < n; ++i) {
-                            genres.push(data.genres[i].description.trim());
-                        }
-                    }
-                    genres.sort(function (a, b) {
-                        return a.localeCompare(b, {
-                            sensitivity: `base`
-                        });
-                    });
-                    categories.earlyAccess = genres.indexOf(`Early Access`) >= 0 ? 1 : 0;
-                    categories.genres = genres.join(`, `);
-                    platforms = data.platforms;
-                    categories.linux = platforms.linux ? 1 : 0;
-                    categories.mac = platforms.mac ? 1 : 0;
-                    categories.name = data.name;
-                    price = data.price || data.price_overview;
-                    categories.price = price ? (price.currency === `USD` ? Math.ceil(price.initial / 100) : -1) : 0;
-                }
-            }
-            request(null, false, `http://store.steampowered.com/${type.slice(0, -1)}/${id}`, function (response) {
-                responseHtml = DOM.parse(response.responseText);
-                if (response.finalUrl.match(id)) {
-                    elements = responseHtml.getElementsByClassName(`user_reviews_summary_row`);
-                    n = elements.length;
-                    if (n > 0) {
-                        match = elements[n - 1].getAttribute(`data-store-tooltip`).replace(/,/g, ``).match(/(\d+)%.*?(\d+)/);
-                        if (match) {
-                            categories.rating = `${match[1]}% (${match[2]} Reviews)`;
-                            rating = parseInt(match[1]);
-                            if (rating >= 0) {
-                                if (rating < 40) {
-                                    categories.ratingType = `Negative`;
-                                } else if (rating < 70) {
-                                    categories.ratingType = `Mixed`;
-                                } else {
-                                    categories.ratingType = `Positive`;
+            try {
+                categories = {
+                    achievements: 0,
+                    dlc: 0,
+                    earlyAccess: 0,
+                    genres: ``,
+                    linux: 0,
+                    mac: 0,
+                    multiplayer: 0,
+                    name: ``,
+                    price: -1,
+                    rating: ``,
+                    ratingType: ``,
+                    removed: 1,
+                    steamCloud: 0,
+                    tags: ``,
+                    tradingCards: 0            
+                };
+                responseJson = JSON.parse(response.responseText);
+                if (responseJson && responseJson[id]) {
+                    data = responseJson[id].data;
+                    if (data) {
+                        if (data.categories) {
+                            for (i = 0, n = data.categories.length; i < n; ++i) {
+                                switch (data.categories[i].description) {
+                                    case "Steam Achievements":
+                                        categories.achievements = 1;
+                                        break;
+                                    case "Multi-player":
+                                        categories.multiplayer = 1;
+                                        break;
+                                    case "Steam Cloud":
+                                        categories.steamCloud = 1;
+                                        break;
+                                    case "Steam Trading Cards":
+                                        categories.tradingCards = 1;
+                                        break;
+                                    default:
+                                        break;
                                 }
-                            } else {
-                                categories.ratingType = `?`;
                             }
                         }
-                    }
-                    categories.removed = 0;
-                    tags = [];
-                    elements = responseHtml.querySelectorAll(`a.app_tag`);
-                    for (i = 0, n = elements.length; i < n; ++i) {
-                        tags.push(elements[i].textContent.trim());
-                    }
-                    tags.sort(function (a, b) {
-                        return a.localeCompare(b, {
-                            sensitivity: `base`
+                        categories.dlc = data.type === `dlc` ? 1 : 0;
+                        genres = [];
+                        if (data.genres) {
+                            for (i = 0, n = data.genres.length; i < n; ++i) {
+                                genres.push(data.genres[i].description.trim());
+                            }
+                        }
+                        genres.sort(function (a, b) {
+                            return a.localeCompare(b, {
+                                sensitivity: `base`
+                            });
                         });
-                    });
-                    categories.tags = tags.join(`, `);
+                        categories.earlyAccess = genres.indexOf(`Early Access`) >= 0 ? 1 : 0;
+                        categories.genres = genres.join(`, `);
+                        platforms = data.platforms;
+                        categories.linux = platforms.linux ? 1 : 0;
+                        categories.mac = platforms.mac ? 1 : 0;
+                        categories.name = data.name;
+                        price = data.price || data.price_overview;
+                        categories.price = price ? (price.currency === `USD` ? Math.ceil(price.initial / 100) : -1) : 0;
+                    }
                 }
-                gc.cache[type][id] = categories;
+                request(null, false, `http://store.steampowered.com/${type.slice(0, -1)}/${id}`, function (response) {
+                    responseHtml = DOM.parse(response.responseText);
+                    if (response.finalUrl.match(id)) {
+                        elements = responseHtml.getElementsByClassName(`user_reviews_summary_row`);
+                        n = elements.length;
+                        if (n > 0) {
+                            match = elements[n - 1].getAttribute(`data-store-tooltip`).match(/(\d+?)%\sof\sthe\s(.+?)\s/);
+                            if (match) {
+                                categories.rating = `${match[1]}% (${match[2]})`;
+                                rating = parseInt(match[1]);
+                                if (rating >= 0) {
+                                    if (rating < 40) {
+                                        categories.ratingType = `Negative`;
+                                    } else if (rating < 70) {
+                                        categories.ratingType = `Mixed`;
+                                    } else {
+                                        categories.ratingType = `Positive`;
+                                    }
+                                } else {
+                                    categories.ratingType = `?`;
+                                }
+                            }
+                        }
+                        categories.removed = 0;
+                        tags = [];
+                        elements = responseHtml.querySelectorAll(`a.app_tag`);
+                        for (i = 0, n = elements.length; i < n; ++i) {
+                            tags.push(elements[i].textContent.trim());
+                        }
+                        tags.sort(function (a, b) {
+                            return a.localeCompare(b, {
+                                sensitivity: `base`
+                            });
+                        });
+                        categories.tags = tags.join(`, `);
+                    }
+                    gc.cache[type][id] = categories;
+                    gc.count += 1;
+                });
+            } catch (error) {
                 gc.count += 1;
-            });
+                console.log(error);
+            }
         });
     }
 
@@ -24670,7 +24753,7 @@ ${avatar.outerHTML}
                         }
                         break;
                     case `gc_gi`:
-                        if (cache && cache.price) {
+                        if (((esgst.gc_gi_t && games[0].table) || (!esgst.gc_gi_t)) && cache && cache.price) {
                             user = esgst.users.users[esgst.steamId];
                             if (user) {
                                 ugd = user.ugd;
@@ -24819,9 +24902,9 @@ ${avatar.outerHTML}
         for (i = 0, n = games.length; i < n; ++i) {
             panel = games[i].container.getElementsByClassName(`esgst-gc-panel`)[0];
             if (panel && !panel.innerHTML) {
-                if (esgst.gc_s && !esgst.giveawayPath) {
+                if (esgst.gc_il && !esgst.giveawayPath) {
                     panel.previousElementSibling.style.display = `inline-block`;
-                    panel.classList.add(`simplified`);
+                    panel.classList.add(`esgst-gc-panel-inline`);
                 }
                 panel.innerHTML = html;
             }
@@ -25383,7 +25466,7 @@ ${avatar.outerHTML}
                         break;
                     case `gc_r`:
                         elements.push(`
-                            <div class="esgst-clickable esgst-gc esgst-gc-rating esgst-gc-rating-positive ${esgst.gc_r ? `` : `esgst-hidden`}" draggable="true" id="gc_r" title="Rating"><i class="fa fa-thumbs-up"></i>${esgst.gc_r_s ? ` 0% (0 Ratings)` : ``}</div>
+                            <div class="esgst-clickable esgst-gc esgst-gc-rating esgst-gc-rating-positive ${esgst.gc_r ? `` : `esgst-hidden`}" draggable="true" id="gc_r" title="Rating"><i class="fa fa-thumbs-up"></i>${esgst.gc_r_s ? ` 0% (0)` : ``}</div>
                         `);
                         break;
                     case `gc_a`:
@@ -26437,10 +26520,17 @@ ${avatar.outerHTML}
     }
 
     function loadCommentFeatures(context, main) {
-        var count, comments, i, n;
+        var count, comments, i, n, pagination;
+        if (main && esgst.es_r && esgst.discussionPath && (esgst.currentPage !== 1 || !document.referrer.match(/\/discussions/))) {
+            pagination = context.getElementsByClassName(`pagination`)[0];
+            if (pagination) {
+                reverseComments(pagination.previousElementSibling);
+            }
+        }
         comments = getComments(context, document, main);
         if (main) {
             for (i = 0, n = comments.length; i < n; ++i) {
+                comments[i].index = i;
                 esgst.currentComments.push(comments[i]);
             }
         }
@@ -26463,7 +26553,7 @@ ${avatar.outerHTML}
     }
 
     function getComments(context, mainContext, main) {
-        var comment, comments, i, matches, n, sourceLink, savedUsers;
+        var comment, comments, i, matches, sourceLink, savedUsers;
         comments = [];
         savedUsers = JSON.parse(GM_getValue(`users`));
         matches = context.querySelectorAll(`:not(.comment--submit) > .comment__parent, .comment__child, .comment_inner`);
@@ -27185,7 +27275,6 @@ ${avatar.outerHTML}
                     reversePages = true;
                     activateEndlessScrolling();
                 } else {
-                    reverseComments(context);
                     currentPage = esgst.currentPage;
                     nextPage = currentPage - 1;
                     reversePages = false;
@@ -27198,8 +27287,6 @@ ${avatar.outerHTML}
                 nextPage = currentPage + 1;
                 activateEndlessScrolling();
             }
-        } else if (esgst.es_r && esgst.discussionPath) {
-            reverseComments(context);
         }
         }
 
@@ -27294,7 +27381,6 @@ ${avatar.outerHTML}
             setESHide(context);
             setESRemoveEntry(context);
             if (esgst.es_r && esgst.discussionPath) {
-                reverseComments(context);
                 if (lastPageMissing) {
                     lastPageMissing = false;
                     currentPage = parseInt(paginationNavigation.lastElementChild.getAttribute(`data-page-number`));
@@ -27365,9 +27451,6 @@ ${avatar.outerHTML}
                 loadEndlessFeatures(newContext, true);
                 setESHide(newContext);
                 setESRemoveEntry(newContext);
-                if (esgst.es_r && esgst.discussionPath) {
-                    reverseComments(newContext);
-                }
                 element = document.getElementById(`esgst-es-page-${page}`);
                 if (element.classList.contains(`esgst-fmph-placeholder`)) {
                     element = esgst.pagination.previousElementSibling.previousElementSibling;
@@ -29061,6 +29144,9 @@ ${avatar.outerHTML}
             ".comment__actions >:first-child + .esgst-ct-comment-button {" +
             "    margin: 0;" +
             "}" +
+            ".esgst-ct-comment-button >:not(:last-child) {" +
+            "    margin: 0 10px 0 0;" +
+            "}" +
             ".CFHPanel {" +
             "    margin: 0 0 2px;" +
             "    text-align: left;" +
@@ -29569,7 +29655,7 @@ ${avatar.outerHTML}
                 text-decoration: none;
             }
 
-            .esgst-gc-panel.simplified {
+            .esgst-gc-panel-inline {
                 display: inline-block;
                 margin: 0 0 0 5px;
             }
