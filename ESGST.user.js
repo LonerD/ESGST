@@ -3,7 +3,7 @@
 // @namespace ESGST
 // @description Enhances SteamGifts and SteamTrades by adding some cool features to them.
 // @icon https://github.com/revilheart/ESGST/raw/master/Resources/esgstIcon.ico
-// @version 6.Beta.28.1
+// @version 6.Beta.28.2
 // @author revilheart
 // @downloadURL https://github.com/revilheart/ESGST/raw/master/ESGST.user.js
 // @updateURL https://github.com/revilheart/ESGST/raw/master/ESGST.meta.js
@@ -3158,7 +3158,7 @@
                     button.addEventListener(`click`, saveUgsReroll.bind(null, category, winner));
                 }
             }
-            if (esgst.newGiveawayPath) {
+            if (esgst.gts && esgst.newGiveawayPath) {
                 rows = document.getElementsByClassName(`form__rows`)[0];
                 if (rows) {
                     button = document.createElement(`div`);
@@ -4062,7 +4062,13 @@
 
     function syncWhitelistBlacklist(syncer, callback) {
         if (!syncer.canceled) {
-            deleteUserValues([`whitelisted`, `whitelistedDate`, `blacklisted`, `blacklistedDate`], continueWhitelistBlacklistSync.bind(null, syncer, callback));
+            if (esgst.settings.syncWhitelist && esgst.settings.syncBlacklist) {
+                deleteUserValues([`whitelisted`, `whitelistedDate`, `blacklisted`, `blacklistedDate`], continueWhitelistBlacklistSync.bind(null, syncer, callback));
+            } else if (esgst.settings.syncWhitelist) {
+                deleteUserValues([`whitelisted`, `whitelistedDate`], continueWhitelistBlacklistSync.bind(null, syncer, callback));
+            } else {
+                deleteUserValues([`blacklisted`, `blacklistedDate`], continueWhitelistBlacklistSync.bind(null, syncer, callback));
+            }
         }
     }
 
@@ -8955,10 +8961,12 @@ ${avatar.outerHTML}
         }
     }
 
-    function setGglButtons(giveaways) {
+    function setGglButtons(giveaways, main) {
         var i, n;
-        for (i = 0, n = giveaways.length; i < n; ++i) {
-            setGglButton(giveaways[i]);
+        if ((main && !esgst.createdPath && !esgst.enteredPath && !esgst.wonPath) || !main) {
+            for (i = 0, n = giveaways.length; i < n; ++i) {
+                setGglButton(giveaways[i]);
+            }
         }
     }
 
@@ -26205,7 +26213,7 @@ ${avatar.outerHTML}
                         Label: <input type="text" value="${esgst[`${Feature.id}Label`]}">
                     </div>
                 `);
-                createTooltip(input.firstElementChild.nextElementSibling, `The name of the icon must be any name in this page: <a href="http://fontawesome.io/icons/">http://fontawesome.io/icons/</a>`);
+                createTooltip(input.firstElementChild.nextElementSibling, `The name of the icon must be any name in this page: <a href="http://fontawesome.io/icons/">http://fontawesome.io/icons/</a> (except for the 41 new icons from 4.7, SG doesn't support that)`);
                 input.firstElementChild.addEventListener(`change`, function() {
                     setValue(`${Feature.id}Icon`, input.firstElementChild.value);
                     esgst[`${Feature.id}Icon`] = input.firstElementChild.value;

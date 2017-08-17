@@ -1,4 +1,12 @@
 /*
+ * August 17, 2017 - v6.Beta.28.2
+ */
+
+* Fixed a bug that was deleting data from the other list when syncing only one of whitelist/blacklist.
+* Fixed a bug that was enabling Giveaway Templates even when disabled.
+* Fixed a bug that was happening in the created/entered/won pages if the popup option was enabled in Giveaway Groups Loader.
+
+/*
  * August 16, 2017 - v6.Beta.28.1
  */
 
