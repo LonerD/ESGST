@@ -1,4 +1,24 @@
 /*
+ * August 16, 2017 - v6.Beta.28.0
+ */
+
+* Popups are now properly stacked.
+* Added the hide game buttons to popups (closes #337).
+* Fixed a bug in Endless Scrolling that was reversing the comments even with the feature disabled.
+* Giveaway Filters now shows how many points are required to enter all unfiltered giveaways.
+* Added an option (2.15.1) to Enter/Leave Giveaway Button that allows you to enable the feature only for popups (closes #341).
+* Train Giveaways Extractor now shows how many points are required to enter all giveaways in the train (closes #341).
+* Fixed a bug that was enabling Not Received Finder for users when it shouldn't.
+* Fixed a bug in Game Categories that was showing the "Hidden" icon for "Wishlisted" icons.
+* Moved the icon descriptions in Game Categories to tooltips (closes #355).
+
+Added the following features:
+
+* 2.23 Sent Keys Searcher (closes #331)
+* 3.3 Discussion Filters (closes #336)
+* [4.1 - SG / 5.1 - ST] Collapse/Expand Replies Button (closes #346)
+
+/*
  * August 16, 2017 - v6.Beta.27.4
  */
 

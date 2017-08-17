@@ -3,7 +3,7 @@
 // @namespace ESGST
 // @description Enhances SteamGifts and SteamTrades by adding some cool features to them.
 // @icon https://github.com/revilheart/ESGST/raw/master/Resources/esgstIcon.ico
-// @version 6.Beta.27.4
+// @version 6.Beta.28.0
 // @author revilheart
 // @downloadURL https://github.com/revilheart/ESGST/raw/master/ESGST.user.js
 // @updateURL https://github.com/revilheart/ESGST/raw/master/ESGST.meta.js
@@ -239,6 +239,7 @@
                         ugs_checkMember: `UGS_G`
                     };
                     esgst.defaultValues = {
+                        sks_exportKeys: false,
                         gc_fcvIcon: `calendar`,
                         gc_rcvIcon: `calendar-minus-o`,
                         gc_ncvIcon: `calendar-times-o`,
@@ -916,7 +917,7 @@
                                 </ul>
                             `,
                             id: `hcp`,
-                            name: `[NEW] Hidden Community Poll`,
+                            name: `Hidden Community Poll`,
                             sg: true,
                             type: `general`
                         },
@@ -1001,7 +1002,7 @@
                                 </ul>
                             `,
                             id: `gas`,
-                            name: `[NEW] Giveaways Sorter`,
+                            name: `Giveaways Sorter`,
                             sg: true,
                             type: `giveaways`
                         },
@@ -1221,6 +1222,11 @@
                             `,
                             features: [
                                 {
+                                    id: `elgb_p`,
+                                    name: `[NEW] Only enable for popups.`,
+                                    sg: true
+                                },
+                                {
                                     id: `elgb_d`,
                                     name: `Pop up the giveaway description when entering, if any.`,
                                     sg: true
@@ -1346,6 +1352,18 @@
                             `,
                             id: `ugs`,
                             name: `Unsent Gifts Sender`,
+                            sg: true,
+                            type: `giveaways`
+                        },
+                        {
+                            description: `
+                                <ul>
+                                    <li>Allows you to search all your sent giveaways for certain keys to check if you have already made giveaways with those keys.</li>
+                                    <li>Allows you to export all keys you ever sent to a text file.</li>
+                                </ul>
+                            `,
+                            id: `sks`,
+                            name: `[NEW] Sent Keys Searcher`,
                             sg: true,
                             type: `giveaways`
                         },
@@ -1513,6 +1531,18 @@
                         {
                             description: `
                                 <ul>
+                                    <li>Allows you to hide discussions.</li>
+                                </ul>
+                            `,
+                            id: `df`,
+                            load: loadDf,
+                            name: `[NEW] Discussion Filters`,
+                            sg: true,
+                            type: `discussions`
+                        },
+                        {
+                            description: `
+                                <ul>
                                     <li>Allows you to sort discussions by creation date (from newest to oldest).</li>
                                 </ul>
                                 <img src="https://camo.githubusercontent.com/9fd9d276d5c6fc9377b2b9f36fe69c8d4d39562d/687474703a2f2f692e696d6775722e636f6d2f704d416f5671392e706e67"/>
@@ -1607,6 +1637,27 @@
                             sg: true,
                             st: true,
                             type: `trades`
+                        },
+                        {
+                            description: `
+                                <ul>
+                                    <li>Allows you to collapse/expand all replies (level 2+ comments) in a page.</li>
+                                </ul>
+                            `,
+                            features: [
+                                {
+                                    id: `cerb_a`,
+                                    name: `Automatically collapse all replies when visiting a page.`,
+                                    sg: true,
+                                    st: true
+                                }
+                            ],
+                            id: `cerb`,
+                            load: loadCerb,
+                            name: `[NEW] Collapse/Expand Replies Button`,
+                            sg: true,
+                            st: true,
+                            type: `comments`
                         },
                         {
                             description: `
@@ -1848,7 +1899,7 @@
                                         </ul>
                                     `,
                                     id: `rfi_s`,
-                                    name: `[NEW] Save replies.`,
+                                    name: `Save replies.`,
                                     sg: true,
                                     st: true
                                 }
@@ -2731,7 +2782,7 @@
         }*/
         if (esgst.giveawaysPath || esgst.discussionsPath) {
             esgst.endlessFeatures.push(loadDiscussionFeatures);
-            loadDiscussionFeatures(document);
+            loadDiscussionFeatures(document, true);
         }
         if (esgst.gv && (esgst.giveawaysPath || esgst.gv_gb || esgst.gv_ged || esgst.gv_tge)) {
             esgst.giveawayFeatures.push(setGvContainers);
@@ -2798,6 +2849,19 @@
                     `;
                     mainPageHeadingBefore.appendChild(button);
                     button.addEventListener(`click`, openUgsPopup.bind(null, {
+                        button: button
+                    }));
+                }
+                if (esgst.sks) {
+                    button = document.createElement(`div`);
+                    button.className = `esgst-heading-button`;
+                    button.title = `Search keys`;
+                    button.innerHTML = `
+                        <i class="fa fa-key"></i>
+                        <i class="fa fa-search"></i>
+                    `;
+                    mainPageHeadingBefore.appendChild(button);
+                    button.addEventListener(`click`, openSksPopup.bind(null, {
                         button: button
                     }));
                 }
@@ -4540,10 +4604,14 @@
     }
 
     function openPopup(popup, callback) {
+        var n;
         popup.popup.classList.remove(`esgst-hidden`);
         popup.modal = insertHtml(document.body, `beforeEnd`, `
             <div class="esgst-popup-modal"></div>
         `);
+        n = 9999 + document.querySelectorAll(`.esgst-popup:not(.esgst-hidden)`).length;
+        popup.modal.style.zIndex = n;
+        popup.popup.style.zIndex = n + 1;
         popup.modal.addEventListener(`click`, closePopup.bind(null, popup));
         popup.reposition();
         if (callback) {
@@ -4566,6 +4634,34 @@
     }
 
     /* Popout */
+
+    function createTooltip(context, message) {
+        var popout, timeout;
+        context.addEventListener(`mouseenter`, function () {
+            if (popout) {
+                popout.open(context);
+            } else {
+                popout = createPopout_v6(`esgst-feature-description markdown`);
+                popout.popout.style.maxHeight = `300px`;
+                popout.popout.style.overflow = `auto`;
+                popout.popout.innerHTML = message;
+                popout.open(context);
+                popout.popout.addEventListener(`mouseenter`, function () {
+                    if (timeout) {
+                        window.clearTimeout(timeout);
+                        timeout = null;
+                    }
+                });
+            }
+        });
+        context.addEventListener(`mouseleave`, function (event) {
+            if (popout && !popout.popout.contains(event.relatedTarget)) {
+                timeout = window.setTimeout(function () {
+                    popout.close();
+                }, 1000);
+            }
+        });
+    }
 
     function createPopout_v6(className, click) {
         var currentContext, popout, timeout;
@@ -7277,7 +7373,7 @@
                 </div>
                 <div class="esgst-gf-button">
                     <span>Expand</span>
-                    <span class="esgst-hidden">Collapse</span> filters (<span>0</span> filtered - <span></span>)
+                    <span class="esgst-hidden">Collapse</span> filters (<span>0</span> filtered - <span>0</span>P required to enter all unfiltered - <span></span>)
                 </div>
             </div>
         `);
@@ -7299,7 +7395,8 @@
         expand = button.firstElementChild;
         collapse = expand.nextElementSibling;
         gf.filteredCount = collapse.nextElementSibling;
-        gf.presetDisplay = gf.filteredCount.nextElementSibling;
+        gf.pointsCount = gf.filteredCount.nextElementSibling;
+        gf.presetDisplay = gf.pointsCount.nextElementSibling;
         var preset = esgst[`gf_preset${gf.type}`];
         var savedPresets;
         if (preset) {
@@ -7496,12 +7593,13 @@
     }
 
     function filterGfGiveaways(gf, unfilter) {
-        var context, count, element, elements, filtered, genres, giveaway, giveaways, i, j, k, key, maxKey, minKey, n, n2, n3, name;
+        var context, count, element, elements, filtered, genres, giveaway, giveaways, i, j, k, key, maxKey, minKey, n, n2, n3, name, points;
         if (gf.type === `Popup`) {
             giveaways = esgst.popupGiveaways;
         } else {
             giveaways = esgst.currentGiveaways;
         }
+        points = 0;
         for (i = 0, n = giveaways.length; i < n; ++i) {
             giveaway = giveaways[i];
             if (unfilter) {
@@ -7560,13 +7658,19 @@
                             gf.filteredCount.textContent = count + 1;
                             giveaway.outerWrap.classList.add(`esgst-hidden`);
                         }
-                    } else if (giveaway.outerWrap.classList.contains(`esgst-hidden`)) {
-                        gf.filteredCount.textContent = count - 1;
-                        giveaway.outerWrap.classList.remove(`esgst-hidden`);
+                    } else {
+                        points += giveaway.points;
+                        if (giveaway.outerWrap.classList.contains(`esgst-hidden`)) {
+                            gf.filteredCount.textContent = count - 1;
+                            giveaway.outerWrap.classList.remove(`esgst-hidden`);
+                        }
                     }
+                } else {
+                    points += giveaway.points;
                 }
             }
         }
+        gf.pointsCount.textContent = points;
         if (esgst.gfType !== `Popup`) {
             elements = document.getElementsByClassName(`pagination`);
             for (i = 0, n = elements.length; i < n; ++i) {
@@ -8060,6 +8164,7 @@ ${avatar.outerHTML}
                         if (builtGiveaway && builtGiveaway.started) {
                             results.insertAdjacentHTML(`beforeEnd`, builtGiveaway.html);
                             var giveawayy = getGiveawayInfo(results.lastElementChild.lastElementChild, document, esgst.games, null, false, false, null, true);
+                            setHideButton(giveawayy.giveaway);
                             esgst.popupGiveaways.push(giveawayy.giveaway);
                             currentGiveaways[giveawayy.data.code] = giveawayy.data;
                             loadEndlessFeatures(results.lastElementChild, false, `ged`);
@@ -8153,8 +8258,38 @@ ${avatar.outerHTML}
         }
     }
 
+    function hideGame(id, name) {
+        var popup;
+        popup = document.getElementsByClassName(`popup--hide-games`)[0];
+        if (popup) {
+            popup.querySelector(`[name=game_id`).value = id;
+            popup.getElementsByClassName(`popup__heading__bold`)[0].textContent = name;
+            $(popup).bPopup({
+                opacity: .85,
+                fadeSpeed: 200,
+                followSpeed: 500,
+                modalColor: "#3c424d",
+                amsl: [0]
+            });
+        }
+    }
+
+    function setHideButton(giveaway) {
+        var hideButton, temp;
+        hideButton = giveaway.innerWrap.getElementsByClassName(`featured__giveaway__hide`)[0];
+        if (hideButton) {
+            hideButton = hideButton.parentElement;
+            temp = hideButton.previousElementSibling;
+            hideButton.outerHTML = `
+                <i class="fa fa-eye-slash giveaway__hide giveaway__icon"></i>
+            `;
+            hideButton = temp.nextElementSibling;
+            hideButton.addEventListener(`click`, hideGame.bind(null, giveaway.gameId, giveaway.gameName));
+        }
+    }
+
     function buildGiveaway(context, url) {
-        var avatar, code, column, columns, comments, counts, endTime, endTimeColumn, entered, entries, giveaway, heading, headingName, hideButton, i, id, icons, image, n, removeEntryButton, started, startTimeColumn, thinHeadings;
+        var avatar, code, column, columns, comments, counts, endTime, endTimeColumn, entered, entries, giveaway, heading, headingName, i, id, icons, image, n, removeEntryButton, started, startTimeColumn, thinHeadings;
         giveaway = context.getElementsByClassName(`featured__outer-wrap--giveaway`)[0];
         if (giveaway) {
             code = url.match(/giveaway\/(.+?)\//)[1];
@@ -8169,10 +8304,6 @@ ${avatar.outerHTML}
             thinHeadings = heading.getElementsByClassName(`featured__heading__small`);
             for (i = 0, n = thinHeadings.length; i < n; ++i) {
                 thinHeadings[0].outerHTML = `<span class="giveaway__heading__thin">${thinHeadings[0].innerHTML}</span>`;
-            }
-            hideButton = heading.getElementsByClassName(`featured__giveaway__hide`)[0];
-            if (hideButton) {
-                hideButton.remove();
             }
             columns = heading.nextElementSibling;
             endTimeColumn = columns.firstElementChild;
@@ -8334,18 +8465,19 @@ ${avatar.outerHTML}
     }
 
     function completeOchgbProcess(button, giveaway, key, main) {
-        var i, n;
+        var i, n, source;
         if ((esgst.giveawayPath && !main) || !esgst.giveawayPath) {
+            source = main ? `currentGiveaways` : `popupGiveaways`;
             if (esgst.ochgb_f) {
-                for (i = 0, n = esgst.currentGiveaways.length; i < n; ++i) {
-                    if (esgst.currentGiveaways[i].gameId === giveaway.gameId) {
-                        esgst.currentGiveaways[i][key]();
+                for (i = 0, n = esgst[source].length; i < n; ++i) {
+                    if (esgst[source][i].gameId === giveaway.gameId) {
+                        esgst[source][i][key]();
                     }
                 }
             } else {
-                for (i = 0, n = esgst.currentGiveaways.length; i < n; ++i) {
-                    if (esgst.currentGiveaways[i].gameId === giveaway.gameId) {
-                        esgst.currentGiveaways[i].outerWrap.remove();
+                for (i = 0, n = esgst[source].length; i < n; ++i) {
+                    if (esgst[source][i].gameId === giveaway.gameId) {
+                        esgst[source][i].outerWrap.remove();
                     }
                 }
             }
@@ -8517,7 +8649,7 @@ ${avatar.outerHTML}
     function addElgbButtons(giveaways, main, source) {
         var games, giveaway, i, n;
             games = JSON.parse(GM_getValue(`games`));
-        if (((esgst.createdPath || esgst.enteredPath || esgst.wonPath || esgst.giveawayPath) && !main) || (!esgst.createdPath && !esgst.enteredPath && !esgst.wonPath && !esgst.giveawayPath)) {
+        if (((main && !esgst.elgb_p) || !main) && (((esgst.createdPath || esgst.enteredPath || esgst.wonPath || esgst.giveawayPath) && !main) || (!esgst.createdPath && !esgst.enteredPath && !esgst.wonPath && !esgst.giveawayPath))) {
             for (i = 0, n = giveaways.length; i < n; ++i) {
                 giveaway = giveaways[i];
                 if (!giveaway.innerWrap.getElementsByClassName(`esgst-button-set`)[0]) {
@@ -10793,6 +10925,198 @@ ${avatar.outerHTML}
         ugs.popup.reposition();
     }
 
+    /* [SKS] Sent Keys Searcher */
+
+    function openSksPopup(sks) {
+        if (!sks.popup) {
+            sks.popup = createPopup(`fa-key`, `Search for keys:`);
+            sks.textArea = insertHtml(sks.popup.scrollable, `beforeEnd`, `
+                <div class="esgst-description">Insert the keys below, one per line.</div>
+                <textarea></textarea>
+            `);
+            createToggleSwitch(sks.popup.description, `sks_exportKeys`, false, `Export all keys ever sent.`, false, false, `This will search all your giveaways and export a file with all keys ever sent. You don't need to enter any keys if this option is enabled.`, esgst.sks_exportKeys);
+            sks.results = insertHtml(sks.popup.scrollable, `beforeEnd`, `<div></div>`);
+            sks.popup.description.appendChild(createButtonSet(`green`, `grey`, `fa-search`, `fa-times`, `Search`, `Cancel`, searchSksGiveaways.bind(null, sks), cancelSksSearch.bind(null, sks)).set);
+            sks.progress = insertHtml(sks.popup.description, `beforeEnd`, `<div></div>`);
+        }
+        sks.popup.open();
+    }
+
+    function searchSksGiveaways(sks, callback) {
+        var i, key, keys, n;
+        sks.button.classList.add(`esgst-busy`);
+        sks.canceled = false;
+        sks.count = 0;
+        sks.giveaways = {};
+        sks.allKeys = [];
+        sks.keys = [];
+        sks.progress.innerHTML = ``;
+        sks.results.innerHTML = ``;
+        keys = sks.textArea.value.trim().split(/\n/);
+        n = keys.length;
+        if ((n > 0 && !esgst.sks_exportKeys) || esgst.sks_exportKeys) {
+            for (i = 0, n = keys.length; i < n; ++i) {
+                key = keys[i].trim();
+                if (key) {
+                    sks.keys.push(key);
+                    sks.count += 1;
+                }
+            }
+            sks.textArea.value = sks.keys.join(`\n`);
+            getSksGiveaways(document, esgst.currentPage, sks, completeSksSearch.bind(null, sks, callback));
+        } else {
+            callback();
+        }
+    }
+
+    function getSksGiveaways(context, nextPage, sks, callback) {
+        var element, elements, giveaways, heading, i, n, unsent, url;
+        if (!sks.canceled) {
+            sks.popup.reposition();
+            if (context) {
+                if (nextPage === esgst.currentPage) {
+                    sks.lastPage = getLastPage(context);
+                    sks.lastPage = sks.lastPage === 999999999 ? `` : ` of ${sks.lastPage}`;
+                }
+                sks.progress.innerHTML = `
+                    <i class="fa fa-circle-o-notch fa-spin"></i>
+                    <span>Searching for ${sks.count} keys (page ${nextPage}${sks.lastPage})...</span>
+                `;
+                giveaways = [];
+                elements = context.getElementsByClassName(`trigger-popup--keys`);
+                for (i = 0, n = elements.length; i < n; ++i) {
+                    element = elements[i];
+                    giveaways.push({
+                        code: element.parentElement.querySelector(`[name=code]`).value,
+                        name: element.getAttribute(`data-name`)
+                    });
+                }
+                n = giveaways.length;
+                if (n > 0) {
+                    checkSksGiveaways(giveaways, 0, n, sks, checkNextSksPage.bind(null, context, nextPage, sks, callback));
+                } else {
+                    checkNextSksPage(context, nextPage, sks, callback);
+                }
+            } else if (document.getElementById(`esgst-es-page-${nextPage}`)) {
+                setTimeout(getSksGiveaways, 0, null, ++nextPage, sks, callback);
+            } else if (!sks.canceled) {
+                request(null, false, `/giveaways/created/search?page=${nextPage}`, loadNextSksPage.bind(null, nextPage, sks, callback));
+            }
+        }
+    }
+
+    function checkSksGiveaways(giveaways, i, n, sks, callback) {
+        if (!sks.canceled) {
+            if (i < n) {
+                request(`xsrf_token=${esgst.xsrfToken}&do=popup_keys&code=${giveaways[i].code}`, false, `/ajax.php`, checkSksGiveaway.bind(null, giveaways, i, n, sks, callback));
+            } else {
+                callback();
+            }
+        }        
+    }
+
+    function checkSksGiveaway(giveaways, i, n, sks, callback, response) {
+        var element, heading, j, key;
+        heading = DOM.parse(JSON.parse(response.responseText).html).getElementsByClassName(`popup__keys__heading`)[0];
+        if (heading && heading.textContent === `Assigned`) {
+            element = heading.nextElementSibling.nextElementSibling;
+            for (j = element.children.length - 1; j >= 0; --j) {
+                key = element.children[j].textContent;
+                if (sks.keys.indexOf(key) >= 0) {
+                    sks.giveaways[key] = giveaways[i];
+                    sks.count -= 1;
+                }
+                if (esgst.sks_exportKeys) {
+                    sks.allKeys.push(`${key} ${giveaways[i].name} https://www.steamgifts.com/giveaway/${giveaways[i].code}/`);
+                }
+            }
+        }
+        setTimeout(checkSksGiveaways, 0, giveaways, ++i, n, sks, callback);
+    }
+
+    function checkNextSksPage(context, nextPage, sks, callback) {
+        var pagination;
+        if (!sks.canceled) {
+            if (sks.count > 0 || esgst.sks_exportKeys) {
+                pagination = context.getElementsByClassName(`pagination__navigation`)[0];
+                if (pagination && !pagination.lastElementChild.classList.contains(`is-selected`)) {
+                    setTimeout(getSksGiveaways, 0, null, nextPage, sks, callback);
+                } else {
+                    callback();
+                }
+            } else {
+                callback();
+            }
+        }
+    }
+
+    function loadNextSksPage(nextPage, sks, callback, response) {
+        if (!sks.canceled) {
+            setTimeout(getSksGiveaways, 0, DOM.parse(response.responseText), ++nextPage, sks, callback);
+        }
+    }
+
+    function completeSksSearch(sks, callback) {
+        var anchor, found, giveaway, i, key, n, notFound, url;
+        found = [];
+        notFound = [];
+        for (i = 0, n = sks.keys.length; i < n; ++i) {
+            key = sks.keys[i];
+            giveaway = sks.giveaways[key];
+            if (giveaway) {
+                found.push(`<li>${key} (<a href="/giveaway/${giveaway.code}/">${giveaway.name}</a>)</li>`);
+            } else {
+                notFound.push(`<li>${key}</li>`);
+            }
+        }
+        n = found.length;
+        if (n > 0) {
+            sks.results.insertAdjacentHTML(`beforeEnd`, `
+                <div class="markdown">
+                    <div>
+                        <strong>Found ${n} keys:</strong>
+                    </div>
+                    <ul>
+                        ${found.join(``)}
+                    </ul>
+                </div>
+            `);
+        }
+        n = notFound.length;
+        if (n > 0) {
+            sks.results.insertAdjacentHTML(`beforeEnd`, `
+                <div class="markdown">
+                    <div>
+                        <strong>Did not find ${n} keys:</strong>
+                    </div>
+                    <ul>
+                        ${notFound.join(``)}
+                    </ul>
+                </div>
+            `);
+        }
+        if (esgst.sks_exportKeys) {
+            anchor = document.createElement(`a`);
+            anchor.download = `esgst_sks_keys_${new Date().toISOString()}.txt`;
+            url = window.URL.createObjectURL(new Blob([sks.allKeys.join(`\r\n`)]));
+            anchor.href = url;
+            document.body.appendChild(anchor);
+            anchor.click();
+            anchor.remove();
+            window.URL.revokeObjectURL(url);
+        }
+        sks.progress.innerHTML = ``;
+        sks.popup.reposition();
+        sks.button.classList.remove(`esgst-busy`);
+        callback();
+    }
+
+    function cancelSksSearch(sks) {
+        sks.canceled = true;
+        sks.button.classList.remove(`esgst-busy`);
+        sks.progress.innerHTML = ``;
+    }
+
     /* [ET] Entries Tracker */
 
     function getEtEntries(context) {
@@ -11130,7 +11454,7 @@ ${avatar.outerHTML}
                         addCewgdDetails(giveaway, currentGiveaway);
                         ++cewgd.count;
                     } else {
-                        giveaways[i].panel.insertAdjacentHTML(`afterEnd`, `
+                        (giveaway.panel || giveaway.innerWrap.firstElementChild.nextElementSibling).insertAdjacentHTML(`afterEnd`, `
                             <div class="table__column--width-small text-center">-</div>
                             <div class="table__column--width-small text-center">-</div>
                         `);
@@ -11476,6 +11800,7 @@ ${avatar.outerHTML}
     function extractTgeGiveaways(tge) {
         var heading;
         if (!tge.popup) {
+            tge.points = 0;
             tge.popup = createPopup(`fa-train`, `Choo choo!`);
             tge.results = insertHtml(tge.popup.scrollable, `beforeEnd`, `<div class="esgst-text-left"></div>`);
             if (esgst.gf) {
@@ -11522,6 +11847,7 @@ ${avatar.outerHTML}
                         <h2>
                             <a href="${tge.bump}">Bump</a>
                         </h2>
+                        ${tge.points}P required to enter all giveaways.
                     </div>
                 `);
                 tge.results.insertAdjacentHTML(`beforeEnd`, `
@@ -11529,9 +11855,11 @@ ${avatar.outerHTML}
                         <h2>
                             <a href="${tge.bump}">Bump</a>
                         </h2>
+                        ${tge.points}P required to enter all giveaways.
                     </div>
                 `);
             }
+            tge.popup.reposition();
         } else {
             tge.set.firstElementChild.lastElementChild.textContent = `Extract More`;
             tge.count = 0;
@@ -11551,7 +11879,10 @@ ${avatar.outerHTML}
                 tge.progress.lastElementChild.textContent = tge.total;
                 giveaway = buildGiveaway(context, url);
                 if (giveaway) {
-                    esgst.popupGiveaways.push(getGiveawayInfo(insertHtml(tge.results.lastElementChild, `beforeEnd`, giveaway.html).firstElementChild, document, esgst.games).giveaway);
+                    giveaway = getGiveawayInfo(insertHtml(tge.results.lastElementChild, `beforeEnd`, giveaway.html).firstElementChild, document, esgst.games).giveaway;
+                    setHideButton(giveaway);
+                    tge.points += giveaway.points;
+                    esgst.popupGiveaways.push(giveaway);
                 }
                 tge.popup.reposition();
             }
@@ -11996,6 +12327,96 @@ ${avatar.outerHTML}
         }
     }
 
+    /* [DF] Discussion Filters */
+
+    function loadDf() {
+        var discussion, savedDiscussions;
+        if (esgst.discussionPath) {
+            discussion = {
+                code: location.pathname.match(/^\/discussion\/(.+?)\//)[1],
+                heading: document.getElementsByClassName(`page__heading__breadcrumbs`)[0],
+                headingContainer: document.getElementsByClassName(`page__heading`)[0]
+            };
+            savedDiscussions = JSON.parse(localStorage.esgst_discussions);
+            if (savedDiscussions[discussion.code] && savedDiscussions[discussion.code].hidden) {
+                addDfUnhideButton(discussion, true);
+            } else {
+                addDfHideButton(discussion, true);
+            }
+        }
+    }
+
+    function addDfHideButton(discussion, main) {
+        var button;
+        if (!discussion.heading.parentElement.getElementsByClassName(`esgst-df-button`)[0]) {
+            button = insertHtml(discussion.headingContainer.firstElementChild, `beforeBegin`, `
+                <div class="esgst-df-button" title="Hide discussion">
+                    <i class="fa fa-eye-slash"></i>
+                </div>
+            `);
+            button.firstElementChild.addEventListener(`click`, function() {
+                button.innerHTML = `<i class="fa fa-circle-o-notch fa-spin"></i>`;
+                hideDfDiscussion(discussion, function() {
+                    button.remove();
+                    if ((esgst.discussionPath && !main) || !esgst.discussionPath) {
+                        discussion.outerWrap.remove();
+                    }
+                });
+            });
+        }
+    }
+
+    function hideDfDiscussion(discussion, callback) {
+        createLock(`discussionLock`, 300, function(deleteLock) {
+            var discussions;
+            discussions = JSON.parse(localStorage.esgst_discussions || `{}`);
+            if (!discussions[discussion.code]) {
+                discussions[discussion.code] = {};
+            }
+            discussions[discussion.code].hidden = true;
+            localStorage.esgst_discussions = JSON.stringify(discussions);
+            deleteLock();
+            if (callback) {
+                callback();
+            }
+        });
+    }
+
+    function addDfUnhideButton(discussion, main) {
+        var button;
+        if (!discussion.heading.parentElement.getElementsByClassName(`esgst-df-button`)[0]) {
+            button = insertHtml(discussion.headingContainer.firstElementChild, `beforeBegin`, `
+                <div class="esgst-df-button" title="Unhide discussion">
+                    <i class="fa fa-eye"></i>
+                </div>
+            `);
+            button.firstElementChild.addEventListener(`click`, function() {
+                button.innerHTML = `<i class="fa fa-circle-o-notch fa-spin"></i>`;
+                unhideDfDiscussion(discussion, function() {
+                    button.remove();
+                    if ((esgst.discussionPath && !main) || !esgst.discussionPath) {
+                        discussion.outerWrap.remove();
+                    }
+                });
+            });
+        }
+    }
+
+    function unhideDfDiscussion(discussion, callback) {
+        createLock(`discussionLock`, 300, function(deleteLock) {
+            var discussions;
+            discussions = JSON.parse(localStorage.esgst_discussions || `{}`);
+            if (discussions[discussion.code]) {
+                discussions[discussion.code].hidden = false;
+                localStorage.esgst_discussions = JSON.stringify(discussions);
+            }
+            deleteLock();
+            if (callback) {
+                callback();
+            }
+        });
+    }
+
     /* [DH] Discussions Highlighter */
 
     function loadDh() {
@@ -12051,23 +12472,6 @@ ${avatar.outerHTML}
                     }
                 }
             }
-    }
-
-    function getDhDiscussions(discussions) {
-        var i, n, savedDiscussions;
-        savedDiscussions = JSON.parse(localStorage.esgst_discussions);
-        for (i = 0, n = discussions.length; i < n; ++i) {
-            getDhDiscussion(discussions[i], savedDiscussions);
-        }
-    }
-
-    function getDhDiscussion(discussion, savedDiscussions) {
-        if (savedDiscussions[discussion.code] && savedDiscussions[discussion.code].highlighted) {
-            highlightDhDiscussion(discussion.code, discussion.outerWrap);
-            addDhUnhighlightButton(discussion.code, discussion.outerWrap, discussion.heading.parentElement);
-        } else {
-            addDhHighlightButton(discussion.code, discussion.outerWrap, discussion.heading.parentElement);
-        }
     }
 
     function highlightDhDiscussion(code, context, save) {
@@ -20348,6 +20752,110 @@ ${avatar.outerHTML}
         }
     }
 
+    /* [CERB] Collapse/Expand Replies Button */
+
+    function loadCerb() {
+        var button, collapse, comments, expand;
+        if (esgst.cerb && esgst.commentsPath) {
+            comments = document.getElementsByClassName(`comments`)[0];
+            if (comments && comments.children.length) {
+                esgst.cerbButtons = [];
+                button = insertHtml(esgst.mainPageHeadingBackground || esgst.mainPageHeading, `afterEnd`, `
+                    <div class="esgst-cerb-button esgst-clickable">
+                        <span>
+                            <i class="fa fa-minus-square"></i> Collapse all replies
+                        </span>
+                        <span class="esgst-hidden">
+                            <i class="fa fa-plus-square"></i> Expand all replies
+                        </span>
+                    </div>
+                `);
+                collapse = button.firstElementChild;
+                expand = collapse.nextElementSibling;
+                collapse.addEventListener(`click`, collapseAllCerbReplies.bind(null, collapse, expand));
+                expand.addEventListener(`click`, expandAllCerbReplies.bind(null, collapse, expand));
+                esgst.endlessFeatures.push(getCerbReplies);
+                getCerbReplies(document, collapse, expand);
+            }
+        }
+    }
+
+    function getCerbReplies(context, collapse, expand) {
+        var elements, i, n, reply, replies;
+        elements = context.querySelectorAll(`.comments > .comment, .comments > .comment_outer`);
+        for (i = 0, n = elements.length; i < n; ++i) {
+            reply = elements[i];
+            replies = reply.querySelector(`.comment__children, .comment_children`);
+            if (replies && replies.children.length) {
+                setCerbButton(insertHtml(reply.firstElementChild, `afterBegin`, `
+                    <div class="esgst-cerb-reply-button esgst-clickable">
+                        <span title="Collapse all replies">
+                            <i class="fa fa-minus-square"></i>
+                        </span>
+                        <span class="esgst-hidden" title="Expand all replies">
+                            <i class="fa fa-plus-square"></i>
+                        </span>
+                    </div>
+                `), reply, replies.children);
+            }
+        }
+        if (context === document && esgst.cerb_a) {
+            collapseAllCerbReplies(collapse, expand);
+        }
+    }
+
+    function setCerbButton(button, reply, replies) {
+        var collapse, expand;
+        collapse = button.firstElementChild;
+        expand = collapse.nextElementSibling;
+        esgst.cerbButtons.push({
+            collapse: collapseCerbReplies.bind(null, collapse, expand, replies),
+            expand: expandCerbReplies.bind(null, collapse, expand, replies)
+        });
+        collapse.addEventListener(`click`, collapseCerbReplies.bind(null, collapse, expand, replies));
+        expand.addEventListener(`click`, expandCerbReplies.bind(null, collapse, expand, replies));
+        if (esgst.cerb_a) {
+            collapse.classList.toggle(`esgst-hidden`);
+            expand.classList.toggle(`esgst-hidden`);
+        }
+    }
+
+    function collapseCerbReplies(collapse, expand, replies) {
+        var i, n, replies;
+        for (i = 0, n = replies.length; i < n; ++i) {
+            replies[i].classList.add(`esgst-hidden`);
+        }
+        collapse.classList.add(`esgst-hidden`);
+        expand.classList.remove(`esgst-hidden`);
+    }
+
+    function expandCerbReplies(collapse, expand, replies) {
+        var i, n, replies;
+        for (i = 0, n = replies.length; i < n; ++i) {
+            replies[i].classList.remove(`esgst-hidden`);
+        }
+        collapse.classList.remove(`esgst-hidden`);
+        expand.classList.add(`esgst-hidden`);
+    }
+
+    function collapseAllCerbReplies(collapse, expand) {
+        var i, n;
+        for (i = 0, n = esgst.cerbButtons.length; i < n; ++i) {
+            esgst.cerbButtons[i].collapse();
+        }
+        collapse.classList.add(`esgst-hidden`);
+        expand.classList.remove(`esgst-hidden`);
+    }
+
+    function expandAllCerbReplies(collapse, expand) {
+        var i, n;
+        for (i = 0, n = esgst.cerbButtons.length; i < n; ++i) {
+            esgst.cerbButtons[i].expand();
+        }
+        collapse.classList.remove(`esgst-hidden`);
+        expand.classList.add(`esgst-hidden`);
+    }
+
     /* [RBOT] Reply Box On Top */
 
     function loadRbot() {
@@ -22456,6 +22964,7 @@ ${avatar.outerHTML}
                 };
                 setNAMWCResult(NAMWC, user, SavedUsers.users[SavedUsers.steamIds[NAMWC.Users[I]]].namwc, false);
             }
+            NAMWC.Popup.reposition();
         } else if (NAMWC.User) {
             NAMWC.Users.push(NAMWC.User.Username);
             checkNAMWCUsers(NAMWC, 0, 1, Callback);
@@ -22528,8 +23037,8 @@ ${avatar.outerHTML}
                     );
                 }
             }
+            NAMWC.Popup.reposition();
             if (!NAMWC.ShowResults) {
-                NAMWC.Popup.reposition();
                 user.values = {
                     namwc: namwc
                 };
@@ -23226,6 +23735,7 @@ ${avatar.outerHTML}
                     };
                     setWBCResult(WBC, user, SavedUsers.users[SavedUsers.steamIds[WBC.Users[I]]].wbc, SavedUsers.users[SavedUsers.steamIds[WBC.Users[I]]].notes, SavedUsers.users[SavedUsers.steamIds[WBC.Users[I]]].whitelisted, SavedUsers.users[SavedUsers.steamIds[WBC.Users[I]]].blacklisted, false);
                 }
+                WBC.Popup.reposition();
             } else {
                 checkWBCUsers(WBC, 0, WBC.Users.length, Callback);
             }
@@ -23362,8 +23872,8 @@ ${avatar.outerHTML}
             WBC[Key].classList.remove("rhHidden");
             WBC[Key + "Count"].textContent = parseInt(WBC[Key + "Count"].textContent) + 1;
             WBC[Key + "Users"].insertAdjacentHTML("beforeEnd", "<a " + (New ? "class=\"rhBold rhItalic\" " : "") + "href=\"/user/" + user.username + "\">" + user.username + "</a>");
+            WBC.Popup.reposition();
             if (!WBC.ShowResults) {
-                WBC.Popup.reposition();
                 if ((WBC.RW.checked && (wbc.result === `whitelisted`) && !whitelisted) || (WBC.B && WBC.RB.checked && (wbc.result === `blacklisted`) && !blacklisted)) {
                     if (user.id) {
                         returnWBCWhitelistBlacklist(WBC, wbc, user.username, user.id, notes, function (success, notes) {
@@ -24749,7 +25259,7 @@ ${avatar.outerHTML}
                     case `gc_w`:
                         if (savedGame && savedGame.wishlisted) {
                             elements.push(`
-                                <a class="esgst-gc esgst-gc-wishlisted" href="https://www.steamgifts.com/account/steam/wishlist/search?q=${encodedName}" title="Wishlisted">${esgst.gc_s ? (esgst.gc_s_i ? `<i class="fa fa-${esgst.gc_hIcon}"></i>` : `W`) : esgst.gc_wLabel}</a>
+                                <a class="esgst-gc esgst-gc-wishlisted" href="https://www.steamgifts.com/account/steam/wishlist/search?q=${encodedName}" title="Wishlisted">${esgst.gc_s ? (esgst.gc_s_i ? `<i class="fa fa-${esgst.gc_wIcon}"></i>` : `W`) : esgst.gc_wLabel}</a>
                             `);
                         }
                         break;
@@ -25037,6 +25547,11 @@ ${avatar.outerHTML}
             Name: "SMManageFilteredGiveaways esgst-heading-button",
             Title: "Manage hidden giveaways."
         }, {
+            Check: esgst.sg && esgst.gf && esgst.gf_h,
+            Icons: ["fa-comments", "fa-eye-slash"],
+            Name: "SMManageFilteredDiscussions esgst-heading-button",
+            Title: "Manage hidden discussions"
+        }, {
             Check: esgst.sg && esgst.et,
             Icons: ["fa-ticket", "fa-history"],
             Name: "SMManageEntriesTracker esgst-heading-button",
@@ -25134,6 +25649,7 @@ ${avatar.outerHTML}
         SMRecentUsernameChanges = Container.getElementsByClassName("SMRecentUsernameChanges")[0];
         SMManageFilteredUsers = Container.getElementsByClassName("SMManageFilteredUsers")[0];
         var SMManageFilteredGiveaways = Container.getElementsByClassName("SMManageFilteredGiveaways")[0];
+        var SMManageFilteredDiscussions = Container.getElementsByClassName("SMManageFilteredDiscussions")[0];
         var SMManageEntriesTracker = Container.getElementsByClassName("SMManageEntriesTracker")[0];
         SMManageTags = Container.getElementsByClassName("SMManageTags")[0];
         SMSyncFrequency = Container.getElementsByClassName("SMSyncFrequency")[0];
@@ -25331,6 +25847,9 @@ ${avatar.outerHTML}
         }
         if (SMManageFilteredGiveaways) {
             setSMManageFilteredGiveaways(SMManageFilteredGiveaways);
+        }
+        if (SMManageFilteredDiscussions) {
+            setSMManageFilteredDiscussions(SMManageFilteredDiscussions);
         }
         if (SMManageEntriesTracker) {
             setSMManageEntriesTracker(SMManageEntriesTracker);
@@ -25568,13 +26087,12 @@ ${avatar.outerHTML}
             if (Feature.input) {
                 input = insertHtml(SMFeatures, `beforeEnd`, `
                     <div class="esgst-sm-colors">
-                        Icon: <input type="text" value="${esgst[`${Feature.id}Icon`]}">
-                        <br/>
-                        The name of the icon must be any name in this page: <a href="http://fontawesome.io/icons/" target="_blank">http://fontawesome.io/icons/</a>
+                        Icon: <input type="text" value="${esgst[`${Feature.id}Icon`]}"> <i class="esgst-clickable fa fa-question-circle"></i>
                         <br/>
                         Label: <input type="text" value="${esgst[`${Feature.id}Label`]}">
                     </div>
                 `);
+                createTooltip(input.firstElementChild.nextElementSibling, `The name of the icon must be any name in this page: <a href="http://fontawesome.io/icons/">http://fontawesome.io/icons/</a>`);
                 input.firstElementChild.addEventListener(`change`, function() {
                     setValue(`${Feature.id}Icon`, input.firstElementChild.value);
                     esgst[`${Feature.id}Icon`] = input.firstElementChild.value;
@@ -25943,6 +26461,96 @@ ${avatar.outerHTML}
             }
             popup.open();
         });
+    }
+
+    function setSMManageFilteredDiscussions(SMManageFilteredDiscussions) {
+        var discussions, hidden, i, popup, set;
+        SMManageFilteredDiscussions.addEventListener(`click`, function() {
+            popup = createPopup(`fa-comments`, `Hidden Discussions`);
+            popup.discussions = insertHtml(popup.scrollable, `afterBegin`, `
+                <div class="table esgst-text-left">
+                    <div class="table__heading">
+                        <div class="table__column--width-fill">Summary</div>
+                        <div class="table__column--width-small text-center">Comments</div>
+                    </div>
+                </div>
+            `);
+            discussions = JSON.parse(localStorage.esgst_discussions);
+            hidden = [];
+            for (key in discussions) {
+                if (discussions[key].hidden) {
+                    hidden.push(key);
+                }
+            }
+            i = 0;
+            set = createButtonSet(`green`, `grey`, `fa-plus`, `fa-circle-o-notch fa-spin`, `Load more...`, `Loading more...`, function (callback) {
+                getDfDiscussions(hidden, i, i, i + 5, popup, function (value) {
+                    i = value;
+                    if (i > hidden.length) {
+                        set.set.remove();
+                    }
+                    callback();
+                });
+            });
+            popup.description.appendChild(set.set);
+            popup.open();
+            set.trigger();
+        });
+    }
+
+    function getDfDiscussions(hidden, i, j, n, popup, callback) {
+        var key;
+        if (i < n) {
+            if (hidden[i]) {
+                request(null, false, `/discussion/${hidden[i]}/`, function(response) {
+                    var breadcrumbs, categoryLink, context, usernameLink;
+                    context = DOM.parse(response.responseText);
+                    breadcrumbs = context.getElementsByClassName(`page__heading__breadcrumbs`);
+                    categoryLink = breadcrumbs[0].firstElementChild.nextElementSibling.nextElementSibling;
+                    usernameLink = context.getElementsByClassName(`comment__username`)[0].firstElementChild;
+                    popup.discussions.insertAdjacentHTML(`beforeEnd`, `
+                        <div>
+                            <div class="table__row-outer-wrap">
+                                <div class="table__row-inner-wrap">
+                                    <div>
+                                        ${context.getElementsByClassName(`global__image-outer-wrap`)[0].outerHTML}
+                                    </div>
+                                    <div class="table__column--width-fill">
+                                        <h3>
+                                            <a class="table__column__heading" href="/discussion/${hidden[i]}/">${categoryLink.nextElementSibling.nextElementSibling.firstElementChild.textContent}</a>
+                                        </h3>
+                                        <p>
+                                            <a class="table__column__secondary-link" href="${categoryLink.getAttribute(`href`)}">${categoryLink.textContent}</a> -
+                                            ${context.querySelector(`.comment [data-timestamp]`).outerHTML} ago by
+                                            <a class="table__column__secondary-link" href="${usernameLink.getAttribute(`href`)}">${usernameLink.textContent}</a>
+                                        </p>
+                                    </div>
+                                    <div class="table__column--width-small text-center">
+                                        <a class="table__column__secondary-link" href="/discussion/${hidden[i]}/">${breadcrumbs[1].textContent.match(/(.+) Comments/)[1]}</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `);
+                    loadEndlessFeatures(popup.discussions.lastElementChild);
+                    if (!esgst.giveawaysPath && !esgst.discussionsPath) {
+                        if (esgst.gdttt) {
+                            addCtDiscussionPanels(popup.discussions.lastElementChild, true);
+                            checkGdtttVisited(popup.discussions.lastElementChild);
+                        } else if (esgst.ct) {
+                            addCtDiscussionPanels(popup.discussions.lastElementChild, true);
+                        }
+                        loadDiscussionFeatures(popup.discussions.lastElementChild);
+                    }
+                    popup.reposition();
+                    window.setTimeout(getDfDiscussions, 0, hidden, ++i, ++j, n, popup, callback);
+                });
+            } else {
+                callback(j + 1);
+            }
+        } else {
+            callback(j);
+        }
     }
 
     function setSMManageFilteredGiveaways(SMManageFilteredGiveaways) {
@@ -26421,27 +27029,55 @@ ${avatar.outerHTML}
         };
     }
 
-    function loadDiscussionFeatures(context) {
-        var i, n, discussions;
-        discussions = getDiscussions(document);
+    function loadDiscussionFeatures(context, main) {
+        var i, n, discussion, discussions, savedDiscussion, savedDiscussions;
+        savedDiscussions = JSON.parse(localStorage.esgst_discussions || `{}`);
+        discussions = getDiscussions(document, main, savedDiscussions);
         for (i = 0, n = discussions.length; i < n; ++i) {
             esgst.currentDiscussions.push(discussions[i]);
         }
-        if (esgst.dh) {
-            getDhDiscussions(discussions);
+        if (esgst.df || esgst.dh) {
+            for (i = 0, n = discussions.length; i < n; ++i) {
+                discussion = discussions[i];
+                savedDiscussion = savedDiscussions[discussion.code];
+                if (savedDiscussion) {
+                    if (esgst.df) {
+                        if (savedDiscussion.hidden) {
+                            addDfUnhideButton(discussion, main);
+                        } else {
+                            addDfHideButton(discussion, main);
+                        }
+                    }
+                    if (esgst.dh) {
+                        if (savedDiscussion.highlighted) {
+                            highlightDhDiscussion(discussion.code, discussion.outerWrap);
+                            addDhUnhighlightButton(discussion.code, discussion.outerWrap, discussion.heading.parentElement);
+                        } else {
+                            addDhHighlightButton(discussion.code, discussion.outerWrap, discussion.heading.parentElement);
+                        }
+                    }
+                } else {
+                    if (esgst.df) {
+                        addDfHideButton(discussion, main);
+                    } 
+                    if (esgst.dh) {
+                        addDhHighlightButton(discussion.code, discussion.outerWrap, discussion.heading.parentElement);
+                    }
+                }
+            }
         }
         if (esgst.ds && esgst.ds_auto) {
             sortContent(discussions, esgst.ds_option);
         }
     }
 
-    function getDiscussions(context) {
+    function getDiscussions(context, main, savedDiscussions) {
         var discussion, discussions, elements, i, n, savedUsers;
         discussions = [];
         savedUsers = JSON.parse(GM_getValue(`users`));
         elements = context.getElementsByClassName(`table__row-outer-wrap`);
         for (i = elements.length - 1; i >= 0; --i) {
-            discussion = getDiscussionInfo(elements[i], savedUsers);
+            discussion = getDiscussionInfo(elements[i], main, savedDiscussions, savedUsers);
             if (discussion) {
                 discussions.push(discussion);
             }
@@ -26449,7 +27085,7 @@ ${avatar.outerHTML}
         return discussions;
     }
 
-    function getDiscussionInfo(context, savedUsers) {
+    function getDiscussionInfo(context, main, savedDiscussions, savedUsers) {
         var match, discussion, savedUser, uf;
         discussion = {};
         discussion.outerWrap = context;
@@ -26467,6 +27103,10 @@ ${avatar.outerHTML}
                 match = discussion.url.match(/discussion\/(.+?)\//);
                 if (match) {
                     discussion.code = match[1];
+                    if (main && esgst.df && savedDiscussions[discussion.code] && savedDiscussions[discussion.code].hidden) {
+                        discussion.outerWrap.remove();
+                        return null;
+                    }
                     discussion.categoryContainer = discussion.info.firstElementChild;
                     discussion.category = discussion.categoryContainer.textContent;
                     discussion.created = discussion.categoryContainer.nextElementSibling;
@@ -26522,7 +27162,7 @@ ${avatar.outerHTML}
 
     function loadCommentFeatures(context, main) {
         var count, comments, i, n, pagination;
-        if (main && esgst.es_r && esgst.discussionPath && (esgst.currentPage !== 1 || !document.referrer.match(/\/discussions/))) {
+        if (main && esgst.es && esgst.es_r && esgst.discussionPath && (esgst.currentPage !== 1 || !document.referrer.match(/\/discussions/))) {
             pagination = context.getElementsByClassName(`pagination`)[0];
             if (pagination) {
                 reverseComments(pagination.previousElementSibling);
@@ -26708,7 +27348,7 @@ ${avatar.outerHTML}
                         profile.sentFull = parseInt(rows[1].columns[1].name.replace(/,/g, ``));
                         profile.sentReduced = parseInt(rows[2].columns[1].name.replace(/,/g, ``));
                         profile.sentZero = parseInt(rows[3].columns[1].name.replace(/,/g, ``));
-                        profile.notSent = parseInt(rows[4].columns[1].name.replace(/,/g, ``));
+                        profile.notSent = parseInt(rows[5].columns[1].name.replace(/,/g, ``));
                         cvrow = profile.sentRowRight.firstElementChild.lastElementChild;
                         rows = JSON.parse(cvrow.getAttribute(`data-ui-tooltip`)).rows;
                         profile.sentCV = parseFloat(cvrow.textContent.replace(/\$|,/g, ``));
@@ -28697,6 +29337,21 @@ ${avatar.outerHTML}
         unknown = window.getComputedStyle(unknown).color;
         temp.remove();
         style += `
+            .comment__parent .esgst-cerb-reply-button {
+                margin-top: 54px;
+                position: absolute;
+                text-align: center;
+                width: 44px;
+            }
+            
+            .comment_inner .esgst-cerb-reply-button {
+                margin-left: 21px;
+                margin-top: 34px;
+                position: absolute;
+                text-align: center;
+                width: 24px;
+            }
+
             .esgst-page-heading {
                 display: flex;
                 align-items: flex-start;
@@ -29135,7 +29790,7 @@ ${avatar.outerHTML}
             ".esgst-ct-comment-read:hover, .esgst-ct-visited:hover {" +
             "    background-color: " + unknown.replace(/rgb/, "rgba").replace(/\)/, ", 0.1)") + " !important;" +
             "}" +
-            ".esgst-gf-hide-button, .esgst-gf-unhide-button, .esgst-gb-button, .esgst-dh-button {" +
+            ".esgst-gf-hide-button, .esgst-gf-unhide-button, .esgst-gb-button, .esgst-df-button, .esgst-dh-button {" +
             "    cursor: pointer; display: inline-block;" +
             "    margin: 0 5px 0 0;" +
             "}" +
@@ -29464,7 +30119,6 @@ ${avatar.outerHTML}
                 position: fixed;
                 right: 0;
                 top: 0;
-                z-index: 9998;
             }
 
             .esgst-popup {
@@ -29476,7 +30130,6 @@ ${avatar.outerHTML}
                 position: fixed;
                 text-align: center;
                 text-shadow: 1px 1px rgba(255,255,255,0.94);
-                z-index: 9999;
             }
 
             .esgst-popup li:before {
