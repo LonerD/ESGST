@@ -3,7 +3,7 @@
 // @namespace ESGST
 // @description Enhances SteamGifts and SteamTrades by adding some cool features to them.
 // @icon https://github.com/revilheart/ESGST/raw/master/Resources/esgstIcon.ico
-// @version 6.Beta.28.2
+// @version 6.Beta.28.3
 // @author revilheart
 // @downloadURL https://github.com/revilheart/ESGST/raw/master/ESGST.user.js
 // @updateURL https://github.com/revilheart/ESGST/raw/master/ESGST.meta.js
@@ -7725,7 +7725,7 @@
                     for (j = 0, n2 = gf.typeFilters.length; !filtered && j < n2; ++j) {
                         key = gf.typeFilters[j].key;
                         if ((key === `regionRestricted` && !gf.advancedSearch) || key !== `regionRestricted`) {
-                            if ((key === `fullCV` && ((gf.fullCV === `disabled` && !giveaway.reducedCV) || (gf.fullCV === `none` && giveaway.reducedCV))) || (key !== `fullCV` && ((gf[key] === `disabled` && giveaway[key]) || (gf[key] === `none` && !giveaway[key])))) {
+                            if ((key === `fullCV` && ((gf.fullCV === `disabled` && !giveaway.reducedCV && !giveaway.noCV) || (gf.fullCV === `none` && (giveaway.reducedCV || giveaway.noCV)))) || (key !== `fullCV` && ((gf[key] === `disabled` && giveaway[key]) || (gf[key] === `none` && !giveaway[key])))) {
                                 filtered = true;
                             }
                         }
@@ -9620,29 +9620,6 @@ ${avatar.outerHTML}
                             <div></div>
                             <div class="esgst-hidden">
                                 <div></div>
-                                <div class="esgst-description markdown">
-                                <div>Add the connection style to the description of the giveaway, wherever you want it to appear, using the format [ESGST-P]...[P]...[/P]...[/ESGST-P]...[ESGST-N]...[N]...[/N]...[/ESGST-N] or the simplified format [ESGST-P]...[/ESGST-P]...[ESGST-N]...[/ESGST-N], where [P]...[/P] and [N]...[/N] delimit the clickable link, [ESGST-P]...[/ESGST-P] and [ESGST-N]...[/ESGST-N] delimit the entire text area that includes the clickable link, and the "..." between [/ESGST-P] and [ESGST-N] delimit the separator between the links. If using the simplified format, [P]...[/P] and [N]...[/N] are not required and the entire text inside [ESGST-P]...[/ESGST-P] and [ESGST-N]...[/ESGST-N] will be turned into a link.</div>
-                                <br/>
-                                <div>Some examples:</div>
-                                <br/>
-                                <div>[ESGST-P]Previous[/ESGST-P] [ESGST-N]Next[/ESGST-N] -> Result will look like "<a href="">Previous</a> <a href="">Next</a>".</div>
-                                <br/>
-                                <div>### [ESGST-P]← [P]Previous[/P][/ESGST-P] | [ESGST-N][N]Next[/N] →[/ESGST-N] -> Result will look like "← <a href="">Previous</a> | <a href="">Next</a> →" in medium font size.</div>
-                                <br/>
-                                <div>[ESGST-P]Go [P]back[/P].[/ESGST-P] [ESGST-N]Go [N]forward[/N].[/ESGST-N] -> Result will look like "Go <a href="">back</a>. Go <a href="">forward</a>.".</div>
-                                <br/>
-                                <div>You can also add a counter style to the description, using the format [ESGST-C]...[/ESGST-C], where "..." delimits the separator between the numbers.</div>
-                                <br/>
-                                <div>Some examples:</div>
-                                <br/>
-                                <div>[ESGST-C] of [/ESGST-C] -> Result will look like "2 of 10".</div>
-                                <br/>
-                                <div>[ESGST-C]/[/ESGST-C] -> Result will look like "2/10".</div>
-                                <br/>
-                                <div>An example merging the connection with the counter:</div>
-                                <br/>
-                                <div>[ESGST-P]Previous[/ESGST-P] [ESGST-N]Next[/ESGST-N] ([ESGST-C] of [/ESGST-C]) -> Result will look like "<a href="">Previous</a> <a href="">Next</a> (2 of 10)".</div>
-                            </div>
                             </div>
                         </div>
                     </div>
@@ -9653,8 +9630,33 @@ ${avatar.outerHTML}
             if (esgst.mgc_createTrain) {
                 createTrainDescription.classList.remove(`esgst-hidden`);
             }
-            createTrainSwitch = createToggleSwitch(createTrainOption.firstElementChild, `mgc_createTrain`, false, `Create train.`, false, false, null, esgst.mgc_createTrain);
+            createTrainSwitch = createToggleSwitch(createTrainOption.firstElementChild, `mgc_createTrain`, false, `Create train. <i class="fa fa-question-circle"></i>`, false, false, null, esgst.mgc_createTrain);
             createTrainSwitch.dependencies.push(createTrainDescription);
+            createTooltip(createTrainSwitch.name.lastElementChild, `
+                <div class="esgst-description markdown">
+                    <div>Add the connection style to the description of the giveaway, wherever you want it to appear, using the format [ESGST-P]...[P]...[/P]...[/ESGST-P]...[ESGST-N]...[N]...[/N]...[/ESGST-N] or the simplified format [ESGST-P]...[/ESGST-P]...[ESGST-N]...[/ESGST-N], where [P]...[/P] and [N]...[/N] delimit the clickable link, [ESGST-P]...[/ESGST-P] and [ESGST-N]...[/ESGST-N] delimit the entire text area that includes the clickable link, and the "..." between [/ESGST-P] and [ESGST-N] delimit the separator between the links. If using the simplified format, [P]...[/P] and [N]...[/N] are not required and the entire text inside [ESGST-P]...[/ESGST-P] and [ESGST-N]...[/ESGST-N] will be turned into a link.</div>
+                    <br/>
+                    <div>Some examples:</div>
+                    <br/>
+                    <div>[ESGST-P]Previous[/ESGST-P] [ESGST-N]Next[/ESGST-N] -> Result will look like "<a href="">Previous</a> <a href="">Next</a>".</div>
+                    <br/>
+                    <div>### [ESGST-P]← [P]Previous[/P][/ESGST-P] | [ESGST-N][N]Next[/N] →[/ESGST-N] -> Result will look like "← <a href="">Previous</a> | <a href="">Next</a> →" in medium font size.</div>
+                    <br/>
+                    <div>[ESGST-P]Go [P]back[/P].[/ESGST-P] [ESGST-N]Go [N]forward[/N].[/ESGST-N] -> Result will look like "Go <a href="">back</a>. Go <a href="">forward</a>.".</div>
+                    <br/>
+                    <div>You can also add a counter style to the description, using the format [ESGST-C]...[/ESGST-C], where "..." delimits the separator between the numbers.</div>
+                    <br/>
+                    <div>Some examples:</div>
+                    <br/>
+                    <div>[ESGST-C] of [/ESGST-C] -> Result will look like "2 of 10".</div>
+                    <br/>
+                    <div>[ESGST-C]/[/ESGST-C] -> Result will look like "2/10".</div>
+                    <br/>
+                    <div>An example merging the connection with the counter:</div>
+                    <br/>
+                    <div>[ESGST-P]Previous[/ESGST-P] [ESGST-N]Next[/ESGST-N] ([ESGST-C] of [/ESGST-C]) -> Result will look like "<a href="">Previous</a> <a href="">Next</a> (2 of 10)".</div>
+                </div>
+            `);
             createToggleSwitch(createTrainDescription.firstElementChild, `mgc_removeLinks`, false, `Remove previous/next links from the first/last wagons.`, false, false, `Disabling this keeps the links as plain text.`, esgst.mgc_removeLinks);
             addButton = createButtonSet(`green`, `grey`, `fa-plus-circle`, `fa-circle-o-notch fa-spin`, `Add`, `Adding...`, getMgcValues.bind(null, mgc));
             importButton = createButtonSet(`green`, `grey`, `fa-arrow-circle-up`, `fa-circle-o-notch fa-spin`, `Import`, `Importing...`, importMgcGiveaways.bind(null, mgc));
@@ -9769,28 +9771,29 @@ ${avatar.outerHTML}
         popup = createPopup(`fa-arrow-up`, `Import Giveaways`, true);
         popup.scrollable.insertAdjacentHTML(`beforeEnd`, `
             <div class="esgst-description">
-                <div>Before importing, make sure you have filled the details of the giveaway (time, region, whitelist, group, level and description) or applied a template. Having different details for each giveaway is currently not supported.</div>
-                <br/>
-                <div>Separate giveaways with a new line. For gift giveaways, write the name of the game (exactly like it is on Steam) and the number of copies (only required if bigger than 1) in the format "(X Copies)" without the quotes and separated from the name of the game by a single space. For key giveaways, write the name of the game (exactly like it is on Steam) and put the key after or before the name of the game (depending on whether or not you have reverse position enabled), separated from the name of the game by a single space (Steam and HumbleBundle gift links are supported and work just like the keys, but they must start with "http://" or "https://" to be detected). Here's an example of how the input should be with reverse position disabled:</div>
-                <br/>
-                <div>Portal</div>
-                <div>Portal ABCDE-FGHIJ-KLMNO</div>
-                <div>Portal ABCDE-FGHIJ-PQRST</div>
-                <div>Portal (2 Copies)</div>
-                <div>Portal ABCDE-FGHIJ-UVWXY</div>
-                <br/>
-                <div>And here's an example of how it should be with reverse position enabled:</div>
-                <br/>
-                <div>Portal</div>
-                <div>ABCDE-FGHIJ-KLMNO Portal</div>
-                <div>ABCDE-FGHIJ-PQRST Portal</div>
-                <div>Portal (2 Copies)</div>
-                <div>ABCDE-FGHIJ-UVWXY Portal</div>
-                <br/>
-                <div>In both examples above, 5 giveaways will be created (one for each line) if the option to group keys is disabled. But if the option is enabled, only 4 giveaways will be created, because the two adjacent (next to each other) Portal keys will be grouped in a single giveaway. Note that the last Portal key will not grouped, as it is not adjacent to the other keys.</div>
+                Insert the keys below. <i class="fa fa-question-circle"></i>
             </div>
         `);
-        createToggleSwitch(popup.description, `mgc_reversePosition`, false, `Enable reverse position (the keys come before the name of the game).`, false, false, ``, esgst.mgc_reversePosition);
+        createTooltip(popup.scrollable.lastElementChild.lastElementChild, `
+            <div>Before importing, make sure you have filled the details of the giveaway (time, region, whitelist, group, level and description) or applied a template. Having different details for each giveaway is currently not supported.</div>
+            <br/>
+            <div>Separate giveaways with a new line. For gift giveaways, write the name of the game (exactly like it is on Steam) and the number of copies (only required if bigger than 1) in the format "(X Copies)" without the quotes and separated from the name of the game by a single space. For key giveaways, write the name of the game (exactly like it is on Steam) and put the key after or before the name of the game, separated from the name of the game by a single space (Steam and HumbleBundle gift links are supported and work just like the keys, but they must start with "http://" or "https://" to be detected). Here's an example:</div>
+            <br/>
+            <div>Portal</div>
+            <div>ABCDE-FGHIJ-KLMNO Portal</div>
+            <div>Portal ABCDE-FGHIJ-PQRST</div>
+            <div>Portal (2 Copies)</div>
+            <div>Portal ABCDE-FGHIJ-UVWXY</div>
+            <br/>
+            <div>In the example above, 5 giveaways will be created (one for each line) if the option to group keys is disabled. But if the option is enabled, only 4 giveaways will be created, because the two adjacent (next to each other) Portal keys will be grouped in a single giveaway. Note that the last Portal key will not grouped, as it is not adjacent to the other keys.</div>
+            <br/>
+            <div>You can also put keys in front of each other, separated by a space. The below will generate the same result as above:</div>
+            <br/>
+            <div>Portal</div>
+            <div>Portal ABCDE-FGHIJ-KLMNO ABCDE-FGHIJ-PQRST</div>
+            <div>Portal (2 Copies)</div>
+            <div>Portal ABCDE-FGHIJ-UVWXY</div>
+        `);
         createToggleSwitch(popup.description, `mgc_groupKeys`, false, `Group adjacent keys for the same game.`, false, false, ``, esgst.mgc_groupKeys);
         textArea = insertHtml(popup.scrollable, `beforeEnd`, `
             <textarea></textarea>
@@ -9847,24 +9850,29 @@ ${avatar.outerHTML}
     }
 
     function importMgcGiveaway(giveaways, i, mgc, n, progress, textArea, mainCallback, callback) {
-        var copies, copiesPos, found, giveaway, j, key, keyPos, match, name, namePos, regExp, values;
+        var copies, found, giveaway, j, key, keyPos, match, name, namePos, regExp, values;
         if (i < n) {
-            if (esgst.mgc_reversePosition) {
-                regExp = /(([\d\w]{5}(-[\d\w]{5}){2,})\s)?((https?:\/\/.+?)\s)?(.+?)(\s\((\d+?)\sCopies\))?$/;
-                keyPos = 2;
-                namePos = 6;
-                copiesPos = 8;
-            } else {
-                regExp = /(.+?)(\s\((\d+?)\sCopies\))?(\s([\d\w]{5}(-[\d\w]{5}){2,}))?(\s(https?:\/\/.+?))?$/;
-                keyPos = 5;
-                namePos = 1;
-                copiesPos = 3;
-            }
-            match = giveaways[i].match(regExp);
+            match = giveaways[i].match(/^(([\d\w]{5}(-[\d\w]{5}){2,}\s?|https?:\/\/.+?\s?)+)\s(.+)$/);
             if (match) {
-                key = match[keyPos] || match[keyPos + 3];
+                key = true;
+                keyPos = 1;
+                namePos = 4;
+            } else {
+                match = giveaways[i].match(/^(.+?)\s(([\d\w]{5}(-[\d\w]{5}){2,}\s?|https?:\/\/.+?\s?)+)$/);
+                if (match) {
+                    key = true;
+                    keyPos = 2;
+                    namePos = 1;
+                } else {
+                    match = giveaways[i].match(/^(.+?)(\s\((\d+?)\sCopies\))?$/);
+                    if (match) {
+                        key = false;
+                        namePos = 1;
+                    }
+                }
+            }
+            if (match) {
                 name = match[namePos];
-                copies = match[copiesPos];
                 values = {
                     gameName: name,
                     startTime: mgc.startTime.value,
@@ -9878,13 +9886,14 @@ ${avatar.outerHTML}
                 };
                 if (key) {
                     values.gameType = `key`;
-                    values.keys = key;
+                    values.keys = match[keyPos].replace(/\s/g, `\n`);
                 } else {
                     values.gameType = `gift`;
+                    copies = match[3];
                     if (copies) {
                         values.copies = copies;
                     } else {
-                    values.copies = `1`;
+                        values.copies = `1`;
                     }
                 }
                 j = 1;
@@ -9893,15 +9902,26 @@ ${avatar.outerHTML}
                         found = false;
                         giveaway = giveaways[i + 1];
                         if (giveaway) {
-                            match = giveaway.match(regExp);
+                            match = giveaway.match(/^(([\d\w]{5}(-[\d\w]{5}){2,}\s?|https?:\/\/.+?\s?)+)\s(.+)$/);
                             if (match) {
-                                key = match[keyPos] || match[keyPos + 3];
-                                if (key && match[namePos] === name) {
-                                    found = true;
-                                    values.keys += `\n${key}`;
-                                    ++i;
-                                    ++j;
+                                key = true;
+                                keyPos = 1;
+                                namePos = 4;
+                            } else {
+                                match = giveaway.match(/^(.+?)\s(([\d\w]{5}(-[\d\w]{5}){2,}\s?|https?:\/\/.+?\s?)+)$/);
+                                if (match) {
+                                    key = true;
+                                    keyPos = 2;
+                                    namePos = 1;
+                                } else {
+                                    key = false;
                                 }
+                            }
+                            if (match && key && match[namePos] === name) {
+                                found = true;
+                                values.keys += `\n${match[keyPos].replace(/\s/g, `\n`)}`;
+                                ++i;
+                                ++j;
                             }
                         }
                     } while (found);
@@ -9941,36 +9961,43 @@ ${avatar.outerHTML}
         textArea.focus();
     }
 
-    function exportMgcGiveaways(mgc, callback) {
-        var anchor, file, i, j, n, name, url, values;
-        file = ``;
-        for (i = 0, n = mgc.giveaways.children.length; i < n; ++i) {
-            values = mgc.giveaways.children[i].title.split(/\n/);
-            if (values[1] === `Gift`) {
-                if (parseInt(values[2].match(/\d+/)[0]) > 1) {
-                    file += `${values[0]} (${values[2]})\r\n`;
-                } else {
-                    file += `${values[0]}\r\n`;
-                }
-            } else {
-                for (j = 2; values[j]; ++j) {
-                    if (esgst.mgc_reversePosition) {
-                        file += `${values[j]} ${values[0]}\r\n`;
+    function exportMgcGiveaways(mgc, mainCallback) {
+        var anchor, file, i, j, n, name, popup, url, values;
+        popup = createPopup(`fa-arrow-down`, `Export`);
+        createToggleSwitch(popup.description, `mgc_reversePosition`, false, `Export keys in reverse position (before the name of the game).`, false, false, ``, esgst.mgc_reversePosition);
+        popup.description.appendChild(createButtonSet(`green`, ``, `fa-arrow-down`, ``, `Export`, ``, function (callback) {
+            file = ``;
+            for (i = 0, n = mgc.giveaways.children.length; i < n; ++i) {
+                values = mgc.giveaways.children[i].title.split(/\n/);
+                if (values[1] === `Gift`) {
+                    if (parseInt(values[2].match(/\d+/)[0]) > 1) {
+                        file += `${values[0]} (${values[2]})\r\n`;
                     } else {
-                        file += `${values[0]} ${values[j]}\r\n`;
+                        file += `${values[0]}\r\n`;
+                    }
+                } else {
+                    for (j = 2; values[j]; ++j) {
+                        if (esgst.mgc_reversePosition) {
+                            file += `${values[j]} ${values[0]}\r\n`;
+                        } else {
+                            file += `${values[0]} ${values[j]}\r\n`;
+                        }
                     }
                 }
             }
-        }
-        anchor = document.createElement(`a`);
-        anchor.download = `giveaways.txt`;
-        url = window.URL.createObjectURL(new Blob([file]));
-        anchor.href = url;
-        document.body.appendChild(anchor);
-        anchor.click();
-        anchor.remove();
-        window.URL.revokeObjectURL(url);
-        callback();
+            anchor = document.createElement(`a`);
+            anchor.download = `giveaways.txt`;
+            url = window.URL.createObjectURL(new Blob([file]));
+            anchor.href = url;
+            document.body.appendChild(anchor);
+            anchor.click();
+            anchor.remove();
+            window.URL.revokeObjectURL(url);
+            callback();
+            mainCallback();
+        }).set);
+        popup.onClose = mainCallback;
+        popup.open();
     }
 
     function emptyMgcGiveaways(mgc, callback) {
@@ -25336,7 +25363,7 @@ ${avatar.outerHTML}
             if (esgst[category]) {
                 switch (category) {
                     case `gc_fcv`:
-                        if (savedGame && !savedGame.reducedCV) {
+                        if (savedGame && !savedGame.reducedCV && !savedGame.noCV) {
                             elements.push(`
                                 <a class="esgst-gc esgst-gc-fullCV" href="https://www.steamgifts.com/bundle-games/search?q=${encodedName}" title="Full CV">${esgst.gc_s ? (esgst.gc_s_i ? `<i class="fa fa-${esgst.gc_fcvIcon}"></i>` : `FCV`) : esgst.gc_fcvLabel}</a>
                             `);

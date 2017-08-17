@@ -1,4 +1,13 @@
 /*
+ * August 17, 2017 - v6.Beta.28.3
+ */
+
+* Moved all the instructions on Multiple Giveaways Creator to tooltips.
+* Multiple Giveaways Creator now automatically recognizes if the key is before or after the game name when importing (closes #267).
+* Added the "Portal ABCDE-FGHIJ-KLMNO ABCDE-FGHIJ-PQRST" format to Multiple Giveaways Creator, which allows you to put all keys for a giveaway in front of each other instead of in separate lines.
+* Fixed a bug in Game Categories that was showing the "Full CV" category for no CV games.
+
+/*
  * August 17, 2017 - v6.Beta.28.2
  */
 
