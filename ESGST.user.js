@@ -3,7 +3,7 @@
 // @namespace ESGST
 // @description Enhances SteamGifts and SteamTrades by adding some cool features to them.
 // @icon https://github.com/revilheart/ESGST/raw/master/Resources/esgstIcon.ico
-// @version 6.Beta.28.0
+// @version 6.Beta.28.1
 // @author revilheart
 // @downloadURL https://github.com/revilheart/ESGST/raw/master/ESGST.user.js
 // @updateURL https://github.com/revilheart/ESGST/raw/master/ESGST.meta.js
@@ -144,6 +144,7 @@
                     esgst.profilePath = window.location.pathname.match(/^\/account\/settings\/profile/);
                     esgst.giveawayPath = window.location.pathname.match(/^\/giveaway\//);
                     esgst.discussionPath = window.location.pathname.match(/^\/discussion\//);
+                    esgst.tradePath = window.location.pathname.match(/^\/trade\//);
                     esgst.discussionsPath = window.location.pathname.match(/^\/discussions(?!\/new)/);
                     esgst.newGiveawayPath = window.location.pathname.match(/^\/giveaways\/new/);
                     esgst.newTicketPath = window.location.pathname.match(/^\/support\/tickets\/new/);
@@ -665,6 +666,7 @@
                             input: true,
                             name: `Shortcut Keys`,
                             sg: true,
+                            st: true,
                             type: `general`
                         },
                         {
@@ -949,7 +951,8 @@
                                 {
                                     id: `gdttt_v`,
                                     name: `Mark the pages as visited when visiting them.`,
-                                    sg: true
+                                    sg: true,
+                                    st: true
                                 }
                             ],
                             id: `gdttt`,
@@ -2998,29 +3001,61 @@
                         mainPageHeadingBefore.appendChild(button);
                         loadRbp(button);
                     }
-                    if (esgst.ct && !esgst.ct_s) {
-                        button1 = document.createElement(`div`);
-                        button1.className = `esgst-heading-button`;
-                        button1.title = `Go to the first unread comment of this page.`;
-                        button1.innerHTML = `
-                            <i class="fa fa-comments-o"></i>
-                        `;
-                        mainPageHeadingBefore.appendChild(button1);
-                        button2 = document.createElement(`div`);
-                        button2.className = `esgst-heading-button`;
-                        button2.title = `Mark all comments in this page as read.`;
-                        button2.innerHTML = `
-                            <i class="fa fa-eye"></i>
-                        `;
-                        mainPageHeadingBefore.appendChild(button2);
-                        button3 = document.createElement(`div`);
-                        button3.className = `esgst-heading-button`;
-                        button3.title = `Mark all comments in this page as unread.`;
-                        button3.innerHTML = `
-                            <i class="fa fa-eye-slash"></i>
-                        `;
-                        mainPageHeadingBefore.appendChild(button3);
-                        addCtCommentPanel(button1, button2, button3);
+                    if (esgst.ct) {
+                        var match = location.pathname.match(/\/(giveaway|discussion|ticket|trade)\/(.+?)\//);
+                        if (match) {
+                            var element = esgst.mainPageHeading.querySelector(`.page__heading__breadcrumbs, .page_heading_breadcrumbs`).firstElementChild;
+                            var type = `${match[1]}s`;
+                            code = match[2];
+                            var comments = JSON.parse(localStorage[`esgst_${type}`]);
+                            var diff;
+                            var count = parseInt(element.textContent.replace(/,/g, ``).match(/\d+/)[0]);
+                            if (comments[code]) {
+                                var read;
+                                if (esgst.ct_s) {
+                                    read = comments[code].count || (esgst.ct_s_h ? count : 0);
+                                } else {
+                                    read = 0;
+                                    for (var id in comments[code].readComments) {
+                                        if (!id.match(/^(Count|undefined|)$/) && comments[code].readComments[id]) {
+                                            ++read;
+                                        }
+                                    }
+                                }
+                                diff = count === read ? 0 : count - read;
+                            } else if (esgst.ct_s && esgst.ct_s_h) {
+                                diff = 0;
+                            } else {
+                                diff = count;
+                            }
+                            if (diff > 0) {
+                                element.insertAdjacentHTML(`beforeEnd`, ` <span class="esgst-ct-count" title="Unread comments">(+${diff})</span>`);
+                            }
+                        }
+                        if (!esgst.ct_s) {
+                            button1 = document.createElement(`div`);
+                            button1.className = `esgst-heading-button`;
+                            button1.title = `Go to the first unread comment of this page.`;
+                            button1.innerHTML = `
+                                <i class="fa fa-comments-o"></i>
+                            `;
+                            mainPageHeadingBefore.appendChild(button1);
+                            button2 = document.createElement(`div`);
+                            button2.className = `esgst-heading-button`;
+                            button2.title = `Mark all comments in this page as read.`;
+                            button2.innerHTML = `
+                                <i class="fa fa-eye"></i>
+                            `;
+                            mainPageHeadingBefore.appendChild(button2);
+                            button3 = document.createElement(`div`);
+                            button3.className = `esgst-heading-button`;
+                            button3.title = `Mark all comments in this page as unread.`;
+                            button3.innerHTML = `
+                                <i class="fa fa-eye-slash"></i>
+                            `;
+                            mainPageHeadingBefore.appendChild(button3);
+                            addCtCommentPanel(button1, button2, button3);
+                        }
                     }
                 }
             } else if (esgst.inboxPath) {
@@ -6131,21 +6166,31 @@
             esgst.endlessFeatures.push(addCtDiscussionPanels);
             addCtDiscussionPanels(document);
         }
-        if (esgst.gdttt_v && esgst.commentsPath && !esgst.ct) {
-            createLock(`commentLock`, 300, function (deleteLock) {
-                var match = window.location.pathname.match(/(giveaway|discussion|ticket|trade)\/(.+?)\//);
-                var type = `${match[1]}s`;
-                var savedComments = JSON.parse(localStorage[`esgst_${type}`]);
-                var code = match[2];
-                if (!savedComments[code]) {
-                    savedComments[code] = {
-                        readComments: {}
-                    };
+        if (esgst.commentsPath) {
+            var match = window.location.pathname.match(/(giveaway|discussion|ticket|trade)\/(.+?)\//);
+            var type = `${match[1]}s`;
+            var code = match[2];
+            var savedComments = JSON.parse(localStorage[`esgst_${type}`]);
+            if (esgst.gdttt_v) {
+                if (!esgst.ct) {
+                    createLock(`commentLock`, 300, function (deleteLock) {
+                        if (!savedComments[code]) {
+                            savedComments[code] = {
+                                readComments: {}
+                            };
+                        }
+                        savedComments[code].visited = true;
+                        localStorage[`esgst_${type}`] = JSON.stringify(savedComments);
+                        deleteLock();
+                    });
                 }
-                savedComments[code].visited = true;
-                localStorage[`esgst_${type}`] = JSON.stringify(savedComments);
-                deleteLock();
-            });
+            } else if (esgst.discussionPath || esgst.tradePath) {
+                if (savedComments[code] && savedComments[code].visited) {
+                    addGdtttMarkUnvisitedButton(null, code, document.querySelector(`.page__heading, .page_heading`), type);
+                } else {
+                    addGdtttMarkVisitedButton(null, code, document.querySelector(`.page__heading, .page_heading`), type);
+                }
+            }
         }
         esgst.endlessFeatures.push(checkGdtttVisited);
         checkGdtttVisited(document);
@@ -6174,6 +6219,53 @@
                 }
             }
         }
+    }
+
+    function addGdtttMarkVisitedButton(button, code, context, type) {
+        var comments;
+        if (!button) {
+            button = insertHtml(context, `afterBegin`, `<div class="esgst-gdttt-button page_heading_btn"><div>`);
+        }
+        button.innerHTML = `<i class="fa fa-check" title="Mark as visited"></i>`;
+        button.firstElementChild.addEventListener(`click`, function() {
+            button.innerHTML = `<i class="fa fa-circle-o-notch fa-spin"></i>`;
+            createLock(`commentLock`, 300, function(deleteLock) {
+                comments = JSON.parse(localStorage[`esgst_${type}`]);
+                if (!comments[code]) {
+                    comments[code] = {
+                        readComments: {}
+                    };
+                }
+                if (esgst.ct_s) {
+                    comments[code].count = count;
+                }
+                comments[code].visited = true;
+                localStorage[`esgst_${type}`] = JSON.stringify(comments);
+                deleteLock();
+                addGdtttMarkUnvisitedButton(button, code, context, type);
+            });
+        });
+    }
+
+    function addGdtttMarkUnvisitedButton(button, code, context, type) {
+        var comments;
+        if (!button) {
+            button = insertHtml(context, `afterBegin`, `<div class="esgst-gdttt-button page_heading_btn"><div>`);
+        }
+        button.innerHTML = `<i class="fa fa-times" title="Mark as unvisited"></i>`;
+        button.firstElementChild.addEventListener(`click`, function() {
+            button.innerHTML = `<i class="fa fa-circle-o-notch fa-spin"></i>`;
+            createLock(`commentLock`, 300, function(deleteLock) {
+                comments = JSON.parse(localStorage[`esgst_${type}`]);
+                if (esgst.ct_s) {
+                    delete comments[code].count;
+                }
+                delete comments[code].visited;
+                localStorage[`esgst_${type}`] = JSON.stringify(comments);
+                deleteLock();
+                addGdtttMarkVisitedButton(button, code, context, type);
+            });
+        });
     }
 
     /* [QGB] Quick Giveaway Browsing */
@@ -10987,6 +11079,7 @@ ${avatar.outerHTML}
                 for (i = 0, n = elements.length; i < n; ++i) {
                     element = elements[i];
                     giveaways.push({
+                        active: Date.now() < (parseInt(element.closest(`.table__row-inner-wrap`).querySelector(`[data-timestamp]`).getAttribute(`data-timestamp`)) * 1e3),
                         code: element.parentElement.querySelector(`[name=code]`).value,
                         name: element.getAttribute(`data-name`)
                     });
@@ -11018,7 +11111,7 @@ ${avatar.outerHTML}
     function checkSksGiveaway(giveaways, i, n, sks, callback, response) {
         var element, heading, j, key;
         heading = DOM.parse(JSON.parse(response.responseText).html).getElementsByClassName(`popup__keys__heading`)[0];
-        if (heading && heading.textContent === `Assigned`) {
+        if (heading && (heading.textContent === `Assigned` || giveaways[i].active)) {
             element = heading.nextElementSibling.nextElementSibling;
             for (j = element.children.length - 1; j >= 0; --j) {
                 key = element.children[j].textContent;
@@ -11027,7 +11120,7 @@ ${avatar.outerHTML}
                     sks.count -= 1;
                 }
                 if (esgst.sks_exportKeys) {
-                    sks.allKeys.push(`${key} ${giveaways[i].name} https://www.steamgifts.com/giveaway/${giveaways[i].code}/`);
+                    sks.allKeys.push(`${giveaways[i].active ? `[UNASSIGNED] ` : ``}${key} ${giveaways[i].name} https://www.steamgifts.com/giveaway/${giveaways[i].code}/`);
                 }
             }
         }
@@ -11064,7 +11157,7 @@ ${avatar.outerHTML}
             key = sks.keys[i];
             giveaway = sks.giveaways[key];
             if (giveaway) {
-                found.push(`<li>${key} (<a href="/giveaway/${giveaway.code}/">${giveaway.name}</a>)</li>`);
+                found.push(`<li>${giveaway.active ? `[UNASSIGNED] ` : ``}${key} (<a href="/giveaway/${giveaway.code}/">${giveaway.name}</a>)</li>`);
             } else {
                 notFound.push(`<li>${key}</li>`);
             }
@@ -21584,9 +21677,14 @@ ${avatar.outerHTML}
     }
 
     function markCtCommentRead(comment, comments, save, callback) {
+        var count;
         if (save) {
             createLock(`commentLock`, 300, function(deleteLock) {
                 comments = JSON.parse(localStorage[`esgst_${comment.type}`]);
+                if (comment.id && !comments[comment.code].readComments[comment.id] && esgst.commentsPath) {
+                    count = document.getElementsByClassName(`esgst-ct-count`)[0];
+                    count.textContent = ` (+${parseInt(count.textContent.match(/\d+/)[0]) - 1})`;
+                }
                 comments[comment.code].readComments[comment.id] = comment.timestamp;
                 localStorage[`esgst_${comment.type}`] = JSON.stringify(comments);
                 deleteLock();
@@ -21597,6 +21695,10 @@ ${avatar.outerHTML}
             });
         } else {
             if (comments) {
+                if (comment.id && !comments[comment.type][comment.code].readComments[comment.id] && esgst.commentsPath) {
+                    count = document.getElementsByClassName(`esgst-ct-count`)[0];
+                    count.textContent = ` (+${parseInt(count.textContent.match(/\d+/)[0]) - 1})`;
+                }
                 comments[comment.type][comment.code].readComments[comment.id] = comment.timestamp;
             }
             comment.comment.classList.add(`esgst-ct-comment-read`);
@@ -21606,20 +21708,31 @@ ${avatar.outerHTML}
     }
 
     function markCtCommentUnread(comment, comments, save, callback) {
+        var count;
         if (save) {
             createLock(`commentLock`, 300, function(deleteLock) {
                 var comments;
                 comments = JSON.parse(localStorage[`esgst_${comment.type}`]);
-                delete comments[comment.code].readComments[comment.id];
-                localStorage[`esgst_${comment.type}`] = JSON.stringify(comments);
-                deleteLock();
+                if (comments[comment.code].readComments[comment.id]) {
+                    delete comments[comment.code].readComments[comment.id];
+                    localStorage[`esgst_${comment.type}`] = JSON.stringify(comments);
+                    deleteLock();
+                    if (comment.id && esgst.commentsPath) {
+                        count = document.getElementsByClassName(`esgst-ct-count`)[0];
+                        count.textContent = ` (+${parseInt(count.textContent.match(/\d+/)[0]) + 1})`;
+                    }
+                }
                 comment.comment.classList.remove(`esgst-ct-comment-read`);
                 comment.comment.style.opacity = `1`;
                 setHoverOpacity(comment.comment, `1`, `1`);
                 callback();
             });
         } else {
-            if (comments) {
+            if (comments && comments[comment.type][comment.code].readComments[comment.id]) {
+                if (comment.id && esgst.commentsPath) {
+                    count = document.getElementsByClassName(`esgst-ct-count`)[0];
+                    count.textContent = ` (+${parseInt(count.textContent.match(/\d+/)[0]) + 1})`;
+                }
                 delete comments[comment.type][comment.code].readComments[comment.id];
             }
             comment.comment.classList.remove(`esgst-ct-comment-read`);
@@ -29790,7 +29903,7 @@ ${avatar.outerHTML}
             ".esgst-ct-comment-read:hover, .esgst-ct-visited:hover {" +
             "    background-color: " + unknown.replace(/rgb/, "rgba").replace(/\)/, ", 0.1)") + " !important;" +
             "}" +
-            ".esgst-gf-hide-button, .esgst-gf-unhide-button, .esgst-gb-button, .esgst-df-button, .esgst-dh-button {" +
+            ".esgst-gf-hide-button, .esgst-gf-unhide-button, .esgst-gb-button, .esgst-gdttt-button, .esgst-df-button, .esgst-dh-button {" +
             "    cursor: pointer; display: inline-block;" +
             "    margin: 0 5px 0 0;" +
             "}" +

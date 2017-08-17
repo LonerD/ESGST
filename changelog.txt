@@ -1,4 +1,13 @@
 /*
+ * August 16, 2017 - v6.Beta.28.1
+ */
+
+* Shortcut Keys and the option 1.17.2 are now enabled for SteamTrades (they should have been all along, but I somehow forgot to do it).
+* You can now mark discussions/trades as read in Giveaways/Discussions/Tickets/Trades Tracker from inside of them if option 1.17.2 is disabled.
+* Added support for active giveaways to Sent Keys Searcher. Keys from active giveaways will have a "[UNASSIGNED]" tag next to them.
+* The number of unread comments in Comment Tracker is now also shown inside of giveaways/discussions/tickets/trades and changes as you read/unread comments in the page.
+
+/*
  * August 16, 2017 - v6.Beta.28.0
  */
 
