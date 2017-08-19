@@ -1,4 +1,10 @@
 /*
+ * August 19, 2017 - v6.Beta.30.1
+ */
+
+* Fixed a bug that was not enabling Giveaway Recreator in profile pages other than page 1.
+
+/*
  * August 19, 2017 - v6.Beta.30.0
  */
 
