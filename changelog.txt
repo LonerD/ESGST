@@ -1,4 +1,21 @@
 /*
+ * August 19, 2017 - v6.Beta.29.0
+ */
+
+* Added an option to sync your giveaways from the settings menu, without the need to use User Giveaways Data.
+* Fixed a bug that was not showing the button to manage hidden discussions in the settings menu.
+* If you have Level Progress Visualizer, Created/Entered/Won Giveaway Details, Real CV Calculator or the "Giveaway Info" category in Game Categories enabled, when you create a giveaway you will now get a popup asking you to wait a few seconds until the giveaway is saved in the storage for those features.
+* Level Progress Visualizer now projects what your level will be after your active giveaways end and get marked as received (only works for giveaways created after v6.Beta.29.0) (closes #181).
+* Real CV Calculator and the "Giveaway Info" category in Game Categories now both take into account active giveaways for calculation (closes #297).
+* Fixed a bug in Giveaway Filters that was not filtering some filters (closes #359).
+* Changed how User Giveaways Data is stored.
+* Fixed a bug in Game Categories that was showing the wrong icon/label for the "Multiplayer" category.
+
+Added the following features:
+
+* Giveaways Manager (closes #197)
+
+/*
  * August 17, 2017 - v6.Beta.28.3
  */
 
