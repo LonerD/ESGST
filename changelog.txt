@@ -14,7 +14,7 @@
 
 Added the following features:
 
-* Giveaway Recreator
+* 2.18 Giveaway Recreator
 
 /*
  * August 19, 2017 - v6.Beta.29.0
@@ -31,7 +31,7 @@ Added the following features:
 
 Added the following features:
 
-* Giveaways Manager (closes #197)
+* 2.25 Giveaways Manager (closes #197)
 
 /*
  * August 17, 2017 - v6.Beta.28.3
