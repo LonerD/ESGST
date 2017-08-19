@@ -1,4 +1,16 @@
 /*
+ * August 19, 2017 - v6.Beta.30.0
+ */
+
+* Fixed a bug that was preventing the script from running in the entered/won pages.
+* Giveaways visited or hidden no longer count for the option in Header Refresher to indicate if there are unentered wishlist giveaways open.
+* Fixed a bug in Endless Scrolling that was not reversing the pages correctly.
+
+Added the following features:
+
+* Giveaway Recreator
+
+/*
  * August 19, 2017 - v6.Beta.29.0
  */
 
