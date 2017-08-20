@@ -3,7 +3,7 @@
 // @namespace ESGST
 // @description Enhances SteamGifts and SteamTrades by adding some cool features to them.
 // @icon https://github.com/revilheart/ESGST/raw/master/Resources/esgstIcon.ico
-// @version 6.Beta.30.1
+// @version 6.Beta.30.2
 // @author revilheart
 // @downloadURL https://github.com/revilheart/ESGST/raw/master/ESGST.user.js
 // @updateURL https://github.com/revilheart/ESGST/raw/master/ESGST.meta.js
@@ -1303,6 +1303,13 @@
                                 </ul>
                                 <img src="http://i.imgur.com/DReWyEi.png"/>
                             `,
+                            features: [
+                                {
+                                    id: `gr_r`,
+                                    name: `[NEW] Remove the button for giveaways that have been recreated.`,
+                                    sg: true
+                                }
+                            ],
                             id: `gr`,
                             name: `[NEW] Giveaway Recreator`,
                             sg: true,
@@ -7182,6 +7189,14 @@
         popup.description.insertAdjacentHTML(`afterBegin`, `
             <div class="esgst-description">To edit a preset, apply it and save it with the same name. Drag and drop presets to move them.</div>
         `);
+        gf.undo = insertHtml(popup.description, `beforeEnd`, `
+            <div class="esgst-clickable esgst-hidden">
+                <i class="fa fa-rotate-left"></i>
+                <span>Undo Delete</span>
+            </div>
+        `);
+        gf.undo.addEventListener(`click`, undoGfDelete.bind(null, gf));
+        gf.deleted = [];
         presets = insertHtml(popup.scrollable, `beforeEnd`, `
             <div class="esgst-text-left popup__keys__list"></div>
         `);
@@ -7404,18 +7419,37 @@
             popup.close();
         });
         deleteButton.addEventListener(`click`, function () {
-            if (window.confirm(`Are you sure you want to delete this preset?`)) {
-                deleteButton.innerHTML = `
-                    <i class="fa fa-circle-o-notch fa-spin"></i>
-                `;
-                savedPresets = JSON.parse(GM_getValue(`filterPresets`, `[]`));
-                for (i = 0, n = savedPresets.length; i < n && savedPresets[i].name !== savedPreset.name; ++i);
-                savedPresets.splice(i, 1);
-                GM_setValue(`filterPresets`, JSON.stringify(savedPresets));
-                preset.remove();
-                gf.edit = false;
-            }
+            deleteButton.innerHTML = `
+                <i class="fa fa-circle-o-notch fa-spin"></i>
+            `;
+            savedPresets = JSON.parse(GM_getValue(`filterPresets`, `[]`));
+            for (i = 0, n = savedPresets.length; i < n && savedPresets[i].name !== savedPreset.name; ++i);
+            savedPresets.splice(i, 1);
+            GM_setValue(`filterPresets`, JSON.stringify(savedPresets));
+            deleteButton.innerHTML = `
+                <i class="fa fa-trash"></i>
+            `;
+            preset.classList.add(`esgst-hidden`);
+            gf.deleted.push({
+                preset: preset,
+                savedPreset: savedPreset
+            });
+            gf.undo.classList.remove(`esgst-hidden`);
+            gf.edit = false;
         });
+    }
+
+    function undoGfDelete(gf) {
+        var deletedPreset, savedPresets;
+        deletedPreset = gf.deleted.pop();
+        deletedPreset.preset.classList.remove(`esgst-hidden`);
+        deletedPreset.preset.parentElement.appendChild(deletedPreset.preset);
+        savedPresets = JSON.parse(GM_getValue(`filterPresets`, `[]`));
+        savedPresets.push(deletedPreset.savedPreset);
+        GM_setValue(`filterPresets`, JSON.stringify(savedPresets));
+        if (gf.deleted.length === 0) {
+            gf.undo.classList.add(`esgst-hidden`);
+        }
     }
 
     function setGfSource(gf, name, preset) {
@@ -9338,11 +9372,13 @@ ${avatar.outerHTML}
                             loadEndlessFeatures(panel);
                             progress.remove();
                         }
+                        popup.reposition();
                     } else {
                         progress.innerHTML = `
                             <i class="fa fa-times-circle"></i>
                             <span>An error ocurred.</span>
                         `;
+                        popup.reposition();
                     }
                 });
             });
@@ -9402,9 +9438,7 @@ ${avatar.outerHTML}
         var className, groupCount, i, key, link, n, panel;
         if (!giveaway.summary.getElementsByClassName(`esgst-ggl-panel`)[0]) {
             panel = insertHtml(giveaway.summary, `beforeEnd`, `
-                <div class="esgst-ggl-panel">
-                    <i class="fa fa-user"></i>
-                </div>
+                <div class="esgst-ggl-panel"></div>
             `);
             groupCount = 0;
             for (i = 0, n = groups.length; i < n; ++i) {
@@ -9493,8 +9527,18 @@ ${avatar.outerHTML}
     /* [GR] Giveaway Recreator */
 
     function recreateGrGiveaway(button, giveaway) {
-        var context, elements, i, keys, n, responseJson, template;
+        var context, elements, giveaways, i, keys, n, responseJson, template;
         button.innerHTML = `<i class="fa fa-circle-o-notch fa-spin"></i>`;
+        if (esgst.createdPath) {
+            request(null, false, giveaway.url, function (response) {
+                saveGrTemplate(button, getGiveaways(DOM.parse(response.responseText), false, response.finalUrl, false, `giveaway`)[0] || giveaway);
+            });
+        } else {
+            saveGrTemplate(button, giveaway);
+        }
+    }
+
+    function saveGrTemplate(button, giveaway) {
         request(`do=autocomplete_giveaway_game&page_number=1&search_query=${encodeURIComponent(giveaway.name)}`, false, `/ajax.php`, function(response) {
             template = {
                 delay: 0,
@@ -9536,7 +9580,14 @@ ${avatar.outerHTML}
                     template.copies = giveaway.copies;
                 }
                 GM_setValue(`grTemplate`, JSON.stringify(template));
-                location.href = `/giveaways/new`;
+                giveaways = JSON.parse(localStorage.esgst_giveaways);
+                if (!giveaways[giveaway.code]) {
+                    giveaways[giveaway.code] = {};
+                }
+                giveaways[giveaway.code].recreated = true;
+                localStorage.esgst_giveaways = JSON.stringify(giveaways);
+                button.remove();
+                window.open(`/giveaways/new`);
             });
         });
     }
@@ -9554,9 +9605,10 @@ ${avatar.outerHTML}
     /* [GTS] Giveaway Templates */
 
     function addGtsButtonSection(button, rows) {
-        var createGiveawayButton, delay, edit, endTime, input, message, preciseEndCheckbox, preciseEndOption, preciseStartCheckbox, preciseStartOption, reviewButton, section, set, startTime, warning;
+        var createGiveawayButton, delay, deletedTemplates, edit, endTime, input, message, preciseEndCheckbox, preciseEndOption, preciseStartCheckbox, preciseStartOption, reviewButton, section, set, startTime, undo, warning;
         if (rows) {
             gts = {};
+            deletedTemplates = [];
             reviewButton = rows.lastElementChild;
             createGiveawayButton = createButtonSet(`green`, `grey`, `fa-plus-circle`, `fa-circle-o-notch fa-spin`, `Create Giveaway`, `Creating...`, function (callback) {
                 var data;
@@ -9585,6 +9637,13 @@ ${avatar.outerHTML}
                 popup.description.insertAdjacentHTML(`afterBegin`, `
                     <div class="esgst-description">Drag and drop templates to move them.</div>
                 `);
+                undo = insertHtml(popup.description, `beforeEnd`, `
+                    <div class="esgst-clickable esgst-hidden">
+                        <i class="fa fa-rotate-left"></i>
+                        <span>Undo Delete</span>
+                    </div>
+                `);
+                undo.addEventListener(`click`, undoGtsDelete);
                 templates = insertHtml(popup.scrollable, `beforeEnd`, `
                     <div class="esgst-text-left popup__keys__list"></div>
                 `);
@@ -9802,21 +9861,40 @@ ${avatar.outerHTML}
                 popup.close();
             });
             deleteButton.addEventListener(`click`, function () {
-                if (window.confirm(`Are you sure you want to delete this template?`)) {
+                deleteButton.innerHTML = `
+                    <i class="fa fa-circle-o-notch fa-spin"></i>
+                `;
+                createLock(`templateLock`, 300, function (deleteLock) {
+                    savedTemplates = JSON.parse(localStorage.esgst_templates || `[]`);
+                    for (i = 0, n = savedTemplates.length; i < n && savedTemplates[i].name !== savedTemplate.name; ++i);
+                    savedTemplates.splice(i, 1);
+                    localStorage.esgst_templates = JSON.stringify(savedTemplates);
+                    deleteLock();
                     deleteButton.innerHTML = `
-                        <i class="fa fa-circle-o-notch fa-spin"></i>
+                        <i class="fa fa-trash"></i>
                     `;
-                    createLock(`templateLock`, 300, function (deleteLock) {
-                        savedTemplates = JSON.parse(localStorage.esgst_templates || `[]`);
-                        for (i = 0, n = savedTemplates.length; i < n && savedTemplates[i].name !== savedTemplate.name; ++i);
-                        savedTemplates.splice(i, 1);
-                        localStorage.esgst_templates = JSON.stringify(savedTemplates);
-                        deleteLock();
-                        template.remove();
-                        edit = false;
+                    template.classList.add(`esgst-hidden`);
+                    deletedTemplates.push({
+                        template: template,
+                        savedTemplate: savedTemplate
                     });
-                }
+                    undo.classList.remove(`esgst-hidden`);
+                    edit = false;
+                });
             });
+        }
+
+        function undoGtsDelete() {
+            var deletedTemplate;
+            deletedTemplate = deletedTemplates.pop();
+            deletedTemplate.template.classList.remove(`esgst-hidden`);
+            deletedTemplate.template.parentElement.appendChild(deletedTemplate.template);
+            savedTemplates = JSON.parse(localStorage.esgst_templates || `[]`);
+            savedTemplates.push(deletedTemplate.savedTemplate);
+            localStorage.esgst_templates = JSON.stringify(savedTemplates);
+            if (deletedTemplates.length === 0) {
+                undo.classList.add(`esgst-hidden`);
+            }
         }
     }
 
@@ -21179,9 +21257,16 @@ ${avatar.outerHTML}
                             </div>
                             <div class="esgst-cfh-sr-container"></div>
                             <div class="form__saving-button btn_action white">Add New Reply</div>
+                            <div class="esgst-clickable esgst-hidden">
+                                <i class="fa fa-rotate-left"></i>
+                                <span>Undo Delete</span>
+                            </div>
                         `;
+                        CFH.deleted = [];
                         filter = popout.firstElementChild.firstElementChild;
-                        addButton = popout.lastElementChild;
+                        CFH.undo = popout.lastElementChild;
+                        CFH.undo.addEventListener(`click`, undoCfhDelete.bind(null, CFH));
+                        addButton = CFH.undo.previousElementSibling;
                         replies = addButton.previousElementSibling;
                         for (i = 0, n = savedReplies.length; i < n; ++i) {
                             savedReply = savedReplies[i];
@@ -21258,16 +21343,32 @@ ${avatar.outerHTML}
             openCfhReplyPopup(cfh, savedReply.description, savedReply.name, replies, summary);
         });
         deleteButton.addEventListener(`click`, function () {
-            if (confirm(`Are you sure you want to delete the saved reply?`)) {
-                savedReplies = JSON.parse(GM_getValue(`savedReplies`, `[]`));
-                for (i = 0, n = savedReplies.length; i < n && savedReplies[i].name !== name.textContent && savedReplies[i].description !== description.textContent; ++i);
-                if (i < n) {
-                    savedReplies.splice(i, 1);
-                    reply.remove();
-                    GM_setValue(`savedReplies`, JSON.stringify(savedReplies));
-                }
+            savedReplies = JSON.parse(GM_getValue(`savedReplies`, `[]`));
+            for (i = 0, n = savedReplies.length; i < n && savedReplies[i].name !== name.textContent && savedReplies[i].description !== description.textContent; ++i);
+            if (i < n) {
+                savedReplies.splice(i, 1);
+                GM_setValue(`savedReplies`, JSON.stringify(savedReplies));
+                reply.classList.add(`esgst-hidden`);
+                cfh.deleted.push({
+                    reply: reply,
+                    savedReply: savedReply
+                });
+                cfh.undo.classList.remove(`esgst-hidden`);
             }
         });
+    }
+
+    function undoCfhDelete(cfh) {
+        var deleted, saved;
+        deleted = cfh.deleted.pop();
+        deleted.reply.classList.remove(`esgst-hidden`);
+        deleted.reply.parentElement.appendChild(deleted.reply);
+        saved = JSON.parse(GM_getValue(`savedReplies`, `[]`));
+        saved.push(deleted.savedReply);
+        GM_setValue(`savedReplies`, JSON.stringify(saved));
+        if (cfh.deleted.length === 0) {
+            cfh.undo.classList.add(`esgst-hidden`);
+        }
     }
 
     function setCfhSource(cfh, description, name, reply) {
@@ -27682,8 +27783,8 @@ ${avatar.outerHTML}
         }
     }
 
-    function getGiveaways(context, main, mainUrl, hr) {
-        var games, giveaway, giveaways, i, key, mainContext, matches, n, query, savedUsers;
+    function getGiveaways(context, main, mainUrl, hr, key) {
+        var games, giveaway, giveaways, i, mainContext, matches, n, query, savedUsers;
         games = JSON.parse(GM_getValue(`games`));
         savedUsers = JSON.parse(GM_getValue(`users`));
         giveaways = [];
@@ -27692,12 +27793,16 @@ ${avatar.outerHTML}
         } else {
             query = `.giveaway__row-outer-wrap, .featured__outer-wrap--giveaway`;
         }
-        if (mainUrl) {
+        if (key) {
             mainContext = context;
-            key = `data`;
         } else {
-            mainContext = document;
-            key = `giveaway`;
+            if (mainUrl) {
+                mainContext = context;
+                key = `data`;
+            } else {
+                mainContext = document;
+                key = `giveaway`;
+            }
         }
         matches = context.querySelectorAll(query);
         for (i = matches.length - 1; i >= 0; --i) {
@@ -27794,7 +27899,7 @@ ${avatar.outerHTML}
         } else {
             giveaway.started = true;
         }
-        if (!giveaway.endTime && (esgst.enteredPath || esgst.wonPath)) {
+        if (!giveaway.endTime && (esgst.createdPath || esgst.enteredPath || esgst.wonPath)) {
             giveaway.endTime = giveaway.innerWrap.querySelector(`[data-timestamp]`);
             if (giveaway.endTime) {
                 giveaway.endTimeColumn = giveaway.endTime.parentElement;
@@ -27875,11 +27980,11 @@ ${avatar.outerHTML}
             }
         }
         if (!giveaway.entriesLink) {
-            var ct = giveaway.panel || giveaway.innerWrap.firstElementChild.nextElementSibling;
+            var ct = giveaway.panel || (esgst.gm_enable && esgst.createdPath ? giveaway.innerWrap.firstElementChild.nextElementSibling.nextElementSibling : giveaway.innerWrap.firstElementChild.nextElementSibling);
             if (ct.nextElementSibling) {
                 giveaway.entries = parseInt(ct.nextElementSibling.textContent.replace(/,/g, ``));
             }
-        }
+        }        
         giveaway.levelColumn = giveaway.outerWrap.querySelector(`.giveaway__column--contributor-level, .featured__column--contributor-level`);
         giveaway.level = giveaway.levelColumn ? parseInt(giveaway.levelColumn.textContent.match(/\d+/)[0]) : 0;
         giveaway.inviteOnly = giveaway.outerWrap.querySelector(`.giveaway__column--invite-only, .featured__column--invite-only`);
@@ -27894,7 +27999,7 @@ ${avatar.outerHTML}
             feedback.addEventListener(`click`, openRrbp.bind(null, giveaway));
         }
         if (main) {
-            if (esgst.gr && giveaway.ended && giveaway.creator === esgst.username && giveaway.entries === 0 && !giveaway.headingName.parentElement.getElementsByClassName(`esgst-gr-button`)[0]) {
+            if (esgst.gr && giveaway.ended && giveaway.creator === esgst.username && (giveaway.entries === 0 || giveaway.entries < giveaway.copies) && (!esgst.gr_r || !esgst.giveaways[giveaway.code] || !esgst.giveaways[giveaway.code].recreated) && !giveaway.headingName.parentElement.getElementsByClassName(`esgst-gr-button`)[0]) {
                 var button = insertHtml(giveaway.headingName, `beforeBegin`, `
                     <div class="esgst-gr-button" title="Recreate giveaway">
                         <i class="fa fa-rotate-left"></i>
@@ -31002,7 +31107,6 @@ ${avatar.outerHTML}
 
             .esgst-ggl-panel a:last-child {
                 border-bottom: 1px dotted;
-                box-shadow: 0 1px 0 rgba(255,255,255,0.3);
             }
 
             .esgst-ggl-panel .table_image_avatar {
@@ -31358,13 +31462,14 @@ ${avatar.outerHTML}
 
             .esgst-gr-button {
                 cursor: pointer;
+                display: inline-block;
             }
 
             .esgst-egh-icon {
                 cursor: pointer;
             }
 
-            .giveaway__row-outer-wrap .esgst-egh-button, .giveaway__row-outer-wrap .esgst-gr-button, .table__row-outer-wrap .esgst-egh-button {
+            .giveaway__row-outer-wrap .esgst-egh-button, .giveaway__row-outer-wrap .esgst-gr-button, .table__row-outer-wrap .esgst-egh-button, .table__row-outer-wrap .esgst-egh-button, .table__row-outer-wrap .esgst-gr-button {
                 margin-right: 5px;
             }
 
