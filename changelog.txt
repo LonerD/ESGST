@@ -1,4 +1,15 @@
 /*
+ * August 20, 2017 - v6.Beta.30.3
+ */
+
+* Fixed a typo in the sync that was showing the same message for syncing hidden and wishlisted/owned/ignored games.
+* Fixed a bug that was happening when storing/syncing giveaways (closes #365).
+* Fixed a bug in Header Refresher that was not filtering entered giveaways after entering them.
+* Fixed a bug in Main Post Popup that was preventing the script from loading correctly.
+* Fixed a bug in Comment Formatting Helper that was not saving emojis.
+* Fixed a bug in Shared Groups Checker that was not indentifying shared groups with uppercase letters.
+
+/*
  * August 19, 2017 - v6.Beta.30.2
  */
 

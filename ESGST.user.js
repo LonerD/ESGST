@@ -3,7 +3,7 @@
 // @namespace ESGST
 // @description Enhances SteamGifts and SteamTrades by adding some cool features to them.
 // @icon https://github.com/revilheart/ESGST/raw/master/Resources/esgstIcon.ico
-// @version 6.Beta.30.2
+// @version 6.Beta.30.3
 // @author revilheart
 // @downloadURL https://github.com/revilheart/ESGST/raw/master/ESGST.user.js
 // @updateURL https://github.com/revilheart/ESGST/raw/master/ESGST.meta.js
@@ -2977,41 +2977,43 @@
                                 sentTimestamp: 0,
                                 wonTimestamp: 0
                             };
-                            ugd = savedUser.ugd;
-                            if (ugd) {
-                                if (ugd.sent) {
-                                    for (var key in ugd.sent.apps) {
-                                        giveaways.sent.apps[key] = [];
-                                        for (var i = 0, n = ugd.sent.apps[key].length; i < n; ++i) {
-                                            ggiveaways[ugd.sent.apps[key][i].code] = ugd.sent.apps[key][i];
-                                            giveaways.sent.apps[key].push(ugd.sent.apps[key][i].code);
+                            if (savedUser) {
+                                ugd = savedUser.ugd;
+                                if (ugd) {
+                                    if (ugd.sent) {
+                                        for (var key in ugd.sent.apps) {
+                                            giveaways.sent.apps[key] = [];
+                                            for (var i = 0, n = ugd.sent.apps[key].length; i < n; ++i) {
+                                                ggiveaways[ugd.sent.apps[key][i].code] = ugd.sent.apps[key][i];
+                                                giveaways.sent.apps[key].push(ugd.sent.apps[key][i].code);
+                                            }
                                         }
-                                    }
-                                    for (var key in ugd.sent.subs) {
-                                        giveaways.sent.subs[key] = [];
-                                        for (var i = 0, n = ugd.sent.subs[key].length; i < n; ++i) {
-                                            ggiveaways[ugd.sent.subs[key][i].code] = ugd.sent.subs[key][i];
-                                            giveaways.sent.subs[key].push(ugd.sent.subs[key][i].code);
+                                        for (var key in ugd.sent.subs) {
+                                            giveaways.sent.subs[key] = [];
+                                            for (var i = 0, n = ugd.sent.subs[key].length; i < n; ++i) {
+                                                ggiveaways[ugd.sent.subs[key][i].code] = ugd.sent.subs[key][i];
+                                                giveaways.sent.subs[key].push(ugd.sent.subs[key][i].code);
+                                            }
                                         }
+                                        giveaways.sentTimestamp = ugd.sentTimestamp;
                                     }
-                                    giveaways.sentTimestamp = ugd.sentTimestamp;
-                                }
-                                if (ugd.won) {
-                                    for (var key in ugd.won.apps) {
-                                        giveaways.won.apps[key] = [];
-                                        for (var i = 0, n = ugd.won.apps[key].length; i < n; ++i) {
-                                            ggiveaways[ugd.won.apps[key][i].code] = ugd.won.apps[key][i];
-                                            giveaways.won.apps[key].push(ugd.won.apps[key][i].code);
+                                    if (ugd.won) {
+                                        for (var key in ugd.won.apps) {
+                                            giveaways.won.apps[key] = [];
+                                            for (var i = 0, n = ugd.won.apps[key].length; i < n; ++i) {
+                                                ggiveaways[ugd.won.apps[key][i].code] = ugd.won.apps[key][i];
+                                                giveaways.won.apps[key].push(ugd.won.apps[key][i].code);
+                                            }
                                         }
-                                    }
-                                    for (var key in ugd.won.subs) {
-                                        giveaways.won.subs[key] = [];
-                                        for (var i = 0, n = ugd.won.subs[key].length; i < n; ++i) {
-                                            ggiveaways[ugd.won.subs[key][i].code] = ugd.won.subs[key][i];
-                                            giveaways.won.subs[key].push(ugd.won.subs[key][i].code);
+                                        for (var key in ugd.won.subs) {
+                                            giveaways.won.subs[key] = [];
+                                            for (var i = 0, n = ugd.won.subs[key].length; i < n; ++i) {
+                                                ggiveaways[ugd.won.subs[key][i].code] = ugd.won.subs[key][i];
+                                                giveaways.won.subs[key].push(ugd.won.subs[key][i].code);
+                                            }
                                         }
+                                        giveaways.wonTimestamp = ugd.wonTimestamp;
                                     }
-                                    giveaways.wonTimestamp = ugd.wonTimestamp;
                                 }
                             }
                         }
@@ -4270,7 +4272,7 @@
 
     function continueSyncStep3(syncer, callback) {
         if (esgst.settings.syncHiddenGames) {
-            syncer.progress.lastElementChild.textContent = `Syncing your wishlisted/owned/ignored games...`;
+            syncer.progress.lastElementChild.textContent = `Syncing your hidden games...`;
             syncer.hiddenGames = {
                 apps: [],
                 subs: []
@@ -4577,45 +4579,47 @@
                     sentTimestamp: 0,
                     wonTimestamp: 0
                 };
-                ugd = savedUser.ugd;
-                if (ugd) {
-                    var ggiveaways = {};
-                    if (ugd.sent) {
-                        for (var key in ugd.sent.apps) {
-                            giveaways.sent.apps[key] = [];
-                            for (var i = 0, n = ugd.sent.apps[key].length; i < n; ++i) {
-                                ggiveaways[ugd.sent.apps[key][i].code] = ugd.sent.apps[key][i];
-                                giveaways.sent.apps[key].push(ugd.sent.apps[key][i].code);
+                if (savedUser) {
+                    ugd = savedUser.ugd;
+                    if (ugd) {
+                        var ggiveaways = {};
+                        if (ugd.sent) {
+                            for (var key in ugd.sent.apps) {
+                                giveaways.sent.apps[key] = [];
+                                for (var i = 0, n = ugd.sent.apps[key].length; i < n; ++i) {
+                                    ggiveaways[ugd.sent.apps[key][i].code] = ugd.sent.apps[key][i];
+                                    giveaways.sent.apps[key].push(ugd.sent.apps[key][i].code);
+                                }
                             }
-                        }
-                        for (var key in ugd.sent.subs) {
-                            giveaways.sent.subs[key] = [];
-                            for (var i = 0, n = ugd.sent.subs[key].length; i < n; ++i) {
-                                ggiveaways[ugd.sent.subs[key][i].code] = ugd.sent.subs[key][i];
-                                giveaways.sent.subs[key].push(ugd.sent.subs[key][i].code);
+                            for (var key in ugd.sent.subs) {
+                                giveaways.sent.subs[key] = [];
+                                for (var i = 0, n = ugd.sent.subs[key].length; i < n; ++i) {
+                                    ggiveaways[ugd.sent.subs[key][i].code] = ugd.sent.subs[key][i];
+                                    giveaways.sent.subs[key].push(ugd.sent.subs[key][i].code);
+                                }
                             }
+                            giveaways.sentTimestamp = ugd.sentTimestamp;
                         }
-                        giveaways.sentTimestamp = ugd.sentTimestamp;
-                    }
-                    if (ugd.won) {
-                        for (var key in ugd.won.apps) {
-                            giveaways.won.apps[key] = [];
-                            for (var i = 0, n = ugd.won.apps[key].length; i < n; ++i) {
-                                ggiveaways[ugd.won.apps[key][i].code] = ugd.won.apps[key][i];
-                                giveaways.won.apps[key].push(ugd.won.apps[key][i].code);
+                        if (ugd.won) {
+                            for (var key in ugd.won.apps) {
+                                giveaways.won.apps[key] = [];
+                                for (var i = 0, n = ugd.won.apps[key].length; i < n; ++i) {
+                                    ggiveaways[ugd.won.apps[key][i].code] = ugd.won.apps[key][i];
+                                    giveaways.won.apps[key].push(ugd.won.apps[key][i].code);
+                                }
                             }
-                        }
-                        for (var key in ugd.won.subs) {
-                            giveaways.won.subs[key] = [];
-                            for (var i = 0, n = ugd.won.subs[key].length; i < n; ++i) {
-                                ggiveaways[ugd.won.subs[key][i].code] = ugd.won.subs[key][i];
-                                giveaways.won.subs[key].push(ugd.won.subs[key][i].code);
+                            for (var key in ugd.won.subs) {
+                                giveaways.won.subs[key] = [];
+                                for (var i = 0, n = ugd.won.subs[key].length; i < n; ++i) {
+                                    ggiveaways[ugd.won.subs[key][i].code] = ugd.won.subs[key][i];
+                                    giveaways.won.subs[key].push(ugd.won.subs[key][i].code);
+                                }
                             }
+                            giveaways.wonTimestamp = ugd.wonTimestamp;
                         }
-                        giveaways.wonTimestamp = ugd.wonTimestamp;
-                    }
-                    if (Object.keys(ggiveaways).length > 0) {
-                        lockAndSaveGiveaways(ggiveaways);
+                        if (Object.keys(ggiveaways).length > 0) {
+                            lockAndSaveGiveaways(ggiveaways);
+                        }
                     }
                 }
             }
@@ -5903,7 +5907,7 @@
             esgst.headerData.level = parseInt(esgst.headerElements.levelContainer.textContent.match(/\d+/)[0]);
             esgst.headerElements.createdButton = navigation.getElementsByClassName(`fa-gift`)[0].closest(`.nav__button-container`);
             esgst.headerElements.wonButton = navigation.getElementsByClassName(`fa-trophy`)[0].closest(`.nav__button-container`);
-            if (esgst.hr_g) {
+            if (esgst.hr_g && context !== document) {
                 esgst.headerData.wishlist = false;
                 giveaways = getGiveaways(context, false, null, true);
                 for (i = 0, n = giveaways.length; i < n; ++i) {
@@ -10555,41 +10559,43 @@ ${avatar.outerHTML}
                 sentTimestamp: 0,
                 wonTimestamp: 0
             };
-            ugd = savedUser.ugd;
-            if (ugd) {
-                if (ugd.sent) {
-                    for (var key in ugd.sent.apps) {
-                        giveaways.sent.apps[key] = [];
-                        for (var i = 0, n = ugd.sent.apps[key].length; i < n; ++i) {
-                            mgc.saveGiveaways[ugd.sent.apps[key][i].code] = ugd.sent.apps[key][i];
-                            giveaways.sent.apps[key].push(ugd.sent.apps[key][i].code);
+            if (savedUser) {
+                ugd = savedUser.ugd;
+                if (ugd) {
+                    if (ugd.sent) {
+                        for (var key in ugd.sent.apps) {
+                            giveaways.sent.apps[key] = [];
+                            for (var i = 0, n = ugd.sent.apps[key].length; i < n; ++i) {
+                                mgc.saveGiveaways[ugd.sent.apps[key][i].code] = ugd.sent.apps[key][i];
+                                giveaways.sent.apps[key].push(ugd.sent.apps[key][i].code);
+                            }
                         }
-                    }
-                    for (var key in ugd.sent.subs) {
-                        giveaways.sent.subs[key] = [];
-                        for (var i = 0, n = ugd.sent.subs[key].length; i < n; ++i) {
-                            mgc.saveGiveaways[ugd.sent.subs[key][i].code] = ugd.sent.subs[key][i];
-                            giveaways.sent.subs[key].push(ugd.sent.subs[key][i].code);
+                        for (var key in ugd.sent.subs) {
+                            giveaways.sent.subs[key] = [];
+                            for (var i = 0, n = ugd.sent.subs[key].length; i < n; ++i) {
+                                mgc.saveGiveaways[ugd.sent.subs[key][i].code] = ugd.sent.subs[key][i];
+                                giveaways.sent.subs[key].push(ugd.sent.subs[key][i].code);
+                            }
                         }
+                        giveaways.sentTimestamp = ugd.sentTimestamp;
                     }
-                    giveaways.sentTimestamp = ugd.sentTimestamp;
-                }
-                if (ugd.won) {
-                    for (var key in ugd.won.apps) {
-                        giveaways.won.apps[key] = [];
-                        for (var i = 0, n = ugd.won.apps[key].length; i < n; ++i) {
-                            mgc.saveGiveaways[ugd.won.apps[key][i].code] = ugd.won.apps[key][i];
-                            giveaways.won.apps[key].push(ugd.won.apps[key][i].code);
+                    if (ugd.won) {
+                        for (var key in ugd.won.apps) {
+                            giveaways.won.apps[key] = [];
+                            for (var i = 0, n = ugd.won.apps[key].length; i < n; ++i) {
+                                mgc.saveGiveaways[ugd.won.apps[key][i].code] = ugd.won.apps[key][i];
+                                giveaways.won.apps[key].push(ugd.won.apps[key][i].code);
+                            }
                         }
-                    }
-                    for (var key in ugd.won.subs) {
-                        giveaways.won.subs[key] = [];
-                        for (var i = 0, n = ugd.won.subs[key].length; i < n; ++i) {
-                            mgc.saveGiveaways[ugd.won.subs[key][i].code] = ugd.won.subs[key][i];
-                            giveaways.won.subs[key].push(ugd.won.subs[key][i].code);
+                        for (var key in ugd.won.subs) {
+                            giveaways.won.subs[key] = [];
+                            for (var i = 0, n = ugd.won.subs[key].length; i < n; ++i) {
+                                mgc.saveGiveaways[ugd.won.subs[key][i].code] = ugd.won.subs[key][i];
+                                giveaways.won.subs[key].push(ugd.won.subs[key][i].code);
+                            }
                         }
+                        giveaways.wonTimestamp = ugd.wonTimestamp;
                     }
-                    giveaways.wonTimestamp = ugd.wonTimestamp;
                 }
             }
         }
@@ -13515,7 +13521,7 @@ ${avatar.outerHTML}
             if (esgst.mpp_r) {
                 discussion = JSON.parse(localStorage.esgst_discussions)[window.location.pathname.match(/^\/discussion\/(.+?)\//)[1]];
                 if (discussion) {
-                    if (discussion.readComments[``]) {
+                    if (discussion.readComments && discussion.readComments[``]) {
                         Hidden = true;
                     } else {
                         Hidden = false;
@@ -21171,7 +21177,7 @@ ${avatar.outerHTML}
                             for (I = 0, N = SavedEmojis.children.length; I < N; ++I) {
                                 SavedEmojis.children[I].addEventListener("click", function (Event) {
                                     Event.currentTarget.remove();
-                                    GM_setValue("Emojis", SavedEmojis.innerHTML);
+                                    GM_setValue(`emojis`, SavedEmojis.innerHTML);
                                     Popup.reposition();
                                 });
                             }
@@ -21184,11 +21190,11 @@ ${avatar.outerHTML}
                                 ID = Event.dataTransfer.getData("text").replace(/\\/g, "\\\\");
                                 if (!SavedEmojis.querySelector("[data-id='" + ID + "']")) {
                                     SavedEmojis.appendChild(document.querySelector("[data-id='" + ID + "']").cloneNode(true));
-                                    GM_setValue("Emojis", SavedEmojis.innerHTML);
+                                    GM_setValue(`emojis`, SavedEmojis.innerHTML);
                                     Popup.reposition();
                                     SavedEmojis.lastElementChild.addEventListener("click", function (Event) {
                                         Event.currentTarget.remove();
-                                        GM_setValue("Emojis", SavedEmojis.innerHTML);
+                                        GM_setValue(`emojis`, SavedEmojis.innerHTML);
                                         Popup.reposition();
                                     });
                                 }
@@ -23358,7 +23364,7 @@ ${avatar.outerHTML}
             link = info.firstElementChild;
             communityName = link.getAttribute(`href`).match(/\/groups\/(.+)/)[1];
             avatar = link.firstElementChild.getAttribute(`src`);
-            savedGroup = savedGroups[communityName];
+            savedGroup = savedGroups[communityName.toLowerCase()];
             if (savedGroup && savedGroup.member) {
                 groups.push({
                     name: savedGroup.name,
@@ -23481,45 +23487,47 @@ ${avatar.outerHTML}
                     sentTimestamp: 0,
                     wonTimestamp: 0
                 };
-                ugd = savedUser.ugd;
-                if (ugd) {
-                    var ggiveaways = {};
-                    if (ugd.sent) {
-                        for (var key in ugd.sent.apps) {
-                            giveaways.sent.apps[key] = [];
-                            for (var i = 0, n = ugd.sent.apps[key].length; i < n; ++i) {
-                                ggiveaways[ugd.sent.apps[key][i].code] = ugd.sent.apps[key][i];
-                                giveaways.sent.apps[key].push(ugd.sent.apps[key][i].code);
+                if (savedUser) {
+                    ugd = savedUser.ugd;
+                    if (ugd) {
+                        var ggiveaways = {};
+                        if (ugd.sent) {
+                            for (var key in ugd.sent.apps) {
+                                giveaways.sent.apps[key] = [];
+                                for (var i = 0, n = ugd.sent.apps[key].length; i < n; ++i) {
+                                    ggiveaways[ugd.sent.apps[key][i].code] = ugd.sent.apps[key][i];
+                                    giveaways.sent.apps[key].push(ugd.sent.apps[key][i].code);
+                                }
                             }
-                        }
-                        for (var key in ugd.sent.subs) {
-                            giveaways.sent.subs[key] = [];
-                            for (var i = 0, n = ugd.sent.subs[key].length; i < n; ++i) {
-                                ggiveaways[ugd.sent.subs[key][i].code] = ugd.sent.subs[key][i];
-                                giveaways.sent.subs[key].push(ugd.sent.subs[key][i].code);
+                            for (var key in ugd.sent.subs) {
+                                giveaways.sent.subs[key] = [];
+                                for (var i = 0, n = ugd.sent.subs[key].length; i < n; ++i) {
+                                    ggiveaways[ugd.sent.subs[key][i].code] = ugd.sent.subs[key][i];
+                                    giveaways.sent.subs[key].push(ugd.sent.subs[key][i].code);
+                                }
                             }
+                            giveaways.sentTimestamp = ugd.sentTimestamp;
                         }
-                        giveaways.sentTimestamp = ugd.sentTimestamp;
-                    }
-                    if (ugd.won) {
-                        for (var key in ugd.won.apps) {
-                            giveaways.won.apps[key] = [];
-                            for (var i = 0, n = ugd.won.apps[key].length; i < n; ++i) {
-                                ggiveaways[ugd.won.apps[key][i].code] = ugd.won.apps[key][i];
-                                giveaways.won.apps[key].push(ugd.won.apps[key][i].code);
+                        if (ugd.won) {
+                            for (var key in ugd.won.apps) {
+                                giveaways.won.apps[key] = [];
+                                for (var i = 0, n = ugd.won.apps[key].length; i < n; ++i) {
+                                    ggiveaways[ugd.won.apps[key][i].code] = ugd.won.apps[key][i];
+                                    giveaways.won.apps[key].push(ugd.won.apps[key][i].code);
+                                }
                             }
-                        }
-                        for (var key in ugd.won.subs) {
-                            giveaways.won.subs[key] = [];
-                            for (var i = 0, n = ugd.won.subs[key].length; i < n; ++i) {
-                                ggiveaways[ugd.won.subs[key][i].code] = ugd.won.subs[key][i];
-                                giveaways.won.subs[key].push(ugd.won.subs[key][i].code);
+                            for (var key in ugd.won.subs) {
+                                giveaways.won.subs[key] = [];
+                                for (var i = 0, n = ugd.won.subs[key].length; i < n; ++i) {
+                                    ggiveaways[ugd.won.subs[key][i].code] = ugd.won.subs[key][i];
+                                    giveaways.won.subs[key].push(ugd.won.subs[key][i].code);
+                                }
                             }
+                            giveaways.wonTimestamp = ugd.wonTimestamp;
                         }
-                        giveaways.wonTimestamp = ugd.wonTimestamp;
-                    }
-                    if (Object.keys(ggiveaways).length > 0) {
-                        lockAndSaveGiveaways(ggiveaways);
+                        if (Object.keys(ggiveaways).length > 0) {
+                            lockAndSaveGiveaways(ggiveaways);
+                        }
                     }
                 }
             }
