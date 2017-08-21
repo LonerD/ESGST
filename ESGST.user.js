@@ -3,7 +3,7 @@
 // @namespace ESGST
 // @description Enhances SteamGifts and SteamTrades by adding some cool features to them.
 // @icon https://github.com/revilheart/ESGST/raw/master/Resources/esgstIcon.ico
-// @version 6.Beta.30.3
+// @version 6.Beta.30.4
 // @author revilheart
 // @downloadURL https://github.com/revilheart/ESGST/raw/master/ESGST.user.js
 // @updateURL https://github.com/revilheart/ESGST/raw/master/ESGST.meta.js
@@ -527,8 +527,8 @@
                         }
                         esgst.groups = localStorage.esgst_groups;
                         if (typeof esgst.groups === `undefined`) {
-                            localStorage.esgst_groups = GM_getValue(`groups`, `{}`);
-                            esgst.groups = {};
+                            localStorage.esgst_groups = `[]`;
+                            esgst.groups = [];
                         } else {
                             esgst.groups = JSON.parse(esgst.groups);
                         }
@@ -2320,6 +2320,11 @@
                             type: `games`
                         },
                         {
+                            description: `
+                                <ul>
+                                    <li>Highlights games that you have already entered giveaways for.</li>
+                                </ul>                            
+                            `,
                             features: [
                                 {
                                     id: `egh_t`,
@@ -2424,6 +2429,13 @@
                                 },
                                 {
                                     colors: true,
+                                    features: [
+                                        {
+                                            id: `gc_ncv_o`,
+                                            name: `[NEW] Only display "No CV" is game also has "Reduced CV".`,
+                                            sg: true
+                                        }
+                                    ],
                                     id: `gc_ncv`,
                                     input: true,
                                     name: `No CV`,
@@ -4116,17 +4128,32 @@
     }
 
     function continueSyncStep1(syncer, callback) {
-        var key;
+        var i, key, n, newGroups, savedGiveaways, savedGroups;
         if (esgst.sg && esgst.settings.syncGroups) {
             syncer.progress.lastElementChild.textContent = `Syncing your Steam groups...`;
             syncer.groups = {};
             savedGroups = JSON.parse(localStorage.esgst_groups);
-            syncer.currentGroups = [];
-            for (key in savedGroups) {
-                if (savedGroups[key].member) {
-                    syncer.currentGroups.push(key);
+            if (!Array.isArray(savedGroups)) {
+                newGroups = [];
+                for (key in savedGroups) {
+                    newGroups.push(savedGroups[key]);
+                }
+                savedGroups = newGroups;
+                localStorage.esgst_groups = JSON.stringify(savedGroups);
+                savedGiveaways = JSON.parse(localStorage.esgst_giveaways);
+                for (key in savedGiveaways) {
+                    delete savedGiveaways[key].groups;
+                }
+                localStorage.esgst_giveaways = JSON.stringify(savedGiveaways);
+            }
+            syncer.currentGroups = {};
+            for (i = 0, n = savedGroups.length; i < n; ++i) {
+                if (savedGroups[i].member && savedGroups[i].steamId) {
+                    syncer.currentGroups[savedGroups[i].steamId] = savedGroups[i].name;
                 }
             }
+            syncer.newGroups = {};
+            syncer.savedGroups = savedGroups;
             syncGroups(1, syncer, `https://www.steamgifts.com/account/steam/groups/search?page=`, continueSyncStep2.bind(null, syncer, callback));
         } else {
             continueSyncStep2(syncer, callback);
@@ -4140,57 +4167,87 @@
     }
 
     function getGroupsAndContinueSync(nextPage, syncer, url, callback, response) {
-        var element, elements, heading, i, match, n, pagination, responseHtml, missing, neww, id, html;
+        var elements, html, id, pagination, responseHtml, missing, neww;
         responseHtml = DOM.parse(response.responseText);
         elements = responseHtml.getElementsByClassName(`table__row-outer-wrap`);
-        for (i = 0, n = elements.length; i < n; ++i) {
-            element = elements[i];
-            heading = element.getElementsByClassName(`table__column__heading`)[0];
-            match = heading.getAttribute(`href`).match(/\/group\/(.+?)\/(.+)/);
-            syncer.groups[match[2]] = {
-                avatar: element.getElementsByClassName(`table_image_avatar`)[0].style.backgroundImage.match(/\/avatars\/(.+)_medium/)[1],
-                code: match[1],
-                member: true,
-                name: heading.textContent
-            };
-        }
-        pagination = responseHtml.getElementsByClassName(`pagination__navigation`)[0];
-        if (pagination && !pagination.lastElementChild.classList.contains(`is-selected`)) {
-            window.setTimeout(syncGroups, 0, ++nextPage, syncer, url, callback);
-        } else if (!syncer.canceled) {
-            lockAndSaveGroups(syncer.groups, true, function () {
-                missing = [];
-                neww = [];
-                for (i = 0, n = syncer.currentGroups.length; i < n; ++i) {
-                    id = syncer.currentGroups[i];
-                    if (!syncer.groups[id]) {
-                        missing.push(`<a href="http://steamcommunity.com/groups/${id}">${id}</a>`);
+        getGroupIds(elements, 0, elements.length, syncer, function () {
+            pagination = responseHtml.getElementsByClassName(`pagination__navigation`)[0];
+            if (pagination && !pagination.lastElementChild.classList.contains(`is-selected`)) {
+                setTimeout(syncGroups, 0, ++nextPage, syncer, url, callback);
+            } else if (!syncer.canceled) {
+                lockAndSaveGroups(syncer.groups, true, function () {
+                    missing = [];
+                    neww = [];
+                    for (id in syncer.currentGroups) {
+                        if (!syncer.newGroups[id]) {
+                            missing.push(`<a href="http://steamcommunity.com/gid/${id}">${syncer.currentGroups[id]}</a>`);
+                        }
                     }
-                }
-                for (key in syncer.groups) {
-                    if (syncer.currentGroups.indexOf(key) < 0) {
-                        neww.push(`<a href="http://steamcommunity.com/groups/${key}">${key}</a>`);
+                    for (id in syncer.newGroups) {
+                        if (!syncer.currentGroups[id]) {
+                            neww.push(`<a href="http://steamcommunity.com/gid/${id}">${syncer.newGroups[id]}</a>`);
+                        }
                     }
-                }
-                html = ``;
-                if (missing.length) {
-                    html += `
-                        <div>
-                            <strong>Missing groups:</strong> ${missing.join(`, `)}
-                        </div>
-                    `;
-                }
-                if (neww.length) {
-                    html += `
-                        <div>
-                            <strong>New groups:</strong> ${neww.join(`, `)}
-                        </div>
-                    `;
-                }
-                syncer.scrollable.insertAdjacentHTML(`beforeEnd`, html);
+                    html = ``;
+                    if (missing.length) {
+                        html += `
+                            <div>
+                                <strong>Missing groups:</strong> ${missing.join(`, `)}
+                            </div>
+                        `;
+                    }
+                    if (neww.length) {
+                        html += `
+                            <div>
+                                <strong>New groups:</strong> ${neww.join(`, `)}
+                            </div>
+                        `;
+                    }
+                    syncer.scrollable.insertAdjacentHTML(`beforeEnd`, html);
+                    callback();
+                });
+            }
+        });
+    }
+
+    function getGroupIds(elements, i, n, syncer, callback) {
+        var avatar, code, element, heading, j, match, name;
+        if (!syncer.canceled) {
+            if (i < n) {
+                element = elements[i];
+                heading = element.getElementsByClassName(`table__column__heading`)[0];
+                match = heading.getAttribute(`href`).match(/\/group\/(.+?)\/(.+)/);
+                code = match[1];
+                name = heading.textContent;
+                for (j = syncer.savedGroups.length - 1; j >= 0 && syncer.savedGroups[j].code !== code; --j);
+                if (j >= 0 && syncer.savedGroups[j].steamId) {
+                    syncer.groups[code] = {
+                        member: true
+                    };
+                    syncer.newGroups[syncer.savedGroups[j].steamId] = name;
+                    setTimeout(getGroupIds, 0, elements, ++i, n, syncer, callback);
+                } else {
+                    avatar = element.getElementsByClassName(`table_image_avatar`)[0].style.backgroundImage.match(/\/avatars\/(.+)_medium/)[1];
+                    request(null, false, `/group/${code}/`, getGroupId.bind(null, avatar, code, elements, i, n, name, syncer, callback));
+                };
+            } else {
                 callback();
-            });
+            }
         }
+    }
+
+    function getGroupId(avatar, code, elements, i, n, name, syncer, callback, response) {
+        var steamId;
+        steamId = DOM.parse(response.responseText).getElementsByClassName(`sidebar__shortcut-inner-wrap`)[0].firstElementChild.getAttribute(`href`).match(/\d+/)[0];
+        syncer.groups[code] = {
+            avatar: avatar,
+            code: code,
+            member: true,
+            name: name,
+            steamId: steamId
+        };
+        syncer.newGroups[steamId] = name;
+        setTimeout(getGroupIds, 0, elements, ++i, n, syncer, callback);
     }
 
     function continueSyncStep2(syncer, callback) {
@@ -4667,20 +4724,21 @@
     }
 
     function saveGroups(groups, sync, callback, deleteLock) {
-        var key, savedGroups, subKey;
-        savedGroups = JSON.parse(localStorage.esgst_groups || `{}`);
+        var code, i, key, n, savedGroups;
+        savedGroups = JSON.parse(localStorage.esgst_groups || `[]`);
         if (sync) {
-            for (key in savedGroups) {
-                delete savedGroups[key].member;
+            for (i = 0, n = savedGroups.length; i < n; ++i) {
+                delete savedGroups[i].member;
             }
         }
-        for (key in groups) {
-            if (savedGroups[key]) {
-                for (subKey in groups[key]) {
-                    savedGroups[key][subKey] = groups[key][subKey];
+        for (code in groups) {
+            for (i = 0, n = savedGroups.length; i < n && savedGroups[i].code !== code; ++i);
+            if (i < n) {
+                for (key in groups[code]) {
+                    savedGroups[i][key] = groups[code][key];
                 }
             } else {
-                savedGroups[key] = groups[key];
+                savedGroups.push(groups[code]);
             }
         }
         localStorage.esgst_groups = JSON.stringify(savedGroups);
@@ -9092,7 +9150,7 @@ ${avatar.outerHTML}
             for (i = 0, n = giveaways.length; i < n; ++i) {
                 giveaway = giveaways[i];
                 if (!giveaway.innerWrap.getElementsByClassName(`esgst-button-set`)[0]) {
-                    if (((giveaway.inviteOnly && giveaway.url) || !giveaway.inviteOnly) && giveaway.started && !giveaway.ended && !giveaway.created && giveaway.level <= esgst.headerData.level && ((giveaway.id && ((games[giveaway.type][giveaway.id] && !games[giveaway.type][giveaway.id].owned) || !games[giveaway.type][giveaway.id])) || !giveaway.id)) {
+                    if (((giveaway.inviteOnly && giveaway.url) || !giveaway.inviteOnly) && giveaway.started && !giveaway.ended && !giveaway.created && giveaway.level <= esgst.headerData.level && ((giveaway.id && ((games[giveaway.type][giveaway.id] && !games[giveaway.type][giveaway.id].owned && !games[giveaway.type][giveaway.id].hidden) || !games[giveaway.type][giveaway.id])) || !giveaway.id)) {
                         addElgbButton(giveaway, null, main, source);
                     }
                 }
@@ -9333,14 +9391,19 @@ ${avatar.outerHTML}
                 newGiveaways = {};
                 newGroups = {};
                 savedGiveaways = JSON.parse(localStorage.esgst_giveaways || `{}`);
-                savedGroups = JSON.parse(localStorage.esgst_groups || `{}`);
+                savedGroups = JSON.parse(localStorage.esgst_groups || `[]`);
                 loadGglGroups([giveaway], 0, 1, newGiveaways, newGroups, savedGiveaways, savedGroups, function(groups) {
-                    var className, groupCount, i, n, key, link;
+                    var className, code, group, groupCount, i, j, n, link;
                     if (groups) {
                         groupCount = 0;
                         for (i = 0, n = groups.length; i < n; ++i) {
-                            key = groups[i];
-                            var group = savedGroups[key] || newGroups[key];
+                            code = groups[i];
+                            for (j = savedGroups.length - 1; j >= 0 && savedGroups[j].code !== code; --j);
+                            if (j >= 0) {
+                                group = savedGroups[j];
+                            } else {
+                                group = newGroups[code];
+                            }
                             if (group && group.member) {
                                 className = `esgst-ggl-member`;
                                 groupCount += 1;
@@ -9394,7 +9457,7 @@ ${avatar.outerHTML}
         newGiveaways = {};
         newGroups = {};
         savedGiveaways = JSON.parse(localStorage.esgst_giveaways || `{}`);
-        savedGroups = JSON.parse(localStorage.esgst_groups || `{}`);
+        savedGroups = JSON.parse(localStorage.esgst_groups || `[]`);
         loadGglGroups(giveaways, 0, giveaways.length, newGiveaways, newGroups, savedGiveaways, savedGroups);
     }
 
@@ -9411,7 +9474,7 @@ ${avatar.outerHTML}
                     }
                     window.setTimeout(loadGglGroups, 0, giveaways, ++i, n, newGiveaways, newGroups, savedGiveaways, savedGroups);
                 } else {
-                    getGglGroups([], 1, newGroups, `${giveaway.url}/groups/search?page=`, function(groups) {
+                    getGglGroups([], 1, newGroups, `${giveaway.url}/groups/search?page=`, function (groups) {
                         if (groups) {
                             newGiveaways[giveaway.code] = {
                                 groups: groups
@@ -9439,15 +9502,20 @@ ${avatar.outerHTML}
     }
 
     function addGglPanel(giveaway, groups, newGroups, savedGroups) {
-        var className, groupCount, i, key, link, n, panel;
+        var className, code, group, groupCount, i, link, n, panel;
         if (!giveaway.summary.getElementsByClassName(`esgst-ggl-panel`)[0]) {
             panel = insertHtml(giveaway.summary, `beforeEnd`, `
                 <div class="esgst-ggl-panel"></div>
             `);
             groupCount = 0;
             for (i = 0, n = groups.length; i < n; ++i) {
-                key = groups[i];
-                var group = savedGroups[key] || newGroups[key];
+                code = groups[i];
+                for (j = savedGroups.length - 1; j >= 0 && savedGroups[j].code !== code; --j);
+                if (j >= 0) {
+                    group = savedGroups[j];
+                } else {
+                    group = newGroups[code];
+                }
                 if (group && group.member) {
                     className = `esgst-ggl-member`;
                     groupCount += 1;
@@ -9477,7 +9545,7 @@ ${avatar.outerHTML}
     }
 
     function getGglGroups(groups, nextPage, newGroups, url, callback) {
-        var code, communityName, element, elements, error, heading, i, match, n, pagination, responseHtml;
+        var code, element, elements, error, heading, i, match, n, pagination, responseHtml;
         request(null, false, `${url}${nextPage}`, function(response) {
             responseHtml = DOM.parse(response.responseText);
             error = responseHtml.getElementsByClassName(`table--summary`)[0];
@@ -9488,15 +9556,14 @@ ${avatar.outerHTML}
                 for (i = 0, n = elements.length; i < n; ++i) {
                     element = elements[i];
                     heading = element.getElementsByClassName(`table__column__heading`)[0];
-                    match = heading.getAttribute(`href`).match(/group\/(.+?)\/(.+)/);
+                    match = heading.getAttribute(`href`).match(/group\/(.+?)\//);
                     code = match[1];
-                    communityName = match[2];
-                    newGroups[communityName] = {
+                    newGroups[code] = {
                         avatar: element.getElementsByClassName(`table_image_avatar`)[0].style.backgroundImage.match(/\/avatars\/(.+)_medium/)[1],
                         code: code,
                         name: heading.textContent
                     };
-                    groups.push(communityName);
+                    groups.push(code);
                 }
                 pagination = responseHtml.getElementsByClassName(`pagination__navigation`)[0];
                 if (pagination && !pagination.lastElementChild.classList.contains(`is-selected`)) {
@@ -10758,8 +10825,8 @@ ${avatar.outerHTML}
     }
 
     function setSggGiveawayGroups() {
-        var avatar, communityName, container, context, elements, i, id, key, n, savedGroups, separator, stickied;
-        savedGroups = JSON.parse(localStorage.esgst_groups || `{}`);
+        var avatar, code, container, context, elements, i, id, j, n, savedGroups, separator, stickied;
+        savedGroups = JSON.parse(localStorage.esgst_groups || `[]`);
         container = document.getElementsByClassName(`form__groups`)[0];
         separator = container.firstElementChild.nextElementSibling;
         elements = container.getElementsByClassName(`form__group--steam`);
@@ -10767,59 +10834,59 @@ ${avatar.outerHTML}
             context = elements[i];
             id = context.getAttribute(`data-group-id`);
             avatar = context.firstElementChild.style.backgroundImage;
-            communityName = null;
+            code = null;
             stickied = false;
-            for (key in savedGroups) {
-                if (avatar.match(savedGroups[key].avatar)) {
-                    communityName = key;
-                    if (savedGroups[key].stickied) {
+            for (j = savedGroups.length - 1; j >= 0; --j) {
+                if (avatar.match(savedGroups[j].avatar)) {
+                    code = savedGroups[j].code;
+                    if (savedGroups[j].stickied) {
                         stickied = true;
                     }
                     break;
                 }
             }
-            if (communityName) {
+            if (code) {
                 if (stickied) {
                     if (context === separator) {
                         separator = separator.nextElementSibling;
                     }
                     container.insertBefore(context, separator);
-                    addSggUnstickyButton(communityName, container, context, id, separator);
+                    addSggUnstickyButton(code, container, context, id, separator);
                 } else {
-                    addSggStickyButton(communityName, container, context, id, separator);
+                    addSggStickyButton(code, container, context, id, separator);
                 }
             }
         }
     }
 
     function setSggGroups(context) {
-        var avatar, communityName, element, elements, i, key, n, savedGroups, stickied;
-        savedGroups = JSON.parse(localStorage.esgst_groups || `{}`);
+        var avatar, code, element, elements, i, j, key, n, savedGroups, stickied;
+        savedGroups = JSON.parse(localStorage.esgst_groups || `[]`);
         elements = context.getElementsByClassName(`table__row-inner-wrap`);
         for (i = 0, n = elements.length; i < n; ++i) {
             element = elements[i];
             avatar = element.getElementsByClassName(`table_image_avatar`)[0].style.backgroundImage;
             stickied = false;
-            for (key in savedGroups) {
-                if (avatar.match(savedGroups[key].avatar)) {
-                    communityName = key;
-                    if (savedGroups[key].stickied) {
+            for (j = savedGroups.length - 1; j >= 0; --j) {
+                if (avatar.match(savedGroups[j].avatar)) {
+                    code = savedGroups[j].code;
+                    if (savedGroups[j].stickied) {
                         stickied = true;
                     }
                     break;
                 }
             }
-            if (communityName) {
+            if (code) {
                 if (stickied) {
-                    addSggUnstickyButton(communityName, null, element);
+                    addSggUnstickyButton(code, null, element);
                 } else {
-                    addSggStickyButton(communityName, null, element);
+                    addSggStickyButton(code, null, element);
                 }
             }
         }
     }
 
-    function addSggStickyButton(communityName, container, context, id, separator, button) {
+    function addSggStickyButton(code, container, context, id, separator, button) {
         if (button) {
             button.remove();
         }
@@ -10830,10 +10897,10 @@ ${avatar.outerHTML}
                 </a>
             </div>
         `);
-        button.firstElementChild.addEventListener(`click`, stickySggGroup.bind(null, communityName, container, context, id, separator, button));
+        button.firstElementChild.addEventListener(`click`, stickySggGroup.bind(null, code, container, context, id, separator, button));
     }
 
-    function addSggUnstickyButton(communityName, container, context, id, separator, button) {
+    function addSggUnstickyButton(code, container, context, id, separator, button) {
         if (button) {
             button.remove();
         }
@@ -10844,10 +10911,10 @@ ${avatar.outerHTML}
                 </a>
             </div>
         `);
-        button.firstElementChild.addEventListener(`click`, unstickySggGroup.bind(null, communityName, container, context, id, separator, button));
+        button.firstElementChild.addEventListener(`click`, unstickySggGroup.bind(null, code, container, context, id, separator, button));
     }
 
-    function stickySggGroup(communityName, container, context, id, separator, button, event) {
+    function stickySggGroup(code, container, context, id, separator, button, event) {
         var groups;
         event.stopPropagation();
         button.innerHTML = `
@@ -10860,16 +10927,16 @@ ${avatar.outerHTML}
             container.insertBefore(context, separator);
         }
         groups = {};
-        groups[communityName] = {
+        groups[code] = {
             stickied: true
         };
         if (id) {
-            groups[communityName].id = id;
+            groups[code].id = id;
         }
-        lockAndSaveGroups(groups, false, addSggUnstickyButton.bind(null, communityName, container, context, id, separator, button));
+        lockAndSaveGroups(groups, false, addSggUnstickyButton.bind(null, code, container, context, id, separator, button));
     }
 
-    function unstickySggGroup(communityName, container, context, id, separator, button, event) {
+    function unstickySggGroup(code, container, context, id, separator, button, event) {
         var groups;
         event.stopPropagation();
         button.innerHTML = `
@@ -10880,13 +10947,13 @@ ${avatar.outerHTML}
             separator = separator.previousElementSibling;
         }
         groups = {};
-        groups[communityName] = {
+        groups[code] = {
             stickied: false
         };
         if (id) {
-            groups[communityName].id = id;
+            groups[code].id = id;
         }
-        lockAndSaveGroups(groups, false, addSggStickyButton.bind(null, communityName, container, context, id, separator, button));
+        lockAndSaveGroups(groups, false, addSggStickyButton.bind(null, code, container, context, id, separator, button));
     }
 
     /* [RCVC] Real CV Calculator */
@@ -11414,9 +11481,12 @@ ${avatar.outerHTML}
     }
 
     function getUgsGroupMembers(giveaway, ugs, i, n, winner, callback) {
+        var code, j;
         if (!ugs.canceled) {
             if (i < n) {
-                request(null, false, `http://steamcommunity.com/groups/${giveaway.groups[i].name}/memberslistxml/?xml=1`, checkUgsGroupMembers.bind(null, giveaway, ugs, i, n, winner, callback));
+                code = giveaway.groups[i].code;
+                for (j = esgst.groups.length - 1; j >= 0 && esgst.groups[j].code !== code; --j);
+                request(null, false, `http://steamcommunity.com/gid/${esgst.groups[j].steamId}/memberslistxml?xml=1`, checkUgsGroupMembers.bind(null, giveaway, ugs, i, n, winner, callback));
             } else {
                 callback();
             }
@@ -13695,7 +13765,7 @@ ${avatar.outerHTML}
         getCfhAreas(document);
         esgst.emojis = [ //Top emojis credit to https://greasyfork.org/scripts/21607-steamgifts-comment-formatting
             {
-                Emoji: "&#xAF;&#92;&#92;&#95;&#40;&#x30C4;&#41;&#95;&#47;&#xAF;",
+                Emoji: "&#xAF;&#92;&#92;&#92;&#95;&#40;&#x30C4;&#41;&#95;&#47;&#xAF;",
                 Title: ""
             }, {
                 Emoji: "&#40; &#x361;&#xB0; &#x35C;&#x296; &#x361;&#xB0;&#41;",
@@ -23353,29 +23423,27 @@ ${avatar.outerHTML}
     }
 
     function loadSgcGroups(profile, response) {
-        var avatar, communityName, element, elements, groups, i, info, link, n, responseHtml, savedGroup, savedGroups;
+        var avatar, element, elements, groups, i, n, name, responseHtml, savedGroup, savedGroups;
         groups = [];
-        savedGroups = JSON.parse(localStorage.esgst_groups || `{}`);
+        savedGroups = JSON.parse(localStorage.esgst_groups || `[]`);
         responseHtml = DOM.parse(response.responseText);
         elements = responseHtml.getElementsByClassName(`groupBlock`);
         for (i = 0, n = elements.length; i < n; ++i) {
             element = elements[i];
-            info = element.getElementsByClassName(`playerAvatar`)[0];
-            link = info.firstElementChild;
-            communityName = link.getAttribute(`href`).match(/\/groups\/(.+)/)[1];
-            avatar = link.firstElementChild.getAttribute(`src`);
-            savedGroup = savedGroups[communityName.toLowerCase()];
-            if (savedGroup && savedGroup.member) {
+            name = element.getElementsByClassName(`linkTitle`)[0].textContent;
+            avatar = element.getElementsByClassName(`playerAvatar`)[0].firstElementChild.firstElementChild.getAttribute(`src`);
+            for (j = savedGroups.length - 1; j >= 0 && savedGroups[j].name !== name; --j);
+            if (j >= 0 && savedGroups[j].member) {
                 groups.push({
-                    name: savedGroup.name,
+                    name: name,
                     html: `
                         <div class="table__row-outer-wrap">
                             <div class="table__row-inner-wrap">
                                 <div>
-                                    <a class="table_image_avatar" href="/group/${savedGroup.code}/" style="background-image:url(${avatar})"></a>
+                                    <a class="table_image_avatar" href="/group/${savedGroups[j].code}/" style="background-image:url(${avatar})"></a>
                                 </div>
                                 <div class="table__column--width-fill">
-                                    <a class="table__column__heading" href="/group/${savedGroup.code}/"></a>
+                                    <a class="table__column__heading" href="/group/${savedGroups[j].code}/"></a>
                                 </div>
                             </div>
                         </div>
@@ -23393,6 +23461,7 @@ ${avatar.outerHTML}
             profile.sgcProgress.remove();
             profile.sgcProgress = null;
             loadEndlessFeatures(profile.sgcResults);
+            profile.sgcPopup.reposition();
         } else {
             profile.sgcProgress.innerHTML = `
                 <div>No shared groups found.</div>
@@ -25057,12 +25126,14 @@ ${avatar.outerHTML}
                                     if (Result) {
                                         Callback(wbc);
                                     } else {
-                                        Groups = JSON.parse(localStorage.esgst_groups || `{}`);
+                                        Groups = JSON.parse(localStorage.esgst_groups || `[]`);
                                         for (GroupGiveaway in wbc.groupGiveaways) {
                                             Found = false;
                                             GroupGiveaways = wbc.groupGiveaways[GroupGiveaway];
                                             for (I = 0, N = GroupGiveaways.length; (I < N) && !Found; ++I) {
-                                                if (Groups[GroupGiveaways[I]] && Groups[GroupGiveaways[I]].member) {
+                                                var i;
+                                                for (i = Groups.length - 1; i >= 0 && Groups[i].code !== GroupGiveaways[I]; --i);
+                                                if (i >= 0 && Groups[i].member) {
                                                     Found = true;
                                                 }
                                             }
@@ -25148,7 +25219,7 @@ ${avatar.outerHTML}
                         wbc.groupGiveaways[GroupGiveaway] = [];
                     }
                     for (I = 0; I < N; ++I) {
-                        Group = Groups[I].getAttribute("href").match(/\/group\/.+?\/(.+)/)[1];
+                        Group = Groups[I].getAttribute("href").match(/\/group\/(.+?)\//)[1];
                         if (wbc.groupGiveaways[GroupGiveaway].indexOf(Group) < 0) {
                             wbc.groupGiveaways[GroupGiveaway].push(Group);
                         }
@@ -25462,19 +25533,15 @@ ${avatar.outerHTML}
     }
 
     function highlightGhGroups(context) {
-        var code, element, elements, i, key, n, savedGroups;
-        savedGroups = JSON.parse(localStorage.esgst_groups || `{}`);
+        var code, element, elements, i, j, key, n, savedGroups;
+        savedGroups = JSON.parse(localStorage.esgst_groups || `[]`);
         elements = context.querySelectorAll(`.table__column__heading[href*="/group/"]`);
         for (i = 0, n = elements.length; i < n; ++i) {
             element = elements[i];
-            code = element.getAttribute(`href`).match(/\/group\/(.+)\//)[1];
-            for (key in savedGroups) {
-                if (savedGroups[key].code === code) {
-                    if (savedGroups[key].member) {
-                        element.closest(`.table__row-outer-wrap`).classList.add(`esgst-gh-highlight`);
-                    }
-                    break;
-                }
+            code = element.getAttribute(`href`).match(/\/group\/(.+?)\//)[1];
+            for (j = savedGroups.length - 1; j >= 0 && savedGroups[j].code !== code; --j);
+            if (j >= 0 && savedGroups[j].member) {
+                element.closest(`.table__row-outer-wrap`).classList.add(`esgst-gh-highlight`);
             }
         }
     }
@@ -26208,7 +26275,7 @@ ${avatar.outerHTML}
                         }
                         break;
                     case `gc_rcv`:
-                        if (savedGame && savedGame.reducedCV && !location.pathname.match(/^\/bundle-games/)) {
+                        if (savedGame && savedGame.reducedCV && !location.pathname.match(/^\/bundle-games/) && (!esgst.gc_ncv_o || !savedGame.noCV)) {
                             elements.push(`
                                 <a class="esgst-gc esgst-gc-reducedCV" href="https://www.steamgifts.com/bundle-games/search?q=${encodedName}" title="Reduced CV since ${savedGame.reducedCV}">${esgst.gc_s ? (esgst.gc_s_i ? `<i class="fa fa-${esgst.gc_rcvIcon}"></i>` : `RCV`) : esgst.gc_rcvLabel}</a>
                             `);
@@ -28911,37 +28978,37 @@ ${avatar.outerHTML}
             mainPaginationNavigationBackup,
             esRefreshButton, esPauseButton;
         if (esgst.esCheck && esgst.pagination) {
-        pagination = esgst.pagination;
-        context = pagination.previousElementSibling;
-        if (esgst.paginationNavigation) {
-            if (esgst.es_r && esgst.discussionPath) {
-                if (esgst.currentPage == 1 && document.referrer.match(/\/discussions/)) {
-                    pagination.classList.add(`esgst-hidden`);
-                    context.classList.add(`esgst-hidden`);
-                    lastLink = esgst.paginationNavigation.lastElementChild;
-                    if (lastLink.classList.contains(`is-selected`) && lastLink.textContent.match(/Last/) && !esgst.lastPageLink) {
-                        currentPage = parseInt(lastLink.getAttribute(`data-page-number`));
-                    } else {
-                        currentPage = 999999999;
-                        lastPageMissing = true;
-                    }
-                    nextPage = currentPage;
-                    reversePages = true;
-                    activateEndlessScrolling();
-                } else {
-                    currentPage = esgst.currentPage;
-                    nextPage = currentPage - 1;
-                    reversePages = false;
-                    if (nextPage > 0) {
+            pagination = esgst.pagination;
+            context = pagination.previousElementSibling;
+            if (esgst.paginationNavigation) {
+                if (esgst.es_r && esgst.discussionPath) {
+                    if (esgst.currentPage == 1 && document.referrer.match(/\/discussions/)) {
+                        pagination.classList.add(`esgst-hidden`);
+                        context.classList.add(`esgst-hidden`);
+                        lastLink = esgst.paginationNavigation.lastElementChild;
+                        if (lastLink.classList.contains(`is-selected`) && lastLink.textContent.match(/Last/) && !esgst.lastPageLink) {
+                            currentPage = parseInt(lastLink.getAttribute(`data-page-number`));
+                        } else {
+                            currentPage = 999999999;
+                            lastPageMissing = true;
+                        }
+                        nextPage = currentPage;
+                        reversePages = true;
                         activateEndlessScrolling();
+                    } else {
+                        currentPage = esgst.currentPage;
+                        nextPage = currentPage - 1;
+                        reversePages = false;
+                        if (nextPage > 0) {
+                            activateEndlessScrolling();
+                        }
                     }
+                } else if (!esgst.paginationNavigation.lastElementChild.classList.contains(esgst.selectedClass)) {
+                    currentPage = esgst.currentPage;
+                    nextPage = currentPage + 1;
+                    activateEndlessScrolling();
                 }
-            } else if (!esgst.paginationNavigation.lastElementChild.classList.contains(esgst.selectedClass)) {
-                currentPage = esgst.currentPage;
-                nextPage = currentPage + 1;
-                activateEndlessScrolling();
             }
-        }
         }
 
         function activateEndlessScrolling() {
@@ -29349,6 +29416,10 @@ ${avatar.outerHTML}
                         name: `Comment Tracker`
                     },
                     {
+                        key: `discussions_df`,
+                        name: `Discussion Filters`
+                    },
+                    {
                         key: `discussions_dh`,
                         name: `Discussion Highlighter`
                     },
@@ -29635,6 +29706,7 @@ ${avatar.outerHTML}
                             if (!values) {
                                 values = {
                                     ct: [`count`, `readComments`],
+                                    df: [`hidden`],
                                     dh: [`highlighted`],
                                     gdttt: [`visited`]
                                 };

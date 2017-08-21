@@ -1,4 +1,15 @@
 /*
+ * August 21, 2017 - v6.Beta.30.4
+ */
+
+* Added an option to manage Discussion Filters data to the settings menu.
+* Added a description to Entered Games Highlighter in the settings menu.
+* Enter/Leave Giveaway Button no longer adds a button to giveaways for hidden games in popups.
+* Fixed a bug in Unsent Gifts Sender and Whitelist/Blacklist Checker that was not detecting groups correctly. As a result, the way the groups are stored has changed (you must sync your groups immediately after this version).
+* Fixed the first emoji in Comment Formatting Helper (¯\\_(ツ)_/¯ -> ¯\\\_(ツ)_/¯).
+* Added an option (7.4.8.1 - SG / 8.4.8.1 - ST) to Game Categories that does not show "Reduced CV" if a game has both "Reduced CV" and "No CV".
+
+/*
  * August 20, 2017 - v6.Beta.30.3
  */
 
