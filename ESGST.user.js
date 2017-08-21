@@ -2432,7 +2432,7 @@
                                     features: [
                                         {
                                             id: `gc_ncv_o`,
-                                            name: `[NEW] Only display "No CV" is game also has "Reduced CV".`,
+                                            name: `[NEW] Only display "No CV" if game also has "Reduced CV".`,
                                             sg: true
                                         }
                                     ],
