@@ -3,7 +3,7 @@
 // @namespace ESGST
 // @description Enhances SteamGifts and SteamTrades by adding some cool features to them.
 // @icon https://github.com/revilheart/ESGST/raw/master/Resources/esgstIcon.ico
-// @version 6.Beta.31.0
+// @version 6.Beta.31.1
 // @author revilheart
 // @downloadURL https://github.com/revilheart/ESGST/raw/master/ESGST.user.js
 // @updateURL https://github.com/revilheart/ESGST/raw/master/ESGST.meta.js
@@ -310,12 +310,14 @@
                         gas_optionGroups: `name_asc`,
                         ds_auto: false,
                         ds_option: `title_asc`,
+                        gc_g_colors: [],
                         gwc_colors: [],
                         gwr_colors: [],
                         ut_colors: {},
                         gt_colors: {},
                         ugs_checkRules: false,
                         ugs_checkWhitelist: false,
+                        ugs_checkBlacklist: false,
                         ugs_checkMember: false,
                         ugs_checkDifference: false,
                         ugs_difference: 0,
@@ -2895,7 +2897,7 @@
             }
             if (esgst.groupPath) {
                 if (esgst.gf) {
-                    mainPageHeadingBefore.appendChild(loadGf(esgst.mainPageHeading));
+                    mainPageHeadingBefore.appendChild(addGfContainer(esgst.mainPageHeading));
                 }
                 if (esgst.gas) {
                     mainPageHeadingBefore.appendChild(loadGas());
@@ -11079,6 +11081,7 @@ ${avatar.outerHTML}
             checkMemberSwitch = createToggleSwitch(ugs.popup.description, `ugs_checkMember`, false, `Do not send if the winner is no longer a member of at least one of the groups for group giveaways.`, false, false, `The winners will be checked in real time.`, esgst.ugs_checkMember);
             checkDifferenceSwitch = createToggleSwitch(ugs.popup.description, `ugs_checkDifference`, false, `Do not send if the winner has a gift difference lower than <input class="esgst-ugs-difference" step="0.1" type="number" value="${esgst.ugs_difference}"/>.`, false, false, `The winners will be checked in real time.`, esgst.ugs_checkDifference);
             createToggleSwitch(ugs.popup.description, `ugs_checkWhitelist`, false, `Do not send if the winner is not on your whitelist.`, false, false, `You must sync your whitelist through the settings menu. Whitelisted winners get a pass for broken rules, so if this option is enabled and the winner is whitelisted, the gift will be sent regardless of whether or not the first option is enabled.`, esgst.ugs_checkWhitelist);
+            createToggleSwitch(ugs.popup.description, `ugs_checkBlacklist`, false, `Do not send if the winner on your blacklist.`, false, false, `You must sync your blacklist through the settings menu. If the winner is blacklisted, but is a member of one of the groups, the gift will be sent anyway.`, esgst.ugs_checkBlacklist);
             if (!esgst.ugs_checkMember) {
                 checkDifferenceSwitch.container.classList.add(`esgst-hidden`);
             }
@@ -11361,6 +11364,8 @@ ${avatar.outerHTML}
                     checkUgsGroups(code, ugs, 0, numWinners, sendUgsGifts.bind(null, code, ugs, 0, numWinners, setTimeout.bind(null, checkUgsGifts, 0, codes, ugs, ++i, n, callback)));
                 } else if (esgst.ugs_checkWhitelist) {
                     checkUgsWhitelist(code, ugs, 0, numWinners, sendUgsGifts.bind(null, code, ugs, 0, numWinners, setTimeout.bind(null, checkUgsGifts, 0, codes, ugs, ++i, n, callback)));
+                } else if (esgst.ugs_checkBlacklist) {
+                    checkUgsBlacklist(code, ugs, 0, numWinners, sendUgsGifts.bind(null, code, ugs, 0, numWinners, setTimeout.bind(null, checkUgsGifts, 0, codes, ugs, ++i, n, callback)));
                 } else {
                     for (j = 0; j < numWinners; ++j) {
                         winner = winners[j];
@@ -11396,6 +11401,26 @@ ${avatar.outerHTML}
         }
     }
 
+    function checkUgsBlacklist(code, ugs, i, n, callback) {
+        if (!ugs.canceled) {
+            if (i < n) {
+                giveaway = ugs.giveaways[code];
+                winner = giveaway.winners[i];
+                if (ugs.rerolls.indexOf(winner.winnerId) < 0) {
+                    savedUser = getUser(esgst.users, winner);
+                    if (savedUser && savedUser.blacklisted) {
+                        winner.error = `${winner.username} is blacklisted.`;
+                    }
+                } else {
+                    winner.error = `${winner.username} is currently being rerolled.`;
+                }
+                setTimeout(checkUgsBlacklist, 0, code, ugs, ++i, n, callback);
+            } else {
+                callback();
+            }
+        }
+    }
+
     function checkUgsRules(code, ugs, i, n, callback) {
         var giveaway, namwc, winner;
         if (!ugs.canceled) {
@@ -11420,6 +11445,11 @@ ${avatar.outerHTML}
                                     savedUser = getUser(esgst.users, winner);
                                     if (savedUser && !savedUser.whitelisted) {
                                         winner.error = `${winner.username} is not whitelisted.`;
+                                    }
+                                } else if (esgst.ugs_checkBlacklist) {
+                                    savedUser = getUser(esgst.users, winner);
+                                    if (savedUser && savedUser.blacklisted) {
+                                        winner.error = `${winner.username} is blacklisted.`;
                                     }
                                 } else {
                                     if (namwc.results.notActivated && namwc.results.multiple) {
@@ -26246,7 +26276,7 @@ ${avatar.outerHTML}
     }
 
     function addGcCategory(cache, games, id, savedGame, type) {
-        var category, count, cv, elements, encodedName, giveaway, giveaways, html, i, icons, n, panel, name, ratingType, sent, singularType, user, value;
+        var category, colored, count, cv, elements, encodedName, genre, genreList, genres, giveaway, giveaways, html, i, icons, j, k, n, panel, name, ratingType, sent, singularType, user, value;
         singularType = type.slice(0, -1);
         name = cache ? cache.name : games[0].name;
         encodedName = encodeURIComponent(name.replace(/\.\.\.$/, ``));
@@ -26256,7 +26286,7 @@ ${avatar.outerHTML}
             if (esgst[category]) {
                 switch (category) {
                     case `gc_fcv`:
-                        if (savedGame && !savedGame.reducedCV && !savedGame.noCV) {
+                        if ((savedGame && !savedGame.reducedCV && !savedGame.noCV) || !savedGame) {
                             elements.push(`
                                 <a class="esgst-gc esgst-gc-fullCV" href="https://www.steamgifts.com/bundle-games/search?q=${encodedName}" title="Full CV">${esgst.gc_s ? (esgst.gc_s_i ? `<i class="fa fa-${esgst.gc_fcvIcon}"></i>` : `FCV`) : esgst.gc_fcvLabel}</a>
                             `);
@@ -26445,8 +26475,24 @@ ${avatar.outerHTML}
                     case `gc_g`:
                         if (cache && cache.genres) {
                             genres = esgst.gc_g_udt && cache.tags ? `${cache.genres}, ${cache.tags}` : cache.genres;
+                            genreList = sortArray(Array.from(new Set(genres.split(/,\s/))));
+                            genres = genreList.join(`, `);
+                            colored = [];
+                            for (j = genreList.length - 1; j >= 0; --j) {
+                                genre = genreList[j].toLowerCase();
+                                for (k = esgst.gc_g_colors.length - 1; k >= 0 && esgst.gc_g_colors[k].genre.toLowerCase() !== genre; --k);
+                                if (k >= 0) {
+                                    colored.push(`<span style="color: ${esgst.gc_g_colors[k].color}">${genreList.splice(j, 1)}</span>`);
+                                }
+                            }
+                            if (colored.length) {
+                                colored = sortArray(colored);
+                                for (j = colored.length - 1; j >= 0; --j) {
+                                    genreList.unshift(colored[j]);
+                                }
+                            }
                             elements.push(`
-                                <a class="esgst-gc esgst-gc-genres" href="http://store.steampowered.com/${singularType}/${id}" title="${genres}">${genres}</a>
+                                <a class="esgst-gc esgst-gc-genres" href="http://store.steampowered.com/${singularType}/${id}" title="${genres}">${genreList.join(`, `)}</a>
                             `);
                         }
                         break;
@@ -27128,6 +27174,9 @@ ${avatar.outerHTML}
                 bgColorContext.value = esgst.defaultValues[`${Feature.id}_bgColor`];
                 setValue(`${Feature.id}_bgColor`, bgColorContext.value);
             });
+            if (Feature.id === `gc_g`) {
+                addGcMenuPanel(SMFeatures);
+            }
             if (Feature.input) {
                 input = insertHtml(SMFeatures, `beforeEnd`, `
                     <div class="esgst-sm-colors">
@@ -27417,6 +27466,60 @@ ${avatar.outerHTML}
                 if (i < n) {
                     esgst[id].splice(i, 1);
                     setValue(id, esgst[id]);
+                    setting.remove();
+                }
+            }
+        });
+    }
+
+    function addGcMenuPanel(context) {
+        var button, colorSetting, i, n, panel;
+        panel = insertHtml(context, `beforeEnd`, `            
+            <div class="esgst-sm-colors">
+                <div class="form__saving-button esgst-sm-colors-default">
+                    <span>Add Custom Genre Color</span>
+                </div>
+                <i class="fa fa-question-circle" title="Allows you to color genres (colored genres will appear at the beginning of the list)."></i>
+            </div>
+        `);
+        button = panel.firstElementChild;
+        for (i = 0, n = esgst.gc_g_colors.length; i < n; ++i) {
+            addGcColorSetting(esgst.gc_g_colors[i], panel);
+        }
+        button.addEventListener(`click`, function () {
+            colorSetting = {
+                color: `#ffffff`,
+                genre: ``
+            };
+            esgst.gc_g_colors.push(colorSetting);
+            addGcColorSetting(colorSetting, panel);
+        });
+    }
+
+    function addGcColorSetting(colorSetting, panel) {
+        var color, genre, i, n, remove, setting;
+        setting = insertHtml(panel, `beforeEnd`, `
+            <div>
+                For genre <input type="text" value="${colorSetting.genre}"/>, color it as <input type="color" value="${colorSetting.color}"/>. <i class="esgst-clickable fa fa-times" title="Delete this setting."></i>
+            </div>
+        `);
+        genre = setting.firstElementChild;
+        color = genre.nextElementSibling;
+        remove = color.nextElementSibling;
+        genre.addEventListener(`change`, function () {
+            colorSetting.genre = genre.value;
+            setValue(`gc_g_colors`, esgst.gc_g_colors);
+        });
+        color.addEventListener(`change`, function () {
+            colorSetting.color = color.value;
+            setValue(`gc_g_colors`, esgst.gc_g_colors);
+        });
+        remove.addEventListener(`click`, function () {
+            if (confirm(`Are you sure you want to delete this setting?`)) {
+                for (i = 0, n = esgst.gc_g_colors.length; i < n && esgst.gc_g_colors[i] !== colorSetting; ++i);
+                if (i < n) {
+                    esgst.gc_g_colors.splice(i, 1);
+                    setValue(`gc_g_colors`, esgst.gc_g_colors);
                     setting.remove();
                 }
             }
@@ -27929,11 +28032,12 @@ ${avatar.outerHTML}
                 return null;
             }
         }
+        giveaway.pinned = giveaway.outerWrap.closest(`.pinned-giveaways__outer-wrap`);
         thinHeadings = giveaway.innerWrap.querySelectorAll(`.giveaway__heading__thin, .featured__heading__small`);
         n = thinHeadings.length;
         if (n > 0) {
             if (n > 1) {
-                if (esgst.gch) {
+                if (esgst.gch && !giveaway.pinned) {
                     thinHeadings[0].classList.add(`esgst-bold`, `esgst-red`);
                 }
                 giveaway.copies = parseInt(thinHeadings[0].textContent.replace(/,/g, ``).match(/\d+/)[0]);
@@ -28057,7 +28161,6 @@ ${avatar.outerHTML}
         giveaway.regionRestricted = giveaway.outerWrap.querySelector(`.giveaway__column--region-restricted, .featured__column--region-restricted`);
         giveaway.group = giveaway.outerWrap.querySelector(`.giveaway__column--group, .featured__column--group`);
         giveaway.whitelist = giveaway.outerWrap.querySelector(`.giveaway__column--whitelist, .featured__column--whitelist`);
-        giveaway.pinned = giveaway.outerWrap.closest(`.pinned-giveaways__outer-wrap`);
         chance = context.getElementsByClassName(`esgst-gwc`)[0];
         giveaway.chance = chance ? parseFloat(chance.getAttribute(`data-chance`)) : 0;
         var feedback = giveaway.outerWrap.getElementsByClassName(`table__gift-feedback-awaiting-reply`)[0];

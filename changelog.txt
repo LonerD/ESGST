@@ -1,4 +1,15 @@
 /*
+ * August 23, 2017 - v6.Beta.31.1
+ */
+
+* Fixed a bug in Giveaway Filters that was preventing the script from loading correctly in group pages.
+* Giveaway Copies Highlighter no longer highlights pinned giveaways (closes #370).
+* Added an option to Unsent Gifts Sender that does not send gifts to blacklisted users.
+* Fixed a bug in Game Categories that was not showing "Full CV" category when first loading a page.
+* You can now color genres in Game Categories from 7.4.23 - SG / 8.4.23 - ST (closes #369).
+* Duplicates between genres and user-defined tags in Game Categories are now removed.
+
+/*
  * August 23, 2017 - v6.Beta.31.0
  */
 
