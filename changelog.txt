@@ -1,4 +1,20 @@
 /*
+ * August 23, 2017 - v6.Beta.31.0
+ */
+
+* Renamed the class ".rhHidden" to ".esgst-hidden".
+* Removed useless classes.
+* Fixed a typo in the Level Progress Visualizer tooltip (closes #367).
+* Fixed a bug in Giveaway Filters that was not properly counting the points to enter all unfiltered giveaways.
+* Added "Minutes To End" filter to Giveaway Filters (closes #322).
+* Giveaway Filters now has an advanced exceptions tool that allows you to set individual exceptions for all filters (closes #322).
+* Renaming presets in Giveaway Filters is now much easier: you no longer need to apply the preset to rename it, and upon renaming a preset, it also renames in all pages that are using that preset (closes #313).
+
+Added the following features:
+
+* 2.11 Giveaway Copies Highlighter (closes #322)
+
+/*
  * August 21, 2017 - v6.Beta.30.4
  */
 
