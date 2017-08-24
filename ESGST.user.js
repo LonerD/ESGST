@@ -3,7 +3,7 @@
 // @namespace ESGST
 // @description Enhances SteamGifts and SteamTrades by adding some cool features to them.
 // @icon https://dl.dropboxusercontent.com/s/lr3t3bxrxfxylqe/esgstIcon.ico?raw=1
-// @version 6.Beta.31.5
+// @version 6.Beta.31.6
 // @author revilheart
 // @downloadURL https://github.com/revilheart/ESGST/raw/master/ESGST.user.js
 // @updateURL https://github.com/revilheart/ESGST/raw/master/ESGST.meta.js
@@ -5661,7 +5661,7 @@
             } else {
                 top = esgst.sidebar.offsetTop;
             }
-            if (window.scrollY > top && document.documentElement.offsetHeight > window.innerHeight * 2) {
+            if (window.scrollY > top && document.documentElement.offsetHeight > window.innerHeight) {
                 document.removeEventListener(`scroll`, fixSidebar);
                 esgst.sidebar.classList.add(`esgst-fs`);
                 if (ad) {
@@ -8073,7 +8073,7 @@
                 }
                 if (typeof gf[minKey] !== `undefined`) {
                     if (name === `MinutesToEnd`) {
-                        filtered = minutes >= gf[minKey] ? false : true;
+                        filtered = minutes >= gf[minKey] && !giveaway.ended ? false : true;
                     } else {
                         filtered = giveaway[key] >= gf[minKey] ? false : true;
                     }
@@ -8081,7 +8081,7 @@
                 if (!filtered) {
                     if (typeof gf[maxKey] !== `undefined`) {
                         if (name === `MinutesToEnd`) {
-                            filtered = minutes <= gf[maxKey] ? false : true;
+                            filtered = minutes <= gf[maxKey] && !giveaway.ended ? false : true;
                         } else {
                             filtered = giveaway[key] <= gf[maxKey] ? false : true;
                         }
@@ -8130,9 +8130,11 @@
                     maxKey = `max${name}`;
                     minKey = `min${name}`;
                     if (name === `MinutesToEnd`) {
-                        minutes = (giveaway.endTime - Date.now()) / 60000;
-                        if (minutes < gf[minKey] || minutes > gf[maxKey]) {
-                            filtered = true;
+                        if (!giveaway.ended) {
+                            minutes = (giveaway.endTime - Date.now()) / 60000;
+                            if (minutes < gf[minKey] || minutes > gf[maxKey]) {
+                                filtered = true;
+                            }
                         }
                     } else if (giveaway[key] < gf[minKey] || giveaway[key] > gf[maxKey]) {
                         filtered = true;
@@ -32387,6 +32389,16 @@ ${avatar.outerHTML}
     function loadChangelog(version) {
         var changelog, current, html, i, index, n, popup;
         changelog = [
+            {
+                date: `August 24, 2017`,
+                version: `6.Beta.31.6`,
+                changelog: `
+                    <ul>
+                        <li>The sidebar in Fixed Sidebar now gets fixed if the page is larger than the window (before it would only get fixed if the page was larger than 2 times the window).</li>
+                        <li>Fixed a bug in Giveaway Filters that was filtering all ended giveaways.</li>
+                    </ul>
+                `
+            },
             {
                 date: `August 24, 2017`,
                 version: `6.Beta.31.5`,
