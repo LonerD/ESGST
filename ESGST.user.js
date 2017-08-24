@@ -3,7 +3,7 @@
 // @namespace ESGST
 // @description Enhances SteamGifts and SteamTrades by adding some cool features to them.
 // @icon https://dl.dropboxusercontent.com/s/lr3t3bxrxfxylqe/esgstIcon.ico?raw=1
-// @version 6.Beta.31.8
+// @version 6.Beta.31.9
 // @author revilheart
 // @downloadURL https://github.com/revilheart/ESGST/raw/master/ESGST.user.js
 // @updateURL https://github.com/revilheart/ESGST/raw/master/ESGST.meta.js
@@ -7800,7 +7800,7 @@
 
     function openGfExceptionPopup(exceptionCount, gf, presetInput) {
         var deleted, details, i, max, min, name, popup, preset, presets, row, table, undoButton;
-        popup = createPopup(`fa-gear`, `Manage exceptions: <i class="fa fa-question-circle" title="Exceptions are giveaways that will always appear, no matter which filters are set. For example, if you have a filter that only shows giveaways with 0.5+ chance, but you have an exception for wishlist, all wishlist giveaways will appear, regardless of their chance.\n\nEach exception works as an AND conjunction, so if you want to make an exception for wishlist giveaways **or** giveaways with multiple copies, you have to create 2 separate exceptions, otherwise the exception will be for giveaways that are both wishlist **and** multiple copies."></i>`, true);
+        popup = createPopup(`fa-gear`, `Manage exceptions: <i class="fa fa-question-circle" title="Exceptions are giveaways that will always appear, no matter which basic filters are set (they still get filtered by type/category filters). For example, if you have a filter that only shows giveaways with 0.5+ chance, but you have an exception for wishlist, all wishlist giveaways will appear, regardless of their chance.\n\nEach exception works as an AND conjunction, so if you want to make an exception for wishlist giveaways **or** giveaways with multiple copies, you have to create 2 separate exceptions, otherwise the exception will be for giveaways that are both wishlist **and** multiple copies."></i>`, true);
         deleted = [];
         undoButton = insertHtml(popup.description, `beforeEnd`, `
             <div class="esgst-clickable esgst-hidden">
@@ -7986,7 +7986,7 @@
     }
 
     function filterGfGiveaways(gf, unfilter) {
-        var context, count, element, elements, filtered, genres, giveaway, giveaways, i, j, k, key, maxKey, minKey, n, n2, n3, name, points;
+        var context, count, element, elements, genres, giveaway, giveaways, i, j, k, key, maxKey, minKey, n, n2, n3, name, points;
         if (gf.type === `Popup`) {
             giveaways = esgst.popupGiveaways;
         } else {
@@ -8006,15 +8006,8 @@
                 }
             } else {
                 if (document.body.contains(giveaway.outerWrap)) {
-                    filtered = true;
-                    if (gf.exceptions) {
-                        for (j = gf.exceptions.length - 1; j >= 0 && filtered; --j) {
-                            filtered = filterGfException(gf.exceptions[j], giveaway);
-                        }
-                    }
-                    filtered = filtered ? filterGfGiveaway(gf, giveaway) : false;
                     count = parseInt(gf.filteredCount.textContent);
-                    if (filtered) {
+                    if (filterGfGiveaway(gf, giveaway)) {
                         if (!giveaway.outerWrap.classList.contains(`esgst-hidden`)) {
                             gf.filteredCount.textContent = count + 1;
                             giveaway.outerWrap.classList.add(`esgst-hidden`);
@@ -8149,6 +8142,11 @@
                         filtered = true;
                     }
                 }
+            }
+        }
+        if (gf.exceptions) {
+            for (i = gf.exceptions.length - 1; i >= 0 && filtered; --i) {
+                filtered = filterGfException(gf.exceptions[i], giveaway);
             }
         }
         for (i = 0, n = typeFilters.length; !filtered && i < n; ++i) {
@@ -32398,6 +32396,15 @@ ${avatar.outerHTML}
     function loadChangelog(version) {
         var changelog, current, html, i, index, n, popup;
         changelog = [
+            {
+                date: `August 24, 2017`,
+                version: `6.Beta.31.9`,
+                changelog: `
+                    <ul>
+                        <li>The exceptions in Giveaway Filters should now correctly apply only to the basic filters.</li>
+                    </ul>
+                `
+            },
             {
                 date: `August 24, 2017`,
                 version: `6.Beta.31.8`,
