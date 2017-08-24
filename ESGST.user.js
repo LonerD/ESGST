@@ -3,7 +3,7 @@
 // @namespace ESGST
 // @description Enhances SteamGifts and SteamTrades by adding some cool features to them.
 // @icon https://dl.dropboxusercontent.com/s/lr3t3bxrxfxylqe/esgstIcon.ico?raw=1
-// @version 6.Beta.31.4
+// @version 6.Beta.31.5
 // @author revilheart
 // @downloadURL https://github.com/revilheart/ESGST/raw/master/ESGST.user.js
 // @updateURL https://github.com/revilheart/ESGST/raw/master/ESGST.meta.js
@@ -7791,7 +7791,7 @@
 
     function openGfExceptionPopup(exceptionCount, gf, presetInput) {
         var deleted, details, i, max, min, name, popup, preset, presets, row, table, undoButton;
-        popup = createPopup(`fa-gear`, `Manage exceptions <i class="fa fa-question-circle" title="Exceptions are giveaways that will always appear, no matter what filters are set. For example, if you have a filter that only shows giveaways with 0.5+ chance, but you have an exception for wishlist, all wishlist giveaways will appear, regardless of their chance."></i>:`, true);
+        popup = createPopup(`fa-gear`, `Manage exceptions: <i class="fa fa-question-circle" title="Exceptions are giveaways that will always appear, no matter which filters are set. For example, if you have a filter that only shows giveaways with 0.5+ chance, but you have an exception for wishlist, all wishlist giveaways will appear, regardless of their chance.\n\nEach exception works as an AND conjunction, so if you want to make an exception for wishlist giveaways **or** giveaways with multiple copies, you have to create 2 separate exceptions, otherwise the exception will be for giveaways that are both wishlist **and** multiple copies."></i>`, true);
         deleted = [];
         undoButton = insertHtml(popup.description, `beforeEnd`, `
             <div class="esgst-clickable esgst-hidden">
@@ -32387,6 +32387,15 @@ ${avatar.outerHTML}
     function loadChangelog(version) {
         var changelog, current, html, i, index, n, popup;
         changelog = [
+            {
+                date: `August 24, 2017`,
+                version: `6.Beta.31.5`,
+                changelog: `
+                    <ul>
+                        <li>Improved the tooltip when creating exceptions in Giveaway Filters to clarify that each exception works as an AND conjunction.</li>
+                    </ul>
+                `
+            },
             {
                 date: `August 24, 2017`,
                 version: `6.Beta.31.4`,
