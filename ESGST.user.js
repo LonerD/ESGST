@@ -3,7 +3,7 @@
 // @namespace ESGST
 // @description Enhances SteamGifts and SteamTrades by adding some cool features to them.
 // @icon https://github.com/revilheart/ESGST/raw/master/Resources/esgstIcon.ico
-// @version 6.Beta.31.1
+// @version 6.Beta.31.2
 // @author revilheart
 // @downloadURL https://github.com/revilheart/ESGST/raw/master/ESGST.user.js
 // @updateURL https://github.com/revilheart/ESGST/raw/master/ESGST.meta.js
@@ -28,7 +28,6 @@
 // @grant GM_info
 // @require https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js
 // @require https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js
-// @require https://cdn.steamgifts.com/js/highcharts.js
 // @require https://github.com/dinbror/bpopup/raw/master/jquery.bpopup.min.js
 // @noframes
 // ==/UserScript==
@@ -240,6 +239,7 @@
                         ugs_checkMember: `UGS_G`
                     };
                     esgst.defaultValues = {
+                        exportBackup: true,
                         gm_enable: false,
                         gm_useRegExp: false,
                         sks_exportKeys: false,
@@ -5577,18 +5577,15 @@
                 Top = Element.offsetTop;
                 window.scrollTo(0, Top);
                 window.scrollBy(0, -esgst.commentsTop);
-                Permalink = document.getElementsByClassName(esgst.sg ? "comment__permalink" : "author_permalink")[0];
+                Permalink = document.getElementsByClassName(esgst.sg ? "is_permalink" : "author_permalink")[0];
                 if (Permalink) {
                     Permalink.remove();
                 }
                 element = Element.getElementsByClassName(esgst.sg ? "comment__username" : "author_avatar")[0];
                 if (element) {
-                    element.insertAdjacentHTML(
-                        esgst.sg ? "beforeBegin" : "afterEnd",
-                        "<div class=\"comment__permalink\">" +
-                        "    <i class=\"fa fa-share author_permalink\"></i>" +
-                        "</div>"
-                    );
+                    element.insertAdjacentHTML(esgst.sg ? `beforeBegin` : `afterEnd`, `
+                        <i class="fa fa-share is_permalink author_permalink"></i>
+                    `);
                 }
             }
         }
@@ -6515,7 +6512,7 @@
     /* [HBS] Hidden Blacklist Stats */
 
     function loadHbs() {
-        var Chart, Match, Points, N, Data, I, CountDate, Year, Month, Day, Count, Context;
+        var Chart, Match, Points, N, Data, I, CountDate, Year, Month, Day, Count, Context, script;
         if (window.location.pathname.match(/^\/stats\/personal\/community/)) {
             Chart = document.getElementsByClassName("chart")[4];
             Match = Chart.previousElementSibling.textContent.match(/"Whitelists", data: \[(.+)\]},/)[1];
@@ -6539,20 +6536,21 @@
             Context = Context.nextElementSibling;
             Context.textContent = Context.textContent.replace(/and blacklists\s/, "");
             Context = Context.nextElementSibling;
-            $(function () {
-                chart_options.graph = {
-                    colors: ["#6187d4", "#ec656c"],
-                    tooltip: {
-                        headerFormat: "<p class=\"chart__tooltip-header\">{point.key}</p>",
-                        pointFormat: "<p class=\"chart__tooltip-point\" style=\"color: {point.color};\">{point.y:,.0f} {series.name}</p>"
-                    },
-                    series: [{
-                        name: "Whitelists",
-                        data: Data
-                    }]
-                };
-                $(Context).highcharts(Highcharts.merge(chart_options.default, chart_options.areaspline, chart_options.datetime, chart_options.graph));
-            });
+            script = document.createElement(`script`);
+            script.innerHTML = `
+                $(function () {
+				    chart_options.graph = {
+					    colors: ['#6187d4', '#ec656c'],
+						tooltip: {
+                            headerFormat: '<p class="chart__tooltip-header">{point.key}</p>',
+                            pointFormat: '<p class="chart__tooltip-point" style="color: {point.color};">{point.y:,.0f} {series.name}</p>'
+                        },
+                        series: [ { name: "Whitelists", data: ${JSON.stringify(Data)} } ]
+                    };
+                    $(".chart__personal-community-whitelists-and-blacklists").highcharts(Highcharts.merge(chart_options.default, chart_options.areaspline, chart_options.datetime, chart_options.graph));
+                });
+            `;
+            document.body.appendChild(script);
         }
     }
 
@@ -7322,9 +7320,7 @@
                                 <span></span> exceptions <i class="esgst-clickable fa fa-gear" title="Manage exceptions"></i>
                             </div>
                             <input class="form__input-small" type="text"/>
-                            <span class="esgst-description esgst-hidden">
-                                <span class="esgst-bold">Saved!</span>
-                            </span>
+                            <div class="esgst-description esgst-bold"></div>
                             <div class="form__row__error esgst-hidden">
                                 <i class="fa fa-exclamation-circle"></i> Please enter a name for the preset.
                             </div>
@@ -9798,7 +9794,7 @@ ${avatar.outerHTML}
                             <span>Use precise end time.</span>
                         </div>
                         <input class="form__input-small" type="text"/>
-                        <span class="esgst-description"></span>
+                        <span class="esgst-description esgst-hidden">Saved!</span>
                         <div class="esgst-hidden form__row__error">
                             <i class="fa fa-exclamation-circle"></i> Please enter a name for the template.
                         </div>
@@ -12856,7 +12852,6 @@ ${avatar.outerHTML}
                 tge.visited.push(url.match(/\/giveaway\/(.+?)\//)[1]);
             }
             if (context !== document) {
-                tge.count += 1;
                 tge.total += 1;
                 tge.progress.lastElementChild.textContent = tge.total;
                 giveaway = buildGiveaway(context, url);
@@ -12902,6 +12897,9 @@ ${avatar.outerHTML}
                 }
                 n = giveaways.length;
                 if (n > 0) {
+                    if (context !== document) {
+                        tge.count += 1;
+                    }
                     continueTgeGiveaways(giveaways, 0, n, tge, callback);
                 } else {
                     callback();
@@ -21760,7 +21758,7 @@ ${avatar.outerHTML}
     /* [CERB] Collapse/Expand Replies Button */
 
     function loadCerb() {
-        var button, collapse, comments, expand;
+        var button, collapse, comments, expand, id;
         if (esgst.cerb && esgst.commentsPath) {
             comments = document.getElementsByClassName(`comments`)[0];
             if (comments && comments.children.length) {
@@ -21780,12 +21778,13 @@ ${avatar.outerHTML}
                 collapse.addEventListener(`click`, collapseAllCerbReplies.bind(null, collapse, expand));
                 expand.addEventListener(`click`, expandAllCerbReplies.bind(null, collapse, expand));
                 esgst.endlessFeatures.push(getCerbReplies);
-                getCerbReplies(document, collapse, expand);
+                id = location.hash.replace(/#/, ``);
+                getCerbReplies(document, collapse, expand, id ? document.getElementById(id) : null);
             }
         }
     }
 
-    function getCerbReplies(context, collapse, expand) {
+    function getCerbReplies(context, collapse, expand, permalink) {
         var elements, i, n, reply, replies;
         elements = context.querySelectorAll(`.comments > .comment, .comments > .comment_outer`);
         for (i = 0, n = elements.length; i < n; ++i) {
@@ -21801,7 +21800,7 @@ ${avatar.outerHTML}
                             <i class="fa fa-plus-square"></i>
                         </span>
                     </div>
-                `), reply, replies.children);
+                `), reply.contains(permalink), reply, replies.children);
             }
         }
         if (context === document && esgst.cerb_a) {
@@ -21809,17 +21808,18 @@ ${avatar.outerHTML}
         }
     }
 
-    function setCerbButton(button, reply, replies) {
+    function setCerbButton(button, permalink,  reply, replies) {
         var collapse, expand;
         collapse = button.firstElementChild;
         expand = collapse.nextElementSibling;
         esgst.cerbButtons.push({
             collapse: collapseCerbReplies.bind(null, collapse, expand, replies),
-            expand: expandCerbReplies.bind(null, collapse, expand, replies)
+            expand: expandCerbReplies.bind(null, collapse, expand, replies),
+            permalink: permalink
         });
         collapse.addEventListener(`click`, collapseCerbReplies.bind(null, collapse, expand, replies));
         expand.addEventListener(`click`, expandCerbReplies.bind(null, collapse, expand, replies));
-        if (esgst.cerb_a) {
+        if (esgst.cerb_a && !permalink) {
             collapse.classList.toggle(`esgst-hidden`);
             expand.classList.toggle(`esgst-hidden`);
         }
@@ -21846,7 +21846,9 @@ ${avatar.outerHTML}
     function collapseAllCerbReplies(collapse, expand) {
         var i, n;
         for (i = 0, n = esgst.cerbButtons.length; i < n; ++i) {
-            esgst.cerbButtons[i].collapse();
+            if (!esgst.cerbButtons[i].permalink) {
+                esgst.cerbButtons[i].collapse();
+            }
         }
         collapse.classList.add(`esgst-hidden`);
         expand.classList.remove(`esgst-hidden`);
@@ -23774,7 +23776,7 @@ ${avatar.outerHTML}
         var savedGiveaways = JSON.parse(localStorage.esgst_giveaways);
         for (Key in Giveaways) {
             for (I = 0, N = Giveaways[Key].length; I < N; ++I) {
-                Giveaway = savedGiveaways[Giveaways[Key][I]];
+                Giveaway = typeof Giveaways[Key][I] === `string` ? savedGiveaways[Giveaways[Key][I]] : Giveaways[Key][I];
                 if (Giveaway && Giveaway.entries > 0) {
                     Private = Giveaway.inviteOnly;
                     Group = Giveaway.group;
@@ -23877,8 +23879,12 @@ ${avatar.outerHTML}
                                 if (!giveaways[UGD.Key][Giveaway.gameType][Giveaway.gameSteamId]) {
                                     giveaways[UGD.Key][Giveaway.gameType][Giveaway.gameSteamId] = [];
                                 }
-                                giveaways[UGD.Key][Giveaway.gameType][Giveaway.gameSteamId].push(Giveaway.code);
-                                UGD.giveaways[Giveaway.code] = Giveaway;
+                                if (Giveaway.code) {
+                                    giveaways[UGD.Key][Giveaway.gameType][Giveaway.gameSteamId].push(Giveaway.code);
+                                    UGD.giveaways[Giveaway.code] = Giveaway;
+                                } else {
+                                    giveaways[UGD.Key][Giveaway.gameType][Giveaway.gameSteamId].push(Giveaway);
+                                }
                             }
                         } else {
                             Found = true;
@@ -26164,7 +26170,7 @@ ${avatar.outerHTML}
                         elements = responseHtml.getElementsByClassName(`user_reviews_summary_row`);
                         n = elements.length;
                         if (n > 0) {
-                            match = elements[n - 1].getAttribute(`data-store-tooltip`).match(/(\d+?)%\sof\sthe\s(.+?)\s/);
+                            match = elements[n - 1].getAttribute(`data-store-tooltip`).replace(/,/g, ``).match(/(\d+)%.+?(\d+)/);
                             if (match) {
                                 categories.rating = `${match[1]}% (${match[2]})`;
                                 rating = parseInt(match[1]);
@@ -26980,13 +26986,12 @@ ${avatar.outerHTML}
         if (siwtchSg || siwtchSt) {
         val = val1 || val2;
         Menu.insertAdjacentHTML(`beforeEnd`, `
-            <span>${esgst.settings.esgst_st ? `- ` : ``}${Feature.name}</span>
-            ${Feature.description ? `<i class="fa fa-question-circle esgst-clickable"></i>` : ``}
+            <span>${esgst.settings.esgst_st ? `- ` : ``}${Feature.name}</span> ${Feature.description ? `<i class="fa fa-question-circle esgst-clickable"></i>` : ``} ${Feature.features ? `<i class="fa fa-plus" title="This option has sub-options"></i>` : ``}
             <div class="esgst-form-row-indent SMFeatures esgst-hidden"></div>
         `);
         SMFeatures = Menu.lastElementChild;
         if (Feature.description) {
-        var tool = SMFeatures.previousElementSibling;
+        var tool = SMFeatures.previousElementSibling.previousElementSibling;
         var popout, timeout;
             tool.addEventListener(`mouseenter`, function () {
                 if (popout) {
@@ -29474,7 +29479,7 @@ ${avatar.outerHTML}
                 break;
             case `delete`:
                 icon = `fa-trash`;
-                onClick = manageData,
+                onClick = confirmDataDeletion,
                 title = `Delete`;
                 break;
         }
@@ -29696,6 +29701,9 @@ ${avatar.outerHTML}
         if (type === `import`) {
             dm.input = insertHtml(container, `beforeEnd`, `<input type="file"/>`);
             createToggleSwitch(container, `importAndMerge`, false, `Merge`, false, false, `Merges the current data with the imported data instead of replacing`, esgst.settings.importAndMerge);
+            createToggleSwitch(container, `exportBackup`, false, `Export Backup`, false, false, `Exports the current data as a backup`, esgst.settings.exportBackup);
+        } else if (type === `delete`) {
+            createToggleSwitch(container, `exportBackup`, false, `Export Backup`, false, false, `Exports the current data as a backup`, esgst.settings.exportBackup);
         }
         dm.message = insertHtml(container, `beforeEnd`, `<div class="esgst-description"></div>`);
         dm.warning = insertHtml(container, `beforeEnd`, `<div class="esgst-description esgst-warning"></div>`);
@@ -29759,11 +29767,15 @@ ${avatar.outerHTML}
     function readImportFile(dm, callback) {
         try {
             dm.data = JSON.parse(dm.reader.result);
-            createConfirmation(`Are you sure you want to import the selected data? A copy of your current data will be downloaded as a precaution.`, manageData.bind(null, dm, callback), callback);
+            createConfirmation(`Are you sure you want to import the selected data?`, manageData.bind(null, dm, callback), callback);
         } catch (error) {
             createFadeMessage(dm.warning, `Cannot parse file!`);
             callback();
         }
+    }
+
+    function confirmDataDeletion(dm, callback) {
+        createConfirmation(`Are you sure you want to delete the selected data?`, manageData.bind(null, dm, callback), callback);
     }
 
     function manageData(dm, callback) {
@@ -30354,15 +30366,17 @@ ${avatar.outerHTML}
                 }
             }
         }
-        data = new Blob([JSON.stringify(data)]);
-        url = URL.createObjectURL(data);
-        file = document.createElement(`a`);
-        file.download = `esgst_data_${new Date().toISOString()}.json`;
-        file.href = url;
-        document.body.appendChild(file);
-        file.click();
-        file.remove();
-        URL.revokeObjectURL(url);
+        if (dm.type === `export` || esgst.settings.exportBackup) {
+            data = new Blob([JSON.stringify(data)]);
+            url = URL.createObjectURL(data);
+            file = document.createElement(`a`);
+            file.download = `esgst_data_${new Date().toISOString()}.json`;
+            file.href = url;
+            document.body.appendChild(file);
+            file.click();
+            file.remove();
+            URL.revokeObjectURL(url);
+        }
         createFadeMessage(dm.message, `Data ${dm.type}ed with success!`);
         callback();
     }
