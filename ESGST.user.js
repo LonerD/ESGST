@@ -3,7 +3,7 @@
 // @namespace ESGST
 // @description Enhances SteamGifts and SteamTrades by adding some cool features to them.
 // @icon https://dl.dropboxusercontent.com/s/lr3t3bxrxfxylqe/esgstIcon.ico?raw=1
-// @version 6.Beta.31.9
+// @version 6.Beta.31.10
 // @author revilheart
 // @downloadURL https://github.com/revilheart/ESGST/raw/master/ESGST.user.js
 // @updateURL https://github.com/revilheart/ESGST/raw/master/ESGST.meta.js
@@ -145,6 +145,8 @@
                     esgst.discussionPath = window.location.pathname.match(/^\/discussion\//);
                     esgst.tradePath = window.location.pathname.match(/^\/trade\//);
                     esgst.discussionsPath = window.location.pathname.match(/^\/discussions(?!\/new)/);
+                    esgst.newDiscussionPath = location.pathname.match(/^\/discussions\/new/);
+                    esgst.editDiscussionPath = location.pathname.match(/^\/discussions\/edit/);
                     esgst.newGiveawayPath = window.location.pathname.match(/^\/giveaways\/new/);
                     esgst.newTicketPath = window.location.pathname.match(/^\/support\/tickets\/new/);
                     esgst.wishlistPath = window.location.pathname.match(/^\/giveaways\/wishlist/);
@@ -363,6 +365,7 @@
                         gts_preciseStart: false,
                         gts_preciseEnd: false,
                         mgc_createTrain: true,
+                        mgc_bumpLast: true,
                         mgc_groupKeys: false,
                         mgc_reversePosition: false,
                         mgc_removeLinks: true,
@@ -1069,6 +1072,166 @@
                                     `,
                                     id: `gf_h`,
                                     name: `Enable the option to hide giveaways.`,
+                                    sg: true
+                                },
+                                {
+                                    id: `gf_level`,
+                                    name: `[NEW] Level`,
+                                    sg: true
+                                },
+                                {
+                                    id: `gf_entries`,
+                                    name: `[NEW] Entries`,
+                                    sg: true
+                                },
+                                {
+                                    id: `gf_copies`,
+                                    name: `[NEW] Copies`,
+                                    sg: true
+                                },
+                                {
+                                    id: `gf_points`,
+                                    name: `[NEW] Points`,
+                                    sg: true
+                                },
+                                {
+                                    id: `gf_minutesToEnd`,
+                                    name: `[NEW] Minutes To End`,
+                                    sg: true
+                                },
+                                {
+                                    id: `gf_chance`,
+                                    name: `[NEW] Chance`,
+                                    sg: true
+                                },
+                                {
+                                    id: `gf_rating`,
+                                    name: `[NEW] Rating`,
+                                    sg: true
+                                },
+                                {
+                                    id: `gf_pinned`,
+                                    name: `[NEW] Pinned`,
+                                    sg: true
+                                },
+                                {
+                                    id: `gf_group`,
+                                    name: `[NEW] Group`,
+                                    sg: true
+                                },
+                                {
+                                    id: `gf_whitelist`,
+                                    name: `[NEW] Whitelist`,
+                                    sg: true
+                                },
+                                {
+                                    id: `gf_regionRestricted`,
+                                    name: `[NEW] Region Restricted`,
+                                    sg: true
+                                },
+                                {
+                                    id: `gf_created`,
+                                    name: `[NEW] Created`,
+                                    sg: true
+                                },
+                                {
+                                    id: `gf_entered`,
+                                    name: `[NEW] Entered`,
+                                    sg: true
+                                },
+                                {
+                                    id: `gf_started`,
+                                    name: `[NEW] Started`,
+                                    sg: true
+                                },
+                                {
+                                    id: `gf_ended`,
+                                    name: `[NEW] Ended`,
+                                    sg: true
+                                },
+                                {
+                                    id: `gf_owned`,
+                                    name: `[NEW] Owned`,
+                                    sg: true
+                                },
+                                {
+                                    id: `gf_wishlisted`,
+                                    name: `[NEW] Wishlisted`,
+                                    sg: true
+                                },
+                                {
+                                    id: `gf_hidden`,
+                                    name: `[NEW] Hidden`,
+                                    sg: true
+                                },
+                                {
+                                    id: `gf_ignored`,
+                                    name: `[NEW] Ignored`,
+                                    sg: true
+                                },
+                                {
+                                    id: `gf_fullCV`,
+                                    name: `[NEW] Full CV`,
+                                    sg: true
+                                },
+                                {
+                                    id: `gf_reducedCV`,
+                                    name: `[NEW] Reduced CV`,
+                                    sg: true
+                                },
+                                {
+                                    id: `gf_noCV`,
+                                    name: `[NEW] No CV`,
+                                    sg: true
+                                },
+                                {
+                                    id: `gf_removed`,
+                                    name: `[NEW] Removed`,
+                                    sg: true
+                                },
+                                {
+                                    id: `gf_tradingCards`,
+                                    name: `[NEW] Trading Cards`,
+                                    sg: true
+                                },
+                                {
+                                    id: `gf_achievements`,
+                                    name: `[NEW] Achievements`,
+                                    sg: true
+                                },
+                                {
+                                    id: `gf_multiplayer`,
+                                    name: `[NEW] Multiplayer`,
+                                    sg: true
+                                },
+                                {
+                                    id: `gf_steamCloud`,
+                                    name: `[NEW] Steam Cloud`,
+                                    sg: true
+                                },
+                                {
+                                    id: `gf_linux`,
+                                    name: `[NEW] Linux`,
+                                    sg: true
+                                },
+                                {
+                                    id: `gf_mac`,
+                                    name: `[NEW] Mac`,
+                                    sg: true
+                                },
+                                {
+                                    id: `gf_dlc`,
+                                    name: `[NEW] DLC`,
+                                    sg: true
+                                },
+                                {
+                                    id: `gf_package`,
+                                    name: `[NEW] Package`,
+                                    sg: true
+                                },
+                                {
+                                    id: `gf_genres`,
+                                    name: `[NEW] Genres`,
                                     sg: true
                                 }
                             ],
@@ -3105,6 +3268,17 @@
                     mainPageHeadingBefore.appendChild(loadDs());
                 }
             }
+            if (esgst.newDiscussionPath) {
+                if (esgst.mgc && (localStorage.esgst_mgcAttach_step1 || localStorage.esgst_mgcAttach_step2)) {
+                    localStorage.removeItem(`esgst_mgcAttach_step1`);
+                    localStorage.removeItem(`esgst_mgcAttach_step2`);
+                    addMgcCreateAndAttachButton();
+                }
+            } else if (esgst.editDiscussionPath) {
+                if (esgst.mgc && localStorage.esgst_mgcAttach_step4) {
+                    editMgcDiscussion();
+                }
+            }
             if (esgst.commentsPath) {
                 if (esgst.giveawayCommentsPath) {
                     if (!document.getElementsByClassName(`table--summary`)[0]) {
@@ -3123,6 +3297,26 @@
                         }
                     }
                 } else if (esgst.discussionPath) {
+                    if (esgst.mgc) {
+                        if (localStorage.esgst_mgcAttach_step2) {
+                            localStorage.removeItem(`esgst_mgcAttach_step2`);                            
+                            localStorage.esgst_mgcAttach_step3 = location.pathname.match(/\/discussion\/(.+?)\//)[1];
+                            request(`xsrf_token=${esgst.xsrfToken}&do=close_discussion`, false, location.href, function () {
+                                window.close();
+                            });
+                        } else if (localStorage.esgst_mgcAttach_step4) {
+                            document.querySelector(`form[action="/discussions/edit"]`).submit();
+                        } else if (localStorage.esgst_mgcAttach_step5) {
+                            localStorage.removeItem(`esgst_mgcAttach_step5`);
+                            request(`xsrf_token=${esgst.xsrfToken}&do=reopen_discussion`, false, location.href, function () {
+                                localStorage.esgst_mgcAttach_step6 = true;
+                                location.reload();
+                            });
+                        } else if (localStorage.esgst_mgcAttach_step6) {
+                            localStorage.removeItem(`esgst_mgcAttach_step6`);
+                            createPopup(`fa-check`, `Train created with success! You can close this now.`, true).open();
+                        }
+                    }
                     if (esgst.tge && document.querySelector(`[href*="/giveaway/"]`)) {
                         button = document.createElement(`div`);
                         button.className = `esgst-heading-button`;
@@ -3430,7 +3624,7 @@
             if (typeof esgst.settings[localKey] === `undefined` && (key[0] === key[0].toLowerCase())) {
                 defaultValue = esgst.defaultValues[key];
                 if (typeof defaultValue === `undefined`) {
-                    defaultValue = esgst.enableByDefault || false;
+                    defaultValue = key.match(/^gf_(?!h$)/) ? true : (esgst.enableByDefault || false);
                 }
                 esgst.settings[localKey] = GM_getValue(esgst.oldValues[key] || key, defaultValue);
             }
@@ -7389,45 +7583,54 @@
             ].forEach(filter => {
                 name = filter.name;
                 if (name !== `Rating` || esgst.gc) {
-                    infinite = filter.infinite;
                     maxKey = `max${name}`;
                     maxValue = filter.maxValue;
-                    maxSavedValue = preset[maxKey] || maxValue;
                     minKey = `min${name}`;
                     minValue = filter.minValue;
-                    minSavedValue = preset[minKey] || minValue;
-                    step = filter.step || 1;
-                    if (!infinite && maxSavedValue > maxValue) {
-                        maxSavedValue = maxValue;
+                    key = name === `MinutesToEnd` ? `minutesToEnd` : name.toLowerCase();
+                    if (esgst[`gf_${key}`]) {
+                        infinite = filter.infinite;
+                        maxSavedValue = preset[maxKey] || maxValue;
+                        minSavedValue = preset[minKey] || minValue;
+                        step = filter.step || 1;
+                        if (!infinite && maxSavedValue > maxValue) {
+                            maxSavedValue = maxValue;
+                        }
+                        gf[maxKey] = maxSavedValue;
+                        gf[minKey] = minSavedValue;
+                        basicFilter = insertHtml(basicFilters, `beforeEnd`, `
+                            <div class="esgst-gf-basic-filter">
+                                <div>${name === `MinutesToEnd` ? `Minutes To End` : name} <span class="esgst-float-right"><input type="text" value="${minSavedValue}"> - <input type="text" value="${maxSavedValue}"></span></div>
+                                <div></div>
+                            </div>
+                        `);
+                        display = basicFilter.firstElementChild;
+                        slider = display.nextElementSibling;
+                        gf[`${minKey}Input`] = display.firstElementChild.firstElementChild;
+                        gf[`${maxKey}Input`] = gf[`${minKey}Input`].nextElementSibling;
+                        gf[`${maxKey}Input`].addEventListener(`change`, changeGfMaxValue.bind(null, infinite, slider, step));
+                        gf[`${minKey}Input`].addEventListener(`change`, changeGfMinValue.bind(null, slider, step));
+                        if (infinite) {
+                            maxValue = maxSavedValue;
+                        }
+                        $(slider).slider({
+                            change: changeGfSlider.bind(null, gf, maxKey, minKey),
+                            min: minValue,
+                            max: maxValue,
+                            range: true,
+                            slide: slideGfSlider.bind(null, gf, maxKey, minKey),
+                            step: step,
+                            values: [minSavedValue, maxSavedValue]
+                        });
+                    } else {
+                        gf[maxKey] = maxValue;
+                        gf[minKey] = minValue;
                     }
-                    gf[maxKey] = maxSavedValue;
-                    gf[minKey] = minSavedValue;
-                    basicFilter = insertHtml(basicFilters, `beforeEnd`, `
-                        <div class="esgst-gf-basic-filter">
-                            <div>${name === `MinutesToEnd` ? `Minutes To End` : name} <span class="esgst-float-right"><input type="text" value="${minSavedValue}"> - <input type="text" value="${maxSavedValue}"></span></div>
-                            <div></div>
-                        </div>
-                    `);
-                    display = basicFilter.firstElementChild;
-                    slider = display.nextElementSibling;
-                    gf[`${minKey}Input`] = display.firstElementChild.firstElementChild;
-                    gf[`${maxKey}Input`] = gf[`${minKey}Input`].nextElementSibling;
-                    gf[`${maxKey}Input`].addEventListener(`change`, changeGfMaxValue.bind(null, infinite, slider, step));
-                    gf[`${minKey}Input`].addEventListener(`change`, changeGfMinValue.bind(null, slider, step));
-                    if (infinite) {
-                        maxValue = maxSavedValue;
-                    }
-                    $(slider).slider({
-                        change: changeGfSlider.bind(null, gf, maxKey, minKey),
-                        min: minValue,
-                        max: maxValue,
-                        range: true,
-                        slide: slideGfSlider.bind(null, gf, maxKey, minKey),
-                        step: step,
-                        values: [minSavedValue, maxSavedValue]
-                    });
                 }
             });
+        }
+        if (basicFilters.children.length === 1) {
+            basicFilters.classList.add(`esgst-hidden`);
         }
         [ { key: `pinned`, name: `Pinned` },
           { key: `group`, name: `Group` },
@@ -7447,18 +7650,25 @@
         ].forEach(filter => {
             key = filter.key;
             if (key !== `regionRestricted` || !gf.advancedSearch) {
-                name = filter.name;
-                typeFilter = insertHtml(typeFilters, `beforeEnd`, `
-                    <div class="esgst-gf-type-filter">
-                        <span>${name}</span>
-                    </div>
-                `);
-                value = preset[key] || `enabled`;
-                gf[key] = value;
-                gf[`${key}Checkbox`] = createCheckbox_v6(typeFilter, value, true);
-                gf[`${key}Checkbox`].checkbox.addEventListener(`click`, changeGfValue.bind(null, gf[`${key}Checkbox`], gf, key));
+                if (esgst[`gf_${key}`]) {
+                    name = filter.name;
+                    typeFilter = insertHtml(typeFilters, `beforeEnd`, `
+                        <div class="esgst-gf-type-filter">
+                            <span>${name}</span>
+                        </div>
+                    `);
+                    value = preset[key] || `enabled`;
+                    gf[key] = value;
+                    gf[`${key}Checkbox`] = createCheckbox_v6(typeFilter, value, true);
+                    gf[`${key}Checkbox`].checkbox.addEventListener(`click`, changeGfValue.bind(null, gf[`${key}Checkbox`], gf, key));
+                } else {
+                    gf[key] = `enabled`;
+                }
             }
         });
+        if (typeFilters.children.length === 1) {
+            typeFilters.classList.add(`esgst-hidden`);
+        }
         if (esgst.gc) {
             categoryFilters.classList.remove(`esgst-hidden`);
             [ { id: `gc_rm`, key: `removed`, name: `Removed` },
@@ -7474,26 +7684,33 @@
             ].forEach(filter => {
                 id = filter.id;
                 if ((id !== `gc_dlc` || !gf.advancedSearch) && esgst[id]) {
-                    name = filter.name;
                     key = filter.key;
                     genres = key === `genres`;
-                    categoryFilter = insertHtml(categoryFilters, `beforeEnd`, `
-                        <div class="esgst-gf-category-filter">
-                            <span>${name} ${genres ? `<i class="fa fa-question-circle" title="If disabled, no games will be filtered by genre; if enabled, only games with the listed genres will appear"></i> <input placeholder="Genre1, Genre2" type="text">` : ``}</span>
-                        </div>
-                    `);
-                    value = typeof preset[key] !== `undefined` ? preset[key] : (genres ? false : `enabled`);
-                    gf[key] = value;
-                    gf[`${key}Checkbox`] = createCheckbox_v6(categoryFilter, value, genres ? false : true);
-                    gf[`${key}Checkbox`].checkbox.addEventListener(`click`, changeGfValue.bind(null, gf[`${key}Checkbox`], gf, key));
-                    if (genres) {
-                        gf.genreListInput = categoryFilter.lastElementChild.lastElementChild;
-                        value = (preset.genreList && preset.genreList.replace(/,(?!\s)/g, `, `)) || ``;
-                        gf.genreList = gf.genreListInput.value = value;
-                        gf.genreListInput.addEventListener(`change`, changeGfValue.bind(null, gf.genreListInput, gf, `genreList`));
+                    if (esgst[`gf_${key}`]) {
+                        name = filter.name;
+                        categoryFilter = insertHtml(categoryFilters, `beforeEnd`, `
+                            <div class="esgst-gf-category-filter">
+                                <span>${name} ${genres ? `<i class="fa fa-question-circle" title="If disabled, no games will be filtered by genre; if enabled, only games with the listed genres will appear"></i> <input placeholder="Genre1, Genre2" type="text">` : ``}</span>
+                            </div>
+                        `);
+                        value = typeof preset[key] !== `undefined` ? preset[key] : (genres ? false : `enabled`);
+                        gf[key] = value;
+                        gf[`${key}Checkbox`] = createCheckbox_v6(categoryFilter, value, genres ? false : true);
+                        gf[`${key}Checkbox`].checkbox.addEventListener(`click`, changeGfValue.bind(null, gf[`${key}Checkbox`], gf, key));
+                        if (genres) {
+                            gf.genreListInput = categoryFilter.lastElementChild.lastElementChild;
+                            value = (preset.genreList && preset.genreList.replace(/,(?!\s)/g, `, `)) || ``;
+                            gf.genreList = gf.genreListInput.value = value;
+                            gf.genreListInput.addEventListener(`change`, changeGfValue.bind(null, gf.genreListInput, gf, `genreList`));
+                        }
+                    } else {
+                        gf[key] = genres ? false : `enabled`;
                     }
                 }
             });
+            if (categoryFilters.children.length === 1) {
+                categoryFilters.classList.add(`esgst-hidden`);
+            }
         }
         return headingButton;
     }
@@ -10087,7 +10304,7 @@ ${avatar.outerHTML}
     }
 
     function addMgcSection() {
-        var addButton, createButton, createTrainDescription, createTrainOption, createTrainSwitch, emptyButton, exportButton, importButton, mgc, removeIcon, rows, section, viewButton;
+        var addButton, attachButton, createButton, createTrainDescription, createTrainOption, createTrainSwitch, detach, emptyButton, exportButton, importButton, mgc, removeIcon, rows, section, viewButton;
         rows = document.getElementsByClassName(`form__rows`)[0];
         if (rows) {
             mgc = {
@@ -10172,6 +10389,11 @@ ${avatar.outerHTML}
             importButton = createButtonSet(`green`, `grey`, `fa-arrow-circle-up`, `fa-circle-o-notch fa-spin`, `Import`, `Importing...`, importMgcGiveaways.bind(null, mgc));
             exportButton = createButtonSet(`green`, `grey`, `fa-arrow-circle-down`, `fa-circle-o-notch fa-spin`, `Export`, `Exporting...`, exportMgcGiveaways.bind(null, mgc));
             emptyButton = createButtonSet(`green`, `grey`, `fa-trash`, `fa-circle-o-notch fa-spin`, `Empty`, `Emptying...`, emptyMgcGiveaways.bind(null, mgc));
+            attachButton = createButtonSet(`green`, `grey`, `fa-paperclip`, `fa-circle-o-notch fa-spin`, `Attach Discussion`, `Attaching...`, attachMgcDiscussion.bind(null, mgc));
+            createTrainSwitch.dependencies.push(attachButton.set);
+            if (!esgst.mgc_createTrain) {
+                attachButton.set.classList.add(`esgst-hidden`);
+            }
             viewButton = createButtonSet(`green`, `grey`, `fa-eye`, `fa-circle-o-notch fa-spin`, `View Results`, `Opening...`, viewMgcResults.bind(null, mgc));
             createButton = createButtonSet(`green`, `grey`, `fa-arrow-circle-right`, `fa-circle-o-notch fa-spin`, `Create`, `Creating...`, createMgcGiveaways.bind(null, mgc, viewButton));
             viewButton.set.classList.add(`esgst-hidden`);
@@ -10179,8 +10401,18 @@ ${avatar.outerHTML}
             section.appendChild(importButton.set);
             section.appendChild(exportButton.set);
             section.appendChild(emptyButton.set);
+            section.appendChild(attachButton.set);
             section.appendChild(createButton.set);
             section.appendChild(viewButton.set);
+            mgc.discussionPanel = insertHtml(section, `beforeEnd`, `            
+                <div class="esgst-hidden">
+                    <span class="esgst-bold">Discussion Attached:</span> <a></a> <i class="esgst-clickable fa fa-times" title="Detach discussion"></i>
+                </div>
+            `);
+            detach = mgc.discussionPanel.lastElementChild;
+            detach.addEventListener(`click`, detachMgcDiscussion.bind(null, mgc));
+            mgc.discussionLink = detach.previousElementSibling;
+            createToggleSwitch(mgc.discussionPanel, `mgc_bumpLast`, false, `Only insert the bump link in the last wagon.`, false, false, `If disabled, the bump link will appear on all wagons.`, esgst.mgc_bumpLast);
             mgc.giveaways = insertHtml(section, `beforeEnd`, `
                 <div class="pinned-giveaways__outer-wrap">
                     <div class="pinned-giveaways__inner-wrap"></div>
@@ -10279,12 +10511,13 @@ ${avatar.outerHTML}
     function importMgcGiveaways(mgc, callback) {
         var counter, popup, progress, progressPanel, textArea;
         popup = createPopup(`fa-arrow-up`, `Import Giveaways`, true);
-        popup.scrollable.insertAdjacentHTML(`beforeEnd`, `
+        popup.popup.classList.add(`esgst-popup-large`);
+        popup.description.insertAdjacentHTML(`afterBegin`, `
             <div class="esgst-description">
                 Insert the keys below. <i class="fa fa-question-circle"></i>
             </div>
         `);
-        createTooltip(popup.scrollable.lastElementChild.lastElementChild, `
+        createTooltip(popup.description.firstElementChild.lastElementChild, `
             <div>Before importing, make sure you have filled the details of the giveaway (time, region, whitelist, group, level and description) or applied a template. Having different details for each giveaway is currently not supported.</div>
             <br/>
             <div>Separate giveaways with a new line. For gift giveaways, write the name of the game (exactly like it is on Steam) and the number of copies (only required if bigger than 1) in the format "(X Copies)" without the quotes and separated from the name of the game by a single space. For key giveaways, write the name of the game (exactly like it is on Steam) and put the key after or before the name of the game, separated from the name of the game by a single space (Steam and HumbleBundle gift links are supported and work just like the keys, but they must start with "http://" or "https://" to be detected). Here's an example:</div>
@@ -10325,6 +10558,23 @@ ${avatar.outerHTML}
         popup.description.appendChild(createButtonSet(`green`, `grey`, `fa-arrow-circle-up`, `fa-circle-o-notch fa-spin`, `Import`, `Importing...`, getMgcGiveaways.bind(null, mgc, popup, progress, textArea)).set);
         popup.onClose = callback;
         popup.open(focusMgcTextArea.bind(null, textArea));
+        textArea.style.height = `${window.innerHeight * 0.9 - (popup.popup.offsetHeight - popup.scrollable.offsetHeight) - 25}px`;
+        textArea.style.overflow = `auto`;
+        popup.reposition();
+        textArea.addEventListener(`paste`, resizeMgcTextArea.bind(null, popup, textArea));
+    }
+
+    function resizeMgcTextArea(popup, textArea) {
+        var interval, value;
+        value = textArea.value;
+        interval = setInterval(function () {
+            if (value !== textArea.value) {
+                clearInterval(interval);
+                textArea.style.height = `${window.innerHeight * 0.9 - (popup.popup.offsetHeight - popup.scrollable.offsetHeight) - 25}px`;
+                textArea.style.overflow = `auto`;
+                popup.reposition();
+            }
+        }, 250);
     }
 
     function getMgcGiveaways(mgc, popup, progress, textArea, callback) {
@@ -10356,10 +10606,10 @@ ${avatar.outerHTML}
             });
             progress.total.textContent = n;
         }
-        importMgcGiveaway(giveaways, 0, mgc, n, progress, textArea, popup.close, callback);
+        importMgcGiveaway(giveaways, 0, mgc, n, popup, progress, textArea, popup.close, callback);
     }
 
-    function importMgcGiveaway(giveaways, i, mgc, n, progress, textArea, mainCallback, callback) {
+    function importMgcGiveaway(giveaways, i, mgc, n, popup, progress, textArea, mainCallback, callback) {
         var copies, found, giveaway, j, key, keyPos, match, name, namePos, regExp, values;
         if (i < n) {
             match = giveaways[i].match(/^(([\d\w]{5}(-[\d\w]{5}){2,}\s?|https?:\/\/.+?\s?)+)\s(.+)$/);
@@ -10436,7 +10686,7 @@ ${avatar.outerHTML}
                         }
                     } while (found);
                 }
-                request(`do=autocomplete_giveaway_game&page_number=1&search_query=${encodeURIComponent(name)}`, false, `/ajax.php`, getMgcGiveaway.bind(null, giveaways, i, j, mgc, n, name, progress, textArea, values, mainCallback, callback));
+                request(`do=autocomplete_giveaway_game&page_number=1&search_query=${encodeURIComponent(name)}`, false, `/ajax.php`, getMgcGiveaway.bind(null, giveaways, i, j, mgc, n, name, popup, progress, textArea, values, mainCallback, callback));
             } else {
                 createAlert(`The next giveaway is not in the right format. Please correct it and click on "Import" again to continue importing.`);
                 callback();
@@ -10446,7 +10696,7 @@ ${avatar.outerHTML}
         }
     }
 
-    function getMgcGiveaway(giveaways, i, j, mgc, n, name, progress, textArea, values, mainCallback, callback, response) {
+    function getMgcGiveaway(giveaways, i, j, mgc, n, name, popup, progress, textArea, values, mainCallback, callback, response) {
         var elements, k, numElements, value;
         elements = DOM.parse(JSON.parse(response.responseText).html).getElementsByClassName(`table__row-outer-wrap`);
         for (k = 0, numElements = elements.length; k < numElements && elements[k].getAttribute(`data-autocomplete-name`) !== name; ++k);
@@ -10460,7 +10710,8 @@ ${avatar.outerHTML}
                 textArea.value = textArea.value.replace(/^(.+?)\n/, ``);
                 --j;
             } while (j > 0);
-            window.setTimeout(importMgcGiveaway, 0, giveaways, ++i, mgc, n, progress, textArea, mainCallback, callback);
+            popup.reposition();
+            window.setTimeout(importMgcGiveaway, 0, giveaways, ++i, mgc, n, popup, progress, textArea, mainCallback, callback);
         } else {
             createAlert(`${name} was not found! Please correct the title of the game and click on "Import" again to continue importing (it must be exactly like on Steam).`);
             callback();
@@ -10674,6 +10925,7 @@ ${avatar.outerHTML}
         id = responseHtml.querySelector(`[name="giveaway_id"]`).value;
         description = responseHtml.querySelector(`[name="description"]`).value;
         if (i === 0) {
+            mgc.firstWagon = mgc.created[i].url;
             replaceCallback = getMgcNext;
         } else if (i === n - 1) {
             replaceCallback = getMgcPrevious;
@@ -10682,7 +10934,12 @@ ${avatar.outerHTML}
         }
         description = description.replace(/\[ESGST-P\](.+?)\[\/ESGST-P\](.+?)\[ESGST-N\](.+?)\[\/ESGST-N\]/g, replaceCallback.bind(null, i, mgc));
         description = description.replace(/\[ESGST-C\](.+?)\[\/ESGST-C\]/g, getMgcCounter.bind(null, i, n));
-        request(`xsrf_token=${esgst.xsrfToken}&do=edit_giveaway_description&giveaway_id=${id}&description=${encodeURIComponent(description)}`, false, `/ajax.php`, connectMgcWagon.bind(null, i, mgc, n, callback));
+        if (mgc.discussion && (!esgst.mgc_bumpLast || i === n - 1)) {
+            description = description.replace(/\[ESGST-B\](.+?)\[\/ESGST-B\]/g, `[$1](/discussion/${mgc.discussion}/)`);
+        } else {
+            description = description.replace(/\[ESGST-B\](.+?)\[\/ESGST-B\]/g, ``);
+        }
+        request(`xsrf_token=${esgst.xsrfToken}&do=edit_giveaway_description&giveaway_id=${id}&description=${encodeURIComponent(description.trim())}`, false, `/ajax.php`, connectMgcWagon.bind(null, i, mgc, n, callback));
     }
 
     function getMgcNext(i, mgc, fullMatch, match1, match2, match3) {
@@ -10758,10 +11015,94 @@ ${avatar.outerHTML}
     }
 
     function completeMgcCreation(mgc, viewButton, callback) {
-        if (mgc.created.length) {
-            viewButton.set.classList.remove(`esgst-hidden`);
+        if (mgc.discussion) {
+            if (mgc.created.length) {
+                localStorage.esgst_mgcAttach_step4 = mgc.firstWagon;
+                window.open(`/discussion/${mgc.discussion}/`);
+                viewButton.set.classList.remove(`esgst-hidden`);
+            }
+            callback();
+        } else {
+            if (mgc.created.length) {
+                viewButton.set.classList.remove(`esgst-hidden`);
+            }
+            callback();
         }
+    }
+
+    function attachMgcDiscussion(mgc, callback) {
+        var input, popup;
         callback();
+        popup = createPopup(`fa-comments`, `Attach discussion:`);
+        popup.description.insertAdjacentHTML(`afterBegin`, `
+            <div class="esgst-description">
+                <div>You can attach an existing or a new discussion. To attach an existing discussion, simply enter its code below and click "Attach Existing". To attach a new discussion, simply click "Attach New".</div>
+                <br/>
+                <div>Use [ESGST-B][/ESGST-B] to delimit the bump link in the description of the giveaway, for example: ### [ESGST-B]Bump[/ESGST-B]</div>
+                <br/>
+                <div>Use [ESGST-T][/ESGST-T] to delimit the train link in the description of the discussion (this link will lead to the first giveaway of the train), for example: ### [ESGST-T]Choo choo![/ESGST-T]</div>
+                <br/>
+                <div>When the discussion page opens in your browser at the end of the train creation, wait until it has completely finished altering it (you will get a popup when this happens).</div>
+            </div>
+        `);
+        input = insertHtml(popup.description, `beforeEnd`, `<input placeholder="XXXXX" type="text"/>`);
+        popup.description.appendChild(createButtonSet(`green`, `grey`, `fa-paperclip`, `fa-circle-o-notch fa-spin`, `Attach Existing`, `Attaching...`, attachExistingMgcDiscussion.bind(null, input, mgc, popup)).set);
+        popup.description.appendChild(createButtonSet(`green`, `grey`, `fa-paperclip`, `fa-circle-o-notch fa-spin`, `Attach New`, `Attaching...`, attachNewMgcDiscussion.bind(null, mgc, popup)).set);
+        popup.open();
+    }
+
+    function attachExistingMgcDiscussion(input, mgc, popup, callback) {
+        mgc.discussion = input.value;
+        mgc.discussionPanel.classList.remove(`esgst-hidden`);
+        mgc.discussionLink.href = `/discussion/${mgc.discussion}/`;
+        mgc.discussionLink.textContent = mgc.discussion;
+        callback();
+        popup.close();
+    }
+
+    function attachNewMgcDiscussion(mgc, popup, callback) {
+        var win;
+        localStorage.esgst_mgcAttach_step1 = true;
+        win = window.open(`/discussions/new`);
+        setTimeout(checkMgcAttached, 100, mgc, popup, win, callback);
+    }
+
+    function checkMgcAttached(mgc, popup, win, callback) {
+        if (win.closed) {
+            mgc.discussion = localStorage.esgst_mgcAttach_step3;
+            localStorage.removeItem(`esgst_mgcAttach_step3`);
+            mgc.discussionPanel.classList.remove(`esgst-hidden`);
+            mgc.discussionLink.href = `/discussion/${mgc.discussion}/`;
+            mgc.discussionLink.textContent = mgc.discussion;
+            callback();
+            popup.close();
+        } else {
+            setTimeout(checkMgcAttached, 100, mgc, popup, win, callback);
+        }
+    }
+
+    function addMgcCreateAndAttachButton() {
+        var rows;
+        rows = document.getElementsByClassName(`form__rows`)[0];
+        rows.appendChild(createButtonSet(`green`, `grey`, `fa-check`, `fa-circle-o-notch fa-spin`, `Create & Attach`, `Creating & attaching...`, createAndAttachMgcDiscussion.bind(null, rows)).set);
+    }
+
+    function createAndAttachMgcDiscussion(rows) {
+        localStorage.esgst_mgcAttach_step2 = true;
+        rows.parentElement.submit();
+    }
+
+    function editMgcDiscussion() {
+        description = document.querySelector(`[name=description]`);
+        description.value = description.value.replace(/\[ESGST-T\](.+?)\[\/ESGST-T\]/g, `[$1](${localStorage.esgst_mgcAttach_step4})`);
+        localStorage.removeItem(`esgst_mgcAttach_step4`);
+        localStorage.esgst_mgcAttach_step5 = true;
+        document.getElementsByClassName(`js__submit-form`)[0].click();
+    }
+
+    function detachMgcDiscussion(mgc) {
+        mgc.discussion = null;
+        mgc.discussionPanel.classList.add(`esgst-hidden`);
     }
 
     function viewMgcResults(mgc, callback) {
@@ -11141,7 +11482,7 @@ ${avatar.outerHTML}
                 }
                 ugs.progress.innerHTML = `
                     <i class="fa fa-circle-o-notch fa-spin"></i>
-                    <span>Searching for unsent gifts (page ${nextPage}${ugs.lastPage})...</span>
+                    <span>Searching for unsent gifts (page ${nextPage - 1}${ugs.lastPage})...</span>
                 `;
                 giveaways = [];
                 elements = context.getElementsByClassName(`table__row-outer-wrap`);
@@ -11210,7 +11551,7 @@ ${avatar.outerHTML}
             }
             ugs.progress.innerHTML = `
                 <i class="fa fa-circle-o-notch fa-spin"></i>
-                <span>Retrieving winners (page ${nextPage}${ugs.lastWinnersPage})...</span>
+                <span>Retrieving winners (page ${nextPage - 1}${ugs.lastWinnersPage})...</span>
             `;
             elements = responseHtml.getElementsByClassName(`table__row-outer-wrap`);
             for (i = 0, n = elements.length; i < n; ++i) {
@@ -11268,7 +11609,7 @@ ${avatar.outerHTML}
             }
             ugs.progress.innerHTML = `
                 <i class="fa fa-circle-o-notch fa-spin"></i>
-                <span>Retrieving groups (page ${nextPage}${ugs.lastGroupsPage})...</span>
+                <span>Retrieving groups (page ${nextPage - 1}${ugs.lastGroupsPage})...</span>
             `;
             elements = responseHtml.getElementsByClassName(`table__column__heading`);
             for (i = 0, n = elements.length; i < n; ++i) {
@@ -11732,7 +12073,7 @@ ${avatar.outerHTML}
                 }
                 sks.progress.innerHTML = `
                     <i class="fa fa-circle-o-notch fa-spin"></i>
-                    <span>Searching for ${sks.count} keys (page ${nextPage}${sks.lastPage})...</span>
+                    <span>Searching for ${sks.count} keys (page ${nextPage - 1}${sks.lastPage})...</span>
                 `;
                 giveaways = [];
                 elements = context.getElementsByClassName(`trigger-popup--keys`);
@@ -12193,7 +12534,7 @@ ${avatar.outerHTML}
                 }
                 er.progress.innerHTML = `
                     <i class="fa fa-circle-o-notch fa-spin"></i>
-                    <span>Removing entries (page ${nextPage}${er.lastPage})...</span>
+                    <span>Removing entries (page ${nextPage - 1}${er.lastPage})...</span>
                 `;
                 elements = context.getElementsByClassName(`table__remove-default`);
                 n = elements.length;
@@ -21943,7 +22284,7 @@ ${avatar.outerHTML}
             }
             cs.progress.innerHTML = `
                 <i class="fa fa-circle-o-notch fa-spin"></i>
-                <span>Searching comments (page ${nextPage}${cs.lastPage})...</span>
+                <span>Searching comments (page ${nextPage - 1}${cs.lastPage})...</span>
             `;
             comments = responseHtml.getElementsByClassName(`comments`);
             comments = comments[1] || comments[0];
@@ -23858,7 +24199,7 @@ ${avatar.outerHTML}
                     }
                     UGD.Progress.innerHTML =
                         "<i class=\"fa fa-circle-o-notch fa-spin\"></i> " +
-                        "<span>Retrieving giveaways (page " + NextPage + UGD.lastPage + ")...</span>";
+                        "<span>Retrieving giveaways (page " + (NextPage - 1) + UGD.lastPage + ")...</span>";
                 }
                 Giveaways = Context.getElementsByClassName("giveaway__row-outer-wrap");
                 for (I = 0, NumGiveaways = Giveaways.length; I < NumGiveaways; ++I) {
@@ -24059,7 +24400,7 @@ ${avatar.outerHTML}
         var User, Results, Key, newR;
         if (!NAMWC.Canceled) {
             NAMWC.Progress.innerHTML = "";
-            NAMWC.OverallProgress.textContent = I + " of " + N + " users checked...";
+            NAMWC.OverallProgress.textContent = (I - 1) + " of " + N + " users checked...";
             if (I < N) {
                 User = NAMWC.User ? NAMWC.User : {
                     Username: NAMWC.Users[I]
@@ -24367,7 +24708,7 @@ ${avatar.outerHTML}
                 }
                 NRF.Progress.innerHTML =
                     "<i class=\"fa fa-circle-o-notch fa-spin\"></i> " +
-                    "<span>Searching " + username + "'s giveaways (page " + NextPage + NRF.lastPage + ")...</span>";
+                    "<span>Searching " + username + "'s giveaways (page " + (NextPage - 1) + NRF.lastPage + ")...</span>";
                 Matches = Context.querySelectorAll("div.giveaway__column--negative");
                 for (I = 0, N = Matches.length; I < N; ++I) {
                     NRF.I += Matches[I].querySelectorAll("a[href*='/user/']").length;
@@ -24408,7 +24749,7 @@ ${avatar.outerHTML}
         if (!NRF.Canceled) {
             NRF.Progress.innerHTML =
                 "<i class=\"fa fa-circle-o-notch fa-spin\"></i> " +
-                "<span>Searching inside giveaways with multiple copies (" + I + " of " + N + ")...</span>";
+                "<span>Searching inside giveaways with multiple copies (" + (I - 1) + " of " + N + ")...</span>";
             if (I < N) {
                 searchNRFGiveaway(NRF, NRF.Multiple[I].getElementsByClassName("giveaway__heading__name")[0].getAttribute("href") + "/winners/search?page=", 1, function (Found) {
                     if (Found) {
@@ -24908,7 +25249,7 @@ ${avatar.outerHTML}
         var User, Result;
         if (!WBC.Canceled) {
             WBC.Progress.innerHTML = "";
-            WBC.OverallProgress.textContent = I + " of " + N + " users checked...";
+            WBC.OverallProgress.textContent = (I - 1) + " of " + N + " users checked...";
             if (I < N) {
                 User = (WBC.User && WBC.SC.checked) ? WBC.User : {
                     Username: WBC.Users[I]
@@ -25107,7 +25448,7 @@ ${avatar.outerHTML}
                 }
                 WBC.Progress.innerHTML =
                     "<i class=\"fa fa-circle-o-notch fa-spin\"></i> " +
-                    "<span>Retrieving " + username + "'s giveaways (page " + NextPage + WBC.lastPage + ")...</span>";
+                    "<span>Retrieving " + username + "'s giveaways (page " + (NextPage - 1) + WBC.lastPage + ")...</span>";
                 if (!wbc.giveaway) {
                     Giveaway = Context.querySelector("[class='giveaway__heading__name'][href*='/giveaway/']");
                     wbc.giveaway = Giveaway ? Giveaway.getAttribute("href") : null;
@@ -25205,7 +25546,7 @@ ${avatar.outerHTML}
             if (I < N) {
                 WBC.Progress.innerHTML =
                     "<i class=\"fa fa-circle-o-notch\"></i> " +
-                    "<span>Retrieving " + username + "'s group giveaways (" + I + " of " + N + ")...</span>";
+                    "<span>Retrieving " + username + "'s group giveaways (" + (I - 1) + " of " + N + ")...</span>";
                 getWBCGroups(WBC, WBC.GroupGiveaways[I] + "/search?page=", 1, wbc, function (wbc, Result) {
                     if (Result) {
                         Callback(wbc, Result);
@@ -25270,7 +25611,7 @@ ${avatar.outerHTML}
                 }
                 WBC.Progress.innerHTML =
                     "<i class=\"fa fa-circle-o-notch fa-spin\"></i> " +
-                    "<span>Retrieving users (page " + NextPage + WBC.lastPage + ")...</span>";
+                    "<span>Retrieving users (page " + (NextPage - 1) + WBC.lastPage + ")...</span>";
                 Matches = Context.querySelectorAll("a[href*='/user/']");
                 for (I = 0, N = Matches.length; I < N; ++I) {
                     Match = Matches[I].getAttribute("href").match(/\/user\/(.+)/);
@@ -31252,6 +31593,10 @@ ${avatar.outerHTML}
                 top: 0;
             }
 
+            .esgst-popup-large {
+                width: 75%;
+            }
+
             .esgst-popup {
                 background-color: #f0f2f5;
                 border-radius: 4px;
@@ -32398,6 +32743,18 @@ ${avatar.outerHTML}
         changelog = [
             {
                 date: `August 24, 2017`,
+                version: `6.Beta.31.10`,
+                changelog: `
+                    <ul>
+                        <li>Fixed a typo in checkers that was showing a first number higher than the second i.e. 10 of 9 (closes #320).</li>
+                        <li>You can now choose which filters you want for Giveaway Filters through the settings menu.</li>
+                        <li>Added the option to attach discussions to trains to Multiple Giveaways Creator so that bump links are automatically added when creating trains (closes #248).</li>
+                        <li>Made some enhancements to the import popup in Multiple Giveaways Creator (closes #372).
+                    </ul>
+                `
+            },
+            {
+                date: `August 24, 2017`,
                 version: `6.Beta.31.9`,
                 changelog: `
                     <ul>
@@ -32410,7 +32767,7 @@ ${avatar.outerHTML}
                 version: `6.Beta.31.8`,
                 changelog: `
                     <ul>
-                        <li>Added an option (1.15.1) to Hidden Community Poll that only hides the poll if you already voted (closes #317).</li>
+                        <li>Added an option (1.15.1) to Hidden Community Poll that only hides the poll if you already voted (closes <a href="https://github.com/revilheart/ESGST/issues/317">#317</a>).</li>
                     </ul>
                 `
             },
@@ -32470,10 +32827,10 @@ ${avatar.outerHTML}
                         <li>Made the backup download when importing/deleting data an option.</li>
                         <li>Added a confirmation popup that was missing when deleting data.</li>
                         <li>Fixed a bug that was duplicating permalink icons because of recent SG changes.</li>
-                        <li>Fixed a bug that was not loading Hidden Blacklist Stats on Firefox (closes #362).</li>
-                        <li>Fixed a bug in Train Giveaways Extractor that was not extracting giveaways correctly when the number of giveaways to be extracted was a multiple of 50 (closes #363).</li>
-                        <li>Fixed a bug in Collapse/Expand Replies Button that was not correctly going to permalinks (closes #358).</li>
-                        <li>Fixed a bug in User Giveaways Data that was happening for invite only giveaways when checking other users (closes #368).</li>
+                        <li>Fixed a bug that was not loading Hidden Blacklist Stats on Firefox (closes <a href="https://github.com/revilheart/ESGST/issues/362">#362</a>).</li>
+                        <li>Fixed a bug in Train Giveaways Extractor that was not extracting giveaways correctly when the number of giveaways to be extracted was a multiple of 50 (closes <a href="https://github.com/revilheart/ESGST/issues/363">#363</a>).</li>
+                        <li>Fixed a bug in Collapse/Expand Replies Button that was not correctly going to permalinks (closes <a href="https://github.com/revilheart/ESGST/issues/358">#358</a>).</li>
+                        <li>Fixed a bug in User Giveaways Data that was happening for invite only giveaways when checking other users (closes <a href="https://github.com/revilheart/ESGST/issues/368">#368</a>).</li>
                         <li>Fixed a bug in Game Categories that was not retrieving rating for non-English users.</li>
                     </ul>
                 `
@@ -32484,10 +32841,10 @@ ${avatar.outerHTML}
                 changelog: `
                     <ul>
                         <li>Fixed a bug in Giveaway Filters that was preventing the script from loading correctly in group pages.</li>
-                        <li>Giveaway Copies Highlighter no longer highlights pinned giveaways (closes #370).</li>
+                        <li>Giveaway Copies Highlighter no longer highlights pinned giveaways (closes <a href="https://github.com/revilheart/ESGST/issues/370">#370</a>).</li>
                         <li>Added an option to Unsent Gifts Sender that does not send gifts to blacklisted users.</li>
                         <li>Fixed a bug in Game Categories that was not showing "Full CV" category when first loading a page.</li>
-                        <li>You can now color genres in Game Categories from 7.4.23 - SG / 8.4.23 - ST (closes #369).</li>
+                        <li>You can now color genres in Game Categories from 7.4.23 - SG / 8.4.23 - ST (closes <a href="https://github.com/revilheart/ESGST/issues/369">#369</a>).</li>
                         <li>Duplicates between genres and user-defined tags in Game Categories are now removed.</li>
                     </ul>
                 `
@@ -32499,15 +32856,15 @@ ${avatar.outerHTML}
                     <ul>
                         <li>Renamed the class ".rhHidden" to ".esgst-hidden".</li>
                         <li>Removed useless classes.</li>
-                        <li>Fixed a typo in the Level Progress Visualizer tooltip (closes #367).</li>
+                        <li>Fixed a typo in the Level Progress Visualizer tooltip (closes <a href="https://github.com/revilheart/ESGST/issues/367">#367</a>).</li>
                         <li>Fixed a bug in Giveaway Filters that was not properly counting the points to enter all unfiltered giveaways.</li>
-                        <li>Added "Minutes To End" filter to Giveaway Filters (closes #322).</li>
-                        <li>Giveaway Filters now has an advanced exceptions tool that allows you to set individual exceptions for all filters (closes #322).</li>
-                        <li>Renaming presets in Giveaway Filters is now much easier: you no longer need to apply the preset to rename it, and upon renaming a preset, it also renames in all pages that are using that preset (closes #313).</li>
+                        <li>Added "Minutes To End" filter to Giveaway Filters (closes <a href="https://github.com/revilheart/ESGST/issues/322">#322</a>).</li>
+                        <li>Giveaway Filters now has an advanced exceptions tool that allows you to set individual exceptions for all filters (closes <a href="https://github.com/revilheart/ESGST/issues/322">#322</a>).</li>
+                        <li>Renaming presets in Giveaway Filters is now much easier: you no longer need to apply the preset to rename it, and upon renaming a preset, it also renames in all pages that are using that preset (closes <a href="https://github.com/revilheart/ESGST/issues/313">#313</a>).</li>
                     </ul>
                     <p>Added the following features:</p>
                     <ul>
-                        <li>2.11 Giveaway Copies Highlighter (closes #322)</li>
+                        <li>2.11 Giveaway Copies Highlighter (closes <a href="https://github.com/revilheart/ESGST/issues/322">#322</a>)</li>
                     </ul>
                 `
             },
@@ -32531,7 +32888,7 @@ ${avatar.outerHTML}
                 changelog: `
                     <ul>
                         <li>Fixed a typo in the sync that was showing the same message for syncing hidden and wishlisted/owned/ignored games.</li>
-                        <li>Fixed a bug that was happening when storing/syncing giveaways (closes #365).</li>
+                        <li>Fixed a bug that was happening when storing/syncing giveaways (closes <a href="https://github.com/revilheart/ESGST/issues/365">#365</a>).</li>
                         <li>Fixed a bug in Header Refresher that was not filtering entered giveaways after entering them.</li>
                         <li>Fixed a bug in Main Post Popup that was preventing the script from loading correctly.</li>
                         <li>Fixed a bug in Comment Formatting Helper that was not saving emojis.</li>
@@ -32546,9 +32903,9 @@ ${avatar.outerHTML}
                     <ul>
                         <li>Added an option (2.18.1) to Giveaway Recreator to remove the button for giveaways that have been recreated.</li>
                         <li>Giveaway Recreator now runs on the created page, opens in a new tab and is also shown for giveaways with less entries than copies.</li>
-                        <li>Deleting presets, templates and saved replies no longer prompts for a confirmation. Instead a "Undo Delete" button will appear so you can restore them if you deleted them by mistake (closes #206).</li>
-                        <li>Fixed a style issue in Giveaway Groups Loader that was not repositioning popups (closes #232).</li>
-                        <li>Fixed a style issue in Giveaway Groups Loader that was adding double underlines to groups (closes #247).</li>
+                        <li>Deleting presets, templates and saved replies no longer prompts for a confirmation. Instead a "Undo Delete" button will appear so you can restore them if you deleted them by mistake (closes <a href="https://github.com/revilheart/ESGST/issues/206">#206</a>).</li>
+                        <li>Fixed a style issue in Giveaway Groups Loader that was not repositioning popups (closes <a href="https://github.com/revilheart/ESGST/issues/232">#232</a>).</li>
+                        <li>Fixed a style issue in Giveaway Groups Loader that was adding double underlines to groups (closes <a href="https://github.com/revilheart/ESGST/issues/247">#247</a>).</li>
                         <li>Removed the user icon from Giveaway Groups Loader, since the feature shows avatars again.</li>
                     </ul>
                 `
@@ -32585,15 +32942,15 @@ ${avatar.outerHTML}
                         <li>Added an option to sync your giveaways from the settings menu, without the need to use User Giveaways Data.</li>
                         <li>Fixed a bug that was not showing the button to manage hidden discussions in the settings menu.</li>
                         <li>If you have Level Progress Visualizer, Created/Entered/Won Giveaway Details, Real CV Calculator or the "Giveaway Info" category in Game Categories enabled, when you create a giveaway you will now get a popup asking you to wait a few seconds until the giveaway is saved in the storage for those features.</li>
-                        <li>Level Progress Visualizer now projects what your level will be after your active giveaways end and get marked as received (only works for giveaways created after v6.Beta.29.0) (closes #181).</li>
-                        <li>Real CV Calculator and the "Giveaway Info" category in Game Categories now both take into account active giveaways for calculation (closes #297).</li>
-                        <li>Fixed a bug in Giveaway Filters that was not filtering some filters (closes #359).</li>
+                        <li>Level Progress Visualizer now projects what your level will be after your active giveaways end and get marked as received (only works for giveaways created after v6.Beta.29.0) (closes <a href="https://github.com/revilheart/ESGST/issues/181">#181</a>).</li>
+                        <li>Real CV Calculator and the "Giveaway Info" category in Game Categories now both take into account active giveaways for calculation (closes <a href="https://github.com/revilheart/ESGST/issues/297">#297</a>).</li>
+                        <li>Fixed a bug in Giveaway Filters that was not filtering some filters (closes <a href="https://github.com/revilheart/ESGST/issues/359">#359</a>).</li>
                         <li>Changed how User Giveaways Data is stored.</li>
                         <li>Fixed a bug in Game Categories that was showing the wrong icon/label for the "Multiplayer" category.</li>
                     </ul>
                     <p>Added the following features:</p>
                     <ul>
-                        <li>2.25 Giveaways Manager (closes #197)</li>
+                        <li>2.25 Giveaways Manager (closes <a href="https://github.com/revilheart/ESGST/issues/197">#197</a>)</li>
                     </ul>
                 `
             },
@@ -32603,7 +32960,7 @@ ${avatar.outerHTML}
                 changelog: `
                     <ul>
                         <li>Moved all the instructions on Multiple Giveaways Creator to tooltips.</li>
-                        <li>Multiple Giveaways Creator now automatically recognizes if the key is before or after the game name when importing (closes #267).</li>
+                        <li>Multiple Giveaways Creator now automatically recognizes if the key is before or after the game name when importing (closes <a href="https://github.com/revilheart/ESGST/issues/267">#267</a>).</li>
                         <li>Added the "Portal ABCDE-FGHIJ-KLMNO ABCDE-FGHIJ-PQRST" format to Multiple Giveaways Creator, which allows you to put all keys for a giveaway in front of each other instead of in separate lines.</li>
                         <li>Fixed a bug in Game Categories that was showing the "Full CV" category for no CV games.</li>
                     </ul>
@@ -32638,20 +32995,20 @@ ${avatar.outerHTML}
                 changelog: `
                     <ul>
                         <li>Popups are now properly stacked.</li>
-                        <li>Added the hide game buttons to popups (closes #337).</li>
+                        <li>Added the hide game buttons to popups (closes <a href="https://github.com/revilheart/ESGST/issues/337">#337</a>).</li>
                         <li>Fixed a bug in Endless Scrolling that was reversing the comments even with the feature disabled.</li>
                         <li>Giveaway Filters now shows how many points are required to enter all unfiltered giveaways.</li>
-                        <li>Added an option (2.15.1) to Enter/Leave Giveaway Button that allows you to enable the feature only for popups (closes #341).</li>
-                        <li>Train Giveaways Extractor now shows how many points are required to enter all giveaways in the train (closes #341).</li>
+                        <li>Added an option (2.15.1) to Enter/Leave Giveaway Button that allows you to enable the feature only for popups (closes <a href="https://github.com/revilheart/ESGST/issues/341">#341</a>).</li>
+                        <li>Train Giveaways Extractor now shows how many points are required to enter all giveaways in the train (closes <a href="https://github.com/revilheart/ESGST/issues/341">#341</a>).</li>
                         <li>Fixed a bug that was enabling Not Received Finder for users when it shouldn't.</li>
                         <li>Fixed a bug in Game Categories that was showing the "Hidden" icon for "Wishlisted" icons.</li>
-                        <li>Moved the icon descriptions in Game Categories to tooltips (closes #355).</li>
+                        <li>Moved the icon descriptions in Game Categories to tooltips (closes <a href="https://github.com/revilheart/ESGST/issues/355">#355</a>).</li>
                     </ul>
                     <p>Added the following features:</p>
                     <ul>
-                        <li>2.23 Sent Keys Searcher (closes #331)</li>
-                        <li>3.3 Discussion Filters (closes #336)</li>
-                        <li>[4.1 - SG / 5.1 - ST] Collapse/Expand Replies Button (closes #346)</li>
+                        <li>2.23 Sent Keys Searcher (closes <a href="https://github.com/revilheart/ESGST/issues/331">#331</a>)</li>
+                        <li>3.3 Discussion Filters (closes <a href="https://github.com/revilheart/ESGST/issues/336">#336</a>)</li>
+                        <li>[4.1 - SG / 5.1 - ST] Collapse/Expand Replies Button (closes <a href="https://github.com/revilheart/ESGST/issues/346">#346</a>)</li>
                     </ul>
                 `
             },
@@ -32673,10 +33030,10 @@ ${avatar.outerHTML}
                     <ul>
                         <li>Fixed a returning style issue that was not centering the outdated version popup.</li>
                         <li>Added 3 buttons below the comments in Comment Tracker: "mark this comment as read and go to the next unread comment", "mark all comments from this comment upwards as read" and "mark all comments from this comment upwards as unread".</li>
-                        <li>Fixed a bug in Game Categories that was happening when making too many requests to the Steam store in a short amount of time (closes #352).</li>
-                        <li>Fixed a style issue in Game Categories that was breaking polls (closes #342).</li>
+                        <li>Fixed a bug in Game Categories that was happening when making too many requests to the Steam store in a short amount of time (closes <a href="https://github.com/revilheart/ESGST/issues/352">#352</a>).</li>
+                        <li>Fixed a style issue in Game Categories that was breaking polls (closes <a href="https://github.com/revilheart/ESGST/issues/342">#342</a>).</li>
                         <li>Added an option (7.4.2 - SG / 8.4.2 - ST) to Game Categories that allows you to decide whether to show the categories next to the game name or below it.</li>
-                        <li>Added an option (7.4.4.1 - SG / 8.4.4.1 - ST) to Game Categories to only show the "Giveaway Info" category in discussion tables (closes #265).</li>
+                        <li>Added an option (7.4.4.1 - SG / 8.4.4.1 - ST) to Game Categories to only show the "Giveaway Info" category in discussion tables (closes <a href="https://github.com/revilheart/ESGST/issues/265">#265</a>).</li>
                     </ul>
                 `
             },
@@ -32685,7 +33042,7 @@ ${avatar.outerHTML}
                 version: `6.Beta.27.2`,
                 changelog: `
                     <ul>
-                        <li>Fixed some style issues in popups (closes #347 and #350).</li>
+                        <li>Fixed some style issues in popups (closes <a href="https://github.com/revilheart/ESGST/issues/347">#347</a> and <a href="https://github.com/revilheart/ESGST/issues/350">#350</a>).</li>
                         <li>You can now use custom icons/labels for Game Categories.</li>
                     </ul>
                 `
@@ -32698,7 +33055,7 @@ ${avatar.outerHTML}
                         <li>Fixed a style issue that was adding an additional column to created/won pages.</li>
                         <li>Fixed a bug in Giveaway Filters that was not saving started/ended filter settings.</li>
                         <li>Fixed a style issue that was adding a plus sign instead of a minus sign to Enter/Leave Giveaway Button inside of popups.</li>
-                        <li>Fixed a bug that was running Giveaway Winners Link inside of giveaways (closes #351).</li>
+                        <li>Fixed a bug that was running Giveaway Winners Link inside of giveaways (closes <a href="https://github.com/revilheart/ESGST/issues/351">#351</a>).</li>
                         <li>Fixed a bug that was preventing Giveaway Error Search Links from running.</li>
                     </ul>
                 `
@@ -32708,12 +33065,12 @@ ${avatar.outerHTML}
                 version: `6.Beta.27.0`,
                 changelog: `
                     <ul>
-                        <li>Fixed a bug in Giveaway Templates that was not closing the template popup when applying a template (closes #349).</li>
-                        <li>Giveaway Templates no longer displays "?-?" if a template does not have precise start and end times (closes #339).</li>
+                        <li>Fixed a bug in Giveaway Templates that was not closing the template popup when applying a template (closes <a href="https://github.com/revilheart/ESGST/issues/349">#349</a>).</li>
+                        <li>Giveaway Templates no longer displays "?-?" if a template does not have precise start and end times (closes <a href="https://github.com/revilheart/ESGST/issues/339">#339</a>).</li>
                     </ul>
                     <p>Added the following features:</p>
                     <ul>
-                        <li>Shortcut Keys (closes #348)</li>
+                        <li>Shortcut Keys (closes <a href="https://github.com/revilheart/ESGST/issues/348">#348</a>)</li>
                     </ul>
                 `
             },
@@ -32762,7 +33119,7 @@ ${avatar.outerHTML}
                 version: `6.Beta.26.6`,
                 changelog: `
                     <ul>
-                        <li>Fixed a style issue that was blurring popups (closes #347).</li>
+                        <li>Fixed a style issue that was blurring popups (closes <a href="https://github.com/revilheart/ESGST/issues/347">#347</a>).</li>
                         <li>Rolled Game Categories back to retrieving the categories manually, since Google Sheets was not able to handle the quota, but kept the 24-hour cache.</li>
                     </ul>
                 `
@@ -32772,7 +33129,7 @@ ${avatar.outerHTML}
                 version: `6.Beta.26.5`,
                 changelog: `
                     <ul>
-                        <li>Popups are now fixed in the center of the page (closes #238).</li>
+                        <li>Popups are now fixed in the center of the page (closes <a href="https://github.com/revilheart/ESGST/issues/238">#238</a>).</li>
                         <li>Added a small 24-hour cache to Game Categories.</li>
                     </ul>
                 `
@@ -32782,7 +33139,7 @@ ${avatar.outerHTML}
                 version: `6.Beta.26.4`,
                 changelog: `
                     <ul>
-                        <li>Fixed a bug that was not showing some categories or was duplicating some categories in Game Categories (closes #340).</li>
+                        <li>Fixed a bug that was not showing some categories or was duplicating some categories in Game Categories (closes <a href="https://github.com/revilheart/ESGST/issues/340">#340</a>).</li>
                     </ul>
                 `
             },
@@ -32804,7 +33161,7 @@ ${avatar.outerHTML}
                     <ul>
                         <li>Removed Game Categories from the new giveaway page, since SG now shows an asterisk there if the game is bundled.</li>
                         <li>You can now sort the categories in Game Categories from the settings menu (you will find it at the end of the Game Categories section - Games.4).</li>
-                        <li>EXPERIMENTAL: Game Categories are now loaded from a Google Sheet instead of being stored locally (closes #291 and #302). If you're requesting games for the first time, it should take around 15 seconds for the categories to load, but every other time it should be a lot faster, sometimes loading instantly or after around 2 seconds. I believe this is a worth time to wait considering this method doesn't consume any memory. This method is experimental though, since I'm not sure if Google Sheets will be able to handle the request quota, but worst case scenario I can add a manual request method as fallback later.</li>
+                        <li>EXPERIMENTAL: Game Categories are now loaded from a Google Sheet instead of being stored locally (closes <a href="https://github.com/revilheart/ESGST/issues/291">#291</a> and <a href="https://github.com/revilheart/ESGST/issues/302">#302</a>). If you're requesting games for the first time, it should take around 15 seconds for the categories to load, but every other time it should be a lot faster, sometimes loading instantly or after around 2 seconds. I believe this is a worth time to wait considering this method doesn't consume any memory. This method is experimental though, since I'm not sure if Google Sheets will be able to handle the request quota, but worst case scenario I can add a manual request method as fallback later.</li>
                         <li>Added Game Categories data to the "Wipe Storage" button in the settings menu, now that this data is no longer stored locally and therefore useless to keep.</li>
                     </ul>
                 `
@@ -32814,7 +33171,7 @@ ${avatar.outerHTML}
                 version: `6.Beta.26.1`,
                 changelog: `
                     <ul>
-                        <li>Fixed a bug that was preventing some users from exporting data (closes #335).</li>
+                        <li>Fixed a bug that was preventing some users from exporting data (closes <a href="https://github.com/revilheart/ESGST/issues/335">#335</a>).</li>
                     </ul>
                 `
             },
@@ -32824,7 +33181,7 @@ ${avatar.outerHTML}
                 changelog: `
                     <ul>
                         <li>Completely removed support for storages from older versions. Users coming from very old versions will now have to downgrade to v25.5 before upgrading to 26.0 to carry their data on.</li>
-                        <li>Added buttons that allow you to select all/none/inverse when importing/exporting/deleting (closes #251).</li>
+                        <li>Added buttons that allow you to select all/none/inverse when importing/exporting/deleting (closes <a href="https://github.com/revilheart/ESGST/issues/251">#251</a>).</li>
                         <li>Fixed a bug that was adding the Comment Formatting Helper panel to the keys text area in the new giveaway page.</li>
                     </ul>
                     <p>Renamed the settings and sync pages:</p>
@@ -32874,9 +33231,9 @@ ${avatar.outerHTML}
                 changelog: `
                     <ul>
                         <li>Moved Comment Tracker data to localStorage.</li>
-                        <li>Removed tooltips from the manage popup in the settings menu, as they were redundant (closes #196).</li>
-                        <li>Removed redundant "data" and period from the manage popup in the settings menu (closes #253).</li>
-                        <li>Fixed a bug that was duplicating the Comment Formatting Helper panel in some places (closes #330).</li>
+                        <li>Removed tooltips from the manage popup in the settings menu, as they were redundant (closes <a href="https://github.com/revilheart/ESGST/issues/196">#196</a>).</li>
+                        <li>Removed redundant "data" and period from the manage popup in the settings menu (closes <a href="https://github.com/revilheart/ESGST/issues/253">#253</a>).</li>
+                        <li>Fixed a bug that was duplicating the Comment Formatting Helper panel in some places (closes <a href="https://github.com/revilheart/ESGST/issues/330">#330</a>).</li>
                     </ul>
                 `
             },
@@ -32885,7 +33242,7 @@ ${avatar.outerHTML}
                 version: `6.Beta.25.1`,
                 changelog: `
                     <ul>
-                        <li>Fixed a bug with the rerolls/winners localStorage (possible solution for #329).</li>
+                        <li>Fixed a bug with the rerolls/winners localStorage (possible solution for <a href="https://github.com/revilheart/ESGST/issues/329">#329</a>).</li>
                     </ul>
                 `
             },
@@ -32896,15 +33253,15 @@ ${avatar.outerHTML}
                     <ul>
                         <li>Moved all data that doesn't need to be shared between SG and ST to localStorage, to start getting rid of GM_setValue/GM_getValue and hopefully improve the script's performance. This data includes: entries, giveaways, groups, rerolls, templates and winners. As a result, this data can no longer be managed through SteamTrades, only through SteamGifts. A button has been added to the settings menu to wipe the GM_setValue/GM_getValue data from the storage (make sure to backup through Tampermonkey before doing this).</li>
                         <li>The script's settings page now has the title "ESGST Settings" and the icon of the script as favicon.</li>
-                        <li>Fixed a style issue that was making tooltips appear behind popups/popouts (closes #321).</li>
-                        <li>Fixed a style issue with the source link in Giveaways Encrypter/Decrypter that was affecting non-grid view (closes #326).</li>
-                        <li>The currently used preset in Giveaway Filters is now highlighted in the preset list (closes #312).</li>
-                        <li>Chances lower than 0.01 are now rounded up to 0.01 in Giveaway Winning Chance (closes #324).</li>
-                        <li>Added a confirmation dialog to Multiple Giveaways Creator when trying to leave the new giveaway page if giveaways have been added (closes #328).</li>
-                        <li>Fixed a bug in Comment Formatting Helper that was not adding the panel to text areas in the new ticket page (closes #325).</li>        </ul>
+                        <li>Fixed a style issue that was making tooltips appear behind popups/popouts (closes <a href="https://github.com/revilheart/ESGST/issues/321">#321</a>).</li>
+                        <li>Fixed a style issue with the source link in Giveaways Encrypter/Decrypter that was affecting non-grid view (closes <a href="https://github.com/revilheart/ESGST/issues/326">#326</a>).</li>
+                        <li>The currently used preset in Giveaway Filters is now highlighted in the preset list (closes <a href="https://github.com/revilheart/ESGST/issues/312">#312</a>).</li>
+                        <li>Chances lower than 0.01 are now rounded up to 0.01 in Giveaway Winning Chance (closes <a href="https://github.com/revilheart/ESGST/issues/324">#324</a>).</li>
+                        <li>Added a confirmation dialog to Multiple Giveaways Creator when trying to leave the new giveaway page if giveaways have been added (closes <a href="https://github.com/revilheart/ESGST/issues/328">#328</a>).</li>
+                        <li>Fixed a bug in Comment Formatting Helper that was not adding the panel to text areas in the new ticket page (closes <a href="https://github.com/revilheart/ESGST/issues/325">#325</a>).</li>        </ul>
                     <p>Added the following features:</p>
                     <ul>
-                        <li>General.8 Search Maginifying Glass Button (closes #319)</li>
+                        <li>General.8 Search Maginifying Glass Button (closes <a href="https://github.com/revilheart/ESGST/issues/319">#319</a>)</li>
                     </ul>
                 `
             },
@@ -32914,7 +33271,7 @@ ${avatar.outerHTML}
                 changelog: `
                     <ul>
                         <li>Fixed a bug in Header Refresher that was no longer indicating the unread messages in the tab icon.</li>
-                        <li>The name of the preset currently being used is now displayed next to the filtered count in Giveaway Filters (closes #314).</li>
+                        <li>The name of the preset currently being used is now displayed next to the filtered count in Giveaway Filters (closes <a href="https://github.com/revilheart/ESGST/issues/314">#314</a>).</li>
                         <li>Fixed a bug in Active Discussions On Top/Sidebar that was using classes from the sidebar option in the top option.</li>
                         <li>Fixed a bug in Game Categories that was coloring all categories red.</li>
                     </ul>
@@ -32937,14 +33294,14 @@ ${avatar.outerHTML}
                 version: `6.Beta.24.0`,
                 changelog: `
                     <ul>
-                        <li>Fixed a bug in Givewaways Encrypter/Decrypter that was duplicating decrypted giveaways when editing a comment (closes #304).</li>
+                        <li>Fixed a bug in Givewaways Encrypter/Decrypter that was duplicating decrypted giveaways when editing a comment (closes <a href="https://github.com/revilheart/ESGST/issues/304">#304</a>).</li>
                         <li>Fixed a bug that was not calculating ratio/chance inside of invite only giveaways.</li>
                         <li>Added "Started" and "Ended" filters to Giveaway Filters.</li>
                         <li>Whitelist/Blacklist Checker now only stores data if the result is either whitelisted or blacklisted. Any other data will be wiped from the storage.</li>
                     </ul>
                     <p>Added the following features:</p>
                     <ul>
-                        <li>Comments.5 Received Reply Box Popup (closes #305)</li>
+                        <li>Comments.5 Received Reply Box Popup (closes <a href="https://github.com/revilheart/ESGST/issues/305">#305</a>)</li>
                     </ul>
                 `
             },
@@ -32965,8 +33322,8 @@ ${avatar.outerHTML}
                 changelog: `
                     <ul>
                         <li>Fixed a bug in Fixed Sidebar that was fixing the sidebar immediately without scrolling the page.</li>
-                        <li>When syncing, the script will now show a list of missing/new groups/games (closes #268).</li>
-                        <li>Unsent Gifts Sender no longer shows the sent/unsent items if 0 gifts were sent/unsent (closes #290).</li>
+                        <li>When syncing, the script will now show a list of missing/new groups/games (closes <a href="https://github.com/revilheart/ESGST/issues/268">#268</a>).</li>
+                        <li>Unsent Gifts Sender no longer shows the sent/unsent items if 0 gifts were sent/unsent (closes <a href="https://github.com/revilheart/ESGST/issues/290">#290</a>).</li>
                         <li>Moved the area where the results appear in Unsent Gifts Sender to below the button.</li>
                         <li>Fixed a bug in Entries Remover that was not going through the pages correctly.</li>
                     </ul>
@@ -32978,9 +33335,9 @@ ${avatar.outerHTML}
                 changelog: `
                     <ul>
                         <li>Separated the functionality of fading giveaways in One-Click Hide Giveaway Button into an option (Giveaways.11.1).</li>
-                        <li>Fixed a bug that was showing chance/ratio in the review giveaway page (closes #201).</li>
+                        <li>Fixed a bug that was showing chance/ratio in the review giveaway page (closes <a href="https://github.com/revilheart/ESGST/issues/201">#201</a>).</li>
                         <li>Fixed a bug that was not showing chance/ratio for ended invite only giveaways.</li>
-                        <li>Next/Previous Train Hotkeys now uses the browser history to go to the previous wagon if there isn't a previous link (closes #300).</li>
+                        <li>Next/Previous Train Hotkeys now uses the browser history to go to the previous wagon if there isn't a previous link (closes <a href="https://github.com/revilheart/ESGST/issues/300">#300</a>).</li>
                     </ul>
                 `
             },
@@ -32991,7 +33348,7 @@ ${avatar.outerHTML}
                     <ul>
                         <li>Fixed a bug in Giveaway Filters that was not detecting "Owned", "Wishlisted", "Hidden", "Ignored" and "Bundled" filters in popup filters.</li>
                         <li>Moved Giveaway Filters to the main page heading, so that it scrolls with the page.</li>
-                        <li>One-Click Hide Giveaway Button no longer immediately removes the giveaways (closes #271), but simply fades them, in case of accidental clicks, and also adds a button to unhide the giveaway.</li>
+                        <li>One-Click Hide Giveaway Button no longer immediately removes the giveaways (closes <a href="https://github.com/revilheart/ESGST/issues/271">#271</a>), but simply fades them, in case of accidental clicks, and also adds a button to unhide the giveaway.</li>
                     </ul>
                 `
             },
@@ -33002,9 +33359,9 @@ ${avatar.outerHTML}
                     <ul>
                         <li>Giveaways Sorter and Discussions Sorted now remember the last selected option and have an option to auto sort the pages when loading them.</li>
                         <li>Extended Giveaways Sorter to user and group pages.</li>
-                        <li>Added a button to Giveaway Filters that allows you to enable/disable all filters for the current page (closes #292).</li>
+                        <li>Added a button to Giveaway Filters that allows you to enable/disable all filters for the current page (closes <a href="https://github.com/revilheart/ESGST/issues/292">#292</a>).</li>
                         <li>"Owned", "Wishlisted", "Hidden", "Ignored" and "Bundled" filters have been moved from category filters to type filters and now work with Game Categories disabled.</li>
-                        <li>Giveaway Filters now works with presets (closes #192) and no longer saves automatically when altering filters (you have to click "Save" to update the current preset).</li>
+                        <li>Giveaway Filters now works with presets (closes <a href="https://github.com/revilheart/ESGST/issues/192">#192</a>) and no longer saves automatically when altering filters (you have to click "Save" to update the current preset).</li>
                         <li>Fixed a bug in Created/Entered/Won Giveaway Details that was switching headers in the created/won pages.</li>
                         <li>Prevented "Bundled" category in Game Categories from loading in the bundle list page.</li>
                     </ul>
@@ -33034,17 +33391,17 @@ ${avatar.outerHTML}
                 changelog: `
                     <ul>
                         <li>Bundles are now synced from a Google Sheet database that is updated daily. To get more info about the database, check this thread: https://www.steamgifts.com/discussion/qcvQE/</li>
-                        <li>All checkers now show how many pages there are left to check (closes #53).</li>
+                        <li>All checkers now show how many pages there are left to check (closes <a href="https://github.com/revilheart/ESGST/issues/53">#53</a>).</li>
                         <li>Added some CSS variables to Level Progress Visualizer so themes are able to customize it.</li>
                         <li>Expanded Discussions Sorter.</li>
                         <li>The created trades page is now refreshed if open when auto bumping from Trades Bumper.</li>
-                        <li>Decrypted giveaways added to posts during editing now appear immediately without having to refresh the page (only works with Multi-Reply or Reply From Inbox) (closes #228).</li>
-                        <li>Added an option (Comments.7.1) to Reply From Inbox that keeps the replies in the inbox page when refreshing (closes #179).</li>
+                        <li>Decrypted giveaways added to posts during editing now appear immediately without having to refresh the page (only works with Multi-Reply or Reply From Inbox) (closes <a href="https://github.com/revilheart/ESGST/issues/228">#228</a>).</li>
+                        <li>Added an option (Comments.7.1) to Reply From Inbox that keeps the replies in the inbox page when refreshing (closes <a href="https://github.com/revilheart/ESGST/issues/179">#179</a>).</li>
                     </ul>
                     <p>Added the following features:</p>
                     <ul>
                         <li>General.13 Hidden Community Poll</li>
-                        <li>Giveaways.4 Giveaways Sorter (closes #198)</li>
+                        <li>Giveaways.4 Giveaways Sorter (closes <a href="https://github.com/revilheart/ESGST/issues/198">#198</a>)</li>
                     </ul>
                 `
             },
@@ -33071,18 +33428,18 @@ ${avatar.outerHTML}
                 version: `6.Beta.22.1`,
                 changelog: `
                     <ul>
-                        <li>Fixed a typo in Giveaways.14 (closes #294).</li>
-                        <li>Fixed a style issue in Level Progress Visualizer (Closes #150).</li>
+                        <li>Fixed a typo in Giveaways.14 (closes <a href="https://github.com/revilheart/ESGST/issues/294">#294</a>).</li>
+                        <li>Fixed a style issue in Level Progress Visualizer (closes <a href="https://github.com/revilheart/ESGST/issues/150">#150</a>).</li>
                         <li>Fixed a bug that was enabling Pagination Navigation On Top even if it was disabled.</li>
                         <li>Fixed a bug in Giveaway Filters that was preventing the script from loading correctly for some users.</li>
-                        <li>You can now drag and drop templates in Giveaway Templates (closes #246).</li>
-                        <li>Fixed a bug in Giveaway Winning Chance/Ratio that was miscalculation entered giveaways if visiting them (closes #296).</li>
-                        <li>Multiple Giveaways Creator now trims the list of games before importing to make sure there are no empty lines or lines with white space at the beginning/end. (closes #298).</li>
-                        <li>Fixed a bug in Unsent Gifts Sender that was not sending gifts if none of the options were enabled (closes #301).</li>
+                        <li>You can now drag and drop templates in Giveaway Templates (closes <a href="https://github.com/revilheart/ESGST/issues/246">#246</a>).</li>
+                        <li>Fixed a bug in Giveaway Winning Chance/Ratio that was miscalculation entered giveaways if visiting them (closes <a href="https://github.com/revilheart/ESGST/issues/296">#296</a>).</li>
+                        <li>Multiple Giveaways Creator now trims the list of games before importing to make sure there are no empty lines or lines with white space at the beginning/end. (closes <a href="https://github.com/revilheart/ESGST/issues/298">#298</a>).</li>
+                        <li>Fixed a bug in Unsent Gifts Sender that was not sending gifts if none of the options were enabled (closes <a href="https://github.com/revilheart/ESGST/issues/301">#301</a>).</li>
                         <li>Added some limits to User/Game Tags: you are now allowed a maximum character count of 64 for user tags and 32 for game tags.</li>
                         <li>User/Game Tags can now be colored individually.</li>
                         <li>The buttons in User/Game Tags are now faded out if there are no tags saved (useful for places where the tags are not displayed, such as inside Active Discussions On Sidebar or Grid View).</li>
-                        <li>Fixed a bug in Game Categories that was adding user-defined tags to the list of genres even if the option was disabled (partial solution to #291).</li>
+                        <li>Fixed a bug in Game Categories that was adding user-defined tags to the list of genres even if the option was disabled (partial solution to <a href="https://github.com/revilheart/ESGST/issues/291">#291</a>).</li>
                     </ul>
                 `
             },
@@ -33110,7 +33467,7 @@ ${avatar.outerHTML}
                 changelog: `
                     <ul>
                         <li>Prevended the advanced formula in Giveaway Winning Chance from loading for ended giveaways.</li>
-                        <li>Added an option (Comments.2.20) to Comment Formatting Helper that allows you to save replies for later use (closes #170).</li>
+                        <li>Added an option (Comments.2.20) to Comment Formatting Helper that allows you to save replies for later use (closes <a href="https://github.com/revilheart/ESGST/issues/170">#170</a>).</li>
                         <li>Separated the Comment Tracker change from the last update into a new option (Comments.7.1.1).</li>
                     </ul>
                     <p>Upgraded the following features to v6:</p>
@@ -33147,12 +33504,12 @@ ${avatar.outerHTML}
                         <li>Added an option to import/export/delete Inbox Winners Highlighter data.</li>
                         <li>Removed a gap in Grid View that was being added between the image and the popout.</li>
                         <li>Added an option (Other.2) that automatically updates your whitelist/blacklist when you add/remove a user to/from those lists, without the need of syncing through the settings menu.</li>
-                        <li>Fixed a bug in Entries Remover that was not resetting the button (closes #286).</li>
+                        <li>Fixed a bug in Entries Remover that was not resetting the button (closes <a href="https://github.com/revilheart/ESGST/issues/286">#286</a>).</li>
                         <li>Fixed a bug in Comment Tracker that was not marking replies as read from the inbox page on SteamTrades.</li>
                     </ul>
                     <p>Upgraded the following features to v6:</p>
                     <ul>
-                        <li>Giveaways.2.21 Unsent Gifts Sender - Revamped the feature, fixed some bugs and made some improvements (closes #69, #163, #234, #241, #264 and #287). Added an option to only send gifts to group members with a certain gift difference.</li>
+                        <li>Giveaways.2.21 Unsent Gifts Sender - Revamped the feature, fixed some bugs and made some improvements (closes <a href="https://github.com/revilheart/ESGST/issues/69">#69</a>, <a href="https://github.com/revilheart/ESGST/issues/163">#163</a>, <a href="https://github.com/revilheart/ESGST/issues/234">#234</a>, <a href="https://github.com/revilheart/ESGST/issues/241">#241</a>, <a href="https://github.com/revilheart/ESGST/issues/264">#264</a> and <a href="https://github.com/revilheart/ESGST/issues/287">#287</a>). Added an option to only send gifts to group members with a certain gift difference.</li>
                     </ul>
                 `
             },
@@ -33174,8 +33531,8 @@ ${avatar.outerHTML}
                 version: `6.Beta.21.0`,
                 changelog: `
                     <ul>
-                        <li>Fixed a bug that was showing the trades section in the settings menu even if the script was disabled for SteamTrades (closes #288).</li>
-                        <li>Renamed "Manage" to "Settings" in popups and removed the manage link from the settings popup (closes #289).</li>
+                        <li>Fixed a bug that was showing the trades section in the settings menu even if the script was disabled for SteamTrades (closes <a href="https://github.com/revilheart/ESGST/issues/288">#288</a>).</li>
+                        <li>Renamed "Manage" to "Settings" in popups and removed the manage link from the settings popup (closes <a href="https://github.com/revilheart/ESGST/issues/289">#289</a>).</li>
                         <li>Fixed a bug in Giveaway Filters that was removing the heading of hidden giveaways inside of them.</li>
                         <li>Hidden giveaways are now automatically removed from the list when ended in Giveaway Filters.</li>
                         <li>Added an option (Giveaways.14.2.1) to Enter/Leave Giveaway Button to only pop up a reply box if the giveaway has a description.</li>
@@ -33203,7 +33560,7 @@ ${avatar.outerHTML}
                         <li>Fixed a bug in Header Refresher that was not indicating unviewed keys in the tab.</li>
                         <li>Changed the unviewed keys indicator in Header Refresher from coloring the icon to showing a trophy emoji in the title.</li>
                         <li>Added an option (1.5.2) to indicate if there are unentered wishlist giveaways open to Header Refresher.</li>
-                        <li>Added an option (2.5.1) to Giveaway Filters that allows you to hide giveaways in the main page (closes #224).</li>
+                        <li>Added an option (2.5.1) to Giveaway Filters that allows you to hide giveaways in the main page (closes <a href="https://github.com/revilheart/ESGST/issues/224">#224</a>).</li>
                     </ul>
                     <p>Added the following features:</p>
                     <ul>
@@ -33263,7 +33620,7 @@ ${avatar.outerHTML}
                 version: `6.Beta.19.14`,
                 changelog: `
                     <ul>
-                        <li>Fixed a bug in User Filters that was not filtering discussions in the main page and was causing a bug (closes #284 and #285).</li>
+                        <li>Fixed a bug in User Filters that was not filtering discussions in the main page and was causing a bug (closes <a href="https://github.com/revilheart/ESGST/issues/284">#284</a> and <a href="https://github.com/revilheart/ESGST/issues/285">#285</a>).</li>
                     </ul>
                 `
             },
@@ -33301,7 +33658,7 @@ ${avatar.outerHTML}
                 version: `6.Beta.19.11`,
                 changelog: `
                     <ul>
-                        <li>Fixed a bug that was enabling Discussions Sorter in the new discussion page (closes #275).</li>
+                        <li>Fixed a bug that was enabling Discussions Sorter in the new discussion page (closes <a href="https://github.com/revilheart/ESGST/issues/275">#275</a>).</li>
                     </ul>
                 `
             },
@@ -33312,12 +33669,12 @@ ${avatar.outerHTML}
                     <ul>
                         <li>Fixed some bugs.</li>
                         <li>Upgraded all popups to v6.</li>
-                        <li>Fixed the "Manage" link in popups (closes #250).</li>
+                        <li>Fixed the "Manage" link in popups (closes <a href="https://github.com/revilheart/ESGST/issues/250">#250</a>).</li>
                         <li>Fixed a bug that was happening when importing data.</li>
-                        <li>Fixed a style issue with giveaways loaded in popups (closes #270 and #278).</li>
-                        <li>Fixed a bug in Giveaways/Discussions/Tickets/Trades Tracker that was not fading discussions in the main page (closes #279).</li>
+                        <li>Fixed a style issue with giveaways loaded in popups (closes <a href="https://github.com/revilheart/ESGST/issues/270">#270</a> and <a href="https://github.com/revilheart/ESGST/issues/278">#278</a>).</li>
+                        <li>Fixed a bug in Giveaways/Discussions/Tickets/Trades Tracker that was not fading discussions in the main page (closes <a href="https://github.com/revilheart/ESGST/issues/279">#279</a>).</li>
                         <li>Fixed a bug in Giveaway Filters that was not filtering giveaways with no categories.</li>
-                        <li>Fixed a bug in Giveaway Groups Loader that was preventing groups from loading in the popup version (closes #283).</li>
+                        <li>Fixed a bug in Giveaway Groups Loader that was preventing groups from loading in the popup version (closes <a href="https://github.com/revilheart/ESGST/issues/283">#283</a>).</li>
                         <li>Train Giveaways Extractor now works from discussion pages and now also extracts links to SGTools giveaways.</li>
                         <li>Train Giveaways Extractor now extracts giveaways in batches of 50 to prevent the Steam API from blocking requests if using Game Categories. It's recommended to wait a couple minutes before extracting the next batch.</li>
                     </ul>
@@ -33329,7 +33686,7 @@ ${avatar.outerHTML}
                 changelog: `
                     <ul>
                         <li>Fixed a style issue with list items inside popups.</li>
-                        <li>Fixed a bug that was not importing settings (closes #256).</li>
+                        <li>Fixed a bug that was not importing settings (closes <a href="https://github.com/revilheart/ESGST/issues/256">#256</a>).</li>
                         <li>Fixed a bug that was enabling Active Discussions On Top/Sidebar even when disabled.</li>
                     </ul>
                 `
@@ -33340,10 +33697,10 @@ ${avatar.outerHTML}
                 changelog: `
                     <ul>
                         <li>Fixed some bugs.</li>
-                        <li>Fixed a bug in Multiple Giveaways Creator that was not importing games with an ampersand in their name (closes #274).</li>
+                        <li>Fixed a bug in Multiple Giveaways Creator that was not importing games with an ampersand in their name (closes <a href="https://github.com/revilheart/ESGST/issues/274">#274</a>).</li>
                         <li>Fixed a bug in Giveaway Encrypter/Decrypter and Train Giveaways Extractor that was not filtering results.</li>
-                        <li>Fixed a bug in Entries Remover that was not removing the entries (closes #255).</li>
-                        <li>Adapted Active Discussions On Top/Sidebar to recent SG changes (closes #273).</li>
+                        <li>Fixed a bug in Entries Remover that was not removing the entries (closes <a href="https://github.com/revilheart/ESGST/issues/255">#255</a>).</li>
+                        <li>Adapted Active Discussions On Top/Sidebar to recent SG changes (closes <a href="https://github.com/revilheart/ESGST/issues/273">#273</a>).</li>
                     </ul>
                 `
             },
@@ -33389,11 +33746,11 @@ ${avatar.outerHTML}
                 changelog: `
                     <ul>
                         <li>Fixed a class conflict with the pinned giveaways button.</li>
-                        <li>Fixed a conflict between normal and popup filters in Giveaway Filters (closes #262).</li>
+                        <li>Fixed a conflict between normal and popup filters in Giveaway Filters (closes <a href="https://github.com/revilheart/ESGST/issues/262">#262</a>).</li>
                         <li>Giveaway Encrypter/Decrypter now only loads created/hidden/owned/ignored giveaways if those options are enabled in the filter, instead of loading them first and then filtering. This means that if you change one of those options in the filter, it will only take effect when you refresh the page. Also, giveaways decrypted before this version must be fully loaded (keep clicking "Load more...") if you want them to be filtered correctly.</li>
-                        <li>Added bump links to Train Giveaways Extractor (closes #261).</li>
-                        <li>Train Giveaways Extractor is now able to extract any amount of trains inside of a train (trainception :P) (closes #263).</li>
-                        <li>Added 7.4.4 "Giveaway Info" category to Game Categories (closes #254).</li>
+                        <li>Added bump links to Train Giveaways Extractor (closes <a href="https://github.com/revilheart/ESGST/issues/261">#261</a>).</li>
+                        <li>Train Giveaways Extractor is now able to extract any amount of trains inside of a train (trainception :P) (closes <a href="https://github.com/revilheart/ESGST/issues/263">#263</a>).</li>
+                        <li>Added 7.4.4 "Giveaway Info" category to Game Categories (closes <a href="https://github.com/revilheart/ESGST/issues/254">#254</a>).</li>
                     </ul>
                 `
             },
@@ -33423,10 +33780,10 @@ ${avatar.outerHTML}
                 changelog: `
                     <ul>
                         <li>Started a process of grouping feature calls together and minimizing interactions with DOM to optimize performance.</li>
-                        <li>Fixed a bug that was happening in the automatic sync (closes #260).</li>
+                        <li>Fixed a bug that was happening in the automatic sync (closes <a href="https://github.com/revilheart/ESGST/issues/260">#260</a>).</li>
                         <li>Fixed a bug in the sync that was not properly syncing games.</li>
                         <li>Added "Hidden", "Owned", "Wishlisted", "Ignored" and "Removed" filters to Giveaway Filters.</li>
-                        <li>Extended Giveaway Filters to popups (works with Giveaway Encrypter/Decrypter and Train Giveaways Extractor) (closes #252).</li>
+                        <li>Extended Giveaway Filters to popups (works with Giveaway Encrypter/Decrypter and Train Giveaways Extractor) (closes <a href="https://github.com/revilheart/ESGST/issues/252">#252</a>).</li>
                         <li>Improved Train Giveaways Extractor to work regardless of the name of the "Next" link.</li>
                         <li>Added 7.4.3 "Hidden" filter to Game Categories (must be synced through the settings menu).</li>
                     </ul>
@@ -33478,7 +33835,7 @@ ${avatar.outerHTML}
                 version: `6.Beta.17.8`,
                 changelog: `
                     <ul>
-                        <li>Fixed a bug in Entries Remover while syncing owned games (closes #249).</li>
+                        <li>Fixed a bug in Entries Remover while syncing owned games (closes <a href="https://github.com/revilheart/ESGST/issues/249">#249</a>).</li>
                         <li>Added "Removed" and "Early Access" categories to Game Categories.</li>
                     </ul>
                 `
@@ -33520,7 +33877,7 @@ ${avatar.outerHTML}
                         <li>You can now sync from ST.</li>
                         <li>You can now sync groups/whitelist/blacklist/games separately.</li>
                         <li>The automatic sync now opens in a new tab.</li>
-                        <li>Multiple Giveaways Creator now automatically corrects the starting time of the giveaways if it has already passed and shows error messages in the their titles if the creation process has failed (closes #215).</li>
+                        <li>Multiple Giveaways Creator now automatically corrects the starting time of the giveaways if it has already passed and shows error messages in the their titles if the creation process has failed (closes <a href="https://github.com/revilheart/ESGST/issues/215">#215</a>).</li>
                     </ul>
                 `
             },
@@ -33529,7 +33886,7 @@ ${avatar.outerHTML}
                 version: `6.Beta.17.3`,
                 changelog: `
                     <ul>
-                        <li>Added an option to the new giveaway page in Multiple Giveaways Creator that allows you to choose whether or not to remove the previous/next links in the first/last wagons of the train (closes #240).</li>
+                        <li>Added an option to the new giveaway page in Multiple Giveaways Creator that allows you to choose whether or not to remove the previous/next links in the first/last wagons of the train (closes <a href="https://github.com/revilheart/ESGST/issues/240">#240</a>).</li>
                     </ul>
                 `
             },
@@ -33547,7 +33904,7 @@ ${avatar.outerHTML}
                 version: `6.Beta.17.1`,
                 changelog: `
                     <ul>
-                        <li>Simplified the formatting for descriptions in Multiple Giveaways Creator (make sure you update your templates to the new format, as the old format is no longer supported - pay extra attention because ending tags now have a slash) (closes #237).</li>
+                        <li>Simplified the formatting for descriptions in Multiple Giveaways Creator (make sure you update your templates to the new format, as the old format is no longer supported - pay extra attention because ending tags now have a slash) (closes <a href="https://github.com/revilheart/ESGST/issues/237">#237</a>).</li>
                     </ul>
                 `
             },
@@ -33560,7 +33917,7 @@ ${avatar.outerHTML}
                     </ul>
                     <p>Added the following features:</p>
                     <ul>
-                        <li>2.25 Next/Previous Train Hotkeys (closes #195)</li>
+                        <li>2.25 Next/Previous Train Hotkeys (closes <a href="https://github.com/revilheart/ESGST/issues/195">#195</a>)</li>
                     </ul>
                 `
             },
@@ -33589,7 +33946,7 @@ ${avatar.outerHTML}
                 changelog: `
                     <p>Renamed the following features:</p>
                     <ul>
-                        <li>Giveaway Maker -> Multiple Giveaways Creator - Fixed a bug that was creating duplicate giveaways if clicking on "Create" again after finishing a creation process (closes #214). Added an option to add a counter to trains (closes #209). Added an option to import/export giveaways.</li>
+                        <li>Giveaway Maker -> Multiple Giveaways Creator - Fixed a bug that was creating duplicate giveaways if clicking on "Create" again after finishing a creation process (closes <a href="https://github.com/revilheart/ESGST/issues/214">#214</a>). Added an option to add a counter to trains (closes <a href="https://github.com/revilheart/ESGST/issues/209">#209</a>). Added an option to import/export giveaways.</li>
                     </ul>
                 `
             },
@@ -33598,7 +33955,7 @@ ${avatar.outerHTML}
                 version: `6.Beta.16.6`,
                 changelog: `
                     <ul>
-                        <li>Added an option to Game Categories to show the percentage and number of reviews next to the icon in the rating category (closes #236).</li>
+                        <li>Added an option to Game Categories to show the percentage and number of reviews next to the icon in the rating category (closes <a href="https://github.com/revilheart/ESGST/issues/236">#236</a>).</li>
                     </ul>
                 `
             },
@@ -33618,15 +33975,15 @@ ${avatar.outerHTML}
                 changelog: `
                     <ul>
                         <li>Fixed a few bugs.</li>
-                        <li>Enhanced Last Page Link to show the accurate last page number (closes #212).</li>
-                        <li>Moved the "Source" link in Giveaways Encrypter/Decrypter (closes #210).</li>
+                        <li>Enhanced Last Page Link to show the accurate last page number (closes <a href="https://github.com/revilheart/ESGST/issues/212">#212</a>).</li>
+                        <li>Moved the "Source" link in Giveaways Encrypter/Decrypter (closes <a href="https://github.com/revilheart/ESGST/issues/210">#210</a>).</li>
                         <li>Fixed a bug in Giveaway Filters that was not saving the max value for entries and copies.</li>
                         <li>Fixed a bug in Giveaway Filters that was still showing the "Category Filters" heading even if Game Categories was disabled.</li>
-                        <li>Added "Ratings" filter to Giveaway Filters (games that do not have a rating, either because the Steam page doesn't have it or because the script was unable to get it, have a predefined rating of 0) (closes #191).</li>
-                        <li>Added more info about the giveaway to the popup in Enter/Leave Giveaway Button (closes #226).</li>
-                        <li>Fixed a bug that was missing some features in Discussions Highlighter when opening them outside of the main discussions page (closes #208).</li>
-                        <li>Fixed a bug that was showing the Whitelist/Blacklist Checker button in all pages (closes #227).</li>
-                        <li>Added "Package" category to Game Categories (closes #180).</li>
+                        <li>Added "Ratings" filter to Giveaway Filters (games that do not have a rating, either because the Steam page doesn't have it or because the script was unable to get it, have a predefined rating of 0) (closes <a href="https://github.com/revilheart/ESGST/issues/191">#191</a>).</li>
+                        <li>Added more info about the giveaway to the popup in Enter/Leave Giveaway Button (closes <a href="https://github.com/revilheart/ESGST/issues/226">#226</a>).</li>
+                        <li>Fixed a bug that was missing some features in Discussions Highlighter when opening them outside of the main discussions page (closes <a href="https://github.com/revilheart/ESGST/issues/208">#208</a>).</li>
+                        <li>Fixed a bug that was showing the Whitelist/Blacklist Checker button in all pages (closes <a href="https://github.com/revilheart/ESGST/issues/227">#227</a>).</li>
+                        <li>Added "Package" category to Game Categories (closes <a href="https://github.com/revilheart/ESGST/issues/180">#180</a>).</li>
                     </ul>
                 `
             },
@@ -33645,7 +34002,7 @@ ${avatar.outerHTML}
                 changelog: `
                     <ul>
                         <li>Fixed some bugs and made more optimizations.</li>
-                        <li>Fixed a bug that was not showing the changelog when updating (closes #233).</li>
+                        <li>Fixed a bug that was not showing the changelog when updating (closes <a href="https://github.com/revilheart/ESGST/issues/233">#233</a>).</li>
                     </ul>
                 `
             },
@@ -33656,7 +34013,7 @@ ${avatar.outerHTML}
                     <ul>
                         <li>Fixed a bug that was not saving color settings.</li>
                         <li>Fixed a bug that was enabling the option to pop up giveaway descriptions even if it was disabled in Enter/Leave Giveaway Button.</li>
-                        <li>Fixed a bug that was not marking things as visited in Giveaways/Discussions/Tickets/Trades Tracker if Comment Tracker was disabled (closes #230).</li>
+                        <li>Fixed a bug that was not marking things as visited in Giveaways/Discussions/Tickets/Trades Tracker if Comment Tracker was disabled (closes <a href="https://github.com/revilheart/ESGST/issues/230">#230</a>).</li>
                     </ul>
                 `
             },
@@ -33667,7 +34024,7 @@ ${avatar.outerHTML}
                     <ul>
                         <li>Moved Giveaway/Discussions/Tickets/Trades Tracker to General.</li>
                         <li>Added an option that allows users to disable the script completely for SteamTrades, which also cleans the settings menu from any ST options.</li>
-                        <li>Fixed a bug that was not showing the "Recent Username History" and "Comment History" buttons in the header menu (closes #231).</li>
+                        <li>Fixed a bug that was not showing the "Recent Username History" and "Comment History" buttons in the header menu (closes <a href="https://github.com/revilheart/ESGST/issues/231">#231</a>).</li>
                     </ul>
                     <p>Added a new feature:</p>
                     <ul>
@@ -33715,22 +34072,22 @@ ${avatar.outerHTML}
                         <li>All feature descriptions will now be accessible from the settings menu, without the need to keep going back and forth between the settings menu and the GitHub page (this is a work in progress, some features are currently missing their description).</li>
                         <li>New features and functionalities will now be marked with a [NEW] tag, so it's easier to locate what's new in the current version from the settings menu.</li>
                         <li>Started a process of cloning SG's classes so the script no longer needs to rely on them, which will prevent any possible conflict from SG's script (solves an issue that wasn't opening the header menu on Firefox, and another issue that was replacing the ESGST button with the profile button on ST).</li>
-                        <li>Optimized memory consumption and speed for sync, Game Categories and Created/Entered/Won Giveaway Details (possibly closes #220 and #222).</li>
+                        <li>Optimized memory consumption and speed for sync, Game Categories and Created/Entered/Won Giveaway Details (possibly closes <a href="https://github.com/revilheart/ESGST/issues/220">#220</a> and <a href="https://github.com/revilheart/ESGST/issues/222">#222</a>).</li>
                         <li>Brought back avatars to Grid View.</li>
                         <li>Giveaway Groups Loader now shows group avatars again.</li>
                         <li>Improved how the groups are synced in Stickied Giveaway Groups and upgraded the group storage (unfortunately, unlike previous storage upgrades, this upgrade cannot retain your stickied groups, so you will have to sticky your groups again). You must sync through the settings menu (section 9) immediately, otherwise none of the group features will work correctly in this version.</li>
                         <li>Fixed some bugs in Unsent Gifts Sender.</li>
-                        <li>Comment Formatting Helper now checks to make sure the user entered the right format for encrypted giveaways (closes #225).</li>
+                        <li>Comment Formatting Helper now checks to make sure the user entered the right format for encrypted giveaways (closes <a href="https://github.com/revilheart/ESGST/issues/225">#225</a>).</li>
                         <li>Changed the comment count to red in Comment Tracker.</li>
-                        <li>Fixed a bug in User Giveaways Data that was showing "undefined" for sent data (closes #177).</li>
-                        <li>Game Categories now has links for each category (closes #213) and appears in front of the game title if the simplified mode is enabled.</li>
+                        <li>Fixed a bug in User Giveaways Data that was showing "undefined" for sent data (closes <a href="https://github.com/revilheart/ESGST/issues/177">#177</a>).</li>
+                        <li>Game Categories now has links for each category (closes <a href="https://github.com/revilheart/ESGST/issues/213">#213</a>) and appears in front of the game title if the simplified mode is enabled.</li>
                         <li>Improved a lot of other things, especially user features.</li>
                     </ul>
                     <p>Added the following features:</p>
                     <ul>
                         <li>Giveaways/Discussions/Tickets/Trades Tracker (separated from Comment Tracker)</li>
                         <li>Same Tab Opener</li>
-                        <li>Main Post Skipper (closes #22)</li>
+                        <li>Main Post Skipper (closes <a href="https://github.com/revilheart/ESGST/issues/22">#22</a>)</li>
                     </ul>
                 `
             },
@@ -33785,11 +34142,11 @@ ${avatar.outerHTML}
                         <li>Fixed a style issue in Fixed Header for SteamTrades.</li>
                         <li>Changed the version alert in ESGST's discussion page to a popup.</li>
                         <li>Added the option not to show the changelog from the current version when updating.</li>
-                        <li>Fixed a bug in Giveaway Encrypter/Decrypter that was showing duplicated giveaways (closes #184).</li>
-                        <li>Giveaway Encrypter/Decrypter now appears in any page (closes #188) and the giveaways are now sorted by end date. If the page you're on has a giveaway that hasn't been decrypted yet, the icon will turn green.</li>
+                        <li>Fixed a bug in Giveaway Encrypter/Decrypter that was showing duplicated giveaways (closes <a href="https://github.com/revilheart/ESGST/issues/184">#184</a>).</li>
+                        <li>Giveaway Encrypter/Decrypter now appears in any page (closes <a href="https://github.com/revilheart/ESGST/issues/188">#188</a>) and the giveaways are now sorted by end date. If the page you're on has a giveaway that hasn't been decrypted yet, the icon will turn green.</li>
                         <li>Entered giveaways are now shown correctly in Giveaway Encrypter/Decrypter.</li>
                         <li>Added a link to the giveaways in Giveaway Encrypter/Decrypter that links to the source of the giveaway (the comment where the giveaway came from) - only works for giveaways decrypted since this version or if you revisit the page that the decrypted giveaway is from.</li>
-                        <li>Added "Points" filter to Advanced Giveaway Search and also a delay for showing the panel if you have Active Discussions on the sidebar (closes #207).</li>
+                        <li>Added "Points" filter to Advanced Giveaway Search and also a delay for showing the panel if you have Active Discussions on the sidebar (closes <a href="https://github.com/revilheart/ESGST/issues/207">#207</a>).</li>
                     </ul>
                 `
             },
@@ -33798,7 +34155,7 @@ ${avatar.outerHTML}
                 version: `6.Beta.14.6`,
                 changelog: `
                     <ul>
-                        <li>Fixed a bug in Giveaway Templates that was adding 24 hours to the end time when using both precise start and end times (closes #205).</li>
+                        <li>Fixed a bug in Giveaway Templates that was adding 24 hours to the end time when using both precise start and end times (closes <a href="https://github.com/revilheart/ESGST/issues/205">#205</a>).</li>
                     </ul>
                 `
             },
@@ -33818,7 +34175,7 @@ ${avatar.outerHTML}
                 changelog: `
                     <ul>
                         <li>Changed the sidebar and main page heading positions from fixed to absolute so that they scroll vertically with the page in Fixed Sidebar/Main Page Heading.</li>
-                        <li>Fixed a bug that was causing giveaway features not to appear for invite only giveaways (closes #204).</li>
+                        <li>Fixed a bug that was causing giveaway features not to appear for invite only giveaways (closes <a href="https://github.com/revilheart/ESGST/issues/204">#204</a>).</li>
                     </ul>
                 `
             },
@@ -33827,7 +34184,7 @@ ${avatar.outerHTML}
                 version: `6.Beta.14.3`,
                 changelog: `
                     <ul>
-                        <li>Fixed a style issue in Fixed Main Page Heading (closes #203).</li>
+                        <li>Fixed a style issue in Fixed Main Page Heading (closes <a href="https://github.com/revilheart/ESGST/issues/203">#203</a>).</li>
                         <li>Fixed a bug in Giveaway Winning Chance/Ratio that was adding 1 entry to created/ended giveaways.</li>
                     </ul>
                 `
@@ -33838,7 +34195,7 @@ ${avatar.outerHTML}
                 changelog: `
                     <ul>
                         <li>Fixed some bugs.</li>
-                        <li>Giveaway Winning Chance and Giveaway Winning Ratio now add 1 entry to the chance/ratio calculation if you haven't entered the giveaway yet, to demonstrate what your exact chance will be when entered (closes #202).</li>
+                        <li>Giveaway Winning Chance and Giveaway Winning Ratio now add 1 entry to the chance/ratio calculation if you haven't entered the giveaway yet, to demonstrate what your exact chance will be when entered (closes <a href="https://github.com/revilheart/ESGST/issues/202">#202</a>).</li>
                         <li>Increased the delay from 0.5 to 1 second in Avatar Popout, added a delay for closing the popout, and prevented the popout from opening if a click was made.</li>
                     </ul>
                 `
@@ -33850,12 +34207,12 @@ ${avatar.outerHTML}
                     <ul>
                         <li>Fixed some bugs.</li>
                         <li>Changed "Everyone" to "Public" in all features that use this notation.</li>
-                        <li>Fixed a style issue in Fixed Sidebar/Fixed Main Page Heading for changing-width sidebars/descriptions (closes #117).</li>
+                        <li>Fixed a style issue in Fixed Sidebar/Fixed Main Page Heading for changing-width sidebars/descriptions (closes <a href="https://github.com/revilheart/ESGST/issues/117">#117</a>).</li>
                         <li>Avatar Popout now works also when hovering hover an user's username.</li>
                     </ul>
                     <p>Renamed the following features:</p>
                     <ul>
-                        <li>Giveaway Train Maker -> Giveaway Maker - Made the interface less confusing and added a tooltip describing how to use the feature in more details (closes #200).</li>
+                        <li>Giveaway Train Maker -> Giveaway Maker - Made the interface less confusing and added a tooltip describing how to use the feature in more details (closes <a href="https://github.com/revilheart/ESGST/issues/200">#200</a>).</li>
                     </ul>
                 `
             },
@@ -33886,8 +34243,8 @@ ${avatar.outerHTML}
                     </ul>
                     <p>Added the following features:</p>
                     <ul>
-                        <li>Created/Entered/Won Giveaway Details (closes #193)</li>
-                        <li>Is There Any Deal? Info (closes #194)</li>
+                        <li>Created/Entered/Won Giveaway Details (closes <a href="https://github.com/revilheart/ESGST/issues/193">#193</a>)</li>
+                        <li>Is There Any Deal? Info (closes <a href="https://github.com/revilheart/ESGST/issues/194">#194</a>)</li>
                     </ul>
                     <p>Removed the following features:</p>
                     <ul>
@@ -33911,7 +34268,7 @@ ${avatar.outerHTML}
                     <ul>
                         <li>The script no longer prompts alerts when errors happen, and should now only run if the page has properly loaded (no error pages) and you're logged in.</li>
                         <li>Fixed more bugs with giveaway features being enabled where they shouldn't.</li>
-                        <li>Added a filtered count to each page in Giveaway Filters (closes #80).</li>
+                        <li>Added a filtered count to each page in Giveaway Filters (closes <a href="https://github.com/revilheart/ESGST/issues/80">#80</a>).</li>
                     </ul>
                 `
             },
@@ -33921,7 +34278,7 @@ ${avatar.outerHTML}
                 changelog: `
                     <ul>
                         <li>The script no longer runs when you aren't logged in.</li>
-                        <li>Game Categories should now retrieve correct categories if you're a non-English user (closes #189).</li>
+                        <li>Game Categories should now retrieve correct categories if you're a non-English user (closes <a href="https://github.com/revilheart/ESGST/issues/189">#189</a>).</li>
                         <li>Header Refresher is back to altering the icon of the tab (must be enabled through the settings menu). You can also choose to show the number of delivered wins in the icon if Delivered Gifts Notifier is enabled (it will be shown as yellow to the left of the unread message count, which remains red).</li>
                         <li>Fixed a bug in Not Activated/Multiple Wins Checker that was linking the wrong page for multiple wins.</li>
                     </ul>
@@ -33945,11 +34302,11 @@ ${avatar.outerHTML}
                         <li>Fixed a bug in Endless Scrolling that was not properly reversing discussions with 100+ pages.</li>
                         <li>Fixed a bug in Endless Scrolling that was always reversing discussions, making it impossible to go to page 1 without scrolling down from page 2. Now the reverse scrolling will only kick in if you came to page 1 from the discussions page ("/discussions"). If you came to page 1 from anywhere else, it will not reverse the discussion.</li>
                         <li>Extended Giveaway Filters to work in group pages.</li>
-                        <li>Fixed a bug in Comment Tracker that was not properly going to the first unread comment of discussions with 100+ pages (closes #134).</li>
+                        <li>Fixed a bug in Comment Tracker that was not properly going to the first unread comment of discussions with 100+ pages (closes <a href="https://github.com/revilheart/ESGST/issues/134">#134</a>).</li>
                     </ul>
                     <p>Added the following features:</p>
                     <ul>
-                        <li>Last Page Link (closes #138)</li>
+                        <li>Last Page Link (closes <a href="https://github.com/revilheart/ESGST/issues/138">#138</a>)</li>
                     </ul>
                 `
             },
@@ -34005,7 +34362,7 @@ ${avatar.outerHTML}
                     </ul>
                     <p>Upgraded the following features to v6:</p>
                     <ul>
-                        <li>Giveaway Templates - Changed how the data is stored (just like with previous storage upgrades, your data should be transferred without any losses, but let me know about any missing data). Revamped the feature (closes #52). Added options to use precise start/end time. The "Review Giveaway" button now appears both at the top and at the bottom of the page. Added a new "Create Giveaway" button that creates the giveaway directly without passing through the review step.</li>
+                        <li>Giveaway Templates - Changed how the data is stored (just like with previous storage upgrades, your data should be transferred without any losses, but let me know about any missing data). Revamped the feature (closes <a href="https://github.com/revilheart/ESGST/issues/52">#52</a>). Added options to use precise start/end time. The "Review Giveaway" button now appears both at the top and at the bottom of the page. Added a new "Create Giveaway" button that creates the giveaway directly without passing through the review step.</li>
                     </ul>
                 `
             },
@@ -34033,8 +34390,8 @@ ${avatar.outerHTML}
                 version: `6.Beta.10.0`,
                 changelog: `
                     <ul>
-                        <li>Fixed more bugs for giveaway features being enabled in places where they shouldn't (closes #186).</li>
-                        <li>Added a sorting feature to Giveaway Winning Chance (closes #44).</li>
+                        <li>Fixed more bugs for giveaway features being enabled in places where they shouldn't (closes <a href="https://github.com/revilheart/ESGST/issues/186">#186</a>).</li>
+                        <li>Added a sorting feature to Giveaway Winning Chance (closes <a href="https://github.com/revilheart/ESGST/issues/44">#44</a>).</li>
                         <li>Disabled Giveaway Bookmarks for giveaways that have not started yet because the feature is not configured to work well with them and will always alert that they are ending (I'll figure out a way to make it work later).</li>
                     </ul>
                     <p>Added the following features:</p>
@@ -34048,11 +34405,11 @@ ${avatar.outerHTML}
                 version: `6.Beta.9.0`,
                 changelog: `
                     <ul>
-                        <li>Fixed a bug in Comment Tracker that was not correctly going to the first unread comment of a page (closes #185).</li>
+                        <li>Fixed a bug in Comment Tracker that was not correctly going to the first unread comment of a page (closes <a href="https://github.com/revilheart/ESGST/issues/185">#185</a>).</li>
                     </ul>
                     <p>Added the following features:</p>
                     <ul>
-                        <li>Whitelist/Blacklist Sorter - Must sync through the settings menu for it to work properly (closes #46).</li>
+                        <li>Whitelist/Blacklist Sorter - Must sync through the settings menu for it to work properly (closes <a href="https://github.com/revilheart/ESGST/issues/46">#46</a>).</li>
                     </ul>
                 `
             },
@@ -34061,10 +34418,10 @@ ${avatar.outerHTML}
                 version: `6.Beta.8.3`,
                 changelog: `
                     <ul>
-                        <li>Fixed a bug that was happening in the new giveaway page (closes #183).</li>
-                        <li>Every time you visit the ESGST discussion, the script will now check if you are on the latest version by checking for a hidden element in the OP (no requests required) and will give you an alert if you aren't (closes #147).</li>
-                        <li>Fixed a bug in Giveaway Filters that was filtering giveaways from Giveaway Bookmarks (closes #169).</li>
-                        <li>Fixed a bug in Comment History that was happening when loading the history (closes #182).</li>
+                        <li>Fixed a bug that was happening in the new giveaway page (closes <a href="https://github.com/revilheart/ESGST/issues/183">#183</a>).</li>
+                        <li>Every time you visit the ESGST discussion, the script will now check if you are on the latest version by checking for a hidden element in the OP (no requests required) and will give you an alert if you aren't (closes <a href="https://github.com/revilheart/ESGST/issues/147">#147</a>).</li>
+                        <li>Fixed a bug in Giveaway Filters that was filtering giveaways from Giveaway Bookmarks (closes <a href="https://github.com/revilheart/ESGST/issues/169">#169</a>).</li>
+                        <li>Fixed a bug in Comment History that was happening when loading the history (closes <a href="https://github.com/revilheart/ESGST/issues/182">#182</a>).</li>
                     </ul>
                 `
             },
@@ -34095,13 +34452,13 @@ ${avatar.outerHTML}
                 version: `6.Beta.8.0`,
                 changelog: `
                     <ul>
-                        <li>Fixed a bug that was not properly handling username changes (closes #176).</li>
-                        <li>Fixed a bug in Giveaway Filters that was not applying category filters (closes #173).</li>
+                        <li>Fixed a bug that was not properly handling username changes (closes <a href="https://github.com/revilheart/ESGST/issues/176">#176</a>).</li>
+                        <li>Fixed a bug in Giveaway Filters that was not applying category filters (closes <a href="https://github.com/revilheart/ESGST/issues/173">#173</a>).</li>
                         <li>Game Categories should now load a lot faster, unless "Rating" or "User-Defined Tags" are enabled.</li>
                     </ul>
                     <p>Added the following features:</p>
                     <ul>
-                        <li>Steam Activation Link (closes #177)</li>
+                        <li>Steam Activation Link (closes <a href="https://github.com/revilheart/ESGST/issues/177">#177</a>)</li>
                     </ul>
                 `
             },
@@ -34134,7 +34491,7 @@ ${avatar.outerHTML}
                     </ul>
                     <p>Added the following features:</p>
                     <ul>
-                        <li>User Filters (closes #51)</li>
+                        <li>User Filters (closes <a href="https://github.com/revilheart/ESGST/issues/51">#51</a>)</li>
                     </ul>
                 `
             },
@@ -34143,9 +34500,9 @@ ${avatar.outerHTML}
                 version: `6.Beta.6.3`,
                 changelog: `
                     <ul>
-                        <li>Removed periods from all tooltips (closes #166).</li>
-                        <li>Added tooltip to User Notes button (closes #167).</li>
-                        <li>Fixed a bug that was enabling some giveaway features where they shouldn't (closes #168).</li>
+                        <li>Removed periods from all tooltips (closes <a href="https://github.com/revilheart/ESGST/issues/166">#166</a>).</li>
+                        <li>Added tooltip to User Notes button (closes <a href="https://github.com/revilheart/ESGST/issues/167">#167</a>).</li>
+                        <li>Fixed a bug that was enabling some giveaway features where they shouldn't (closes <a href="https://github.com/revilheart/ESGST/issues/168">#168</a>).</li>
                         <li>Entered giveaways are now automatically unbookmarked in Giveaway Bookmarks.</li>
                         <li>The option to change the background instead of fading out has been removed from Comment Tracker and implemented by default on hover (#closes 143).</li>
                     </ul>
@@ -34175,12 +34532,12 @@ ${avatar.outerHTML}
                 changelog: `
                     <ul>
                         <li>Fixed a bug that was happening in the entered page if Giveaway Winning Chance, Giveaway Winning Ratio and Enter/Leave Giveaway Button were disabled.</li>
-                        <li>Changed the position of Giveaway Filters to above the pinned giveaways, so that it is fixed when filtering the giveaways (closes #165).</li>
+                        <li>Changed the position of Giveaway Filters to above the pinned giveaways, so that it is fixed when filtering the giveaways (closes <a href="https://github.com/revilheart/ESGST/issues/165">#165</a>).</li>
                         <li>Added back the background highlight to groups that you are a member of to the popup option in Giveaway Groups Loader.</li>
-                        <li>Fixed a bug that was not running Comment Tracker in Active Discussions (closes #162).</li>
+                        <li>Fixed a bug that was not running Comment Tracker in Active Discussions (closes <a href="https://github.com/revilheart/ESGST/issues/162">#162</a>).</li>
                         <li>Fixed a bug in Comment Tracker that was not showing the read/unread button under the OP.</li>
                         <li>Fixed a bug in Comment Tracker that was not unfading a comment when making it as unread.</li>
-                        <li>OPs are no longer counted as comments in Comment Tracker (closes #159).</li>
+                        <li>OPs are no longer counted as comments in Comment Tracker (closes <a href="https://github.com/revilheart/ESGST/issues/159">#159</a>).</li>
                         <li>You can now mark discussions as unvisited in Comment Tracker.</li>
                     </ul>
                     <p>Added the following features:</p>
@@ -34214,7 +34571,7 @@ ${avatar.outerHTML}
                     <ul>
                         <li>Fixed a bug in Grid View that wasn't working well with Giveaway Filters.</li>
                         <li>Set a fixed width to the Grid View popout to 600px to prevent things from inflating the page.</li>
-                        <li>Possibly fixed a bug in Comment Tracker that was showing the wrong comment count for discussions (possibly closes #134 and #160).</li>
+                        <li>Possibly fixed a bug in Comment Tracker that was showing the wrong comment count for discussions (possibly closes <a href="https://github.com/revilheart/ESGST/issues/134">#134</a> and <a href="https://github.com/revilheart/ESGST/issues/160">#160</a>).</li>
                     </ul>
                 `
             },
@@ -34223,7 +34580,7 @@ ${avatar.outerHTML}
                 version: `6.Beta.5.2`,
                 changelog: `
                     <ul>
-                        <li>Fixed a bug in Giveaway Groups Loader that wasn't showing some groups (closes #158).</li>
+                        <li>Fixed a bug in Giveaway Groups Loader that wasn't showing some groups (closes <a href="https://github.com/revilheart/ESGST/issues/158">#158</a>).</li>
                         <li>Added an option to only show groups that you are a member of to Giveaway Groups Loader.</li>
                         <li>Added back the option to use a popup to load giveaway groups to Giveaway Groups Loader.</li>
                         <li>Fixed a bug in Enter/Leave Giveaway Button that was still popping up the description even if it was disabled when leaving a giveaway and entering it again.</li>
@@ -34239,8 +34596,8 @@ ${avatar.outerHTML}
                 changelog: `
                     <ul>
                         <li>Fixed a bug that was preventing the script from running.</li>
-                        <li>Decrypted Giveaways are no longer cached (they are now retrieved in real time for accurate number of entries/comments, etc) (closes #141).</li>
-                        <li>Removed an extra underline that popup links had (closes #127).</li>
+                        <li>Decrypted Giveaways are no longer cached (they are now retrieved in real time for accurate number of entries/comments, etc) (closes <a href="https://github.com/revilheart/ESGST/issues/141">#141</a>).</li>
+                        <li>Removed an extra underline that popup links had (closes <a href="https://github.com/revilheart/ESGST/issues/127">#127</a>).</li>
                     </ul>
                 `
             },
@@ -34251,17 +34608,17 @@ ${avatar.outerHTML}
                     <ul>
                         <li>Fixed a bug that was happening when visiting deleted giveaways.</li>
                         <li>Major user storage upgrade to v6. As with the previous upgrades, your data should be transferred without any losses, but let me know about any missing data (if you do find missing data, do not panic - none of the v5 storage is deleted, so it can be easily recovered). As a result, managing tags from the settings menu has been temporarily disabled until it has been rewritten for v6.</li>
-                        <li>Added options to manage user data individually to the settings menu (closes #139).</li>
-                        <li>Fixed an issue that was breaking discussion titles (closes #153).</li>
+                        <li>Added options to manage user data individually to the settings menu (closes <a href="https://github.com/revilheart/ESGST/issues/139">#139</a>).</li>
+                        <li>Fixed an issue that was breaking discussion titles (closes <a href="https://github.com/revilheart/ESGST/issues/153">#153</a>).</li>
                         <li>Disabled the giveaway panel, which makes the icons of the giveaway appear in the entries/comments row, if you don't have Giveaway Winning Chance, Giveaway Winning Ratio and Enter/Leave Giveaway Button, as these make the row too large with the icons in the default row.</li>
-                        <li>Corrected created time for the list of highlighted discussions (closes #155).</li>
+                        <li>Corrected created time for the list of highlighted discussions (closes <a href="https://github.com/revilheart/ESGST/issues/155">#155</a>).</li>
                         <li>You can now use the Enter key to save tags.</li>
                         <li>If you hover hover whitelist/blacklist highlights, you will now see when you whitelisted/blacklisted that user (must be synced through the settings menu).</li>
                     </ul>
                     <p>Added the following features:</p>
                     <ul>
                         <li>Giveaway Grops Loader - Replaces Giveaway Groups Popup (can be added back if there is demand for it).</li>
-                        <li>One-Click Giveaway Hider (closes #156)</li>
+                        <li>One-Click Giveaway Hider (closes <a href="https://github.com/revilheart/ESGST/issues/156">#156</a>)</li>
                     </ul>
                 `
             },
@@ -34282,12 +34639,12 @@ ${avatar.outerHTML}
                         <li>Fixed some bugs.</li>
                         <li>Added back the option to disable description popups to Enter/Leave Giveaway Button, but made the popups enabled by default.</li>
                         <li>Fixed a bug in Comment Tracker that wasn't resetting the loading icon when using reverse order to find an unread comment.</li>
-                        <li>Fixed a typo in Comment Tracker (closes #154).</li>
-                        <li>Enhanced the option to mark all comments as unread in a discussion in Comment Tracker to prevent it from making any requests (closes #152).</li>
+                        <li>Fixed a typo in Comment Tracker (closes <a href="https://github.com/revilheart/ESGST/issues/154">#154</a>).</li>
+                        <li>Enhanced the option to mark all comments as unread in a discussion in Comment Tracker to prevent it from making any requests (closes <a href="https://github.com/revilheart/ESGST/issues/152">#152</a>).</li>
                     </ul>
                     <p>Upgraded the following features to v6:</p>
                     <ul>
-                        <li>Avatar Popout - Completely revamped the feature using the styling from SquishedPotatoe's dark theme (it might also be incompatible with the theme for the moment because of class name changing) (closes #67).</li>
+                        <li>Avatar Popout - Completely revamped the feature using the styling from SquishedPotatoe's dark theme (it might also be incompatible with the theme for the moment because of class name changing) (closes <a href="https://github.com/revilheart/ESGST/issues/67">#67</a>).</li>
                     </ul>
                 `
             },
@@ -34316,11 +34673,11 @@ ${avatar.outerHTML}
                 version: `6.Beta.4.4`,
                 changelog: `
                     <ul>
-                        <li>Fixed a bug that was not updating the sync date after syncing the bundle list (closes #99).</li>
-                        <li>Prevented some buttons from appearing in places where they shouldn't (closes #103).</li>
-                        <li>Added "Created" filter to Giveaway Filters (closes #137).</li>
+                        <li>Fixed a bug that was not updating the sync date after syncing the bundle list (closes <a href="https://github.com/revilheart/ESGST/issues/99">#99</a>).</li>
+                        <li>Prevented some buttons from appearing in places where they shouldn't (closes <a href="https://github.com/revilheart/ESGST/issues/103">#103</a>).</li>
+                        <li>Added "Created" filter to Giveaway Filters (closes <a href="https://github.com/revilheart/ESGST/issues/137">#137</a>).</li>
                         <li>Fixed some bugs in Comment Tracker.</li>
-                        <li>Fixed a bug in Whitelist/Blacklist Checker that was retrieving the wrong pages if the URL had a hash (closes #57).</li>
+                        <li>Fixed a bug in Whitelist/Blacklist Checker that was retrieving the wrong pages if the URL had a hash (closes <a href="https://github.com/revilheart/ESGST/issues/57">#57</a>).</li>
                         <li>Re-enabled the full list check option for the main giveaway pages in Whitelist/Blacklist Checker.</li>
                     </ul>
                 `
@@ -34340,12 +34697,12 @@ ${avatar.outerHTML}
                 changelog: `
                     <ul>
                         <li>Fixed a bug in Grid View.</li>
-                        <li>Added "Last Checked" information to the tooltip of Whitelist/Blacklist Checker and Not Activated/Multiple Wins Checker highlights (closes #142).</li>
+                        <li>Added "Last Checked" information to the tooltip of Whitelist/Blacklist Checker and Not Activated/Multiple Wins Checker highlights (closes <a href="https://github.com/revilheart/ESGST/issues/142">#142</a>).</li>
                     </ul>
                     <p>Upgraded the following features to v6:</p>
                     <ul>
-                        <li>Comment Tracker - Fixed some bugs (possible solution to #134). Changed how the data is stored (your data should be transferred without any losses, but let me know about any missing data). You can now mark comments as unread (closes #128). Read comments and visited giveaways/discussions are no longer faded out - their background now changes to grey (possible solution to #143). The feature now works in the inbox page.</li>
-                        <li>Discussion Highlighter - You can now view your highlighted discussions through the Discussions header button (closes #133).</li>
+                        <li>Comment Tracker - Fixed some bugs (possible solution to <a href="https://github.com/revilheart/ESGST/issues/134">#134</a>). Changed how the data is stored (your data should be transferred without any losses, but let me know about any missing data). You can now mark comments as unread (closes <a href="https://github.com/revilheart/ESGST/issues/128">#128</a>). Read comments and visited giveaways/discussions are no longer faded out - their background now changes to grey (possible solution to <a href="https://github.com/revilheart/ESGST/issues/143">#143</a>). The feature now works in the inbox page.</li>
+                        <li>Discussion Highlighter - You can now view your highlighted discussions through the Discussions header button (closes <a href="https://github.com/revilheart/ESGST/issues/133">#133</a>).</li>
                     </ul>
                 `
             },
@@ -34372,7 +34729,7 @@ ${avatar.outerHTML}
                     <p>Upgraded the following features to v6:</p>
                     <ul>
                         <li>Giveaway Winning Chance - Separated it into Giveaway Winning Chance and Giveaway Winning Ratio.</li>
-                        <li>Enter/Leave Giveaway Button - Fixed some bugs (closes #136 and #146). The feature now automatically detects if you own the game (you must of course sync through the settings menu) or if the giveaway is for a higher level than you and does not show the Enter button in case one of these is true (closes #132). Entered giveaways are now immediately hidden if the filter is enabled (closes #129). If an error occurs while entering a giveaway or if you don't have enough points, the button will simply turn red instead of adding an additional button to its side (partial solution to #89). Brought back the option to add a comment to the giveaway upon entering.</li>
+                        <li>Enter/Leave Giveaway Button - Fixed some bugs (closes <a href="https://github.com/revilheart/ESGST/issues/136">#136</a> and <a href="https://github.com/revilheart/ESGST/issues/146">#146</a>). The feature now automatically detects if you own the game (you must of course sync through the settings menu) or if the giveaway is for a higher level than you and does not show the Enter button in case one of these is true (closes <a href="https://github.com/revilheart/ESGST/issues/132">#132</a>). Entered giveaways are now immediately hidden if the filter is enabled (closes <a href="https://github.com/revilheart/ESGST/issues/129">#129</a>). If an error occurs while entering a giveaway or if you don't have enough points, the button will simply turn red instead of adding an additional button to its side (partial solution to <a href="https://github.com/revilheart/ESGST/issues/89">#89</a>). Brought back the option to add a comment to the giveaway upon entering.</li>
                     </ul>
                     <p>Added the following features:</p>
                     <ul>
@@ -34414,7 +34771,7 @@ ${avatar.outerHTML}
                     </ul>
                     <p>Added the following features:</p>
                     <ul>
-                        <li>Level Progress Visualizer (closes #144)</li>
+                        <li>Level Progress Visualizer (closes <a href="https://github.com/revilheart/ESGST/issues/144">#144</a>)</li>
                     </ul>
                 `
             },
@@ -34436,11 +34793,11 @@ ${avatar.outerHTML}
                         <li>Changed how the game data is stored (your old data should be transferred without any problems, but let me know about any missing data).</li>
                         <li>Fixed a conflict between games' app/sub ids. As a result, Multi-Tag and the option to import/export game data have been temporarily disabled until they are rewritten for the new system.</li>
                         <li>Reinforced how the gama data is saved to further prevent data from being overwritten. As a result, you might notice that game features now take a bit longer to save.</li>
-                        <li>Added "Rating" and "User-Defined Tags" categories to Game Categories (closes #130).</li>
+                        <li>Added "Rating" and "User-Defined Tags" categories to Game Categories (closes <a href="https://github.com/revilheart/ESGST/issues/130">#130</a>).</li>
                         <li>Changed the default colors for Game Categories and added a button to the settings menu that allows you to reset the colors to their default values.</li>
                         <li>Changed the "Wishlisted" and "Ignored" icons in Game Categories.</li>
-                        <li>Game Categories now works on any page (closes #108).</li>
-                        <li>Game Categories now retrieves data from the US store (closes #123).</li>
+                        <li>Game Categories now works on any page (closes <a href="https://github.com/revilheart/ESGST/issues/108">#108</a>).</li>
+                        <li>Game Categories now retrieves data from the US store (closes <a href="https://github.com/revilheart/ESGST/issues/123">#123</a>).</li>
                     </ul>
                     <p>Renamed the following features:</p>
                     <ul>
@@ -34471,7 +34828,7 @@ ${avatar.outerHTML}
                     <ul>
                         <li>Internally tweaked Visible Attached Images, Embedded Videos and Pagination Navigation On Top a little.</li>
                         <li>Added the options to use a 24-hour clock and to show seconds in Accurate Timestamps and shortened the name of the months to the Mmm notation.</li>
-                        <li>Fixed a bug in Giveaway Winning Chance that was happening for giveaways that have not started yet (closes #131).</li>
+                        <li>Fixed a bug in Giveaway Winning Chance that was happening for giveaways that have not started yet (closes <a href="https://github.com/revilheart/ESGST/issues/131">#131</a>).</li>
                     </ul>
                 `
             },
@@ -34506,8 +34863,8 @@ ${avatar.outerHTML}
                 changelog: `
                     <ul>
                         <li>Changed the way the sync works (it no longer requires a Steam API key, but you must be logged in on Steam).</li>
-                        <li>Category filters are now applied to exceptions in Giveaway Filters (closes #115).</li>
-                        <li>Added "Chance" and "Genres" filters to Giveaway Filters (closes #101).</li>
+                        <li>Category filters are now applied to exceptions in Giveaway Filters (closes <a href="https://github.com/revilheart/ESGST/issues/115">#115</a>).</li>
+                        <li>Added "Chance" and "Genres" filters to Giveaway Filters (closes <a href="https://github.com/revilheart/ESGST/issues/101">#101</a>).</li>
                         <li>Added "Ignored" category to Game Categories (must be synced through the settings menu).</li>
                     </ul>
                 `
@@ -34538,14 +34895,14 @@ ${avatar.outerHTML}
                 version: `6.Beta.3.6`,
                 changelog: `
                     <ul>
-                        <li>Fixed a bug in Exclusive Giveaways that was happening for games that the user has hidden (closes #126).</li>
+                        <li>Fixed a bug in Exclusive Giveaways that was happening for games that the user has hidden (closes <a href="https://github.com/revilheart/ESGST/issues/126">#126</a>).</li>
                         <li>Fixed a bug in Exclusive Giveaways that was duplicating elements when using endless scrolling.</li>
-                        <li>Fixed a bug in Embedded Videos that was trying to embed channels/playlists (closes #112).</li>
+                        <li>Fixed a bug in Embedded Videos that was trying to embed channels/playlists (closes <a href="https://github.com/revilheart/ESGST/issues/112">#112</a>).</li>
                         <li>Your own comments are now automatically marked as read in Comment Tracker.</li>
                     </ul>
                     <p>Renamed the following features:</p>
                     <ul>
-                        <li>Exclusive Giveaways -> Giveaways Encrypter/Decrypter - This prevents any confusion about the nature of this feature. The giveaways are not really exclusive (anyone can see them in the source code of the page), this feature simply decrypts them and hands them over to the user (closes #125).</li>
+                        <li>Exclusive Giveaways -> Giveaways Encrypter/Decrypter - This prevents any confusion about the nature of this feature. The giveaways are not really exclusive (anyone can see them in the source code of the page), this feature simply decrypts them and hands them over to the user (closes <a href="https://github.com/revilheart/ESGST/issues/125">#125</a>).</li>
                     </ul>
                     <p>Upgraded the following features to v6:</p>
                     <ul>
@@ -34559,15 +34916,15 @@ ${avatar.outerHTML}
                 version: `6.Beta.3.5`,
                 changelog: `
                     <ul>
-                        <li>New updates of the script will now show a popup with the changelog from the current version (closes #119).</li>
-                        <li>Fixed a bug that was not exporting all settings (closes #122).</li>
+                        <li>New updates of the script will now show a popup with the changelog from the current version (closes <a href="https://github.com/revilheart/ESGST/issues/119">#119</a>).</li>
+                        <li>Fixed a bug that was not exporting all settings (closes <a href="https://github.com/revilheart/ESGST/issues/122">#122</a>).</li>
                         <li>Added an option to the settings menu that allows you to merge the imported data with the current data when importing.</li>
                         <li>Added the option to export Exclusive Giveaways data to the settings menu.</li>
-                        <li>Improved the update link in the header button: it now checks if there is an update before loading the link (closes #118).</li>
+                        <li>Improved the update link in the header button: it now checks if there is an update before loading the link (closes <a href="https://github.com/revilheart/ESGST/issues/118">#118</a>).</li>
                         <li>Fixed a bug in Exclusive Giveaways that was happening in the inbox page.</li>
-                        <li>Revamped the Exclusive Giveaways popup and improved the feature: the giveaways are now requested to gather information about them (only appears in the popup), new giveaways appear with the tag [NEW] (closes #121), and ended giveaways no longer appear.</li>
+                        <li>Revamped the Exclusive Giveaways popup and improved the feature: the giveaways are now requested to gather information about them (only appears in the popup), new giveaways appear with the tag [NEW] (closes <a href="https://github.com/revilheart/ESGST/issues/121">#121</a>), and ended giveaways no longer appear.</li>
                         <li>Added an option to User Notes that prompts for notes when whitelisting/blacklisting an user.</li>
-                        <li>Fixed a typo in the link to the changelog on SteamGifts (closes #109).</li>
+                        <li>Fixed a typo in the link to the changelog on SteamGifts (closes <a href="https://github.com/revilheart/ESGST/issues/109">#109</a>).</li>
                     </ul>
                 `
             },
@@ -34576,7 +34933,7 @@ ${avatar.outerHTML}
                 version: `6.Beta.3.4`,
                 changelog: `
                     <ul>
-                        <li>Fixed a bug that was disabling Real CV Calculator every time a giveaway was created (closes #124).</li>
+                        <li>Fixed a bug that was disabling Real CV Calculator every time a giveaway was created (closes <a href="https://github.com/revilheart/ESGST/issues/124">#124</a>).</li>
                     </ul>
                 `
             },
@@ -34632,8 +34989,8 @@ ${avatar.outerHTML}
                         <li>Fixed a bug in Endless Scrolling that didn't update the filtered count from Giveaway Filters upon refreshing the page.</li>
                         <li>Prevented Giveaway Filters from running if an advanced search has been made.</li>
                         <li>Added "Wishlist" exception to Giveaway Filters.</li>
-                        <li>Fixed a bug in Entries Remover that happened when syncing owned games (closes #110).</li>
-                        <li>Added an option to Whitelist/Blacklist Checker that automatically saves notes to users that have been whitelisted/blacklisted in return (closes #59).</li>
+                        <li>Fixed a bug in Entries Remover that happened when syncing owned games (closes <a href="https://github.com/revilheart/ESGST/issues/110">#110</a>).</li>
+                        <li>Added an option to Whitelist/Blacklist Checker that automatically saves notes to users that have been whitelisted/blacklisted in return (closes <a href="https://github.com/revilheart/ESGST/issues/59">#59</a>).</li>
                         <li>Fixed a bug in Whitelist/Blacklist Checker that was returning wrong results for blacklisted users.</li>
                     </ul>
                 `
@@ -34645,9 +35002,9 @@ ${avatar.outerHTML}
                     <ul>
                         <li>The automatic sync is now less intrusive and appears as a button in the header (which you can click to see the current progress), and only works in the main and account pages.</li>
                         <li>Fixed a bug in Giveaway Filters that wasn't running it for page 2+ with Endless Scrolling.</li>
-                        <li>Added exceptions to Giveaway Filters (closes #106).</li>
-                        <li>Filters for the wishlist and group pages are now saved separately in Giveaway Filters (closes #107).</li>
-                        <li>Fixed a bug in Game Categories that was preventing Giveaway Description/Reply Box Popup from working in user pages (closes #105).</li>
+                        <li>Added exceptions to Giveaway Filters (closes <a href="https://github.com/revilheart/ESGST/issues/106">#106</a>).</li>
+                        <li>Filters for the wishlist and group pages are now saved separately in Giveaway Filters (closes <a href="https://github.com/revilheart/ESGST/issues/107">#107</a>).</li>
+                        <li>Fixed a bug in Game Categories that was preventing Giveaway Description/Reply Box Popup from working in user pages (closes <a href="https://github.com/revilheart/ESGST/issues/105">#105</a>).</li>
                     </ul>
                 `
             },
@@ -34659,7 +35016,7 @@ ${avatar.outerHTML}
                         <li>Changed the script to disable all features upon the first installation.</li>
                         <li>Updated Giveaway Filters to work with three-state checkboxes: none, only and all.</li>
                         <li>Added "Pinned", "Group" and "Whitelist" filters to Giveaway Filters.</li>
-                        <li>Fixed a bug in Giveaway Filters that wasn't filtering out entered giveaways with Grid View enabled (closes #104).</li>
+                        <li>Fixed a bug in Giveaway Filters that wasn't filtering out entered giveaways with Grid View enabled (closes <a href="https://github.com/revilheart/ESGST/issues/104">#104</a>).</li>
                         <li>Added "Owned" tag to Game Categories (must sync owned games through the settings menu).</li>
                         <li>Fixed a bug in Game Categories where multiplayer and mac had the same id.</li>
                         <li>Fixed a bug in Game Categories that was not loading tags for certain games.</li>
@@ -34671,12 +35028,12 @@ ${avatar.outerHTML}
                 version: `6.Beta.2.1`,
                 changelog: `
                     <ul>
-                        <li>The links from the header button now open in the same page instead of in a new window (closes #102).</li>
-                        <li>Changed the table creation in Comment Formatting Helper from a popout to a popup (closes #70).</li>
+                        <li>The links from the header button now open in the same page instead of in a new window (closes <a href="https://github.com/revilheart/ESGST/issues/102">#102</a>).</li>
+                        <li>Changed the table creation in Comment Formatting Helper from a popout to a popup (closes <a href="https://github.com/revilheart/ESGST/issues/70">#70</a>).</li>
                         <li>Increased the Game Categories cache to 1 month, as it was previously 24 hours for testing purposes.</li>
                         <li>Prevented the bundle tags in Game Categories to be displayed if the user has not synced yet.</li>
-                        <li>Fixed a bug in Game Categories that was displaying "Not Bundled" tags even if the bundled category was disabled (closes #100).</li>
-                        <li>Fixed a bug in Game Categories that was happening while creating a giveaway (closes #98).</li>
+                        <li>Fixed a bug in Game Categories that was displaying "Not Bundled" tags even if the bundled category was disabled (closes <a href="https://github.com/revilheart/ESGST/issues/100">#100</a>).</li>
+                        <li>Fixed a bug in Game Categories that was happening while creating a giveaway (closes <a href="https://github.com/revilheart/ESGST/issues/98">#98</a>).</li>
                     </ul>
                 `
             },
@@ -34738,7 +35095,7 @@ ${avatar.outerHTML}
                     </ul>
                     <p>Added the following features:</p>
                     <ul>
-                        <li>Game Categories (closes #93)</li>
+                        <li>Game Categories (closes <a href="https://github.com/revilheart/ESGST/issues/93">#93</a>)</li>
                     </ul>
                 `
             },
@@ -34748,14 +35105,14 @@ ${avatar.outerHTML}
                 changelog: `
                     <ul>
                         <li>Fixed a bug that happened when trying to retrieve the xsrf_token from the page.</li>
-                        <li>Fixed a bug that was mixing the script's popups with SteamTrades' popups (closes #72).</li>
-                        <li>The popups are now repositioned upon clicking on them (closes #83).</li>
+                        <li>Fixed a bug that was mixing the script's popups with SteamTrades' popups (closes <a href="https://github.com/revilheart/ESGST/issues/72">#72</a>).</li>
+                        <li>The popups are now repositioned upon clicking on them (closes <a href="https://github.com/revilheart/ESGST/issues/83">#83</a>).</li>
                         <li>Changed the max width of popups to 75% (it was previously not set, which was making some popups have a 100% width).</li>
                         <li>Fixed a bug on SteamTrades that happened when going to the permalink of a comment.</li>
                         <li>Fixed a bug in Visible Attached Images and added support for images in the format .gifv.</li>
                         <li>Fixed a bug in Embedded Videos.</li>
                         <li>Added endless scrolling support to Giveaway Description/Reply Box Popup.</li>
-                        <li>Added the option to only send gifts to users who are still members of at least one of the groups for group giveaways in Unsent Gifts Sender and added endless scrolling support for it (closes #90).</li>
+                        <li>Added the option to only send gifts to users who are still members of at least one of the groups for group giveaways in Unsent Gifts Sender and added endless scrolling support for it (closes <a href="https://github.com/revilheart/ESGST/issues/90">#90</a>).</li>
                         <li>Fixed a bug on SteamTrades that was enabling Discussion Edit Detector in the user pages.</li>
                         <li>Fixed a bug in Comment Formatting Helper that was not enabling endless scrolling support for it.</li>
                         <li>Fixed a bug in Reply Box On Top for the user pages on SteamTrades.</li>
@@ -34802,11 +35159,11 @@ ${avatar.outerHTML}
                     <ul>
                         <li>Created an icon for the script.</li>
                         <li>Separated all features into different files.</li>
-                        <li>Fixed some typos in the README file (closes #94).</li>
+                        <li>Fixed some typos in the README file (closes <a href="https://github.com/revilheart/ESGST/issues/94">#94</a>).</li>
                         <li>Created new icons for Header Icons Refresher and added support for SteamTrades.</li>
-                        <li>Fixed a bug in Comment Tracker that was not marking some discussions as visited from the main page (closes #95).</li>
+                        <li>Fixed a bug in Comment Tracker that was not marking some discussions as visited from the main page (closes <a href="https://github.com/revilheart/ESGST/issues/95">#95</a>).</li>
                         <li>The URL field for link and image in Comment Formatting Helper is now automatically focused upon opening and you can now select a part of the text to use as Title.</li>
-                        <li>Fixed a bug in User Giveaways Data that was not updating the data correctly for users with ongoing giveaways (closes #68).</li>
+                        <li>Fixed a bug in User Giveaways Data that was not updating the data correctly for users with ongoing giveaways (closes <a href="https://github.com/revilheart/ESGST/issues/68">#68</a>).</li>
                     </ul>
                     <p>Renamed the following features:</p>
                     <ul>
@@ -34823,14 +35180,14 @@ ${avatar.outerHTML}
                         <li>Fixed Elements - Separated the feature into individual features (Fixed Header, Fixed Sidebar, Fixed Main Page Heading and Fixed Footer). Fixed Main Page Heading works much more smoother, especially in small pages.</li>
                         <li>Visible Attached Images</li>
                         <li>Accurate Timestamps - Changed the timestamp format to match SteamGifts' format.</li>
-                        <li>Endless Scrolling - Fixed several bugs (closes #50) and made several improvements. Reverse scrolling now loads the last page first.</li>
+                        <li>Endless Scrolling - Fixed several bugs (closes <a href="https://github.com/revilheart/ESGST/issues/50">#50</a>) and made several improvements. Reverse scrolling now loads the last page first.</li>
                         <li>Hidden Featured Container</li>
                         <li>Active Discussions On Top - The ad is no longer brought to the top.</li>
                     </ul>
                     <p>Added the following features:</p>
                     <ul>
                         <li>Header Button</li>
-                        <li>Embedded Videos - Partial solution to #89.</li>
+                        <li>Embedded Videos - Partial solution to <a href="https://github.com/revilheart/ESGST/issues/89">#89</a>.</li>
                         <li>Pagination Navigation On Top</li>
                         <li>Reply Box On Top</li>
                     </ul>
