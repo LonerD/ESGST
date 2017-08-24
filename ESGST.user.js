@@ -3,7 +3,7 @@
 // @namespace ESGST
 // @description Enhances SteamGifts and SteamTrades by adding some cool features to them.
 // @icon https://dl.dropboxusercontent.com/s/lr3t3bxrxfxylqe/esgstIcon.ico?raw=1
-// @version 6.Beta.31.7
+// @version 6.Beta.31.8
 // @author revilheart
 // @downloadURL https://github.com/revilheart/ESGST/raw/master/ESGST.user.js
 // @updateURL https://github.com/revilheart/ESGST/raw/master/ESGST.meta.js
@@ -925,6 +925,13 @@
                                     <li>Hides the community poll.</li>
                                 </ul>
                             `,
+                            features :[
+                                {
+                                    id: `hcp_v`,
+                                    name: `[NEW] Only hide the poll if you already voted.`,
+                                    sg: true
+                                }
+                            ],
                             id: `hcp`,
                             name: `Hidden Community Poll`,
                             sg: true,
@@ -1151,7 +1158,7 @@
                                 <img src="http://i.imgur.com/IF32HZ5.png"/>
                             `,
                             id: `gch`,
-                            name: `[NEW] Giveaway Copies Highlighter`,
+                            name: `Giveaway Copies Highlighter`,
                             sg: true,
                             type: `giveaways`
                         },
@@ -2754,7 +2761,9 @@
                             if (esgst.hcp) {
                                 var poll = esgst.activeDiscussions.previousElementSibling;
                                 if (poll.classList.contains(`widget-container`)) {
-                                    poll.classList.add(`esgst-hidden`);
+                                    if (!esgst.hcp_v || poll.querySelector(`.table__row-outer-wrap.is-selected`)) {
+                                        poll.classList.add(`esgst-hidden`);
+                                    }
                                 }
                             }
                             if (esgst.oadd) {
@@ -32389,6 +32398,15 @@ ${avatar.outerHTML}
     function loadChangelog(version) {
         var changelog, current, html, i, index, n, popup;
         changelog = [
+            {
+                date: `August 24, 2017`,
+                version: `6.Beta.31.8`,
+                changelog: `
+                    <ul>
+                        <li>Added an option (1.15.1) to Hidden Community Poll that only hides the poll if you already voted (closes #317).</li>
+                    </ul>
+                `
+            },
             {
                 date: `August 24, 2017`,
                 version: `6.Beta.31.7`,
