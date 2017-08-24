@@ -6,7 +6,7 @@
 * Added a confirmation popup that was missing when deleting data.
 * Fixed a bug that was duplicating permalink icons because of recent SG changes.
 * Fixed a bug that was not loading Hidden Blacklist Stats on Firefox (closes #362).
-* Fixed a bug in Train Giveaways Extractor that was not extracting giveaways correctly when the number of giveaways to be extracted was a multiple of 50 (closes #263).
+* Fixed a bug in Train Giveaways Extractor that was not extracting giveaways correctly when the number of giveaways to be extracted was a multiple of 50 (closes #363).
 * Fixed a bug in Collapse/Expand Replies Button that was not correctly going to permalinks (closes #358).
 * Fixed a bug in User Giveaways Data that was happening for invite only giveaways when checking other users (closes #368).
 * Fixed a bug in Game Categories that was not retrieving rating for non-English users.
