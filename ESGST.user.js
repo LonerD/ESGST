@@ -32420,6 +32420,7 @@ ${avatar.outerHTML}
                 version: `6.Beta.31.2`,
                 changelog: `
                     <ul>
+                        <li>Each option in the settings menu that has sub-options now has a plus icon indicating that.</li>
                         <li>Made the backup download when importing/deleting data an option.</li>
                         <li>Added a confirmation popup that was missing when deleting data.</li>
                         <li>Fixed a bug that was duplicating permalink icons because of recent SG changes.</li>
