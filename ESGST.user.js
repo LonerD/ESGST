@@ -3,7 +3,7 @@
 // @namespace ESGST
 // @description Enhances SteamGifts and SteamTrades by adding some cool features to them.
 // @icon https://dl.dropboxusercontent.com/s/lr3t3bxrxfxylqe/esgstIcon.ico?raw=1
-// @version 6.Beta.31.6
+// @version 6.Beta.31.7
 // @author revilheart
 // @downloadURL https://github.com/revilheart/ESGST/raw/master/ESGST.user.js
 // @updateURL https://github.com/revilheart/ESGST/raw/master/ESGST.meta.js
@@ -26972,12 +26972,12 @@ ${avatar.outerHTML}
         if (siwtchSg || siwtchSt) {
         val = val1 || val2;
         Menu.insertAdjacentHTML(`beforeEnd`, `
-            <span>${esgst.settings.esgst_st ? `- ` : ``}${Feature.name}</span> ${Feature.description ? `<i class="fa fa-question-circle esgst-clickable"></i>` : ``} ${Feature.features ? `<i class="fa fa-plus" title="This option has sub-options"></i>` : ``}
+            <span>${esgst.settings.esgst_st ? `- ` : ``}${Feature.name}</span> ${Feature.features ? `<i class="fa fa-ellipsis-h" title="This option has sub-options"></i>` : ``} ${Feature.description ? `<i class="fa fa-question-circle esgst-clickable"></i>` : ``}
             <div class="esgst-form-row-indent SMFeatures esgst-hidden"></div>
         `);
         SMFeatures = Menu.lastElementChild;
         if (Feature.description) {
-        var tool = SMFeatures.previousElementSibling.previousElementSibling;
+        var tool = SMFeatures.previousElementSibling;
         var popout, timeout;
             tool.addEventListener(`mouseenter`, function () {
                 if (popout) {
@@ -32389,6 +32389,15 @@ ${avatar.outerHTML}
     function loadChangelog(version) {
         var changelog, current, html, i, index, n, popup;
         changelog = [
+            {
+                date: `August 24, 2017`,
+                version: `6.Beta.31.7`,
+                changelog: `
+                    <ul>
+                        <li>Changed the icon used to indicate if an option has sub-options in the settings menu to an ellipsis.</li>
+                    </ul>
+                `
+            },
             {
                 date: `August 24, 2017`,
                 version: `6.Beta.31.6`,
