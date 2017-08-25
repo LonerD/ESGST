@@ -3,7 +3,7 @@
 // @namespace ESGST
 // @description Enhances SteamGifts and SteamTrades by adding some cool features to them.
 // @icon https://dl.dropboxusercontent.com/s/lr3t3bxrxfxylqe/esgstIcon.ico?raw=1
-// @version 6.Beta.31.10
+// @version 6.Beta.31.11
 // @author revilheart
 // @downloadURL https://github.com/revilheart/ESGST/raw/master/ESGST.user.js
 // @updateURL https://github.com/revilheart/ESGST/raw/master/ESGST.meta.js
@@ -2813,6 +2813,41 @@
                                     id: `es_r`,
                                     name: `Enable reverse scrolling.`,
                                     sg: true
+                                },
+                                {
+                                    id: `es_gb`,
+                                    name: `[NEW] Enable for Giveaway Bookmarks.`,
+                                    sg: true
+                                },
+                                {
+                                    id: `es_ged`,
+                                    name: `[NEW] Enable for Giveaway Encrypter/Decrypter.`,
+                                    sg: true
+                                },
+                                {
+                                    id: `es_tge`,
+                                    name: `[NEW] Enable for Train Giveaways Extractor.`,
+                                    sg: true
+                                },
+                                {
+                                    id: `es_dh`,
+                                    name: `[NEW] Enable for Discussions Highlighter.`,
+                                    sg: true
+                                },
+                                {
+                                    id: `es_ch`,
+                                    name: `[NEW] Enable for Comment History.`,
+                                    sg: true
+                                },
+                                {
+                                    id: `es_gf`,
+                                    name: `[NEW] Enable for Giveaway Filters.`,
+                                    sg: true
+                                },
+                                {
+                                    id: `es_df`,
+                                    name: `[NEW] Enable for Discussion Filters.`,
+                                    sg: true
                                 }
                             ],
                             id: `es`,
@@ -2918,7 +2953,10 @@
                             esgst.mainPageHeading.appendChild(esgst.paginationNavigation);
                         }
                         if (esgst.smgb) {
-                            loadSmgb();
+                            document.querySelectorAll(`.sidebar__search-container .fa-search`).forEach(button => {
+                                button.classList.add(`esgst-clickable`);
+                                button.addEventListener(`keypress`, dispatchSmgbEvent);
+                            });
                         }
                         if (esgst.giveawaysPath && esgst.activeDiscussions) {
                             if (esgst.hcp) {
@@ -5316,6 +5354,7 @@
             red: `sidebar__error`,
             yellow: `sidebar__entry-delete`
         };
+        set.busy = false;
         set.set.innerHTML = `
             <div class="${classes[color1]} btn_action ${color1}">
                 <i class="fa ${icon1}"></i>
@@ -5332,6 +5371,7 @@
             for (i = 0, n = set.dependencies.length; i < n; ++i) {
                 set.dependencies[i].classList.toggle(`esgst-hidden`);
             }
+            set.busy = set.busy ? false : true;
             button1.classList.toggle(`esgst-hidden`);
             button2.classList.toggle(`esgst-hidden`);
             if (callback) {
@@ -6452,20 +6492,10 @@
 
     /* [SMGB] Search Magnifying Glass Button */
 
-    function loadSmgb() {
-        var elements = document.querySelectorAll(`.sidebar__search-container .fa-search`);
-        for (var i = 0, n = elements.length; i < n; ++i) {
-            setSmgbButton(elements[i]);
-        }
-    }
-
-    function setSmgbButton(button) {
-        button.classList.add(`esgst-clickable`);
-        button.addEventListener(`click`, function () {
-            var event = new Event(`keypress`);
-            event.which = 13;
-            button.previousElementSibling.dispatchEvent(event);  
-        });
+    function dispatchSmgbEvent(event) {
+        var newEvent = new Event(`keypress`);
+        newEvent.which = 13;
+        event.currentTarget.previousElementSibling.dispatchEvent(newEvent);
     }
 
     /* [LPL] Last Page Link */
@@ -8542,6 +8572,8 @@
                     i = value;
                     if (i > n) {
                         set.set.remove();
+                    } else if (esgst.es_gb && popup.scrollable.scrollHeight <= popup.scrollable.offsetHeight) {
+                        set.trigger();
                     }
                     callback();
                 });
@@ -8549,6 +8581,13 @@
             popup.description.appendChild(set.set);
             popup.open();
             set.trigger();
+            if (esgst.es_gb) {
+                popup.scrollable.addEventListener(`scroll`, function () {
+                    if ((popup.scrollable.scrollTop + popup.scrollable.offsetHeight) >= popup.scrollable.scrollHeight && !set.busy) {
+                        set.trigger();
+                    }
+                });
+            }
         });
     }
 
@@ -8812,6 +8851,8 @@ ${avatar.outerHTML}
                         i = value;
                         if (i > n) {
                             set.set.remove();
+                        } else if ((esgst.es_ged && popup.scrollable.scrollHeight <= popup.scrollable.offsetHeight) || ((results.children.length - ((esgst.gfPopup && parseInt(esgst.gfPopup.filteredCount.textContent)) || 0)) % 5 !== 0)) {
+                            set.trigger();
                         }
                         callback();
                     });
@@ -8835,6 +8876,13 @@ ${avatar.outerHTML}
                     set.trigger();
                 }
                 popup.open();
+                if (esgst.es_ged) {
+                    popup.scrollable.addEventListener(`scroll`, function () {
+                        if ((popup.scrollable.scrollTop + popup.scrollable.offsetHeight) >= popup.scrollable.scrollHeight && !set.busy) {
+                            set.trigger();
+                        }
+                    });
+                }
             });
             esgst.checkGedGiveaways = checkGedGiveaways.bind(null, button, newGiveaways);
             esgst.endlessFeatures.push(esgst.checkGedGiveaways);
@@ -8926,7 +8974,7 @@ ${avatar.outerHTML}
                                 <i class="fa fa-star"></i>
                             </a>
                         `);
-                        source = comment.id;
+                        source = comment.id || location.href;
                         if (savedGiveaways[code]) {
                             if (!savedGiveaways[code].source) {
                                 savedGiveaways[code].source = source;
@@ -9093,6 +9141,66 @@ ${avatar.outerHTML}
         return string.replace(/[a-zA-Z]/g, function (char) {
             return String.fromCharCode(((char <= `Z`) ? 90 : 122) >= ((char = char.charCodeAt(0) + n)) ? char : (char - 26));
         });
+    }
+
+    function saveGedGiveaways(codes, source, callback) {
+        var ged, giveaway, giveaways;
+        if (codes.length > 0) {
+            ged = {
+                count: 0,
+                decryptedGiveaways: {},
+                giveaways: {},
+                total: codes.length
+            };
+            giveaways = GM_getValue(`decryptedGiveaways`, GM_getValue(`exclusiveGiveaways`, {}));
+            if (typeof giveaways === `string`) {
+                giveaways = JSON.parse(giveaways);
+            }
+            codes.forEach(code => {
+                if (giveaways[code]) {
+                    ged.count += 1;
+                } else {
+                    giveaway = esgst.giveaways[code];
+                    if (giveaway && giveaway.endTime) {
+                        ged.decryptedGiveaways[code] = {
+                            source: source,
+                            timestamp: giveaway.endTime
+                        };
+                        ged.count += 1;
+                    } else {
+                        request(null, false, `/giveaway/${code}/`, function (response) {
+                            giveaway = getGiveaways(DOM.parse(response.responseText), false, response.finalUrl, false, null, true)[0];
+                            ged.giveaways[code] = giveaway;
+                            ged.decryptedGiveaways[code] = {
+                                source: source,
+                                timestamp: giveaway.endTime
+                            };
+                            ged.count += 1;            
+                        });
+                    }
+                }
+            });
+            checkGedComplete(ged, callback);
+        } else {
+            callback();
+        }
+    }
+
+    function checkGedComplete(ged, callback) {
+        var code, giveaways;
+        if (ged.count >= ged.total) {
+            giveaways = GM_getValue(`decryptedGiveaways`, GM_getValue(`exclusiveGiveaways`, {}));
+            if (typeof giveaways === `string`) {
+                giveaways = JSON.parse(giveaways);
+            }
+            for (code in ged.decryptedGiveaways) {
+                giveaways[code] = ged.decryptedGiveaways[code];
+            }
+            GM_setValue(`decryptedGiveaways`, JSON.stringify(giveaways));
+            lockAndSaveGiveaways(ged.giveaways, callback);
+        } else {
+            setTimeout(checkGedComplete, 100, ged, callback);
+        }
     }
 
     /* [OCHGB] One-Click Hide Giveaway Button */
@@ -13128,9 +13236,16 @@ ${avatar.outerHTML}
             tge.url = window.location.href;
             tge.visited = [];
             tge.bump = ``;
-            tge.set = createButtonSet(`green`, `grey`, `fa-search`, `fa-times`, `Extract`, `Cancel`, startExtracting.bind(null, tge), completeExtraction.bind(null, tge)).set;
-            tge.popup.description.appendChild(tge.set);
+            tge.set = createButtonSet(`green`, `grey`, `fa-search`, `fa-times`, `Extract`, `Cancel`, startExtracting.bind(null, tge), completeExtraction.bind(null, tge));
+            tge.popup.description.appendChild(tge.set.set);
             tge.progress = insertHtml(tge.popup.description, `beforeEnd`, `<div></div>`);
+            if (esgst.es_tge) {
+                tge.popup.scrollable.addEventListener(`scroll`, function () {
+                    if ((tge.popup.scrollable.scrollTop + tge.popup.scrollable.offsetHeight) >= tge.popup.scrollable.scrollHeight && tge.set && !tge.set.busy) {
+                        tge.set.trigger();
+                    }
+                });
+            }
         }
         tge.popup.open();
     }
@@ -13146,12 +13261,13 @@ ${avatar.outerHTML}
     }
 
     function completeExtraction(tge, callback, done) {
+        var child, children, filtered, i;
         tge.button.classList.remove(`esgst-busy`);
         tge.progress.firstElementChild.remove();
         callback();
         loadEndlessFeatures(tge.results.lastElementChild, false, `tge`);
         if (tge.count !== 50 || !tge.full) {
-            tge.set.remove();
+            tge.set.set.remove();
             tge.set = null;
             if (esgst.giveawayPath) {
                 tge.results.insertAdjacentHTML(`afterBegin`, `
@@ -13173,8 +13289,18 @@ ${avatar.outerHTML}
             }
             tge.popup.reposition();
         } else {
-            tge.set.firstElementChild.lastElementChild.textContent = `Extract More`;
+            tge.set.set.firstElementChild.lastElementChild.textContent = `Extract More`;
             tge.count = 0;
+            filtered = false;
+            children = tge.results.lastElementChild.children;
+            for (i = children.length - 1; i >= 0 && !filtered; --i) {
+                if (children[i].firstElementChild.classList.contains(`esgst-hidden`)) {
+                    filtered = true;
+                }
+            }
+            if ((esgst.es_tge && tge.popup.scrollable.scrollHeight <= tge.popup.scrollable.offsetHeight) || filtered) {
+                tge.set.trigger();
+            }
         }
     }
 
@@ -13763,6 +13889,8 @@ ${avatar.outerHTML}
                         i = value;
                         if (i > keys.length) {
                             set.set.remove();
+                        } else if (esgst.es_dh && popup.scrollable.scrollHeight <= popup.scrollable.offsetHeight) {
+                            set.trigger();
                         }
                         callback();
                     });
@@ -13770,6 +13898,13 @@ ${avatar.outerHTML}
                 popup.description.appendChild(set.set);
                 popup.open();
                 set.trigger();
+                if (esgst.es_dh) {
+                    popup.scrollable.addEventListener(`scroll`, function () {
+                        if ((popup.scrollable.scrollTop + popup.scrollable.offsetHeight) >= popup.scrollable.scrollHeight && !set.busy) {
+                            set.trigger();
+                        }
+                    });
+                }
             });
             if (esgst.discussionPath) {
                 comments = JSON.parse(localStorage.esgst_discussions);
@@ -22506,19 +22641,28 @@ ${avatar.outerHTML}
         }
         MR.Description.focus();
         addDEDButton(MR.Box, MR.URL, function (Response, DEDStatus) {
-            var ReplyID, Reply, ResponseJSON;
+            var encryptedCode, codes, ReplyID, Reply, ResponseJSON;
             if (esgst.sg) {
                 ReplyID = Response.finalUrl.match(/#(.+)/);
                 if (ReplyID) {
-                    MR.Box.remove();
                     Reply = DOM.parse(Response.responseText).getElementById(ReplyID[1]).closest(".comment");
-                    if (esgst.rfi && esgst.rfi_s) {
-                        saveRfiReply(ReplyID[1], Reply.outerHTML, MR.url);
-                    }
-                    addRMLLink(MR.Container, [Reply]);
-                    loadEndlessFeatures(Reply);
-                    MR.Children.appendChild(Reply);
-                    window.location.hash = ReplyID[1];
+                    codes = [];
+                    Reply.querySelectorAll(`[href^="ESGST-"]`).forEach(element => {
+                        encryptedCode = element.getAttribute(`href`).match(/ESGST-(.+)/)[1];
+                        if (!encryptedCode.match(/currentVersion/)) {
+                            codes.push(decryptGedCode(encryptedCode));
+                        }
+                    });
+                    saveGedGiveaways(codes, ReplyID[1], function () {
+                        if (esgst.rfi && esgst.rfi_s) {
+                            saveRfiReply(ReplyID[1], Reply.outerHTML, MR.url);
+                        }
+                        addRMLLink(MR.Container, [Reply]);
+                        loadEndlessFeatures(Reply);
+                        MR.Box.remove();
+                        MR.Children.appendChild(Reply);
+                        window.location.hash = ReplyID[1];
+                    });
                 } else {
                     DEDStatus.innerHTML =
                         "<i class=\"fa fa-times\"></i> " +
@@ -22527,15 +22671,24 @@ ${avatar.outerHTML}
             } else {
                 ResponseJSON = JSON.parse(Response.responseText);
                 if (ResponseJSON.success) {
-                    MR.Box.remove();
                     Reply = DOM.parse(ResponseJSON.html).getElementsByClassName("comment_outer")[0];
-                    if (esgst.rfi && esgst.rfi_s) {
-                        saveRfiReply(Reply.id, Reply.outerHTML, MR.url);
-                    }
-                    addRMLLink(MR.Container, [Reply]);
-                    loadEndlessFeatures(Reply);
-                    MR.Children.appendChild(Reply);
-                    window.location.hash = Reply.id;
+                    codes = [];
+                    Reply.querySelectorAll(`[href^="ESGST-"]`).forEach(element => {
+                        encryptedCode = element.getAttribute(`href`).match(/ESGST-(.+)/)[1];
+                        if (!encryptedCode.match(/currentVersion/)) {
+                            codes.push(decryptGedCode(encryptedCode));
+                        }
+                    });
+                    saveGedGiveaways(codes, Reply.id, function () {
+                        if (esgst.rfi && esgst.rfi_s) {
+                            saveRfiReply(Reply.id, Reply.outerHTML, MR.url);
+                        }
+                        addRMLLink(MR.Container, [Reply]);
+                        loadEndlessFeatures(Reply);
+                        MR.Box.remove();
+                        MR.Children.appendChild(Reply);
+                        window.location.hash = Reply.id;
+                    });
                 } else {
                     DEDStatus.innerHTML =
                         "<i class=\"fa fa-times\"></i> " +
@@ -22647,40 +22800,49 @@ ${avatar.outerHTML}
             EditSave.addEventListener("click", function () {
                 makeRequest("xsrf_token=" + esgst.xsrfToken + "&do=comment_edit&comment_id=" + ID + "&allow_replies=" + AllowReplies + "&description=" + encodeURIComponent(Description.value),
                     "/ajax.php", null, function (Response) {
-                        var ResponseJSON, ResponseHTML;
+                        var codes, encryptedCode, ResponseJSON, ResponseHTML;
                         ResponseJSON = JSON.parse(Response.responseText);
                         if (ResponseJSON.type == "success" || ResponseJSON.success) {
                             ResponseHTML = DOM.parse(ResponseJSON[esgst.sg ? "comment" : "html"]);
-                            if (esgst.rfi && esgst.rfi_s) {
-                                var reply = MR.Comment.cloneNode(true);
-                                if (esgst.sg) {
-                                    reply.innerHTML = `
-                                        <div class="ajax comment__child">${ResponseHTML.body.innerHTML}</div>
-                                        <div class="comment__children"></div>
-                                    `;
-                                } else {
-                                    reply.innerHTML = `
-                                        ${ResponseHTML.body.innerHTML}
-                                        <div class="comment_children"></div>
-                                    `;
+                            codes = [];
+                            ResponseHTML.querySelectorAll(`[href^="ESGST-"]`).forEach(element => {
+                                encryptedCode = element.getAttribute(`href`).match(/ESGST-(.+)/)[1];
+                                if (!encryptedCode.match(/currentVersion/)) {
+                                    codes.push(decryptGedCode(encryptedCode));
                                 }
-                                saveRfiReply(MR.url.match(/\/comment\/(.+)/)[1], reply.outerHTML, null, true);
-                            }
-                            DisplayState.innerHTML = ResponseHTML.getElementsByClassName(esgst.sg ? "comment__display-state" : "comment_body_default")[0].innerHTML;
-                            EditState.classList.add(esgst.sg ? "is-hidden" : "is_hidden");
-                            MR.Timestamp.innerHTML = ResponseHTML.getElementsByClassName(esgst.sg ? "comment__actions" : "action_list")[0].firstElementChild.innerHTML;
-                            if (esgst.at) {
-                                getTimestamps(MR.Timestamp);
-                            }
-                            if (esgst.ged) {
-                                esgst.checkGedGiveaways(MR.Container);
-                            }
-                            if (esgst.sg) {
-                                DisplayState.classList.remove("is-hidden");
-                                MR.Context.classList.remove("is-hidden");
-                            } else {
-                                MR.Container.classList.remove("is_hidden");
-                            }
+                            });
+                            saveGedGiveaways(codes, MR.url.match(/\/comment\/(.+)/)[1], function () {
+                                if (esgst.rfi && esgst.rfi_s) {
+                                    var reply = MR.Comment.cloneNode(true);
+                                    if (esgst.sg) {
+                                        reply.innerHTML = `
+                                            <div class="ajax comment__child">${ResponseHTML.body.innerHTML}</div>
+                                            <div class="comment__children"></div>
+                                        `;
+                                    } else {
+                                        reply.innerHTML = `
+                                            ${ResponseHTML.body.innerHTML}
+                                            <div class="comment_children"></div>
+                                        `;
+                                    }
+                                    saveRfiReply(MR.url.match(/\/comment\/(.+)/)[1], reply.outerHTML, null, true);
+                                }
+                                DisplayState.innerHTML = ResponseHTML.getElementsByClassName(esgst.sg ? "comment__display-state" : "comment_body_default")[0].innerHTML;
+                                EditState.classList.add(esgst.sg ? "is-hidden" : "is_hidden");
+                                MR.Timestamp.innerHTML = ResponseHTML.getElementsByClassName(esgst.sg ? "comment__actions" : "action_list")[0].firstElementChild.innerHTML;
+                                if (esgst.at) {
+                                    getTimestamps(MR.Timestamp);
+                                }
+                                if (esgst.ged) {
+                                    esgst.checkGedGiveaways(MR.Container);
+                                }
+                                if (esgst.sg) {
+                                    DisplayState.classList.remove("is-hidden");
+                                    MR.Context.classList.remove("is-hidden");
+                                } else {
+                                    MR.Container.classList.remove("is_hidden");
+                                }
+                            });
                         }
                     });
             });
@@ -27974,6 +28136,8 @@ ${avatar.outerHTML}
                     i = value;
                     if (i > hidden.length) {
                         set.set.remove();
+                    } else if (esgst.es_df && popup.scrollable.scrollHeight <= popup.scrollable.offsetHeight) {
+                        set.trigger();
                     }
                     callback();
                 });
@@ -27981,6 +28145,13 @@ ${avatar.outerHTML}
             popup.description.appendChild(set.set);
             popup.open();
             set.trigger();
+            if (esgst.es_df) {
+                popup.scrollable.addEventListener(`scroll`, function () {
+                    if ((popup.scrollable.scrollTop + popup.scrollable.offsetHeight) >= popup.scrollable.scrollHeight && !set.busy) {
+                        set.trigger();
+                    }
+                });
+            }
         });
     }
 
@@ -28066,6 +28237,8 @@ ${avatar.outerHTML}
                         i = value;
                         if (i > n) {
                             set.set.remove();
+                        } else if (esgst.es_gf && popup.scrollable.scrollHeight <= popup.scrollable.offsetHeight) {
+                            set.trigger();
                         }
                         callback();
                     });
@@ -28073,6 +28246,13 @@ ${avatar.outerHTML}
                 popup.description.appendChild(set.set);
                 popup.open();
                 set.trigger();
+                if (esgst.es_gf) {
+                    popup.scrollable.addEventListener(`scroll`, function () {
+                        if ((popup.scrollable.scrollTop + popup.scrollable.offsetHeight) >= popup.scrollable.scrollHeight && !set.busy) {
+                            set.trigger();
+                        }
+                    });
+                }
             } else {
                 gfGiveaways.textContent = `No hidden giveaways found.`;
                 popup.open();
@@ -28221,6 +28401,8 @@ ${avatar.outerHTML}
                     i = value;
                     if (i > comments.length) {
                         set.set.remove();
+                    } else if (esgst.es_ch && popup.scrollable.scrollHeight <= popup.scrollable.offsetHeight) {
+                        set.trigger();
                     }
                     callback();
                 });
@@ -28228,6 +28410,13 @@ ${avatar.outerHTML}
             popup.description.appendChild(set.set);
             popup.open();
             set.trigger();
+            if (esgst.es_ch) {
+                popup.scrollable.addEventListener(`scroll`, function () {
+                    if ((popup.scrollable.scrollTop + popup.scrollable.offsetHeight) >= popup.scrollable.scrollHeight && !set.busy) {
+                        set.trigger();
+                    }
+                });
+            }
         });
     }
 
@@ -28274,7 +28463,7 @@ ${avatar.outerHTML}
         }
     }
 
-    function getGiveaways(context, main, mainUrl, hr, key) {
+    function getGiveaways(context, main, mainUrl, hr, key, ged) {
         var games, giveaway, giveaways, i, mainContext, matches, n, query, savedUsers;
         games = JSON.parse(GM_getValue(`games`));
         savedUsers = JSON.parse(GM_getValue(`users`));
@@ -28297,7 +28486,7 @@ ${avatar.outerHTML}
         }
         matches = context.querySelectorAll(query);
         for (i = matches.length - 1; i >= 0; --i) {
-            giveaway = getGiveawayInfo(matches[i], mainContext, games, savedUsers, null, null, main, mainUrl);
+            giveaway = getGiveawayInfo(matches[i], mainContext, games, savedUsers, null, null, main, mainUrl, ged);
             if (giveaway) {
                 giveaways.push(giveaway[key]);
             }
@@ -32741,6 +32930,18 @@ ${avatar.outerHTML}
     function loadChangelog(version) {
         var changelog, current, html, i, index, n, popup;
         changelog = [
+            {
+                date: `August 25, 2017`,
+                version: `6.Beta.31.11`,
+                changelog: `
+                    <ul>
+                        <li>All popups with a "Load more..." button now support Endless Scrolling (they must be enabled through options 1.19.7-1.19.13) (closes #244).</li>
+                        <li>If at least one giveaway in the current batch has been filtered in the Giveaway Encrypter/Decrypter and Train Giveaways Extractor popups, the next batch will now be loaded automatically.</li>
+                        <li>When you save a comment with encrypted giveaways, they are now immediately decrypted and the icon in the header no longer turns green (closes #272).</li>
+                        <li>Fixed a bug in Giveaway Encrypter/Decrypter that was missing the source for encrypted giveaways added to the OP of a discussion.</li>
+                    </ul>
+                `
+            },
             {
                 date: `August 24, 2017`,
                 version: `6.Beta.31.10`,
