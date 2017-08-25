@@ -3,7 +3,7 @@
 // @namespace ESGST
 // @description Enhances SteamGifts and SteamTrades by adding some cool features to them.
 // @icon https://dl.dropboxusercontent.com/s/lr3t3bxrxfxylqe/esgstIcon.ico?raw=1
-// @version 6.Beta.31.12
+// @version 6.Beta.31.13
 // @author revilheart
 // @downloadURL https://github.com/revilheart/ESGST/raw/master/ESGST.user.js
 // @updateURL https://github.com/revilheart/ESGST/raw/master/ESGST.meta.js
@@ -8110,7 +8110,7 @@
                   { key: `genres`, name: `genres` }
                 ].forEach(key => {
                     if (exception[key.key]) {
-                        details += (key.key === `genres` ? `genres (${exception.genreList.toLowerCase()}, ` : `${key.name}, `);
+                        details += (key.key === `genres` ? `genres (${exception.genreList.toLowerCase()}), ` : `${key.name}, `);
                     }
                 });
                 row = insertHtml(table, `beforeEnd`, `
@@ -8137,25 +8137,85 @@
     }
 
     function openGfManageExceptionPopup(exception, exceptionCount, gf, preset, callback) {
-        var context;
+        var basicFilters, categoryFilters, context, typeFilters;
         if (callback) {
             callback();
         }
         popup = createPopup(`fa-edit`, `Create/edit exception:`, true);
+        popup.scrollable.classList.add(`esgst-gf-container`, `esgst-gf-filters`, `esgst-text-left`);
         popup.name = insertHtml(popup.description, `afterBegin`, `Name: <input type="text" value="${exception.name || ``}"/>`);
-        [`Level`, `Entries`, `Copies`, `Points`, `MinutesToEnd`, `Chance`, `Rating`].forEach(name => {
-            context = insertHtml(popup.scrollable, `beforeEnd`, `
-                <div>Min ${name} <input type="text" value="${exception[`min${name}`] || ``}"/><br/>Max ${name} <input type="text" value="${exception[`max${name}`] || ``}"/></div>
-            `);
-            popup[`min${name}`] = context.firstElementChild;
-            popup[`max${name}`] = context.lastElementChild;
+        basicFilters = insertHtml(popup.scrollable, `beforeEnd`, `
+            <div class="esgst-gf-basic-filters">
+                <div>
+                    <span class="esgst-bold">Basic Filters:</span>
+                </div>
+            </div>
+        `);
+        [{ key: `Level`, name: `Level` },
+         { key: `Entries`, name: `Entries` },
+         { key: `Copies`, name: `Copies` },
+         { key: `Points`, name: `Points` },
+         { key: `MinutesToEnd`, name: `Minutes To End` },
+         { key: `Chance`, name: `Chance` },
+         { key: `Rating`, name: `Rating` }
+        ].forEach(filter => {
+            context = insertHtml(basicFilters, `beforeEnd`, `
+                <div class="esgst-gf-basic-filter esgst-text-left">
+                    <div>${filter.name} <span class="esgst-float-right"><input type="text" value="${exception[`min${filter.key}`] || ``}"/> - <input type="text" value="${exception[`max${filter.key}`] || ``}"/></span></div>
+                </div>
+            `).firstElementChild.lastElementChild;
+            popup[`min${filter.key}`] = context.firstElementChild;
+            popup[`max${filter.key}`] = context.lastElementChild;
         });
-        [`pinned`, `group`, `whitelist`, `regionRestricted`, `created`, `entered`, `started`, `ended`, `owned`, `wishlisted`, `hidden`, `ignored`, `fullCV`, `reducedCV`, `noCV`, `removed`, `tradingCards`, `achievements`, `multiplayer`, `steamCloud`, `linux`, `mac`, `dlc`, `package`, `genres`].forEach(name => {
-            popup[name] = createCheckbox_v6(insertHtml(popup.scrollable, `beforeEnd`, `<div><span></span> ${name}</div>`).firstElementChild, exception[name]);
-            if (name === `genres`) {
-                popup.genreList = insertHtml(popup.scrollable, `beforeEnd`, `Genres: <input type="text" value="${exception.genreList || ``}"/>`);
+        typeFilters = insertHtml(popup.scrollable, `beforeEnd`, `
+            <div class="esgst-gf-type-filters">
+                <div>
+                    <span class="esgst-bold">Type Filters:</span>
+                </div>
+            </div>
+        `);
+        [{ key: `pinned`, name: `Pinned` },
+         { key: `group`, name: `Group` },
+         { key: `whitelist`, name: `Whitelist` },
+         { key: `regionRestricted`, name: `Region Restricted` },
+         { key: `created`, name: `Created` },
+         { key: `entered`, name: `Entered` },
+         { key: `started`, name: `Started` },
+         { key: `ended`, name: `Ended` },
+         { key: `owned`, name: `Owned` },
+         { key: `wishlisted`, name: `Wishlisted` },
+         { key: `hidden`, name: `Hidden` },
+         { key: `ignored`, name: `Ignored` },
+         { key: `fullCV`, name: `Full CV` },
+         { key: `reducedCV`, name: `Reduced CV` },
+         { key: `noCV`, name: `No CV` }
+        ].forEach(filter => {
+            popup[filter.key] = createCheckbox_v6(insertHtml(typeFilters, `beforeEnd`, `<div class="esgst-gf-type-filter"><span></span> ${filter.name}</div>`).firstElementChild, exception[filter.key]);
+        });
+        categoryFilters = insertHtml(popup.scrollable, `beforeEnd`, `
+            <div class="esgst-gf-category-filters">
+                <div>
+                    <span class="esgst-bold">Category Filters:</span>
+                </div>
+            </div>
+        `);
+        [{ key: `removed`, name: `Removed` },
+         { key: `tradingCards`, name: `Trading Cards` },
+         { key: `achievements`, name: `Achievements` },
+         { key: `multiplayer`, name: `Multiplayer` },
+         { key: `steamCloud`, name: `Steam Cloud` },
+         { key: `linux`, name: `Linux` },
+         { key: `mac`, name: `Mac` },
+         { key: `dlc`, name: `DLC` },
+         { key: `package`, name: `Package` },
+         { key: `genres`, name: `Genres` }
+        ].forEach(filter => {
+            context = insertHtml(categoryFilters, `beforeEnd`, `<div class="esgst-gf-category-filter"><span></span> ${filter.name}${filter.key === `genres` ? ` <input type="text" value="${exception.genreList || ``}"/>` : ``}</div>`);
+            popup[filter.key] = createCheckbox_v6(context.firstElementChild, exception[filter.key]);
+            if (filter.key === `genres`) {
+                popup.genreList = context.lastElementChild;
             }
-        })
+        });
         popup.description.appendChild(createButtonSet(`green`, `grey`, `fa-plus`, `fa-circle-o-notch fa-spin`, `Save`, `Saving...`, saveGfException.bind(null, exceptionCount, gf, preset, popup)).set);
         popup.open();
     }
@@ -8176,7 +8236,7 @@
                 if (name === `genres`) {
                     if (popup.genreList.value.length) {
                         exception.genres = 1;
-                        exception.genresList = popup.genreList.value;
+                        exception.genreList = popup.genreList.value;
                     }
                 } else {
                     exception[name] = 1;
@@ -32041,7 +32101,7 @@ ${avatar.outerHTML}
                 white-space: nowrap;
             }
 
-            .esgst-gf-container {
+            .esgst-gf-container:not(.esgst-popup-scrollable) {
                 background-color: #E8EAEF;
                 border-radius: 4px;
             }
@@ -32955,6 +33015,15 @@ ${avatar.outerHTML}
     function loadChangelog(version) {
         var changelog, current, html, i, index, n, popup;
         changelog = [
+            {
+                date: `August 25, 2017`,
+                version: `6.Beta.31.13`,
+                changelog: `
+                    <ul>
+                        <li>Revamped the exception popup in Giveaway Filters.</li>
+                    </ul>
+                `
+            },
             {
                 date: `August 25, 2017`,
                 version: `6.Beta.31.12`,
