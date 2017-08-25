@@ -844,6 +844,10 @@ The video above does not get embedded.
 
 ## Changelog
 
+**6.Beta.31.15 (August 25, 2017):**
+
+* If the option "Show blacklist information." is disabled in Whitelist/Blacklist Checker the word "blacklist" is now wiped from everywhere (closes #374).
+
 **6.Beta.31.14 (August 25, 2017):**
 
 * Fixed a style issue in the exception popup in Giveaway Filters for users with small-height screens.

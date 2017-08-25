@@ -3,7 +3,7 @@
 // @namespace ESGST
 // @description Enhances SteamGifts and SteamTrades by adding some cool features to them.
 // @icon https://dl.dropboxusercontent.com/s/lr3t3bxrxfxylqe/esgstIcon.ico?raw=1
-// @version 6.Beta.31.14
+// @version 6.Beta.31.15
 // @author revilheart
 // @downloadURL https://github.com/revilheart/ESGST/raw/master/ESGST.user.js
 // @updateURL https://github.com/revilheart/ESGST/raw/master/ESGST.meta.js
@@ -25612,8 +25612,8 @@ ${avatar.outerHTML}
             Check: function () {
                 return true;
             },
-            Description: "Only check users who have not whitelisted/blacklisted you.",
-            Title: "If enabled, everyone who has whitelisted/blacklisted you will be ignored (might lead to outdated data if someone who had whitelisted/blacklisted you in the past removed you from those lists).",
+            Description: "Only check users who have not whitelisted" + (WBC.B ? "/blacklisted" : "") + " you.",
+            Title: "If enabled, everyone who has whitelisted" + (WBC.B ? "/blacklisted" : "") + " you will be ignored (might lead to outdated data if someone who had whitelisted" + (WBC.B ? "/blacklisted" : "") + " you in the past removed you from those lists).",
             Name: "ReducedCheck",
             Key: "RC",
             ID: "WBC_RC"
@@ -25665,7 +25665,7 @@ ${avatar.outerHTML}
             Key: "blacklisted"
         }, {
             Icon: "<i class=\"fa fa-check-circle\"></i> ",
-            Description: "You are neither whitelisted nor blacklisted by",
+            Description: WBC.B ? "You are neither whitelisted nor blacklisted by" : "You are not whitelisted by",
             Key: "none"
         }, {
             Icon: "<i class=\"fa fa-question-circle\"></i> ",
@@ -25673,7 +25673,7 @@ ${avatar.outerHTML}
             Key: "notBlacklisted"
         }, {
             Icon: "<i class=\"fa fa-question-circle\"></i> ",
-            Description: "There is not enough information to know if you are whitelisted or blacklisted by",
+            Description: "There is not enough information to know if you are whitelisted" + (WBC.B ? " or blacklisted" : "") + " by",
             Key: "unknown"
         }]);
         WBCButton.addEventListener("click", function () {
@@ -25854,7 +25854,7 @@ ${avatar.outerHTML}
     function setWBCResult(WBC, user, wbc, notes, whitelisted, blacklisted, New, I, N, Callback) {
         var Key;
         if (!WBC.Canceled) {
-            Key = ((wbc.result === `blacklisted`) && !WBC.B) ? "unknown" : wbc.result;
+            Key = ((wbc.result === `blacklisted` || wbc.result === `notBlacklisted`) && !WBC.B) ? "unknown" : wbc.result;
             WBC[Key].classList.remove("esgst-hidden");
             WBC[Key + "Count"].textContent = parseInt(WBC[Key + "Count"].textContent) + 1;
             WBC[Key + "Users"].insertAdjacentHTML("beforeEnd", "<a " + (New ? "class=\"esgst-bold esgst-italic\" " : "") + "href=\"/user/" + user.username + "\">" + user.username + "</a>");
@@ -33345,6 +33345,15 @@ ${avatar.outerHTML}
     function loadChangelog(version) {
         var changelog, current, html, i, index, n, popup;
         changelog = [
+            {
+                date: `August 25, 2017`,
+                version: `6.Beta.31.15`,
+                changelog: `
+                    <ul>
+                        <li>If the option "Show blacklist information." is disabled in Whitelist/Blacklist Checker the word "blacklist" is now wiped from everywhere (closes <a href="https://github.com/revilheart/ESGST/issues/374">#374</a>).</li>
+                    </ul>
+                `
+            },
             {
                 date: `August 25, 2017`,
                 version: `6.Beta.31.14`,
