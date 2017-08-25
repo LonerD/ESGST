@@ -3,7 +3,7 @@
 // @namespace ESGST
 // @description Enhances SteamGifts and SteamTrades by adding some cool features to them.
 // @icon https://dl.dropboxusercontent.com/s/lr3t3bxrxfxylqe/esgstIcon.ico?raw=1
-// @version 6.Beta.31.13
+// @version 6.Beta.31.14
 // @author revilheart
 // @downloadURL https://github.com/revilheart/ESGST/raw/master/ESGST.user.js
 // @updateURL https://github.com/revilheart/ESGST/raw/master/ESGST.meta.js
@@ -2554,18 +2554,6 @@
                                     sg: true
                                 },
                                 {
-                                    features: [
-                                        {
-                                            id: `gc_s_i`,
-                                            name: `Use icons instead of initials.`,
-                                            sg: true
-                                        }
-                                    ],
-                                    id: `gc_s`,
-                                    name: `Enable the simplified version (shows initials instead of full names).`,
-                                    sg: true
-                                },
-                                {
                                     colors: true,
                                     description: `
                                         <ul>
@@ -2599,6 +2587,26 @@
                                 },
                                 {
                                     colors: true,
+                                    features: [
+                                        {
+                                            description: `
+                                                <ul>
+                                                    <li>Shows the category initials instead of its full name.</li>
+                                                    <li>Not compatible with custom labels.</li>
+                                                </ul>                                    
+                                            `,
+                                            features: [
+                                                {
+                                                    id: `gc_fcv_s_i`,
+                                                    name: `Use icons instead of initials.`,
+                                                    sg: true
+                                                }
+                                            ],
+                                            id: `gc_fcv_s`,
+                                            name: `[NEW] Enable the simplified version.`,
+                                            sg: true
+                                        }
+                                    ],
                                     id: `gc_fcv`,
                                     input: true,
                                     name: `Full CV`,
@@ -2606,6 +2614,26 @@
                                 },
                                 {
                                     colors: true,
+                                    features: [
+                                        {
+                                            description: `
+                                                <ul>
+                                                    <li>Shows the category initials instead of its full name.</li>
+                                                    <li>Not compatible with custom labels.</li>
+                                                </ul>                                    
+                                            `,
+                                            features: [
+                                                {
+                                                    id: `gc_rcv_s_i`,
+                                                    name: `Use icons instead of initials.`,
+                                                    sg: true
+                                                }
+                                            ],
+                                            id: `gc_rcv_s`,
+                                            name: `[NEW] Enable the simplified version.`,
+                                            sg: true
+                                        }
+                                    ],
                                     id: `gc_rcv`,
                                     input: true,
                                     name: `Reduced CV`,
@@ -2614,6 +2642,24 @@
                                 {
                                     colors: true,
                                     features: [
+                                        {
+                                            description: `
+                                                <ul>
+                                                    <li>Shows the category initials instead of its full name.</li>
+                                                    <li>Not compatible with custom labels.</li>
+                                                </ul>                                    
+                                            `,
+                                            features: [
+                                                {
+                                                    id: `gc_ncv_s_i`,
+                                                    name: `Use icons instead of initials.`,
+                                                    sg: true
+                                                }
+                                            ],
+                                            id: `gc_ncv_s`,
+                                            name: `[NEW] Enable the simplified version.`,
+                                            sg: true
+                                        },
                                         {
                                             id: `gc_ncv_o`,
                                             name: `Only display "No CV" if game also has "Reduced CV".`,
@@ -2627,6 +2673,26 @@
                                 },
                                 {
                                     colors: true,
+                                    features: [
+                                        {
+                                            description: `
+                                                <ul>
+                                                    <li>Shows the category initials instead of its full name.</li>
+                                                    <li>Not compatible with custom labels.</li>
+                                                </ul>                                    
+                                            `,
+                                            features: [
+                                                {
+                                                    id: `gc_h_s_i`,
+                                                    name: `Use icons instead of initials.`,
+                                                    sg: true
+                                                }
+                                            ],
+                                            id: `gc_h_s`,
+                                            name: `[NEW] Enable the simplified version.`,
+                                            sg: true
+                                        }
+                                    ],
                                     id: `gc_h`,
                                     input: true,
                                     name: `Hidden`,
@@ -2634,6 +2700,26 @@
                                 },
                                 {
                                     colors: true,
+                                    features: [
+                                        {
+                                            description: `
+                                                <ul>
+                                                    <li>Shows the category initials instead of its full name.</li>
+                                                    <li>Not compatible with custom labels.</li>
+                                                </ul>                                    
+                                            `,
+                                            features: [
+                                                {
+                                                    id: `gc_i_s_i`,
+                                                    name: `Use icons instead of initials.`,
+                                                    sg: true
+                                                }
+                                            ],
+                                            id: `gc_i_s`,
+                                            name: `[NEW] Enable the simplified version.`,
+                                            sg: true
+                                        }
+                                    ],
                                     id: `gc_i`,
                                     input: true,
                                     name: `Ignored`,
@@ -2641,6 +2727,26 @@
                                 },
                                 {
                                     colors: true,
+                                    features: [
+                                        {
+                                            description: `
+                                                <ul>
+                                                    <li>Shows the category initials instead of its full name.</li>
+                                                    <li>Not compatible with custom labels.</li>
+                                                </ul>                                    
+                                            `,
+                                            features: [
+                                                {
+                                                    id: `gc_o_s_i`,
+                                                    name: `Use icons instead of initials.`,
+                                                    sg: true
+                                                }
+                                            ],
+                                            id: `gc_o_s`,
+                                            name: `[NEW] Enable the simplified version.`,
+                                            sg: true
+                                        }
+                                    ],
                                     id: `gc_o`,
                                     input: true,
                                     name: `Owned`,
@@ -2648,6 +2754,26 @@
                                 },
                                 {
                                     colors: true,
+                                    features: [
+                                        {
+                                            description: `
+                                                <ul>
+                                                    <li>Shows the category initials instead of its full name.</li>
+                                                    <li>Not compatible with custom labels.</li>
+                                                </ul>                                    
+                                            `,
+                                            features: [
+                                                {
+                                                    id: `gc_w_s_i`,
+                                                    name: `Use icons instead of initials.`,
+                                                    sg: true
+                                                }
+                                            ],
+                                            id: `gc_w_s`,
+                                            name: `[NEW] Enable the simplified version.`,
+                                            sg: true
+                                        }
+                                    ],
                                     id: `gc_w`,
                                     input: true,
                                     name: `Wishlisted`,
@@ -2655,6 +2781,26 @@
                                 },
                                 {
                                     colors: true,
+                                    features: [
+                                        {
+                                            description: `
+                                                <ul>
+                                                    <li>Shows the category initials instead of its full name.</li>
+                                                    <li>Not compatible with custom labels.</li>
+                                                </ul>                                    
+                                            `,
+                                            features: [
+                                                {
+                                                    id: `gc_a_s_i`,
+                                                    name: `Use icons instead of initials.`,
+                                                    sg: true
+                                                }
+                                            ],
+                                            id: `gc_a_s`,
+                                            name: `[NEW] Enable the simplified version.`,
+                                            sg: true
+                                        }
+                                    ],
                                     id: `gc_a`,
                                     input: true,
                                     name: `Achievements`,
@@ -2662,6 +2808,26 @@
                                 },
                                 {
                                     colors: true,
+                                    features: [
+                                        {
+                                            description: `
+                                                <ul>
+                                                    <li>Shows the category initials instead of its full name.</li>
+                                                    <li>Not compatible with custom labels.</li>
+                                                </ul>                                    
+                                            `,
+                                            features: [
+                                                {
+                                                    id: `gc_mp_s_i`,
+                                                    name: `Use icons instead of initials.`,
+                                                    sg: true
+                                                }
+                                            ],
+                                            id: `gc_mp_s`,
+                                            name: `[NEW] Enable the simplified version.`,
+                                            sg: true
+                                        }
+                                    ],
                                     id: `gc_mp`,
                                     input: true,
                                     name: `Multiplayer`,
@@ -2669,6 +2835,26 @@
                                 },
                                 {
                                     colors: true,
+                                    features: [
+                                        {
+                                            description: `
+                                                <ul>
+                                                    <li>Shows the category initials instead of its full name.</li>
+                                                    <li>Not compatible with custom labels.</li>
+                                                </ul>                                    
+                                            `,
+                                            features: [
+                                                {
+                                                    id: `gc_sc_s_i`,
+                                                    name: `Use icons instead of initials.`,
+                                                    sg: true
+                                                }
+                                            ],
+                                            id: `gc_sc_s`,
+                                            name: `[NEW] Enable the simplified version.`,
+                                            sg: true
+                                        }
+                                    ],
                                     id: `gc_sc`,
                                     input: true,
                                     name: `Steam Cloud`,
@@ -2676,6 +2862,26 @@
                                 },
                                 {
                                     colors: true,
+                                    features: [
+                                        {
+                                            description: `
+                                                <ul>
+                                                    <li>Shows the category initials instead of its full name.</li>
+                                                    <li>Not compatible with custom labels.</li>
+                                                </ul>                                    
+                                            `,
+                                            features: [
+                                                {
+                                                    id: `gc_tc_s_i`,
+                                                    name: `Use icons instead of initials.`,
+                                                    sg: true
+                                                }
+                                            ],
+                                            id: `gc_tc_s`,
+                                            name: `[NEW] Enable the simplified version.`,
+                                            sg: true
+                                        }
+                                    ],
                                     id: `gc_tc`,
                                     input: true,
                                     name: `Trading Cards`,
@@ -2683,6 +2889,26 @@
                                 },
                                 {
                                     colors: true,
+                                    features: [
+                                        {
+                                            description: `
+                                                <ul>
+                                                    <li>Shows the category initials instead of its full name.</li>
+                                                    <li>Not compatible with custom labels.</li>
+                                                </ul>                                    
+                                            `,
+                                            features: [
+                                                {
+                                                    id: `gc_l_s_i`,
+                                                    name: `Use icons instead of initials.`,
+                                                    sg: true
+                                                }
+                                            ],
+                                            id: `gc_l_s`,
+                                            name: `[NEW] Enable the simplified version.`,
+                                            sg: true
+                                        }
+                                    ],
                                     id: `gc_l`,
                                     input: true,
                                     name: `Linux`,
@@ -2690,6 +2916,26 @@
                                 },
                                 {
                                     colors: true,
+                                    features: [
+                                        {
+                                            description: `
+                                                <ul>
+                                                    <li>Shows the category initials instead of its full name.</li>
+                                                    <li>Not compatible with custom labels.</li>
+                                                </ul>                                    
+                                            `,
+                                            features: [
+                                                {
+                                                    id: `gc_m_s_i`,
+                                                    name: `Use icons instead of initials.`,
+                                                    sg: true
+                                                }
+                                            ],
+                                            id: `gc_m_s`,
+                                            name: `[NEW] Enable the simplified version.`,
+                                            sg: true
+                                        }
+                                    ],
                                     id: `gc_m`,
                                     input: true,
                                     name: `Mac`,
@@ -2697,6 +2943,26 @@
                                 },
                                 {
                                     colors: true,
+                                    features: [
+                                        {
+                                            description: `
+                                                <ul>
+                                                    <li>Shows the category initials instead of its full name.</li>
+                                                    <li>Not compatible with custom labels.</li>
+                                                </ul>                                    
+                                            `,
+                                            features: [
+                                                {
+                                                    id: `gc_ea_s_i`,
+                                                    name: `Use icons instead of initials.`,
+                                                    sg: true
+                                                }
+                                            ],
+                                            id: `gc_ea_s`,
+                                            name: `[NEW] Enable the simplified version.`,
+                                            sg: true
+                                        }
+                                    ],
                                     id: `gc_ea`,
                                     input: true,
                                     name: `Early Access`,
@@ -2704,6 +2970,26 @@
                                 },
                                 {
                                     colors: true,
+                                    features: [
+                                        {
+                                            description: `
+                                                <ul>
+                                                    <li>Shows the category initials instead of its full name.</li>
+                                                    <li>Not compatible with custom labels.</li>
+                                                </ul>                                    
+                                            `,
+                                            features: [
+                                                {
+                                                    id: `gc_rm_s_i`,
+                                                    name: `Use icons instead of initials.`,
+                                                    sg: true
+                                                }
+                                            ],
+                                            id: `gc_rm_s`,
+                                            name: `[NEW] Enable the simplified version.`,
+                                            sg: true
+                                        }
+                                    ],
                                     id: `gc_rm`,
                                     input: true,
                                     name: `Removed`,
@@ -2711,6 +2997,26 @@
                                 },
                                 {
                                     colors: true,
+                                    features: [
+                                        {
+                                            description: `
+                                                <ul>
+                                                    <li>Shows the category initials instead of its full name.</li>
+                                                    <li>Not compatible with custom labels.</li>
+                                                </ul>                                    
+                                            `,
+                                            features: [
+                                                {
+                                                    id: `gc_dlc_s_i`,
+                                                    name: `Use icons instead of initials.`,
+                                                    sg: true
+                                                }
+                                            ],
+                                            id: `gc_dlc_s`,
+                                            name: `[NEW] Enable the simplified version.`,
+                                            sg: true
+                                        }
+                                    ],
                                     id: `gc_dlc`,
                                     input: true,
                                     name: `DLC`,
@@ -2718,6 +3024,26 @@
                                 },
                                 {
                                     colors: true,
+                                    features: [
+                                        {
+                                            description: `
+                                                <ul>
+                                                    <li>Shows the category initials instead of its full name.</li>
+                                                    <li>Not compatible with custom labels.</li>
+                                                </ul>                                    
+                                            `,
+                                            features: [
+                                                {
+                                                    id: `gc_p_s_i`,
+                                                    name: `Use icons instead of initials.`,
+                                                    sg: true
+                                                }
+                                            ],
+                                            id: `gc_p_s`,
+                                            name: `[NEW] Enable the simplified version.`,
+                                            sg: true
+                                        }
+                                    ],
                                     id: `gc_p`,
                                     input: true,
                                     name: `Package`,
@@ -3672,7 +3998,7 @@
             if (typeof esgst.settings[localKey] === `undefined` && (key[0] === key[0].toLowerCase())) {
                 defaultValue = esgst.defaultValues[key];
                 if (typeof defaultValue === `undefined`) {
-                    defaultValue = key.match(/^gf_(?!h$)/) ? true : (esgst.enableByDefault || false);
+                    defaultValue = key.match(/^gc_.+?_s$/) ? esgst.settings.gc_s_sg : (key.match(/^gc_.+?_s_i$/) ? esgst.settings.gc_s_i_sg : (key.match(/^gf_(?!h$)/) ? true : (esgst.enableByDefault || false)));
                 }
                 esgst.settings[localKey] = GM_getValue(esgst.oldValues[key] || key, defaultValue);
             }
@@ -26875,49 +27201,49 @@ ${avatar.outerHTML}
                     case `gc_fcv`:
                         if ((savedGame && !savedGame.reducedCV && !savedGame.noCV) || !savedGame) {
                             elements.push(`
-                                <a class="esgst-gc esgst-gc-fullCV" href="https://www.steamgifts.com/bundle-games/search?q=${encodedName}" title="Full CV">${esgst.gc_s ? (esgst.gc_s_i ? `<i class="fa fa-${esgst.gc_fcvIcon}"></i>` : `FCV`) : esgst.gc_fcvLabel}</a>
+                                <a class="esgst-gc esgst-gc-fullCV" href="https://www.steamgifts.com/bundle-games/search?q=${encodedName}" title="Full CV">${esgst.gc_fcv_s ? (esgst.gc_fcv_s_i ? `<i class="fa fa-${esgst.gc_fcvIcon}"></i>` : `FCV`) : esgst.gc_fcvLabel}</a>
                             `);
                         }
                         break;
                     case `gc_rcv`:
                         if (savedGame && savedGame.reducedCV && !location.pathname.match(/^\/bundle-games/) && (!esgst.gc_ncv_o || !savedGame.noCV)) {
                             elements.push(`
-                                <a class="esgst-gc esgst-gc-reducedCV" href="https://www.steamgifts.com/bundle-games/search?q=${encodedName}" title="Reduced CV since ${savedGame.reducedCV}">${esgst.gc_s ? (esgst.gc_s_i ? `<i class="fa fa-${esgst.gc_rcvIcon}"></i>` : `RCV`) : esgst.gc_rcvLabel}</a>
+                                <a class="esgst-gc esgst-gc-reducedCV" href="https://www.steamgifts.com/bundle-games/search?q=${encodedName}" title="Reduced CV since ${savedGame.reducedCV}">${esgst.gc_rcv_s ? (esgst.gc_rcv_s_i ? `<i class="fa fa-${esgst.gc_rcvIcon}"></i>` : `RCV`) : esgst.gc_rcvLabel}</a>
                             `);
                         }
                         break;
                     case `gc_ncv`:
                         if (savedGame && savedGame.noCV) {
                             elements.push(`
-                                <a class="esgst-gc esgst-gc-noCV" href="https://www.steamgifts.com/bundle-games/search?q=${encodedName}" title="No CV since ${savedGame.noCV}">${esgst.gc_s ? (esgst.gc_s_i ? `<i class="fa fa-${esgst.gc_ncvIcon}"></i>` : `NCV`) : esgst.gc_ncvLabel}</a>
+                                <a class="esgst-gc esgst-gc-noCV" href="https://www.steamgifts.com/bundle-games/search?q=${encodedName}" title="No CV since ${savedGame.noCV}">${esgst.gc_ncv_s ? (esgst.gc_ncv_s_i ? `<i class="fa fa-${esgst.gc_ncvIcon}"></i>` : `NCV`) : esgst.gc_ncvLabel}</a>
                             `);
                         }
                         break;
                     case `gc_h`:
                         if (savedGame && savedGame.hidden) {
                             elements.push(`
-                                <a class="esgst-gc esgst-gc-hidden" href="https://www.steamgifts.com/account/settings/giveaways/filters/search?q=${encodedName}" title="Hidden">${esgst.gc_s ? (esgst.gc_s_i ? `<i class="fa fa-${esgst.gc_hIcon}"></i>` : `H`) : esgst.gc_hLabel}</a>
+                                <a class="esgst-gc esgst-gc-hidden" href="https://www.steamgifts.com/account/settings/giveaways/filters/search?q=${encodedName}" title="Hidden">${esgst.gc_h_s ? (esgst.gc_h_s_i ? `<i class="fa fa-${esgst.gc_hIcon}"></i>` : `H`) : esgst.gc_hLabel}</a>
                             `);
                         }
                         break;
                     case `gc_i`:
                         if (savedGame && savedGame.ignored) {
                             elements.push(`
-                                <a class="esgst-gc esgst-gc-ignored" href="http://store.steampowered.com/${singularType}/${id}" title="Ignored">${esgst.gc_s ? (esgst.gc_s_i ? `<i class="fa fa-${esgst.gc_iIcon}"></i>` : `I`) : esgst.gc_iLabel}</a>
+                                <a class="esgst-gc esgst-gc-ignored" href="http://store.steampowered.com/${singularType}/${id}" title="Ignored">${esgst.gc_i_s ? (esgst.gc_i_s_i ? `<i class="fa fa-${esgst.gc_iIcon}"></i>` : `I`) : esgst.gc_iLabel}</a>
                             `);
                         }
                         break;
                     case `gc_o`:
                         if (savedGame && savedGame.owned) {
                             elements.push(`
-                                <a class="esgst-gc esgst-gc-owned" href="https://www.steamgifts.com/account/steam/games/search?q=${encodedName}" title="Owned">${esgst.gc_s ? (esgst.gc_s_i ? `<i class="fa fa-${esgst.gc_oIcon}"></i>` : `O`) : esgst.gc_oLabel}</a>
+                                <a class="esgst-gc esgst-gc-owned" href="https://www.steamgifts.com/account/steam/games/search?q=${encodedName}" title="Owned">${esgst.gc_o_s ? (esgst.gc_o_s_i ? `<i class="fa fa-${esgst.gc_oIcon}"></i>` : `O`) : esgst.gc_oLabel}</a>
                             `);
                         }
                         break;
                     case `gc_w`:
                         if (savedGame && savedGame.wishlisted) {
                             elements.push(`
-                                <a class="esgst-gc esgst-gc-wishlisted" href="https://www.steamgifts.com/account/steam/wishlist/search?q=${encodedName}" title="Wishlisted">${esgst.gc_s ? (esgst.gc_s_i ? `<i class="fa fa-${esgst.gc_wIcon}"></i>` : `W`) : esgst.gc_wLabel}</a>
+                                <a class="esgst-gc esgst-gc-wishlisted" href="https://www.steamgifts.com/account/steam/wishlist/search?q=${encodedName}" title="Wishlisted">${esgst.gc_w_s ? (esgst.gc_w_s_i ? `<i class="fa fa-${esgst.gc_wIcon}"></i>` : `W`) : esgst.gc_wLabel}</a>
                             `);
                         }
                         break;
@@ -26992,70 +27318,70 @@ ${avatar.outerHTML}
                     case `gc_a`:
                         if (cache && cache.achievements) {
                             elements.push(`
-                                <a class="esgst-gc esgst-gc-achievements" href="http://steamcommunity.com/stats/${id}/achievements" title="Achievements">${esgst.gc_s ? (esgst.gc_s_i ? `<i class="fa fa-${esgst.gc_aIcon}"></i>` : `A`) : esgst.gc_aLabel}</a>
+                                <a class="esgst-gc esgst-gc-achievements" href="http://steamcommunity.com/stats/${id}/achievements" title="Achievements">${esgst.gc_a_s ? (esgst.gc_a_s_i ? `<i class="fa fa-${esgst.gc_aIcon}"></i>` : `A`) : esgst.gc_aLabel}</a>
                             `);
                         }
                         break;
                     case `gc_mp`:
                         if (cache && cache.multiplayer) {
                             elements.push(`
-                                <a class="esgst-gc esgst-gc-multiplayer" href="http://store.steampowered.com/${singularType}/${id}" title="Multiplayer">${esgst.gc_s ? (esgst.gc_s_i ? `<i class="fa fa-${esgst.gc_mpIcon}"></i>` : `MP`) : esgst.gc_mpLabel}</a>
+                                <a class="esgst-gc esgst-gc-multiplayer" href="http://store.steampowered.com/${singularType}/${id}" title="Multiplayer">${esgst.gc_mp_s ? (esgst.gc_mp_s_i ? `<i class="fa fa-${esgst.gc_mpIcon}"></i>` : `MP`) : esgst.gc_mpLabel}</a>
                             `);
                         }
                         break;
                     case `gc_sc`:
                         if (cache && cache.steamCloud) {
                             elements.push(`
-                                <a class="esgst-gc esgst-gc-steamCloud" href="http://store.steampowered.com/${singularType}/${id}" title="Steam Cloud">${esgst.gc_s ? (esgst.gc_s_i ? `<i class="fa fa-${esgst.gc_scIcon}"></i>` : `SC`) : esgst.gc_scLabel}</a>
+                                <a class="esgst-gc esgst-gc-steamCloud" href="http://store.steampowered.com/${singularType}/${id}" title="Steam Cloud">${esgst.gc_sc_s ? (esgst.gc_sc_s_i ? `<i class="fa fa-${esgst.gc_scIcon}"></i>` : `SC`) : esgst.gc_scLabel}</a>
                             `);
                         }
                         break;
                     case `gc_tc`:
                         if (cache && cache.tradingCards) {
                             elements.push(`
-                                <a class="esgst-gc esgst-gc-tradingCards" href="http://www.steamcardexchange.net/index.php?gamepage-${singularType}id-${id}" title="Trading Cards">${esgst.gc_s ? (esgst.gc_s_i ? `<i class="fa fa-${esgst.gc_tcIcon}"></i>` : `TC`) : esgst.gc_tcLabel}</a>
+                                <a class="esgst-gc esgst-gc-tradingCards" href="http://www.steamcardexchange.net/index.php?gamepage-${singularType}id-${id}" title="Trading Cards">${esgst.gc_tc_s ? (esgst.gc_tc_s_i ? `<i class="fa fa-${esgst.gc_tcIcon}"></i>` : `TC`) : esgst.gc_tcLabel}</a>
                             `);
                         }
                         break;
                     case `gc_l`:
                         if (cache && cache.linux) {
                             elements.push(`
-                                <a class="esgst-gc esgst-gc-linux" href="http://store.steampowered.com/${singularType}/${id}" title="Linux">${esgst.gc_s ? (esgst.gc_s_i ? `<i class="fa fa-${esgst.gc_lIcon}"></i>` : `L`) : esgst.gc_lLabel}</a>
+                                <a class="esgst-gc esgst-gc-linux" href="http://store.steampowered.com/${singularType}/${id}" title="Linux">${esgst.gc_l_s ? (esgst.gc_l_s_i ? `<i class="fa fa-${esgst.gc_lIcon}"></i>` : `L`) : esgst.gc_lLabel}</a>
                             `);
                         }
                         break;
                     case `gc_m`:
                         if (cache && cache.mac) {
                             elements.push(`
-                                <a class="esgst-gc esgst-gc-mac" href="http://store.steampowered.com/${singularType}/${id}" title="Mac">${esgst.gc_s ? (esgst.gc_s_i ? `<i class="fa fa-${esgst.gc_mIcon}"></i>` : `M`) : esgst.gc_mLabel}</a>
+                                <a class="esgst-gc esgst-gc-mac" href="http://store.steampowered.com/${singularType}/${id}" title="Mac">${esgst.gc_m_s ? (esgst.gc_m_s_i ? `<i class="fa fa-${esgst.gc_mIcon}"></i>` : `M`) : esgst.gc_mLabel}</a>
                             `);
                         }
                         break;
                     case `gc_dlc`:
                         if (cache && cache.dlc) {
                             elements.push(`
-                                <a class="esgst-gc esgst-gc-dlc" href="http://store.steampowered.com/${singularType}/${id}" title="DLC">${esgst.gc_s ? (esgst.gc_s_i ? `<i class="fa fa-${esgst.gc_dlcIcon}"></i>` : `DLC`) : esgst.gc_dlcLabel}</a>
+                                <a class="esgst-gc esgst-gc-dlc" href="http://store.steampowered.com/${singularType}/${id}" title="DLC">${esgst.gc_dlc_s ? (esgst.gc_dlc_s_i ? `<i class="fa fa-${esgst.gc_dlcIcon}"></i>` : `DLC`) : esgst.gc_dlcLabel}</a>
                             `);
                         }
                         break;
                     case `gc_p`:
                         if (type === `subs`) {
                             elements.push(`
-                                <a class="esgst-gc esgst-gc-package" href="http://store.steampowered.com/${singularType}/${id}" title="Package">${esgst.gc_s ? (esgst.gc_s_i ? `<i class="fa fa-${esgst.gc_pIcon}"></i>` : `P`) : esgst.gc_pLabel}</a>
+                                <a class="esgst-gc esgst-gc-package" href="http://store.steampowered.com/${singularType}/${id}" title="Package">${esgst.gc_p_s ? (esgst.gc_p_s_i ? `<i class="fa fa-${esgst.gc_pIcon}"></i>` : `P`) : esgst.gc_pLabel}</a>
                             `);
                         }
                         break;
                     case `gc_ea`:
                         if (cache && cache.earlyAccess) {
                             elements.push(`
-                                <a class="esgst-gc esgst-gc-earlyAccess" href="http://store.steampowered.com/${singularType}/${id}" title="Early Access">${esgst.gc_s ? (esgst.gc_s_i ? `<i class="fa fa-${esgst.gc_eaIcon}"></i>` : `EA`) : esgst.gc_eaLabel}</a>
+                                <a class="esgst-gc esgst-gc-earlyAccess" href="http://store.steampowered.com/${singularType}/${id}" title="Early Access">${esgst.gc_ea_s ? (esgst.gc_ea_s_i ? `<i class="fa fa-${esgst.gc_eaIcon}"></i>` : `EA`) : esgst.gc_eaLabel}</a>
                             `);
                         }
                         break;
                     case `gc_rm`:
                         if (cache && cache.removed) {
                             elements.push(`
-                                <a class="esgst-gc esgst-gc-removed" href="http://steamdb.info/${singularType}/${id}" title="Removed">${esgst.gc_s ? (esgst.gc_s_i ? `<i class="fa fa-${esgst.gc_rmIcon}"></i>` : `RM`) : esgst.gc_rmLabel}</a>
+                                <a class="esgst-gc esgst-gc-removed" href="http://steamdb.info/${singularType}/${id}" title="Removed">${esgst.gc_rm_s ? (esgst.gc_rm_s_i ? `<i class="fa fa-${esgst.gc_rmIcon}"></i>` : `RM`) : esgst.gc_rmLabel}</a>
                             `);
                         }
                         break;
@@ -27622,37 +27948,37 @@ ${avatar.outerHTML}
                 switch (esgst.gc_categories[i]) {
                     case `gc_fcv`:
                         elements.push(`
-                            <div class="esgst-clickable esgst-gc esgst-gc-fullCV ${esgst.gc_fcv ? `` : `esgst-hidden`}" draggable="true" id="gc_fcv" title="Full CV">${esgst.gc_s ? (esgst.gc_s_i ? `<i class="fa fa-${esgst.gc_fcvIcon}"></i>` : `FCV`) : esgst.gc_fcvLabel}</div>
+                            <div class="esgst-clickable esgst-gc esgst-gc-fullCV ${esgst.gc_fcv ? `` : `esgst-hidden`}" draggable="true" id="gc_fcv" title="Full CV">${esgst.gc_fcv_s ? (esgst.gc_fcv_s_i ? `<i class="fa fa-${esgst.gc_fcvIcon}"></i>` : `FCV`) : esgst.gc_fcvLabel}</div>
                         `);
                         break;
                     case `gc_rcv`:
                         elements.push(`
-                            <div class="esgst-clickable esgst-gc esgst-gc-reducedCV ${esgst.gc_rcv ? `` : `esgst-hidden`}" draggable="true" id="gc_rcv" title="Reduced CV">${esgst.gc_s ? (esgst.gc_s_i ? `<i class="fa fa-${esgst.gc_rcvIcon}"></i>` : `RCV`) : esgst.gc_rcvLabel}</div>
+                            <div class="esgst-clickable esgst-gc esgst-gc-reducedCV ${esgst.gc_rcv ? `` : `esgst-hidden`}" draggable="true" id="gc_rcv" title="Reduced CV">${esgst.gc_rcv_s ? (esgst.gc_rcv_s_i ? `<i class="fa fa-${esgst.gc_rcvIcon}"></i>` : `RCV`) : esgst.gc_rcvLabel}</div>
                         `);
                         break;
                     case `gc_ncv`:
                         elements.push(`
-                            <div class="esgst-clickable esgst-gc esgst-gc-noCV ${esgst.gc_ncv ? `` : `esgst-hidden`}" draggable="true" id="gc_ncv" title="No CV">${esgst.gc_s ? (esgst.gc_s_i ? `<i class="fa fa-${esgst.gc_ncvIcon}"></i>` : `NCV`) : esgst.gc_ncvLabel}</div>
+                            <div class="esgst-clickable esgst-gc esgst-gc-noCV ${esgst.gc_ncv ? `` : `esgst-hidden`}" draggable="true" id="gc_ncv" title="No CV">${esgst.gc_ncv_s ? (esgst.gc_ncv_s_i ? `<i class="fa fa-${esgst.gc_ncvIcon}"></i>` : `NCV`) : esgst.gc_ncvLabel}</div>
                         `);
                         break;
                     case `gc_h`:
                         elements.push(`
-                            <div class="esgst-clickable esgst-gc esgst-gc-hidden ${esgst.gc_h ? `` : `esgst-hidden`}" draggable="true" id="gc_h" title="Hidden">${esgst.gc_s ? (esgst.gc_s_i ? `<i class="fa fa-${esgst.gc_hIcon}"></i>` : `H`) : esgst.gc_hLabel}</div>
+                            <div class="esgst-clickable esgst-gc esgst-gc-hidden ${esgst.gc_h ? `` : `esgst-hidden`}" draggable="true" id="gc_h" title="Hidden">${esgst.gc_h_s ? (esgst.gc_h_s_i ? `<i class="fa fa-${esgst.gc_hIcon}"></i>` : `H`) : esgst.gc_hLabel}</div>
                         `);
                         break;
                     case `gc_i`:
                         elements.push(`
-                            <div class="esgst-clickable esgst-gc esgst-gc-ignored ${esgst.gc_i ? `` : `esgst-hidden`}" draggable="true" id="gc_i" title="Ignored">${esgst.gc_s ? (esgst.gc_s_i ? `<i class="fa fa-${esgst.gc_iIcon}"></i>` : `I`) : esgst.gc_iLabel}</div>
+                            <div class="esgst-clickable esgst-gc esgst-gc-ignored ${esgst.gc_i ? `` : `esgst-hidden`}" draggable="true" id="gc_i" title="Ignored">${esgst.gc_i_s ? (esgst.gc_i_s_i ? `<i class="fa fa-${esgst.gc_iIcon}"></i>` : `I`) : esgst.gc_iLabel}</div>
                         `);
                         break;
                     case `gc_o`:
                         elements.push(`
-                            <div class="esgst-clickable esgst-gc esgst-gc-owned ${esgst.gc_o ? `` : `esgst-hidden`}" draggable="true" id="gc_o" title="Owned">${esgst.gc_s ? (esgst.gc_s_i ? `<i class="fa fa-${esgst.gc_oIcon}"></i>` : `O`) : esgst.gc_oLabel}</div>
+                            <div class="esgst-clickable esgst-gc esgst-gc-owned ${esgst.gc_o ? `` : `esgst-hidden`}" draggable="true" id="gc_o" title="Owned">${esgst.gc_o_s ? (esgst.gc_o_s_i ? `<i class="fa fa-${esgst.gc_oIcon}"></i>` : `O`) : esgst.gc_oLabel}</div>
                         `);
                         break;
                     case `gc_w`:
                         elements.push(`
-                            <div class="esgst-clickable esgst-gc esgst-gc-wishlisted ${esgst.gc_w ? `` : `esgst-hidden`}" draggable="true" id="gc_w" title="Wishlisted">${esgst.gc_s ? (esgst.gc_s_i ? `<i class="fa fa-${esgst.gc_wIcon}"></i>` : `W`) : esgst.gc_wLabel}</div>
+                            <div class="esgst-clickable esgst-gc esgst-gc-wishlisted ${esgst.gc_w ? `` : `esgst-hidden`}" draggable="true" id="gc_w" title="Wishlisted">${esgst.gc_w_s ? (esgst.gc_w_s_i ? `<i class="fa fa-${esgst.gc_wIcon}"></i>` : `W`) : esgst.gc_wLabel}</div>
                         `);
                         break;
                     case `gc_gi`:
@@ -27667,52 +27993,52 @@ ${avatar.outerHTML}
                         break;
                     case `gc_a`:
                         elements.push(`
-                            <div class="esgst-clickable esgst-gc esgst-gc-achievements ${esgst.gc_a ? `` : `esgst-hidden`}" draggable="true" id="gc_a" title="Achievements">${esgst.gc_s ? (esgst.gc_s_i ? `<i class="fa fa-${esgst.gc_aIcon}"></i>` : `A`) : esgst.gc_aLabel}</div>
+                            <div class="esgst-clickable esgst-gc esgst-gc-achievements ${esgst.gc_a ? `` : `esgst-hidden`}" draggable="true" id="gc_a" title="Achievements">${esgst.gc_a_s ? (esgst.gc_a_s_i ? `<i class="fa fa-${esgst.gc_aIcon}"></i>` : `A`) : esgst.gc_aLabel}</div>
                         `);
                         break;
                     case `gc_mp`:
                         elements.push(`
-                            <div class="esgst-clickable esgst-gc esgst-gc-multiplayer ${esgst.gc_mp ? `` : `esgst-hidden`}" draggable="true" id="gc_mp" title="Multiplayer">${esgst.gc_s ? (esgst.gc_s_i ? `<i class="fa fa-${esgst.gc_mpIcon}"></i>` : `MP`) : esgst.gc_mpLabel}</div>
+                            <div class="esgst-clickable esgst-gc esgst-gc-multiplayer ${esgst.gc_mp ? `` : `esgst-hidden`}" draggable="true" id="gc_mp" title="Multiplayer">${esgst.gc_mp_s ? (esgst.gc_mp_s_i ? `<i class="fa fa-${esgst.gc_mpIcon}"></i>` : `MP`) : esgst.gc_mpLabel}</div>
                         `);
                         break;
                     case `gc_sc`:
                         elements.push(`
-                            <div class="esgst-clickable esgst-gc esgst-gc-steamCloud ${esgst.gc_sc ? `` : `esgst-hidden`}" draggable="true" id="gc_sc" title="Steam Cloud">${esgst.gc_s ? (esgst.gc_s_i ? `<i class="fa fa-${esgst.gc_scIcon}"></i>` : `SC`) : esgst.gc_scLabel}</div>
+                            <div class="esgst-clickable esgst-gc esgst-gc-steamCloud ${esgst.gc_sc ? `` : `esgst-hidden`}" draggable="true" id="gc_sc" title="Steam Cloud">${esgst.gc_sc_s ? (esgst.gc_sc_s_i ? `<i class="fa fa-${esgst.gc_scIcon}"></i>` : `SC`) : esgst.gc_scLabel}</div>
                         `);
                         break;
                     case `gc_tc`:
                         elements.push(`
-                            <div class="esgst-clickable esgst-gc esgst-gc-tradingCards ${esgst.gc_tc ? `` : `esgst-hidden`}" draggable="true" id="gc_tc" title="Trading Cards">${esgst.gc_s ? (esgst.gc_s_i ? `<i class="fa fa-${esgst.gc_tcIcon}"></i>` : `TC`) : esgst.gc_tcLabel}</div>
+                            <div class="esgst-clickable esgst-gc esgst-gc-tradingCards ${esgst.gc_tc ? `` : `esgst-hidden`}" draggable="true" id="gc_tc" title="Trading Cards">${esgst.gc_tc_s ? (esgst.gc_tc_s_i ? `<i class="fa fa-${esgst.gc_tcIcon}"></i>` : `TC`) : esgst.gc_tcLabel}</div>
                         `);
                         break;
                     case `gc_l`:
                         elements.push(`
-                            <div class="esgst-clickable esgst-gc esgst-gc-linux ${esgst.gc_l ? `` : `esgst-hidden`}" draggable="true" id="gc_l" title="Linux">${esgst.gc_s ? (esgst.gc_s_i ? `<i class="fa fa-${esgst.gc_lIcon}"></i>` : `L`) : esgst.gc_lLabel}</div>
+                            <div class="esgst-clickable esgst-gc esgst-gc-linux ${esgst.gc_l ? `` : `esgst-hidden`}" draggable="true" id="gc_l" title="Linux">${esgst.gc_l_s ? (esgst.gc_l_s_i ? `<i class="fa fa-${esgst.gc_lIcon}"></i>` : `L`) : esgst.gc_lLabel}</div>
                         `);
                         break;
                     case `gc_m`:
                         elements.push(`
-                            <div class="esgst-clickable esgst-gc esgst-gc-mac ${esgst.gc_m ? `` : `esgst-hidden`}" draggable="true" id="gc_m" title="Mac">${esgst.gc_s ? (esgst.gc_s_i ? `<i class="fa fa-${esgst.gc_mIcon}"></i>` : `M`) : esgst.gc_mLabel}</div>
+                            <div class="esgst-clickable esgst-gc esgst-gc-mac ${esgst.gc_m ? `` : `esgst-hidden`}" draggable="true" id="gc_m" title="Mac">${esgst.gc_m_s ? (esgst.gc_m_s_i ? `<i class="fa fa-${esgst.gc_mIcon}"></i>` : `M`) : esgst.gc_mLabel}</div>
                         `);
                         break;
                     case `gc_dlc`:
                         elements.push(`
-                            <div class="esgst-clickable esgst-gc esgst-gc-dlc ${esgst.gc_dlc ? `` : `esgst-hidden`}" draggable="true" id="gc_dlc" title="DLC">${esgst.gc_s ? (esgst.gc_s_i ? `<i class="fa fa-${esgst.gc_dlcIcon}"></i>` : `DLC`) : esgst.gc_dlcLabel}</div>
+                            <div class="esgst-clickable esgst-gc esgst-gc-dlc ${esgst.gc_dlc ? `` : `esgst-hidden`}" draggable="true" id="gc_dlc" title="DLC">${esgst.gc_dlc_s ? (esgst.gc_dlc_s_i ? `<i class="fa fa-${esgst.gc_dlcIcon}"></i>` : `DLC`) : esgst.gc_dlcLabel}</div>
                         `);
                         break;
                     case `gc_p`:
                         elements.push(`
-                            <div class="esgst-clickable esgst-gc esgst-gc-package ${esgst.gc_p ? `` : `esgst-hidden`}" draggable="true" id="gc_p" title="Package">${esgst.gc_s ? (esgst.gc_s_i ? `<i class="fa fa-${esgst.gc_pIcon}"></i>` : `P`) : esgst.gc_pLabel}</div>
+                            <div class="esgst-clickable esgst-gc esgst-gc-package ${esgst.gc_p ? `` : `esgst-hidden`}" draggable="true" id="gc_p" title="Package">${esgst.gc_p_s ? (esgst.gc_p_s_i ? `<i class="fa fa-${esgst.gc_pIcon}"></i>` : `P`) : esgst.gc_pLabel}</div>
                         `);
                         break;
                     case `gc_ea`:
                         elements.push(`
-                            <div class="esgst-clickable esgst-gc esgst-gc-earlyAccess ${esgst.gc_ea ? `` : `esgst-hidden`}" draggable="true" id="gc_ea" title="Early Access">${esgst.gc_s ? (esgst.gc_s_i ? `<i class="fa fa-${esgst.gc_eaIcon}"></i>` : `EA`) : esgst.gc_eaLabel}</div>
+                            <div class="esgst-clickable esgst-gc esgst-gc-earlyAccess ${esgst.gc_ea ? `` : `esgst-hidden`}" draggable="true" id="gc_ea" title="Early Access">${esgst.gc_ea_s ? (esgst.gc_ea_s_i ? `<i class="fa fa-${esgst.gc_eaIcon}"></i>` : `EA`) : esgst.gc_eaLabel}</div>
                         `);
                         break;
                     case `gc_rm`:
                         elements.push(`
-                            <div class="esgst-clickable esgst-gc esgst-gc-removed ${esgst.gc_rm ? `` : `esgst-hidden`}" draggable="true" id="gc_rm" title="Removed">${esgst.gc_s ? (esgst.gc_s_i ? `<i class="fa fa-${esgst.gc_rmIcon}"></i>` : `RM`) : esgst.gc_rmLabel}</div>
+                            <div class="esgst-clickable esgst-gc esgst-gc-removed ${esgst.gc_rm ? `` : `esgst-hidden`}" draggable="true" id="gc_rm" title="Removed">${esgst.gc_rm_s ? (esgst.gc_rm_s_i ? `<i class="fa fa-${esgst.gc_rmIcon}"></i>` : `RM`) : esgst.gc_rmLabel}</div>
                         `);
                         break;
                     case `gc_g`:
@@ -32106,6 +32432,10 @@ ${avatar.outerHTML}
                 border-radius: 4px;
             }
 
+            .esgst-gf-container.esgst-popup-scrollable {
+                min-width: 650px;
+            }
+
             .esgst-gf-container input {
                 display: inline-block;
                 height: 20px;
@@ -33017,6 +33347,16 @@ ${avatar.outerHTML}
         changelog = [
             {
                 date: `August 25, 2017`,
+                version: `6.Beta.31.14`,
+                changelog: `
+                    <ul>
+                        <li>Fixed a style issue in the exception popup in Giveaway Filters for users with small-height screens.</li>
+                        <li>You can now enable the simplified version for Game Categories individually.</li>
+                    </ul>
+                `
+            },
+            {
+                date: `August 25, 2017`,
                 version: `6.Beta.31.13`,
                 changelog: `
                     <ul>
@@ -33032,7 +33372,7 @@ ${avatar.outerHTML}
                         <li>Fixed a bug in Grid View that was happening when opening popups from a discussion page.</li>
                         <li>Fixed a typo in the Giveaway Encrypter/Decrypter source links.</li>
                         <li>When you create a discussion with encrypted giveaways, they are now immediately decrypted and the icon in the header no longer turns green.</li>
-                        <li>Added an option to Whitelist/Blacklist Checker to only check users who have not whitelisted/blacklisted you (closes #315).</li>
+                        <li>Added an option to Whitelist/Blacklist Checker to only check users who have not whitelisted/blacklisted you (<a href="https://github.com/revilheart/ESGST/issues/315">#315</a>)).</li>
                     </ul>
                 `
             },
@@ -33041,9 +33381,9 @@ ${avatar.outerHTML}
                 version: `6.Beta.31.11`,
                 changelog: `
                     <ul>
-                        <li>All popups with a "Load more..." button now support Endless Scrolling (they must be enabled through options 1.19.7-1.19.13) (closes #244).</li>
+                        <li>All popups with a "Load more..." button now support Endless Scrolling (they must be enabled through options 1.19.7-1.19.13) (<a href="https://github.com/revilheart/ESGST/issues/244">#244</a>)).</li>
                         <li>If at least one giveaway in the current batch has been filtered in the Giveaway Encrypter/Decrypter and Train Giveaways Extractor popups, the next batch will now be loaded automatically.</li>
-                        <li>When you save a comment with encrypted giveaways, they are now immediately decrypted and the icon in the header no longer turns green (closes #272).</li>
+                        <li>When you save a comment with encrypted giveaways, they are now immediately decrypted and the icon in the header no longer turns green (<a href="https://github.com/revilheart/ESGST/issues/272">#272</a>)).</li>
                         <li>Fixed a bug in Giveaway Encrypter/Decrypter that was missing the source for encrypted giveaways added to the OP of a discussion.</li>
                     </ul>
                 `
@@ -33053,10 +33393,10 @@ ${avatar.outerHTML}
                 version: `6.Beta.31.10`,
                 changelog: `
                     <ul>
-                        <li>Fixed a typo in checkers that was showing a first number higher than the second i.e. 10 of 9 (closes #320).</li>
+                        <li>Fixed a typo in checkers that was showing a first number higher than the second i.e. 10 of 9 (<a href="https://github.com/revilheart/ESGST/issues/320">#320</a>)).</li>
                         <li>You can now choose which filters you want for Giveaway Filters through the settings menu.</li>
-                        <li>Added the option to attach discussions to trains to Multiple Giveaways Creator so that bump links are automatically added when creating trains (closes #248).</li>
-                        <li>Made some enhancements to the import popup in Multiple Giveaways Creator (closes #372).
+                        <li>Added the option to attach discussions to trains to Multiple Giveaways Creator so that bump links are automatically added when creating trains (<a href="https://github.com/revilheart/ESGST/issues/248">#248</a>)).</li>
+                        <li>Made some enhancements to the import popup in Multiple Giveaways Creator (<a href="https://github.com/revilheart/ESGST/issues/372">#372</a>)).
                     </ul>
                 `
             },

@@ -2,9 +2,13 @@
 
 A script that adds some cool features to SteamGifts and SteamTrades.
 
+---
+
 ## Installation
 
 To install the script, you must install [Greasemonkey](http://www.greasespot.net/) (not 100% compatible with the latest versions of Firefox) or [Tampermonkey](https://tampermonkey.net/) first. Then [click here](https://github.com/revilheart/ESGST/raw/master/ESGST.user.js) and you should be prompted to install it.
+
+---
 
 ## Compatibility
 
@@ -21,9 +25,11 @@ May or may not be working (try at your own risk) in the latest version of:
 
 * Edge
 
-## Features
+---
 
-* [Settings Menu](#settings-menu)
+# Features
+
+---
 
 ## General
 
@@ -34,6 +40,8 @@ May or may not be working (try at your own risk) in the latest version of:
 * [Accurate Timestamp](#accurate-timestamp)
 * [Points Refresher](#points-refresher)
 * [Visible Attached Images](#visible-attached-images)
+
+---
 
 ## Giveaways
 
@@ -53,12 +61,16 @@ May or may not be working (try at your own risk) in the latest version of:
 * [Unsent Gifts Sender](#unsent-gifts-sender)
 * [Entries Remover](#entries-remover)
 
+---
+
 ## Discussions
 
 * [Active Discussions On Top](#active-discussions-on-top)
 * [Discussions Highlighter](#discussions-highlighter)
 * [Main Post Popup](#main-post-popup)
 * [Discussion Edit Detector](#discussion-edit-detector)
+
+---
 
 ## Commenting
 
@@ -69,6 +81,8 @@ May or may not be working (try at your own risk) in the latest version of:
 * [Multi-Reply](#multi-reply)
 * [Reply From Inbox](#reply-from-inbox)
 * [Reply Mention Link](#reply-mention-link)
+
+---
 
 ## Users, Groups & Games
 
@@ -87,12 +101,16 @@ May or may not be working (try at your own risk) in the latest version of:
 * [User Giveaways Data](#user-giveaways-data)
 * [Inbox Winners Highlighter](#inbox-winners-highlighter)
 * [Avatar Popout](#avatar-popout)
-# [Game Categories](#game-categories)
+* [Game Categories](#game-categories)
+
+---
 
 ## Games
 
 * [Entered Games Highlighter](#entered-games-highlighter)
 * [Game Tags](#game-tags)
+
+---
 
 ## Other
 
@@ -103,7 +121,11 @@ May or may not be working (try at your own risk) in the latest version of:
 * [Groups Stats](#groups-stats)
 * [Archive Searcher](#archive-searcher)
 
+---
+
 * [Other Info](#other-info)
+
+---
 
 ### Unfaded Entered Giveaways
 
@@ -817,3 +839,162 @@ The video above does not get embedded.
 * All requests from `Whitelist / Blacklist Checker`, `Not Activated / Multiple Wins Checker`, `Not Received Finder` and `Archive Searcher` are limited to 2 per second, to prevent a stress on the SG servers.
 * If you try to leave the page while `Whitelist / Blacklist Checker`, `Not Activated / Multiple Wins Checker`, `Not Received Finder` and `Archive Searcher` are running, you will get a confirmation dialog asking you if you want to leave the page. Additionally, while these features are running, their buttons are faded out.
 * `Whitelist / Blacklist Checker`, `Not Activated / Multiple Wins Checker`, `Not Received Finder` and `Archive Searcher` allow for real-time options. For example, if you start `Whitelist / Blacklist Checker` with `Also check for whitelist.` enabled, but in the middle of the process you decide to disable that option, from that point onwards it will no longer check for whitelist.
+
+---
+
+## Changelog
+
+**6.Beta.31.14 (August 25, 2017):**
+
+* Fixed a style issue in the exception popup in Giveaway Filters for users with small-height screens.
+* You can now enable the simplified version for Game Categories individually.
+    
+**6.Beta.31.13 (August 25, 2017):**
+
+* Revamped the exception popup in Giveaway Filters.
+    
+**6.Beta.31.12 (August 25, 2017):**
+
+* Fixed a bug in Grid View that was happening when opening popups from a discussion page.
+* Fixed a typo in the Giveaway Encrypter/Decrypter source links.
+* When you create a discussion with encrypted giveaways, they are now immediately decrypted and the icon in the header no longer turns green.
+* Added an option to Whitelist/Blacklist Checker to only check users who have not whitelisted/blacklisted you (<a href="https://github.com/revilheart/ESGST/issues/315">#315</a>).
+    
+**6.Beta.31.11 (August 25, 2017):**
+
+* All popups with a "Load more..." button now support Endless Scrolling (they must be enabled through options 1.19.7-1.19.13) (<a href="https://github.com/revilheart/ESGST/issues/244">#244</a>).
+* If at least one giveaway in the current batch has been filtered in the Giveaway Encrypter/Decrypter and Train Giveaways Extractor popups, the next batch will now be loaded automatically.
+* When you save a comment with encrypted giveaways, they are now immediately decrypted and the icon in the header no longer turns green (<a href="https://github.com/revilheart/ESGST/issues/272">#272</a>).
+* Fixed a bug in Giveaway Encrypter/Decrypter that was missing the source for encrypted giveaways added to the OP of a discussion.
+    
+**6.Beta.31.10 (August 24, 2017):**
+
+* Fixed a typo in checkers that was showing a first number higher than the second i.e. 10 of 9 (<a href="https://github.com/revilheart/ESGST/issues/320">#320</a>).
+* You can now choose which filters you want for Giveaway Filters through the settings menu.
+* Added the option to attach discussions to trains to Multiple Giveaways Creator so that bump links are automatically added when creating trains (<a href="https://github.com/revilheart/ESGST/issues/248">#248</a>).
+* Made some enhancements to the import popup in Multiple Giveaways Creator (<a href="https://github.com/revilheart/ESGST/issues/372">#372</a>).
+    
+**6.Beta.31.9 (August 24, 2017):**
+
+* The exceptions in Giveaway Filters should now correctly apply only to the basic filters.
+    
+**6.Beta.31.8 (August 24, 2017):**
+
+* Added an option (1.15.1) to Hidden Community Poll that only hides the poll if you already voted (closes <a href="https://github.com/revilheart/ESGST/issues/317">#317</a>).
+    
+**6.Beta.31.7 (August 24, 2017):**
+
+* Changed the icon used to indicate if an option has sub-options in the settings menu to an ellipsis.
+    
+**6.Beta.31.6 (August 24, 2017):**
+
+* The sidebar in Fixed Sidebar now gets fixed if the page is larger than the window (before it would only get fixed if the page was larger than 2 times the window).
+* Fixed a bug in Giveaway Filters that was filtering all ended giveaways.
+    
+**6.Beta.31.5 (August 24, 2017):**
+
+* Improved the tooltip when creating exceptions in Giveaway Filters to clarify that each exception works as an AND conjunction.
+    
+**6.Beta.31.4 (August 24, 2017):**
+
+* Fixed a bug in Giveaway Filters that was filtering exceptions higher or lower than, but not equal.
+    
+**6.Beta.31.3 (August 23, 2017):**
+
+* Moved the script's icon to Dropbox.
+* The script's changelog is now stored inside of the script.
+    
+**6.Beta.31.2 (August 23, 2017):**
+
+* Each option in the settings menu that has sub-options now has a plus icon indicating that.
+* Made the backup download when importing/deleting data an option.
+* Added a confirmation popup that was missing when deleting data.
+* Fixed a bug that was duplicating permalink icons because of recent SG changes.
+* Fixed a bug that was not loading Hidden Blacklist Stats on Firefox (closes <a href="https://github.com/revilheart/ESGST/issues/362">#362</a>).
+* Fixed a bug in Train Giveaways Extractor that was not extracting giveaways correctly when the number of giveaways to be extracted was a multiple of 50 (closes <a href="https://github.com/revilheart/ESGST/issues/363">#363</a>).
+* Fixed a bug in Collapse/Expand Replies Button that was not correctly going to permalinks (closes <a href="https://github.com/revilheart/ESGST/issues/358">#358</a>).
+* Fixed a bug in User Giveaways Data that was happening for invite only giveaways when checking other users (closes <a href="https://github.com/revilheart/ESGST/issues/368">#368</a>).
+* Fixed a bug in Game Categories that was not retrieving rating for non-English users.
+    
+**6.Beta.31.1 (August 23, 2017):**
+
+* Fixed a bug in Giveaway Filters that was preventing the script from loading correctly in group pages.
+* Giveaway Copies Highlighter no longer highlights pinned giveaways (closes <a href="https://github.com/revilheart/ESGST/issues/370">#370</a>).
+* Added an option to Unsent Gifts Sender that does not send gifts to blacklisted users.
+* Fixed a bug in Game Categories that was not showing "Full CV" category when first loading a page.
+* You can now color genres in Game Categories from 7.4.23 - SG / 8.4.23 - ST (closes <a href="https://github.com/revilheart/ESGST/issues/369">#369</a>).
+* Duplicates between genres and user-defined tags in Game Categories are now removed.
+    
+**6.Beta.31.0 (August 23, 2017):**
+
+* Renamed the class ".rhHidden" to ".esgst-hidden".
+* Removed useless classes.
+* Fixed a typo in the Level Progress Visualizer tooltip (closes <a href="https://github.com/revilheart/ESGST/issues/367">#367</a>).
+* Fixed a bug in Giveaway Filters that was not properly counting the points to enter all unfiltered giveaways.
+* Added "Minutes To End" filter to Giveaway Filters (closes <a href="https://github.com/revilheart/ESGST/issues/322">#322</a>).
+* Giveaway Filters now has an advanced exceptions tool that allows you to set individual exceptions for all filters (closes <a href="https://github.com/revilheart/ESGST/issues/322">#322</a>).
+* Renaming presets in Giveaway Filters is now much easier: you no longer need to apply the preset to rename it, and upon renaming a preset, it also renames in all pages that are using that preset (closes <a href="https://github.com/revilheart/ESGST/issues/313">#313</a>).
+
+Added the following features:
+
+* 2.11 Giveaway Copies Highlighter (closes <a href="https://github.com/revilheart/ESGST/issues/322">#322</a>)
+    
+**6.Beta.30.4 (August 21, 2017):**
+
+* Added an option to manage Discussion Filters data to the settings menu.
+* Added a description to Entered Games Highlighter in the settings menu.
+* Enter/Leave Giveaway Button no longer adds a button to giveaways for hidden games in popups.
+* Fixed a bug in Unsent Gifts Sender and Whitelist/Blacklist Checker that was not detecting groups correctly. As a result, the way the groups are stored has changed (you must sync your groups immediately after this version).
+* Fixed the first emoji in Comment Formatting Helper (¯\\_(ツ)_/¯ -> ¯\\\_(ツ)_/¯).
+* Added an option (7.4.8.1 - SG / 8.4.8.1 - ST) to Game Categories that does not show "Reduced CV" if a game has both "Reduced CV" and "No CV".
+    
+**6.Beta.30.3 (August 20, 2017):**
+
+* Fixed a typo in the sync that was showing the same message for syncing hidden and wishlisted/owned/ignored games.
+* Fixed a bug that was happening when storing/syncing giveaways (closes <a href="https://github.com/revilheart/ESGST/issues/365">#365</a>).
+* Fixed a bug in Header Refresher that was not filtering entered giveaways after entering them.
+* Fixed a bug in Main Post Popup that was preventing the script from loading correctly.
+* Fixed a bug in Comment Formatting Helper that was not saving emojis.
+* Fixed a bug in Shared Groups Checker that was not indentifying shared groups with uppercase letters.
+    
+**6.Beta.30.2 (August 19, 2017):**
+
+* Added an option (2.18.1) to Giveaway Recreator to remove the button for giveaways that have been recreated.
+* Giveaway Recreator now runs on the created page, opens in a new tab and is also shown for giveaways with less entries than copies.
+* Deleting presets, templates and saved replies no longer prompts for a confirmation. Instead a "Undo Delete" button will appear so you can restore them if you deleted them by mistake (closes <a href="https://github.com/revilheart/ESGST/issues/206">#206</a>).
+* Fixed a style issue in Giveaway Groups Loader that was not repositioning popups (closes <a href="https://github.com/revilheart/ESGST/issues/232">#232</a>).
+* Fixed a style issue in Giveaway Groups Loader that was adding double underlines to groups (closes <a href="https://github.com/revilheart/ESGST/issues/247">#247</a>).
+* Removed the user icon from Giveaway Groups Loader, since the feature shows avatars again.
+    
+**6.Beta.30.1 (August 19, 2017):**
+
+* Fixed a bug that was not enabling Giveaway Recreator in profile pages other than page 1.
+    
+**6.Beta.30.0 (August 19, 2017):**
+
+* Fixed a bug that was preventing the script from running in the entered/won pages.
+* Giveaways visited or hidden no longer count for the option in Header Refresher to indicate if there are unentered wishlist giveaways open.
+* Fixed a bug in Endless Scrolling that was not reversing the pages correctly.
+
+Added the following features:
+
+* 2.18 Giveaway Recreator
+    
+**6.Beta.29.0 (August 19, 2017):**
+
+* Added an option to sync your giveaways from the settings menu, without the need to use User Giveaways Data.
+* Fixed a bug that was not showing the button to manage hidden discussions in the settings menu.
+* If you have Level Progress Visualizer, Created/Entered/Won Giveaway Details, Real CV Calculator or the "Giveaway Info" category in Game Categories enabled, when you create a giveaway you will now get a popup asking you to wait a few seconds until the giveaway is saved in the storage for those features.
+* Level Progress Visualizer now projects what your level will be after your active giveaways end and get marked as received (only works for giveaways created after v6.Beta.29.0) (closes <a href="https://github.com/revilheart/ESGST/issues/181">#181</a>).
+* Real CV Calculator and the "Giveaway Info" category in Game Categories now both take into account active giveaways for calculation (closes <a href="https://github.com/revilheart/ESGST/issues/297">#297</a>).
+* Fixed a bug in Giveaway Filters that was not filtering some filters (closes <a href="https://github.com/revilheart/ESGST/issues/359">#359</a>).
+* Changed how User Giveaways Data is stored.
+* Fixed a bug in Game Categories that was showing the wrong icon/label for the "Multiplayer" category.
+
+Added the following features:
+
+* 2.25 Giveaways Manager (closes <a href="https://github.com/revilheart/ESGST/issues/197">#197</a>)
+
+---
+
+Older changelog is only available in the source code of the script.
