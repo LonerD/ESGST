@@ -3,7 +3,7 @@
 // @namespace ESGST
 // @description Enhances SteamGifts and SteamTrades by adding some cool features to them.
 // @icon https://dl.dropboxusercontent.com/s/lr3t3bxrxfxylqe/esgstIcon.ico?raw=1
-// @version 6.Beta.31.11
+// @version 6.Beta.31.12
 // @author revilheart
 // @downloadURL https://github.com/revilheart/ESGST/raw/master/ESGST.user.js
 // @updateURL https://github.com/revilheart/ESGST/raw/master/ESGST.meta.js
@@ -3335,6 +3335,16 @@
                         }
                     }
                 } else if (esgst.discussionPath) {
+                    if (document.getElementsByClassName(`comment__username`)[0].textContent === esgst.username) {
+                        var codes = [];
+                        document.getElementsByClassName(`comment__description`)[0].querySelectorAll(`[href^="ESGST-"]`).forEach(element => {
+                            var encryptedCode = element.getAttribute(`href`).match(/ESGST-(.+)/)[1];
+                            if (!encryptedCode.match(/currentVersion/)) {
+                                codes.push(decryptGedCode(encryptedCode));
+                            }
+                        });
+                        saveGedGiveaways(codes, location.href);
+                    }
                     if (esgst.mgc) {
                         if (localStorage.esgst_mgcAttach_step2) {
                             localStorage.removeItem(`esgst_mgcAttach_step2`);                            
@@ -8913,7 +8923,7 @@ ${avatar.outerHTML}
                             loadEndlessFeatures(results.lastElementChild, false, `ged`);
                             if (giveaway.source) {
                                 results.lastElementChild.getElementsByClassName(`giveaway__columns`)[0].insertAdjacentHTML(`afterBegin`, `
-                                    <a class="esgst-ged-source" href="/go/comment/${giveaway.source}">Source</a>
+                                    <a class="esgst-ged-source" href="${giveaway.source.match(/\/discussion\//) ? giveaway.source : `/go/comment/${giveaway.source}`}">Source</a>
                                 `);
                             }
                             popup.reposition();
@@ -8968,23 +8978,25 @@ ${avatar.outerHTML}
                 if (!encryptedCode.match(/currentVersion/)) {
                     code = decryptGedCode(encryptedCode);
                     comment = element.closest(`.comment__summary`);
-                    if (comment) {
+                    if (comment) { 
                         comment.getElementsByClassName(`comment__actions`)[0].insertAdjacentHTML(`beforeEnd`, `
                             <a class="esgst-ged-icon" href="/giveaway/${code}/" title="ESGST Decrypted Giveaway">
                                 <i class="fa fa-star"></i>
                             </a>
                         `);
-                        source = comment.id || location.href;
-                        if (savedGiveaways[code]) {
-                            if (!savedGiveaways[code].source) {
-                                savedGiveaways[code].source = source;
+                        if (comment.querySelector(`.comment__username, .author_name`).textContent !== esgst.username) {
+                            source = comment.id || location.href;
+                            if (savedGiveaways[code]) {
+                                if (!savedGiveaways[code].source) {
+                                    savedGiveaways[code].source = source;
+                                }
+                            } else if (!newGiveaways[code]) {
+                                newGiveaway = true;
+                                newGiveaways[code] = {
+                                    code: code,
+                                    source: source
+                                };
                             }
-                        } else if (!newGiveaways[code]) {
-                            newGiveaway = true;
-                            newGiveaways[code] = {
-                                code: code,
-                                source: source
-                            };
                         }
                     }
                 }
@@ -9181,7 +9193,7 @@ ${avatar.outerHTML}
                 }
             });
             checkGedComplete(ged, callback);
-        } else {
+        } else if (callback) {
             callback();
         }
     }
@@ -24562,7 +24574,7 @@ ${avatar.outerHTML}
         var User, Results, Key, newR;
         if (!NAMWC.Canceled) {
             NAMWC.Progress.innerHTML = "";
-            NAMWC.OverallProgress.textContent = (I - 1) + " of " + N + " users checked...";
+            NAMWC.OverallProgress.textContent = I + " of " + N + " users checked...";
             if (I < N) {
                 User = NAMWC.User ? NAMWC.User : {
                     Username: NAMWC.Users[I]
@@ -25214,6 +25226,15 @@ ${avatar.outerHTML}
             Check: function () {
                 return true;
             },
+            Description: "Only check users who have not whitelisted/blacklisted you.",
+            Title: "If enabled, everyone who has whitelisted/blacklisted you will be ignored (might lead to outdated data if someone who had whitelisted/blacklisted you in the past removed you from those lists).",
+            Name: "ReducedCheck",
+            Key: "RC",
+            ID: "WBC_RC"
+        }, {
+            Check: function () {
+                return true;
+            },
             Description: "Clear caches.",
             Title: "If enabled, the caches of all checked users will be cleared (slower).",
             Name: "ClearCaches",
@@ -25411,7 +25432,7 @@ ${avatar.outerHTML}
         var User, Result;
         if (!WBC.Canceled) {
             WBC.Progress.innerHTML = "";
-            WBC.OverallProgress.textContent = (I - 1) + " of " + N + " users checked...";
+            WBC.OverallProgress.textContent = I + " of " + N + " users checked...";
             if (I < N) {
                 User = (WBC.User && WBC.SC.checked) ? WBC.User : {
                     Username: WBC.Users[I]
@@ -25428,12 +25449,16 @@ ${avatar.outerHTML}
                     blacklisted = savedUser.blacklisted;
                     wbc = savedUser.wbc;
                 }
-                        if (wbc && wbc.result) {
-                            Result = wbc.result;
-                        }
-                        checkWBCUser(WBC, wbc, user.username, function (wbc) {
-                            setTimeout(setWBCResult, 0, WBC, user, wbc, notes, whitelisted, blacklisted, (Result != wbc.result) ? true : false, I, N, Callback);
-                        });
+                if (wbc && wbc.result) {
+                    Result = wbc.result;
+                }
+                if (!wbc || !WBC.RC.checked) {
+                    checkWBCUser(WBC, wbc, user.username, function (wbc) {
+                        setTimeout(setWBCResult, 0, WBC, user, wbc, notes, whitelisted, blacklisted, (Result != wbc.result) ? true : false, I, N, Callback);
+                    });
+                } else {
+                    setTimeout(setWBCResult, 0, WBC, user, wbc, notes, whitelisted, blacklisted, (Result != wbc.result) ? true : false, I, N, Callback);
+                }
             } else if (Callback) {
                 Callback();
             }
@@ -29389,12 +29414,12 @@ ${avatar.outerHTML}
 
     function startGameFeatures() {
         esgst.endlessFeatures.push(loadGameFeatures);
-        loadGameFeatures(document);
+        loadGameFeatures(document, true);
     }
 
-    function loadGameFeatures(context) {
+    function loadGameFeatures(context, main) {
         var games, i, n;
-        games = getGames(context);
+        games = getGames(context, main);
         for (i = 0, n = esgst.gameFeatures.length; i < n; ++i) {
             esgst.gameFeatures[i](games);
         }
@@ -29403,13 +29428,13 @@ ${avatar.outerHTML}
         }
     }
 
-    function getGames(context) {
+    function getGames(context, main) {
         var games, heading, headingName, name, i, id, info, match, matches, n, headingQuery, matchesQuery, table, type;
         games = {
             apps: {},
             subs: {}
         };
-        if (esgst.discussionPath && (esgst.gc_t || esgst.gt_t || esgst.egh_t)) {
+        if (esgst.discussionPath && (esgst.gc_t || esgst.gt_t || esgst.egh_t) && main) {
             matchesQuery = `.featured__outer-wrap--giveaway, .giveaway__row-outer-wrap, .table__row-outer-wrap, .markdown table td`;
             headingQuery = `.featured__heading, .giveaway__heading, .table__column__heading, a`;
         } else {
@@ -32930,6 +32955,18 @@ ${avatar.outerHTML}
     function loadChangelog(version) {
         var changelog, current, html, i, index, n, popup;
         changelog = [
+            {
+                date: `August 25, 2017`,
+                version: `6.Beta.31.12`,
+                changelog: `
+                    <ul>
+                        <li>Fixed a bug in Grid View that was happening when opening popups from a discussion page.</li>
+                        <li>Fixed a typo in the Giveaway Encrypter/Decrypter source links.</li>
+                        <li>When you create a discussion with encrypted giveaways, they are now immediately decrypted and the icon in the header no longer turns green.</li>
+                        <li>Added an option to Whitelist/Blacklist Checker to only check users who have not whitelisted/blacklisted you (closes #315).</li>
+                    </ul>
+                `
+            },
             {
                 date: `August 25, 2017`,
                 version: `6.Beta.31.11`,
