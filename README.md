@@ -844,6 +844,14 @@ The video above does not get embedded.
 
 ## Changelog
 
+**6.Beta.33.3 (August 26, 2017):**
+
+<ul>
+    <li>Fixed a bug in Giveaways Manager that was not properly exporting giveaways to encrypted giveaways (closes <a href="https://github.com/revilheart/ESGST/issues/379">#379</a>).</li>
+    <li>Giveaways Manager now works with Multiple Giveaways Creator results (closes <a href="https://github.com/revilheart/ESGST/issues/276">#276</a>).</li>
+    <li>Multiple Giveaways Creator now saves a cache whenever you add/import giveaways in case you accidentaly close the page or you have a power outrage so that you don't lose your progress. The cache is automatically loaded when you visit the page again and is only deleted if you click "Empty" or if you successully create the giveaways (closes <a href="https://github.com/revilheart/ESGST/issues/327">#327</a>).</li>
+</ul>
+
 **6.Beta.33.2 (August 26, 2017):**
 
 * Added an option (7.4.3.2 - SG/8.4.3.2 - ST) to enable "Giveaway Info" category in Game Categories only in the created/entered/won pages.

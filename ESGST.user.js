@@ -3,7 +3,7 @@
 // @namespace ESGST
 // @description Enhances SteamGifts and SteamTrades by adding some cool features to them.
 // @icon https://dl.dropboxusercontent.com/s/lr3t3bxrxfxylqe/esgstIcon.ico?raw=1
-// @version 6.Beta.33.2
+// @version 6.Beta.33.3
 // @author revilheart
 // @downloadURL https://github.com/revilheart/ESGST/raw/master/ESGST.user.js
 // @updateURL https://github.com/revilheart/ESGST/raw/master/ESGST.meta.js
@@ -3536,7 +3536,7 @@
                     toggleSwitch.onEnabled = enableGm;
                     toggleSwitch.onDisabled = disableGm;
                     mainPageHeadingBefore.appendChild(button);
-                    button.lastElementChild.addEventListener(`click`, openGmPopout.bind(null, {
+                    button.lastElementChild.addEventListener(`click`, openGmPopout.bind(null, null, {
                         button: button
                     }));
                 }
@@ -5616,7 +5616,7 @@
         popup.modal = insertHtml(document.body, `beforeEnd`, `
             <div class="esgst-popup-modal"></div>
         `);
-        n = 9999 + document.querySelectorAll(`.esgst-popup:not(.esgst-hidden)`).length;
+        n = 9999 + document.querySelectorAll(`.esgst-popup:not(.esgst-hidden), .esgst-popout:not(.esgst-hidden)`).length;
         popup.modal.style.zIndex = n;
         popup.popup.style.zIndex = n + 1;
         popup.modal.addEventListener(`click`, closePopup.bind(null, popup));
@@ -5671,11 +5671,13 @@
     }
 
     function createPopout_v6(className, click) {
-        var currentContext, currentFixed, popout, timeout;
+        var currentContext, currentFixed, n, popout, timeout;
         popout = {};
         popout.popout = insertHtml(document.body, `beforeEnd`, `<div class="${className} esgst-popout esgst-hidden"></div>`);
         popout.open = function(context, fixed) {
-            popout.popout.classList.remove(`esgst-hidden`);
+            popout.popout.classList.remove(`esgst-hidden`);            
+            n = 9999 + document.querySelectorAll(`.esgst-popup:not(.esgst-hidden), .esgst-popout:not(.esgst-hidden)`).length;
+            popout.popout.style.zIndex = n + 1;
             if (fixed) {
                 currentFixed = fixed;
                 popout.popout.style.position = `fixed`;
@@ -11102,11 +11104,15 @@ ${avatar.outerHTML}
             `).firstElementChild;
             removeIcon = mgc.giveaways.nextElementSibling;
             removeIcon.addEventListener(`dragenter`, removeMgcGiveaway.bind(null, mgc));
+            var cache = JSON.parse(localStorage.esgst_mgcCache || `[]`);
+            cache.forEach(values => {
+                addMgcGiveaway(mgc, values);
+            });
         }
     }
 
     function getMgcValues(mgc, callback) {
-        var values;
+        var cache, values;
         values = {
             gameId: mgc.gameId.value,
             gameType: mgc.gameType.value,
@@ -11127,6 +11133,9 @@ ${avatar.outerHTML}
             if ((esgst.mgc_createTrain && mgc.description.value.match(/\[ESGST-P\]|\[ESGST-N\]/)) || !esgst.mgc_createTrain) {
                 if ((mgc.discussion && mgc.description.value.match(/\[ESGST-B\]/)) || !mgc.discussion) {
                     addMgcGiveaway(mgc, values);
+                    cache = JSON.parse(localStorage.esgst_mgcCache || `[]`);
+                    cache.push(values);
+                    localStorage.esgst_mgcCache = JSON.stringify(cache);
                     mgc.copies.value = `1`;
                     mgc.keys.value = ``;
                 } else {
@@ -11393,12 +11402,15 @@ ${avatar.outerHTML}
     }
 
     function getMgcGiveaway(giveaways, i, j, mgc, n, name, popup, progress, textArea, values, mainCallback, callback, response) {
-        var elements, k, numElements, value;
+        var cache, elements, k, numElements, value;
         elements = DOM.parse(JSON.parse(response.responseText).html).getElementsByClassName(`table__row-outer-wrap`);
         for (k = 0, numElements = elements.length; k < numElements && elements[k].getAttribute(`data-autocomplete-name`) !== name; ++k);
         if (k < numElements) {
             values.gameId = elements[k].getAttribute(`data-autocomplete-id`);
             addMgcGiveaway(mgc, values);
+            cache = JSON.parse(localStorage.esgst_mgcCache || `[]`);
+            cache.push(values);
+            localStorage.esgst_mgcCache = JSON.stringify(cache);
             value = $(progress.bar).progressbar(`option`, `value`) + j;
             $(progress.bar).progressbar(`option`, `value`, value);
             progress.current.textContent = value;
@@ -11459,6 +11471,7 @@ ${avatar.outerHTML}
 
     function emptyMgcGiveaways(mgc, callback) {
         if (window.confirm(`Are you sure you want to empty the creator?`)) {
+            localStorage.removeItem(`esgst_mgcCache`);
             esgst.busy = false;
             mgc.datas = [];
             mgc.created = [];
@@ -11512,7 +11525,7 @@ ${avatar.outerHTML}
     }
 
     function checkMgcCreation(i, mgc, n, callback, response) {
-        var errors, errorsTitle, giveaway, j, numErrors;
+        var errors, errorsTitle, giveaway, j, numErrors, responseHtml;
         giveaway = mgc.giveaways.children[i];
         if (response.finalUrl.match(/\/giveaways\/new/)) {
             giveaway.classList.add(`error`);
@@ -11525,12 +11538,14 @@ ${avatar.outerHTML}
             giveaway.title = `${errorsTitle}${giveaway.title}`;
         } else {
             giveaway.classList.add(`success`);
+            responseHtml = DOM.parse(response.responseText);
             mgc.created.push({
                 giveaway: giveaway,
+                html: buildGiveaway(responseHtml, response.finalUrl).html,
                 url: response.finalUrl
             });
             if (esgst.cewgd || (esgst.gc && esgst.gc_gi) || esgst.lpv || esgst.rcvc) {
-                giveaway = getGiveaways(DOM.parse(response.responseText), false, response.finalUrl)[0];
+                giveaway = getGiveaways(responseHtml, false, response.finalUrl)[0];
                 if (giveaway) {
                     mgc.saveGiveaways[giveaway.code] = giveaway;
                 }
@@ -11740,6 +11755,7 @@ ${avatar.outerHTML}
     function completeMgcCreation(mgc, viewButton, callback) {
         if (mgc.discussion) {
             if (mgc.created.length) {
+                localStorage.removeItem(`esgst_mgcCache`);
                 localStorage.esgst_mgcAttach_step4 = mgc.firstWagon;
                 window.open(`/discussion/${mgc.discussion}/`);
                 viewButton.set.classList.remove(`esgst-hidden`);
@@ -11747,6 +11763,7 @@ ${avatar.outerHTML}
             callback();
         } else {
             if (mgc.created.length) {
+                localStorage.removeItem(`esgst_mgcCache`);
                 viewButton.set.classList.remove(`esgst-hidden`);
             }
             callback();
@@ -11829,22 +11846,38 @@ ${avatar.outerHTML}
     }
 
     function viewMgcResults(mgc, callback) {
-        var html, i, n, popup, url;
+        var button, html, giveaways, i, n, popup, toggleSwitch, url;
         popup = createPopup(`fa-eye`, `Results`);
         html = ``;
         for (i = 0, n = mgc.created.length; i < n; ++i) {
-            url = mgc.created[i].url;
-            html += `
-                <div>
-                    <a href="${url}">${url}</a>
-                </div>
-            `;
+            html += mgc.created[i].html;
         }
         popup.scrollable.insertAdjacentHTML(`beforeEnd`, `
             <div class="popup__keys__list">
                 ${html}
             </div>
         `);
+        giveaways = getGiveaways(popup.scrollable);
+        if (esgst.gm) {
+            esgst.gmCheckboxes = {};
+            button = insertHtml(popup.scrollable, `afterBegin`, `
+                <div class="esgst-page-heading">
+                    <div class="esgst-heading-button" title="Manage giveaways">
+                        <span></span>
+                        <i class="fa fa-gear"></i>
+                    </div>
+                </div>
+            `).firstElementChild;
+            button.lastElementChild.addEventListener(`click`, openGmPopout.bind(null, giveaways, {
+                button: button
+            }));
+            toggleSwitch = createToggleSwitch(button.firstElementChild, `gm_enable`, true, ``, false, false, null, esgst.gm_enable);
+            toggleSwitch.onEnabled = enableGm.bind(null, giveaways);
+            toggleSwitch.onDisabled = disableGm.bind(null, giveaways);
+            if (esgst.gm_enable) {
+                enableGm(giveaways);
+            }
+        }
         popup.open();
         callback();
     }
@@ -12967,10 +13000,13 @@ ${avatar.outerHTML}
 
     /* [GM] Giveaways Manager */
 
-    function enableGm() {
-        var checkbox, giveaway, i, n;
-        for (i = 0, n = esgst.currentGiveaways.length; i < n; ++i) {
-            giveaway = esgst.currentGiveaways[i];
+    function enableGm(giveaways) {
+        var checkbox, giveaway, giveaways, i, n;
+        if (!giveaways) {
+            giveaways = esgst.currentGiveaways;
+        }
+        for (i = 0, n = giveaways.length; i < n; ++i) {
+            giveaway = giveaways[i];
             if (!giveaway.innerWrap.getElementsByClassName(`esgst-gm-checkbox`)[0]) {
                 checkbox = createCheckbox_v6(insertHtml(giveaway.innerWrap, `afterBegin`, `
                     <div class="esgst-gm-checkbox"></div>
@@ -12986,11 +13022,14 @@ ${avatar.outerHTML}
         giveaway.gm = value;
     }
 
-    function disableGm() {
-        var checkbox, giveaway, i, n;
+    function disableGm(giveaways) {
+        var checkbox, giveaway, giveaways, i, n;
         esgst.gmCheckboxes = {};
-        for (i = 0, n = esgst.currentGiveaways.length; i < n; ++i) {
-            giveaway = esgst.currentGiveaways[i];
+        if (!giveaways) {
+            giveaways = esgst.currentGiveaways;
+        }
+        for (i = 0, n = giveaways.length; i < n; ++i) {
+            giveaway = giveaways[i];
             checkbox = giveaway.innerWrap.getElementsByClassName(`esgst-gm-checkbox`)[0];
             if (checkbox) {
                 checkbox.remove();
@@ -12999,17 +13038,17 @@ ${avatar.outerHTML}
         }
     }
 
-    function openGmPopout(gm) {
+    function openGmPopout(giveaways, gm) {
         var checkboxContext, checkbox, textArea, toggleSwitch;
         if (!gm.popout) {
             gm.popout = createPopout_v6(`esgst-gm-popout`, true);
             gm.popout.popout.appendChild(createButtonSet(`grey`, `grey`, `fa-circle`, `fa-circle-o-notch fa-spin`, `Select All`, ``, selectSwitches.bind(null, esgst.gmCheckboxes, `check`)).set);
             gm.popout.popout.appendChild(createButtonSet(`grey`, `grey`, `fa-circle-o`, `fa-circle-o-notch fa-spin`, `Select None`, ``, selectSwitches.bind(null, esgst.gmCheckboxes, `uncheck`)).set);
             gm.popout.popout.appendChild(createButtonSet(`grey`, `grey`, `fa-dot-circle-o`, `fa-circle-o-notch fa-spin`, `Select Inverse`, ``, selectSwitches.bind(null, esgst.gmCheckboxes, `toggle`)).set);
-            gm.popout.popout.appendChild(createButtonSet(`green`, ``, `fa-search`, ``, `Search & Replace`, ``, openGmPopup.bind(null, gm)).set);
-            gm.popout.popout.appendChild(createButtonSet(`green`, `grey`, `fa-puzzle-piece`, `fa-circle-o-notch fa-spin`, `Export to Encrypted Giveaways`, `Exporting...`, exportGmEncrypted.bind(null, gm)).set);
-            gm.popout.popout.appendChild(createButtonSet(`green`, `grey`, `fa-globe`, `fa-circle-o-notch fa-spin`, `Export to Links`, `Exporting...`, exportGmLinks.bind(null, gm)).set);
-            gm.popout.popout.appendChild(createButtonSet(`green`, `grey`, `fa-pencil`, `fa-circle-o-notch fa-spin`, `Export to Custom Format`, `Exporting...`, exportGmCustom.bind(null, gm)).set);
+            gm.popout.popout.appendChild(createButtonSet(`green`, ``, `fa-search`, ``, `Search & Replace`, ``, openGmPopup.bind(null, giveaways, gm)).set);
+            gm.popout.popout.appendChild(createButtonSet(`green`, `grey`, `fa-puzzle-piece`, `fa-circle-o-notch fa-spin`, `Export to Encrypted Giveaways`, `Exporting...`, exportGmEncrypted.bind(null, giveaways, gm)).set);
+            gm.popout.popout.appendChild(createButtonSet(`green`, `grey`, `fa-globe`, `fa-circle-o-notch fa-spin`, `Export to Links`, `Exporting...`, exportGmLinks.bind(null, giveaways, gm)).set);
+            gm.popout.popout.appendChild(createButtonSet(`green`, `grey`, `fa-pencil`, `fa-circle-o-notch fa-spin`, `Export to Custom Format`, `Exporting...`, exportGmCustom.bind(null, giveaways, gm)).set);
             createTooltip(insertHtml(gm.popout.popout, `beforeEnd`, `
                 <div class="esgst-description">
                     Enter the custom format below. <i class="fa fa-question-circle"></i>
@@ -13037,7 +13076,7 @@ ${avatar.outerHTML}
         }
     }
 
-    function openGmPopup(gm, callback) {
+    function openGmPopup(giveaways, gm, callback) {
         callback();
         if (!gm.popup) {
             gm.popup = createPopup(`fa-search`, `Search & Replace`);
@@ -13046,20 +13085,23 @@ ${avatar.outerHTML}
             gm.message = insertHtml(gm.popup.description, `afterBegin`, `<div class="esgst-description esgst-warning"></div>`);
             gm.search = insertHtml(gm.popup.description, `afterBegin`, `Search for: <input type="text">`);
             gm.results = insertHtml(gm.popup.scrollable, `beforeEnd`, `<div class="markdown"><ul></ul></div>`).firstElementChild;
-            gm.popup.description.appendChild(createButtonSet(`green`, `red`, `fa-search`, `fa-times`, `Search & Replace`, `Cancel`, startGmSearch.bind(null, gm), cancelGmSearch.bind(null, gm)).set);
+            gm.popup.description.appendChild(createButtonSet(`green`, `red`, `fa-search`, `fa-times`, `Search & Replace`, `Cancel`, startGmSearch.bind(null, giveaways, gm), cancelGmSearch.bind(null, gm)).set);
             gm.progress = insertHtml(gm.popup.description, `beforeEnd`, `<div></div>`);
         }
         gm.popup.open();
     }
 
-    function startGmSearch(gm, callback) {
+    function startGmSearch(giveaways, gm, callback) {
         var giveaway, i, n;
         gm.canceled = false;
         gm.button.classList.add(`esgst-busy`);
         gm.progress.innerHTML = ``;
         gm.giveaways = [];
-        for (i = 0, n = esgst.currentGiveaways.length; i < n; ++i) {
-            giveaway = esgst.currentGiveaways[i];
+        if (!giveaways) {
+            giveaways = esgst.currentGiveaways;
+        }
+        for (i = 0, n = giveaways.length; i < n; ++i) {
+            giveaway = giveaways[i];
             if (giveaway.gm) {
                 gm.giveaways.push(giveaway);
             }
@@ -13134,24 +13176,30 @@ ${avatar.outerHTML}
         }
     }
 
-    function exportGmEncrypted(gm, callback) {
+    function exportGmEncrypted(giveaways, gm, callback) {
         var encrypted, giveaway, i, n;
         encrypted = [];
-        for (i = 0, n = esgst.currentGiveaways.length; i < n; ++i) {
-            giveaway = esgst.currentGiveaways[i];
+        if (!giveaways) {
+            giveaways = esgst.currentGiveaways;
+        }
+        for (i = 0, n = giveaways.length; i < n; ++i) {
+            giveaway = giveaways[i];
             if (giveaway.gm) {
-                encrypted.push(`[](${encryptGedCode(giveaway.code)})`);
+                encrypted.push(`[](ESGST-${encryptGedCode(giveaway.code)})`);
             }
         }
         gm.textArea.value = encrypted.join(` `);
         callback();
     }
 
-    function exportGmLinks(gm, callback) {
+    function exportGmLinks(giveaways, gm, callback) {
         var giveaway, i, links, n;
         links = [];
-        for (i = 0, n = esgst.currentGiveaways.length; i < n; ++i) {
-            giveaway = esgst.currentGiveaways[i];
+        if (!giveaways) {
+            giveaways = esgst.currentGiveaways;
+        }
+        for (i = 0, n = giveaways.length; i < n; ++i) {
+            giveaway = giveaways[i];
             if (giveaway.gm) {
                 links.push(`[${giveaway.name}](https://www.steamgifts.com/giveaway/${giveaway.code}/)`);
             }
@@ -13160,12 +13208,15 @@ ${avatar.outerHTML}
         callback();
     }
 
-    function exportGmCustom(gm, callback) {
+    function exportGmCustom(giveaways, gm, callback) {
         var giveaway, i, links, n;
         links = [];
         line = gm.textArea.value.match(/\[LINE\](.+)\[\/LINE\]/)[1];
-        for (i = 0, n = esgst.currentGiveaways.length; i < n; ++i) {
-            giveaway = esgst.currentGiveaways[i];
+        if (!giveaways) {
+            giveaways = esgst.currentGiveaways;
+        }
+        for (i = 0, n = giveaways.length; i < n; ++i) {
+            giveaway = giveaways[i];
             if (giveaway.gm) {
                 links.push(line.replace(/\[TYPE\]/g, giveaway.type.slice(0, -1)).replace(/\[ID\]/g, giveaway.id).replace(/\[STEAM\]/g, `http://store.steampowered.com/${giveaway.type.slice(0, -1)}/${giveaway.id}`).replace(/\[NAME\]/g, giveaway.name).replace(/\[CODE\]/g, giveaway.code).replace(/\[SHORT-URL\]/g, `https://www.steamgifts.com/giveaway/${giveaway.code}/`).replace(/\[URL\]/g, `https://www.steamgifts.com${giveaway.url}`).replace(/\[POINTS\]/g, giveaway.points).replace(/\[LEVEL\]/g, giveaway.level));
             }
@@ -32243,11 +32294,6 @@ ${avatar.outerHTML}
             	min-width: 400px;
                 padding: 0 !important;
                 text-shadow: none;
-                z-index: 9999;
-            }
-
-            .esgst-gm-popout {
-                z-index: 9999 !important;
             }
 
             .ui-tooltip {
@@ -32815,7 +32861,7 @@ ${avatar.outerHTML}
                 display: inline-block;
             }
 
-            .page__heading .esgst-toggle-switch-container.inline {
+            .page__heading .esgst-toggle-switch-container.inline, .esgst-page-heading .esgst-toggle-switch-container.inline {
                 height: 16px;
                 margin: 0 2px;
                 line-height: normal;
@@ -33871,6 +33917,17 @@ ${avatar.outerHTML}
     function loadChangelog(version) {
         var changelog, current, html, i, index, n, popup;
         changelog = [
+            {
+                date: `August 26, 2017`,
+                version: `6.Beta.33.3`,
+                changelog: `
+                    <ul>
+                        <li>Fixed a bug in Giveaways Manager that was not properly exporting giveaways to encrypted giveaways (closes <a href="https://github.com/revilheart/ESGST/issues/379">#379</a>).</li>
+                        <li>Giveaways Manager now works with Multiple Giveaways Creator results (closes <a href="https://github.com/revilheart/ESGST/issues/276">#276</a>).</li>
+                        <li>Multiple Giveaways Creator now saves a cache whenever you add/import giveaways in case you accidentaly close the page or you have a power outrage so that you don't lose your progress. The cache is automatically loaded when you visit the page again and is only deleted if you click "Empty" or if you successully create the giveaways (closes <a href="https://github.com/revilheart/ESGST/issues/327">#327</a>).</li>
+                    </ul>
+                `
+            },
             {
                 date: `August 26, 2017`,
                 version: `6.Beta.33.2`,
