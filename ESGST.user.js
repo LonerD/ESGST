@@ -3,7 +3,7 @@
 // @namespace ESGST
 // @description Enhances SteamGifts and SteamTrades by adding some cool features to them.
 // @icon https://dl.dropboxusercontent.com/s/lr3t3bxrxfxylqe/esgstIcon.ico?raw=1
-// @version 6.Beta.31.15
+// @version 6.Beta.32.0
 // @author revilheart
 // @downloadURL https://github.com/revilheart/ESGST/raw/master/ESGST.user.js
 // @updateURL https://github.com/revilheart/ESGST/raw/master/ESGST.meta.js
@@ -854,6 +854,19 @@
                         {
                             description: `
                                 <ul>
+                                    <li>Opens the attached images in a carousel.</li>
+                                </ul>
+                                <img src="http://imgur.com/iJjAs3W"/>
+                            `,
+                            id: `aic`,
+                            name: `[NEW] Attached Images Carousel`,
+                            sg: true,
+                            st: true,
+                            type: `general`
+                        },
+                        {
+                            description: `
+                                <ul>
                                     <li>Shows all attached images by default.</li>
                                 </ul>
                                 <img src="https://camo.githubusercontent.com/e12760aaef77b2d9f6832190291ca43fab1d0622/687474703a2f2f692e696d6775722e636f6d2f496f5a374a684b2e706e67"/>
@@ -867,7 +880,6 @@
                                 }
                             ],
                             id: `vai`,
-                            load: loadVai,
                             name: `Visible Attached Images`,
                             sg: true,
                             st: true,
@@ -931,7 +943,7 @@
                             features :[
                                 {
                                     id: `hcp_v`,
-                                    name: `[NEW] Only hide the poll if you already voted.`,
+                                    name: `Only hide the poll if you already voted.`,
                                     sg: true
                                 }
                             ],
@@ -1076,162 +1088,162 @@
                                 },
                                 {
                                     id: `gf_level`,
-                                    name: `[NEW] Level`,
+                                    name: `Level`,
                                     sg: true
                                 },
                                 {
                                     id: `gf_entries`,
-                                    name: `[NEW] Entries`,
+                                    name: `Entries`,
                                     sg: true
                                 },
                                 {
                                     id: `gf_copies`,
-                                    name: `[NEW] Copies`,
+                                    name: `Copies`,
                                     sg: true
                                 },
                                 {
                                     id: `gf_points`,
-                                    name: `[NEW] Points`,
+                                    name: `Points`,
                                     sg: true
                                 },
                                 {
                                     id: `gf_minutesToEnd`,
-                                    name: `[NEW] Minutes To End`,
+                                    name: `Minutes To End`,
                                     sg: true
                                 },
                                 {
                                     id: `gf_chance`,
-                                    name: `[NEW] Chance`,
+                                    name: `Chance`,
                                     sg: true
                                 },
                                 {
                                     id: `gf_rating`,
-                                    name: `[NEW] Rating`,
+                                    name: `Rating`,
                                     sg: true
                                 },
                                 {
                                     id: `gf_pinned`,
-                                    name: `[NEW] Pinned`,
+                                    name: `Pinned`,
                                     sg: true
                                 },
                                 {
                                     id: `gf_group`,
-                                    name: `[NEW] Group`,
+                                    name: `Group`,
                                     sg: true
                                 },
                                 {
                                     id: `gf_whitelist`,
-                                    name: `[NEW] Whitelist`,
+                                    name: `Whitelist`,
                                     sg: true
                                 },
                                 {
                                     id: `gf_regionRestricted`,
-                                    name: `[NEW] Region Restricted`,
+                                    name: `Region Restricted`,
                                     sg: true
                                 },
                                 {
                                     id: `gf_created`,
-                                    name: `[NEW] Created`,
+                                    name: `Created`,
                                     sg: true
                                 },
                                 {
                                     id: `gf_entered`,
-                                    name: `[NEW] Entered`,
+                                    name: `Entered`,
                                     sg: true
                                 },
                                 {
                                     id: `gf_started`,
-                                    name: `[NEW] Started`,
+                                    name: `Started`,
                                     sg: true
                                 },
                                 {
                                     id: `gf_ended`,
-                                    name: `[NEW] Ended`,
+                                    name: `Ended`,
                                     sg: true
                                 },
                                 {
                                     id: `gf_owned`,
-                                    name: `[NEW] Owned`,
+                                    name: `Owned`,
                                     sg: true
                                 },
                                 {
                                     id: `gf_wishlisted`,
-                                    name: `[NEW] Wishlisted`,
+                                    name: `Wishlisted`,
                                     sg: true
                                 },
                                 {
                                     id: `gf_hidden`,
-                                    name: `[NEW] Hidden`,
+                                    name: `Hidden`,
                                     sg: true
                                 },
                                 {
                                     id: `gf_ignored`,
-                                    name: `[NEW] Ignored`,
+                                    name: `Ignored`,
                                     sg: true
                                 },
                                 {
                                     id: `gf_fullCV`,
-                                    name: `[NEW] Full CV`,
+                                    name: `Full CV`,
                                     sg: true
                                 },
                                 {
                                     id: `gf_reducedCV`,
-                                    name: `[NEW] Reduced CV`,
+                                    name: `Reduced CV`,
                                     sg: true
                                 },
                                 {
                                     id: `gf_noCV`,
-                                    name: `[NEW] No CV`,
+                                    name: `No CV`,
                                     sg: true
                                 },
                                 {
                                     id: `gf_removed`,
-                                    name: `[NEW] Removed`,
+                                    name: `Removed`,
                                     sg: true
                                 },
                                 {
                                     id: `gf_tradingCards`,
-                                    name: `[NEW] Trading Cards`,
+                                    name: `Trading Cards`,
                                     sg: true
                                 },
                                 {
                                     id: `gf_achievements`,
-                                    name: `[NEW] Achievements`,
+                                    name: `Achievements`,
                                     sg: true
                                 },
                                 {
                                     id: `gf_multiplayer`,
-                                    name: `[NEW] Multiplayer`,
+                                    name: `Multiplayer`,
                                     sg: true
                                 },
                                 {
                                     id: `gf_steamCloud`,
-                                    name: `[NEW] Steam Cloud`,
+                                    name: `Steam Cloud`,
                                     sg: true
                                 },
                                 {
                                     id: `gf_linux`,
-                                    name: `[NEW] Linux`,
+                                    name: `Linux`,
                                     sg: true
                                 },
                                 {
                                     id: `gf_mac`,
-                                    name: `[NEW] Mac`,
+                                    name: `Mac`,
                                     sg: true
                                 },
                                 {
                                     id: `gf_dlc`,
-                                    name: `[NEW] DLC`,
+                                    name: `DLC`,
                                     sg: true
                                 },
                                 {
                                     id: `gf_package`,
-                                    name: `[NEW] Package`,
+                                    name: `Package`,
                                     sg: true
                                 },
                                 {
                                     id: `gf_genres`,
-                                    name: `[NEW] Genres`,
+                                    name: `Genres`,
                                     sg: true
                                 }
                             ],
@@ -2603,7 +2615,7 @@
                                                 }
                                             ],
                                             id: `gc_fcv_s`,
-                                            name: `[NEW] Enable the simplified version.`,
+                                            name: `Enable the simplified version.`,
                                             sg: true
                                         }
                                     ],
@@ -2630,7 +2642,7 @@
                                                 }
                                             ],
                                             id: `gc_rcv_s`,
-                                            name: `[NEW] Enable the simplified version.`,
+                                            name: `Enable the simplified version.`,
                                             sg: true
                                         }
                                     ],
@@ -2657,7 +2669,7 @@
                                                 }
                                             ],
                                             id: `gc_ncv_s`,
-                                            name: `[NEW] Enable the simplified version.`,
+                                            name: `Enable the simplified version.`,
                                             sg: true
                                         },
                                         {
@@ -2689,7 +2701,7 @@
                                                 }
                                             ],
                                             id: `gc_h_s`,
-                                            name: `[NEW] Enable the simplified version.`,
+                                            name: `Enable the simplified version.`,
                                             sg: true
                                         }
                                     ],
@@ -2716,7 +2728,7 @@
                                                 }
                                             ],
                                             id: `gc_i_s`,
-                                            name: `[NEW] Enable the simplified version.`,
+                                            name: `Enable the simplified version.`,
                                             sg: true
                                         }
                                     ],
@@ -2743,7 +2755,7 @@
                                                 }
                                             ],
                                             id: `gc_o_s`,
-                                            name: `[NEW] Enable the simplified version.`,
+                                            name: `Enable the simplified version.`,
                                             sg: true
                                         }
                                     ],
@@ -2770,7 +2782,7 @@
                                                 }
                                             ],
                                             id: `gc_w_s`,
-                                            name: `[NEW] Enable the simplified version.`,
+                                            name: `Enable the simplified version.`,
                                             sg: true
                                         }
                                     ],
@@ -2797,7 +2809,7 @@
                                                 }
                                             ],
                                             id: `gc_a_s`,
-                                            name: `[NEW] Enable the simplified version.`,
+                                            name: `Enable the simplified version.`,
                                             sg: true
                                         }
                                     ],
@@ -2824,7 +2836,7 @@
                                                 }
                                             ],
                                             id: `gc_mp_s`,
-                                            name: `[NEW] Enable the simplified version.`,
+                                            name: `Enable the simplified version.`,
                                             sg: true
                                         }
                                     ],
@@ -2851,7 +2863,7 @@
                                                 }
                                             ],
                                             id: `gc_sc_s`,
-                                            name: `[NEW] Enable the simplified version.`,
+                                            name: `Enable the simplified version.`,
                                             sg: true
                                         }
                                     ],
@@ -2878,7 +2890,7 @@
                                                 }
                                             ],
                                             id: `gc_tc_s`,
-                                            name: `[NEW] Enable the simplified version.`,
+                                            name: `Enable the simplified version.`,
                                             sg: true
                                         }
                                     ],
@@ -2905,7 +2917,7 @@
                                                 }
                                             ],
                                             id: `gc_l_s`,
-                                            name: `[NEW] Enable the simplified version.`,
+                                            name: `Enable the simplified version.`,
                                             sg: true
                                         }
                                     ],
@@ -2932,7 +2944,7 @@
                                                 }
                                             ],
                                             id: `gc_m_s`,
-                                            name: `[NEW] Enable the simplified version.`,
+                                            name: `Enable the simplified version.`,
                                             sg: true
                                         }
                                     ],
@@ -2959,7 +2971,7 @@
                                                 }
                                             ],
                                             id: `gc_ea_s`,
-                                            name: `[NEW] Enable the simplified version.`,
+                                            name: `Enable the simplified version.`,
                                             sg: true
                                         }
                                     ],
@@ -2986,7 +2998,7 @@
                                                 }
                                             ],
                                             id: `gc_rm_s`,
-                                            name: `[NEW] Enable the simplified version.`,
+                                            name: `Enable the simplified version.`,
                                             sg: true
                                         }
                                     ],
@@ -3013,7 +3025,7 @@
                                                 }
                                             ],
                                             id: `gc_dlc_s`,
-                                            name: `[NEW] Enable the simplified version.`,
+                                            name: `Enable the simplified version.`,
                                             sg: true
                                         }
                                     ],
@@ -3040,7 +3052,7 @@
                                                 }
                                             ],
                                             id: `gc_p_s`,
-                                            name: `[NEW] Enable the simplified version.`,
+                                            name: `Enable the simplified version.`,
                                             sg: true
                                         }
                                     ],
@@ -3142,37 +3154,37 @@
                                 },
                                 {
                                     id: `es_gb`,
-                                    name: `[NEW] Enable for Giveaway Bookmarks.`,
+                                    name: `Enable for Giveaway Bookmarks.`,
                                     sg: true
                                 },
                                 {
                                     id: `es_ged`,
-                                    name: `[NEW] Enable for Giveaway Encrypter/Decrypter.`,
+                                    name: `Enable for Giveaway Encrypter/Decrypter.`,
                                     sg: true
                                 },
                                 {
                                     id: `es_tge`,
-                                    name: `[NEW] Enable for Train Giveaways Extractor.`,
+                                    name: `Enable for Train Giveaways Extractor.`,
                                     sg: true
                                 },
                                 {
                                     id: `es_dh`,
-                                    name: `[NEW] Enable for Discussions Highlighter.`,
+                                    name: `Enable for Discussions Highlighter.`,
                                     sg: true
                                 },
                                 {
                                     id: `es_ch`,
-                                    name: `[NEW] Enable for Comment History.`,
+                                    name: `Enable for Comment History.`,
                                     sg: true
                                 },
                                 {
                                     id: `es_gf`,
-                                    name: `[NEW] Enable for Giveaway Filters.`,
+                                    name: `Enable for Giveaway Filters.`,
                                     sg: true
                                 },
                                 {
                                     id: `es_df`,
-                                    name: `[NEW] Enable for Discussion Filters.`,
+                                    name: `Enable for Discussion Filters.`,
                                     sg: true
                                 }
                             ],
@@ -3202,6 +3214,7 @@
                     esgst.userFeatures = [];
                     esgst.giveawayFeatures = [];
                     esgst.currentGiveaways = [];
+                    esgst.attachedImages = [];
                     esgst.currentComments = [];
                     esgst.popupGiveaways = [];
                     esgst.currentDiscussions = [];
@@ -3277,6 +3290,10 @@
                         if ((esgst.pnot || esgst.esCheck) && esgst.paginationNavigation && esgst.mainPageHeading) {
                             esgst.paginationNavigation.classList.add(`page_heading_btn`);
                             esgst.mainPageHeading.appendChild(esgst.paginationNavigation);
+                        }
+                        if (esgst.aic || esgst.vai) {
+                            esgst.endlessFeatures.push(getAttachedImages);
+                            getAttachedImages(document);
                         }
                         if (esgst.smgb) {
                             document.querySelectorAll(`.sidebar__search-container .fa-search`).forEach(button => {
@@ -5459,10 +5476,10 @@
         popup.popup = insertHtml(document.body, `beforeEnd`, `
             <div class="esgst-hidden esgst-popup">
                 <div class="popup_summary">
-                    <div class="popup_icon">
+                    <div class="${icon ? `` : `esgst-hidden `}popup_icon">
                         <i class="popup__icon fa ${icon} esgst-popup-icon"></i>
                     </div>
-                    <div class="popup__heading popup_heading">
+                    <div class="${title ? `` : `esgst-hidden `}popup__heading popup_heading">
                         <div class="popup_heading_h2 esgst-popup-title">${title}</div>
                     </div>
                 </div>
@@ -6278,59 +6295,65 @@
             if ((keys && event[keys[1]] && key === keys[2]) || key === shortcut) {
                 switch (value) {
                     case `closePopups`:
-                        closeButtons = document.querySelectorAll(`.b-close, .esgst-popup-close`);
-                        for (j = 0, n2 = closeButtons.length; j < n2; ++j) {
-                            closeButtons[j].click();
-                        }
-                        event.preventDefault();
-                        return;
-                        break;
-                    case `searchBox`:
-                        search = document.getElementsByClassName(`sidebar__search-input`)[0];
-                        if (search) {
-                            search.focus();
+                        if (!event.target.tagName.match(/^(INPUT|TEXTAREA)$/)) {
+                            closeButtons = document.querySelectorAll(`.b-close, .esgst-popup-close`);
+                            for (j = 0, n2 = closeButtons.length; j < n2; ++j) {
+                                closeButtons[j].click();
+                            }
                             event.preventDefault();
                             return;
                         }
                         break;
+                    case `searchBox`:
+                        if (!event.target.tagName.match(/^(INPUT|TEXTAREA)$/)) {
+                            search = document.getElementsByClassName(`sidebar__search-input`)[0];
+                            if (search) {
+                                search.focus();
+                                event.preventDefault();
+                                return;
+                            }
+                        }
+                        break;
                     case `firstPage`:
-                        if (esgst.paginationNavigation && esgst.currentPage > 1) {
+                        if (!event.target.tagName.match(/^(INPUT|TEXTAREA)$/) && esgst.paginationNavigation && esgst.currentPage > 1) {
                             location.href = `${esgst.searchUrl}1`;
                             event.preventDefault();
                             return;
                         }
                         break;
                     case `previousPage`:
-                        if (esgst.paginationNavigation && esgst.currentPage > 1) {
+                        if (!event.target.tagName.match(/^(INPUT|TEXTAREA)$/) && esgst.paginationNavigation && esgst.currentPage > 1) {
                             location.href = `${esgst.searchUrl}${esgst.currentPage - 1}`;
                             event.preventDefault();
                             return;
                         }
                         break;
                     case `nextPage`:
-                        if (esgst.paginationNavigation && esgst.currentPage < esgst.lastPage) {
+                        if (!event.target.tagName.match(/^(INPUT|TEXTAREA)$/) && esgst.paginationNavigation && esgst.currentPage < esgst.lastPage) {
                             location.href = `${esgst.searchUrl}${esgst.currentPage + 1}`;
                             event.preventDefault();
                             return;
                         }
                         break;
                     case `lastPage`:
-                        if (esgst.paginationNavigation && esgst.currentPage < esgst.lastPage && esgst.lastPage !== 999999999) {
+                        if (!event.target.tagName.match(/^(INPUT|TEXTAREA)$/) && esgst.paginationNavigation && esgst.currentPage < esgst.lastPage && esgst.lastPage !== 999999999) {
                             location.href = `${esgst.searchUrl}${esgst.lastPage}`;
                             event.preventDefault();
                             return;
                         }
                         break;
                     case `toggleFilters`:
-                        toggle = document.querySelector(`.esgst-gf-toggle .esgst-toggle-switch`);
-                        if (toggle) {
-                            toggle.click();
-                            event.preventDefault();
-                            return;
+                        if (!event.target.tagName.match(/^(INPUT|TEXTAREA)$/)) {
+                            toggle = document.querySelector(`.esgst-gf-toggle-switch`);
+                            if (toggle) {
+                                toggle.click();
+                                event.preventDefault();
+                                return;
+                            }
                         }
                         break;
                     case `hideGame`:
-                        if (esgst.giveawayPath) {
+                        if (!event.target.tagName.match(/^(INPUT|TEXTAREA)$/) && esgst.giveawayPath) {
                             button = (document.getElementsByClassName(`popup--hide-games`)[0].style.display && document.getElementsByClassName(`popup--hide-games`)[0].style.display !== `none` && document.getElementsByClassName(`js__submit-hide-games`)[0]) || document.querySelector(`.esgst-ochgb, .giveaway__hide, .featured__giveaway__hide`);
                             if (button) {
                                 button.click();
@@ -6340,7 +6363,7 @@
                         }
                         break;
                     case `hideGiveaway`:
-                        if (esgst.giveawayPath) {
+                        if (!event.target.tagName.match(/^(INPUT|TEXTAREA)$/) && esgst.giveawayPath) {
                             button = document.querySelector(`.esgst-gf-hide-button, .esgst-gf-unhide-button`);
                             if (button) {
                                 button.firstElementChild.click();
@@ -6350,7 +6373,7 @@
                         }
                         break;
                     case `giveawayEntry`:
-                        if (event.target.tagName !== `TEXTAREA` && esgst.enterGiveawayButton) {
+                        if (!event.target.tagName.match(/^(INPUT|TEXTAREA)$/) && esgst.enterGiveawayButton) {
                             if (esgst.enterGiveawayButton.classList.contains(`is-hidden`)) {
                                 esgst.leaveGiveawayButton.click();
                             } else {
@@ -6378,7 +6401,7 @@
                         }
                         break;
                     case `replyBox`:
-                        if (esgst.replyBox) {
+                        if (!event.target.tagName.match(/^(INPUT|TEXTAREA)$/) && esgst.replyBox) {
                             esgst.replyBox.getElementsByTagName(`textarea`)[0].focus();
                             event.preventDefault();
                             return;
@@ -6955,25 +6978,72 @@
         }
     }
 
-    /* [VAI] Visible Attached Images */
+    /* [VAI] Visible Attached Images / [AIC] Attached Images Carousel */
 
-    function loadVai() {
-        esgst.endlessFeatures.push(getVaiImages);
-        getVaiImages(document);
+    function getAttachedImages(context) {
+        var comment, i, image, url;
+        context.querySelectorAll(`.comment__toggle-attached, .view_attached`).forEach(button => {
+            image = button.nextElementSibling.firstElementChild;
+            if (esgst.aic) {
+                i = esgst.attachedImages.length;
+                button.addEventListener(`click`, openAicCarousel.bind(null, i));
+                image.addEventListener(`click`, openAicCarousel.bind(null, i));
+                comment = button.closest(`.comment`);
+                esgst.attachedImages.push({
+                    button: button,
+                    image: image,
+                    source: comment && comment.querySelector(`.comment__summary`).id
+                });
+            }
+            if (esgst.vai) {
+                url = image.getAttribute(`src`);
+                if (url && esgst.vai_gifv) {
+                    url = url.replace(/\.gifv/, `.gif`);
+                    image.setAttribute(`src`, url);
+                }
+                image.classList.remove(`is_hidden`, `is-hidden`);
+            }
+        });
     }
 
-    function getVaiImages(context) {
-        var images, i, n, image, url;
-        images = context.querySelectorAll(`.comment__toggle-attached ~ a img, .view_attached ~ a img`);
-        for (i = 0, n = images.length; i < n; ++i) {
-            image = images[i];
-            url = image.getAttribute(`src`);
-            if (url && esgst.vai_gifv) {
-                url = url.replace(/\.gifv/, `.gif`);
-                image.setAttribute(`src`, url);
-            }
-            image.classList.remove(`is_hidden`, `is-hidden`);
+    function openAicCarousel(i, event) {
+        var popup;
+        event.preventDefault();
+        event.stopPropagation();
+        popup = createPopup(null, null, true);
+        popup.open();
+        showAicImage(insertHtml(popup.description, `beforeEnd`, `<div class="esgst-aic-carousel markdown"></div>`), i, popup);
+    }
+
+    function showAicImage(carousel, i, popup) {
+        var attachedImage, n;
+        carousel.innerHTML = ``;
+        n = esgst.attachedImages.length;
+        attachedImage = esgst.attachedImages[i];
+        attachedImage.image.classList.remove(`is_hidden`, `is-hidden`);
+        attachedImage.image.style.maxHeight = `${window.innerHeight * 0.9 - (popup.popup.offsetHeight - popup.scrollable.offsetHeight)}px`;
+        carousel.innerHTML = `
+            ${i > 0 ? `
+            <div class="esgst-aic-left-button">
+                <i class="fa fa-chevron-left"></i>
+            </div>
+            ` : ``}
+            ${attachedImage.image.outerHTML}
+            ${attachedImage.source ? `<div><a href="#${attachedImage.source}">Source</a></div>` : ``}
+            ${i < n - 1 ? `
+            <div class="esgst-aic-right-button">
+                <i class="fa fa-chevron-right"></i>
+            </div>
+            ` : ``}
+        `;
+        if (i > 0) {
+            carousel.firstElementChild.addEventListener(`click`, showAicImage.bind(null, carousel, i - 1, popup));
         }
+        if (i < n - 1) {
+            carousel.lastElementChild.addEventListener(`click`, showAicImage.bind(null, carousel, i + 1, popup));
+        }
+        popup.reposition();
+        popup.reposition();
     }
 
     /* [EV] Embedded Videos */
@@ -9698,7 +9768,7 @@ ${avatar.outerHTML}
         if (((esgst.createdPath || esgst.wonPath || esgst.newGiveawayPath) && !main) || (!esgst.createdPath && !esgst.wonPath && !esgst.newGiveawayPath)) {
             for (i = 0, n = giveaways.length; i < n; ++i) {
                 giveaway = giveaways[i];
-                if (((giveaway.inviteOnly && ((main && esgst.giveawayPath) || giveaway.ended)) || !giveaway.inviteOnly) && !giveaway.innerWrap.getElementsByClassName(`esgst-gwc`)[0]) {
+                if (((giveaway.inviteOnly && ((main && esgst.giveawayPath) || !main || giveaway.ended)) || !giveaway.inviteOnly) && !giveaway.innerWrap.getElementsByClassName(`esgst-gwc`)[0]) {
                     if (giveaway.started) {
                         addGwcChance(insertHtml(giveaway.panel, (esgst.gv && ((main && esgst.giveawaysPath) || (source === `gb` && esgst.gv_gb) || (source === `ged` && esgst.gv_ged) || (source === `tge` && esgst.gv_tge))) ? `afterBegin` : `beforeEnd`, `<div class="${esgst.giveawayPath ? `featured__column` : ``} esgst-gwc" title="Giveaway Winning Chance">`), giveaway);
                     } else {
@@ -9778,7 +9848,7 @@ ${avatar.outerHTML}
         if (((esgst.createdPath || esgst.wonPath || esgst.newGiveawayPath) && !main) || (!esgst.createdPath && !esgst.wonPath && !esgst.newGiveawayPath)) {
             for (i = 0, n = giveaways.length; i < n; ++i) {
                 giveaway = giveaways[i];
-                if (giveaway.started && ((giveaway.inviteOnly && ((main && esgst.giveawayPath) || giveaway.ended)) || !giveaway.inviteOnly) && !giveaway.innerWrap.getElementsByClassName(`esgst-gwr`)[0]) {
+                if (giveaway.started && ((giveaway.inviteOnly && ((main && esgst.giveawayPath) || !main || giveaway.ended)) || !giveaway.inviteOnly) && !giveaway.innerWrap.getElementsByClassName(`esgst-gwr`)[0]) {
                     addGwcRatio(insertHtml(giveaway.panel, (esgst.gv && ((main && esgst.giveawaysPath) || (source === `gb` && esgst.gv_gb) || (source === `ged` && esgst.gv_ged) || (source === `tge` && esgst.gv_tge))) ? `afterBegin` : `beforeEnd`, `<div class="${esgst.giveawayPath ? `featured__column` : ``} esgst-gwr" title="Giveaway Winning Ratio">`), giveaway);
                 }
             }
@@ -10952,9 +11022,17 @@ ${avatar.outerHTML}
             values.groups = mgc.groups.value;
             values.level = mgc.level.value;
             values.description = mgc.description.value;
-            addMgcGiveaway(mgc, values);
-            mgc.copies.value = `1`;
-            mgc.keys.value = ``;
+            if ((esgst.mgc_createTrain && mgc.description.value.match(/\[ESGST-P\]|\[ESGST-N\]/)) || !esgst.mgc_createTrain) {
+                if ((mgc.discussion && mgc.description.value.match(/\[ESGST-B\]/)) || !mgc.discussion) {
+                    addMgcGiveaway(mgc, values);
+                    mgc.copies.value = `1`;
+                    mgc.keys.value = ``;
+                } else {
+                    createAlert(`The bump link format is missing from the description.`);
+                }
+            } else {
+                createAlert(`The next/previous links format is missing from the description.`);
+            }
         } else {
             createAlert(`You must first fill the details of the giveaway.`);
         }
@@ -11085,34 +11163,44 @@ ${avatar.outerHTML}
 
     function getMgcGiveaways(mgc, popup, progress, textArea, callback) {
         var giveaways, lines, max, n, value;
-        esgst.busy = true;
-        giveaways = [];
-        lines = textArea.value.trim().split(/\n/);
-        for (i = 0, n = lines.length; i < n; ++i) {
-            line = lines[i].trim();
-            if (line) {
-                giveaways.push(line);
-            }
-        }
-        textArea.value = giveaways.join(`\n`);
-        n = giveaways.length;
-        if ($(progress.bar).progressbar(`instance`)) {
-            max = $(progress.bar).progressbar(`option`, `max`);
-            value = $(progress.bar).progressbar(`option`, `value`);
-            if (value + n !== max) {
-                $(progress.bar).progressbar({
-                    max: value + n,
-                    value: value
-                });
-                progress.total.textContent = value + n;
+        if ((esgst.mgc_createTrain && mgc.description.value.match(/\[ESGST-P\]|\[ESGST-N\]/)) || !esgst.mgc_createTrain) {
+            if ((mgc.discussion && mgc.description.value.match(/\[ESGST-B\]/)) || !mgc.discussion) {
+                esgst.busy = true;
+                giveaways = [];
+                lines = textArea.value.trim().split(/\n/);
+                for (i = 0, n = lines.length; i < n; ++i) {
+                    line = lines[i].trim();
+                    if (line) {
+                        giveaways.push(line);
+                    }
+                }
+                textArea.value = giveaways.join(`\n`);
+                n = giveaways.length;
+                if ($(progress.bar).progressbar(`instance`)) {
+                    max = $(progress.bar).progressbar(`option`, `max`);
+                    value = $(progress.bar).progressbar(`option`, `value`);
+                    if (value + n !== max) {
+                        $(progress.bar).progressbar({
+                            max: value + n,
+                            value: value
+                        });
+                        progress.total.textContent = value + n;
+                    }
+                } else {
+                    $(progress.bar).progressbar({
+                        max: n
+                    });
+                    progress.total.textContent = n;
+                }
+                importMgcGiveaway(giveaways, 0, mgc, n, popup, progress, textArea, popup.close, callback);
+            } else {
+                createAlert(`The bump link format is missing from the description.`);
+                callback();
             }
         } else {
-            $(progress.bar).progressbar({
-                max: n
-            });
-            progress.total.textContent = n;
+            createAlert(`The next/previous links format is missing from the description.`);
+            callback();
         }
-        importMgcGiveaway(giveaways, 0, mgc, n, popup, progress, textArea, popup.close, callback);
     }
 
     function importMgcGiveaway(giveaways, i, mgc, n, popup, progress, textArea, mainCallback, callback) {
@@ -11280,11 +11368,21 @@ ${avatar.outerHTML}
     }
 
     function createMgcGiveaways(mgc, viewButton, callback) {
-        mgc.copies.value = `1`;
-        mgc.keys.value = ``;
-        viewButton.set.classList.add(`esgst-hidden`);
-        mgc.saveGiveaways = {};
-        createMgcGiveaway(0, mgc, mgc.giveaways.children.length, esgst.cewgd || (esgst.gc && esgst.gc_gi) || esgst.lpv || esgst.rcvc ? saveMgcGiveaways.bind(null, mgc, completeMgcCreation.bind(null, mgc, viewButton, callback)) : completeMgcCreation.bind(null, mgc, viewButton, callback));
+        if ((esgst.mgc_createTrain && mgc.description.value.match(/\[ESGST-P\]|\[ESGST-N\]/)) || !esgst.mgc_createTrain) {
+            if ((mgc.discussion && mgc.description.value.match(/\[ESGST-B\]/)) || !mgc.discussion) {
+                mgc.copies.value = `1`;
+                mgc.keys.value = ``;
+                viewButton.set.classList.add(`esgst-hidden`);
+                mgc.saveGiveaways = {};
+                createMgcGiveaway(0, mgc, mgc.giveaways.children.length, esgst.cewgd || (esgst.gc && esgst.gc_gi) || esgst.lpv || esgst.rcvc ? saveMgcGiveaways.bind(null, mgc, completeMgcCreation.bind(null, mgc, viewButton, callback)) : completeMgcCreation.bind(null, mgc, viewButton, callback));
+            } else {
+                createAlert(`The bump link format is missing from the description.`);
+                callback();
+            }
+        } else {
+            createAlert(`The next/previous links format is missing from the description.`);
+            callback();
+        }
     }
 
     function createMgcGiveaway(i, mgc, n, callback) {
@@ -11438,7 +11536,8 @@ ${avatar.outerHTML}
         } else {
             replaceCallback = getMgcBoth;
         }
-        description = description.replace(/\[ESGST-P\](.+?)\[\/ESGST-P\](.+?)\[ESGST-N\](.+?)\[\/ESGST-N\]/g, replaceCallback.bind(null, i, mgc));
+        description = description.replace(/\[ESGST-P\](.+?)\[\/ESGST-P\](.+?)\[ESGST-N\](.+?)\[\/ESGST-N\]/g, replaceCallback.bind(null, i, mgc, false));
+        description = description.replace(/\[ESGST-P\](.+?)\[\/ESGST-P\]|\[ESGST-N\](.+?)\[\/ESGST-N\]/g, replaceCallback.bind(null, i, mgc, true));
         description = description.replace(/\[ESGST-C\](.+?)\[\/ESGST-C\]/g, getMgcCounter.bind(null, i, n));
         if (mgc.discussion && (!esgst.mgc_bumpLast || i === n - 1)) {
             description = description.replace(/\[ESGST-B\](.+?)\[\/ESGST-B\]/g, `[$1](/discussion/${mgc.discussion}/)`);
@@ -11448,67 +11547,83 @@ ${avatar.outerHTML}
         request(`xsrf_token=${esgst.xsrfToken}&do=edit_giveaway_description&giveaway_id=${id}&description=${encodeURIComponent(description.trim())}`, false, `/ajax.php`, connectMgcWagon.bind(null, i, mgc, n, callback));
     }
 
-    function getMgcNext(i, mgc, fullMatch, match1, match2, match3) {
+    function getMgcNext(i, mgc, single, fullMatch, match1, match2, match3) {
         var match, next, nextPref, nextSuf;
-        match = match3.match(/(.*?)\[N\](.+?)\[\/N\](.*?)$/);
-        if (match) {
-            nextPref = match[1];
-            next = match[2];
-            nextSuf = match[3];
+        if ((single && match2) || !single) {
+            match = (single ? match2 : match3).match(/(.*?)\[N\](.+?)\[\/N\](.*?)$/);
+            if (match) {
+                nextPref = match[1];
+                next = match[2];
+                nextSuf = match[3];
+            } else {
+                nextPref = ``;
+                next = single ? match2 : match3;
+                nextSuf = ``;
+            }
+            if (esgst.mgc_removeLinks || single) {
+                return `${nextPref}[${next}](${mgc.created[i + 1].url})${nextSuf}`;
+            } else {
+                return `${match1}${match2}${nextPref}[${next}](${mgc.created[i + 1].url})${nextSuf}`;
+            }
         } else {
-            nextPref = ``;
-            next = match3;
-            nextSuf = ``;
-        }
-        if (esgst.mgc_removeLinks) {
-            return `${nextPref}[${next}](${mgc.created[i + 1].url})${nextSuf}`;
-        } else {
-            return `${match1}${match2}${nextPref}[${next}](${mgc.created[i + 1].url})${nextSuf}`;
+            return ``;
         }
     }
 
-    function getMgcPrevious(i, mgc, fullMatch, match1, match2, match3) {
+    function getMgcPrevious(i, mgc, single, fullMatch, match1, match2, match3) {
         var match, prev, prevPref, prevSuf;
-        match = match1.match(/(.*?)\[P\](.+?)\[\/P\](.*?)$/);
-        if (match) {
-            prevPref = match[1];
-            prev = match[2];
-            prevSuf = match[3];
+        if ((single && match1) || !single) {
+            match = match1.match(/(.*?)\[P\](.+?)\[\/P\](.*?)$/);
+            if (match) {
+                prevPref = match[1];
+                prev = match[2];
+                prevSuf = match[3];
+            } else {
+                prevPref = ``;
+                prev = match1;
+                prevSuf = ``;
+            }
+            if (esgst.mgc_removeLinks || single) {
+                return `${prevPref}[${prev}](${mgc.created[i - 1].url})${prevSuf}`;
+            } else {
+                return `${prevPref}[${prev}](${mgc.created[i - 1].url})${prevSuf}${match2}${match3}`;
+            }
         } else {
-            prevPref = ``;
-            prev = match1;
-            prevSuf = ``;
-        }
-        if (esgst.mgc_removeLinks) {
-            return `${prevPref}[${prev}](${mgc.created[i - 1].url})${prevSuf}`;
-        } else {
-            return `${prevPref}[${prev}](${mgc.created[i - 1].url})${prevSuf}${match2}${match3}`;
+            return ``;
         }
     }
 
-    function getMgcBoth(i, mgc, fullMatch, match1, match2, match3) {
+    function getMgcBoth(i, mgc, single, fullMatch, match1, match2, match3) {
         var match, next, nextPref, nextSuf, prev, prevPref, prevSuf;
-        match = match1.match(/(.*?)\[P\](.+?)\[\/P\](.*?)$/);
-        if (match) {
-            prevPref = match[1];
-            prev = match[2];
-            prevSuf = match[3];
+        if (single) {
+            if (match1) {
+                return getMgcPrevious(i, mgc, true, fullMatch, match1);
+            } else {
+                return getMgcNext(i, mgc, true, fullMatch, null, match2);
+            }
         } else {
-            prevPref = ``;
-            prev = match1;
-            prevSuf = ``;
+            match = match1.match(/(.*?)\[P\](.+?)\[\/P\](.*?)$/);
+            if (match) {
+                prevPref = match[1];
+                prev = match[2];
+                prevSuf = match[3];
+            } else {
+                prevPref = ``;
+                prev = match1;
+                prevSuf = ``;
+            }
+            match = match3.match(/(.*?)\[N\](.+?)\[\/N\](.*?)$/);
+            if (match) {
+                nextPref = match[1];
+                next = match[2];
+                nextSuf = match[3];
+            } else {
+                nextPref = ``;
+                next = match3;
+                nextSuf = ``;
+            }
+            return `${prevPref}[${prev}](${mgc.created[i - 1].url})${prevSuf}${match2}${nextPref}[${next}](${mgc.created[i + 1].url})${nextSuf}`;
         }
-        match = match3.match(/(.*?)\[N\](.+?)\[\/N\](.*?)$/);
-        if (match) {
-            nextPref = match[1];
-            next = match[2];
-            nextSuf = match[3];
-        } else {
-            nextPref = ``;
-            next = match3;
-            nextSuf = ``;
-        }
-        return `${prevPref}[${prev}](${mgc.created[i - 1].url})${prevSuf}${match2}${nextPref}[${next}](${mgc.created[i + 1].url})${nextSuf}`;
     }
 
     function getMgcCounter(i, n, fullMatch, match1) {
@@ -27077,10 +27192,18 @@ ${avatar.outerHTML}
                         elements = responseHtml.getElementsByClassName(`user_reviews_summary_row`);
                         n = elements.length;
                         if (n > 0) {
-                            match = elements[n - 1].getAttribute(`data-store-tooltip`).replace(/,/g, ``).match(/(\d+)%.+?(\d+)/);
+                            var rating = elements[n - 1].getAttribute(`data-store-tooltip`).replace(/,|\./g, ``);
+                            match = rating.match(/(\d+)%.+?(\d+)/);
+                            var percentageIndex = 1;
+                            var countIndex = 2;
+                            if (!match) {
+                                match = rating.match(/(\d+).+?(\d+)%/);
+                                percentageIndex = 2;
+                                countIndex = 1;
+                            }
                             if (match) {
-                                categories.rating = `${match[1]}% (${match[2]})`;
-                                rating = parseInt(match[1]);
+                                categories.rating = `${match[percentageIndex]}% (${match[countIndex]})`;
+                                rating = parseInt(match[percentageIndex]);
                                 if (rating >= 0) {
                                     if (rating < 40) {
                                         categories.ratingType = `Negative`;
@@ -32183,6 +32306,24 @@ ${avatar.outerHTML}
                 z-index: 99999;
             }
 
+            .esgst-aic-carousel img {
+                max-width: 100%;
+            }
+
+            .esgst-aic-left-button {
+                cursor: pointer;
+                left: 60px;
+                position: absolute;
+                top: 50%;
+            }
+
+            .esgst-aic-right-button {
+                cursor: pointer;
+                right: 50px;
+                position: absolute;
+                top: 50%;
+            }
+
             .esgst-popup-modal {
                 background-color: rgba(60, 66, 77, 0.7);
                 bottom: 0;
@@ -33345,6 +33486,23 @@ ${avatar.outerHTML}
     function loadChangelog(version) {
         var changelog, current, html, i, index, n, popup;
         changelog = [
+            {
+                date: `August 26, 2017`,
+                version: `6.Beta.32.0`,
+                changelog: `
+                    <ul>
+                        <li>Fixed a bug in Shortcut Keys that was firing keys when focused on an input or text area (<a href="https://github.com/revilheart/ESGST/issues/377">#377</a>).</li>
+                        <li>Fixed a bug that was not showing Giveaway Winning Chance/Ratio for active invite only giveaways in popups.</li>
+                        <li>When trying to create a train in Multiple Giveaways Creator with no previous/next/bump links format in the description, an alert will now be shown (<a href="https://github.com/revilheart/ESGST/issues/376">#376</a>).</li>
+                        <li>You can now use only one type of link in Multiple Giveaways Creator. Before the description had to contain both previous and next links, otherwise it wouldn't work. Now you can have only next links in your train, for example.</li>
+                        <li>Fixed a bug in Game Categories that was still not showing rating for non-English users.</li>
+                    </ul>
+                    <p>Added the following features:</p>
+                    <ul>
+                        <li>1.12 Attached Images Carousel (<a href="https://github.com/revilheart/ESGST/issues/364">#364</a>)</li>
+                    </ul>
+                `
+            },
             {
                 date: `August 25, 2017`,
                 version: `6.Beta.31.15`,

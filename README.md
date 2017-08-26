@@ -844,6 +844,18 @@ The video above does not get embedded.
 
 ## Changelog
 
+**6.Beta.32.0 (August 26, 2017):**`
+
+* Fixed a bug in Shortcut Keys that was firing keys when focused on an input or text area (closes #377).
+* Fixed a bug that was not showing Giveaway Winning Chance/Ratio for active invite only giveaways in popups.
+* When trying to create a train in Multiple Giveaways Creator with no previous/next/bump links format in the description, an alert will now be shown (closes #376).
+* You can now use only one type of link in Multiple Giveaways Creator. Before the description had to contain both previous and next links, otherwise it wouldn't work. Now you can have only next links in your train, for example.
+* Fixed a bug in Game Categories that was still not showing rating for non-English users.
+
+Added the following features:
+
+* 1.12 Attached Images Carousel (closes #364)
+
 **6.Beta.31.15 (August 25, 2017):**
 
 * If the option "Show blacklist information." is disabled in Whitelist/Blacklist Checker the word "blacklist" is now wiped from everywhere (closes #374).
@@ -960,44 +972,6 @@ Added the following features:
 * Fixed a bug in Main Post Popup that was preventing the script from loading correctly.
 * Fixed a bug in Comment Formatting Helper that was not saving emojis.
 * Fixed a bug in Shared Groups Checker that was not indentifying shared groups with uppercase letters.
-    
-**6.Beta.30.2 (August 19, 2017):**
-
-* Added an option (2.18.1) to Giveaway Recreator to remove the button for giveaways that have been recreated.
-* Giveaway Recreator now runs on the created page, opens in a new tab and is also shown for giveaways with less entries than copies.
-* Deleting presets, templates and saved replies no longer prompts for a confirmation. Instead a "Undo Delete" button will appear so you can restore them if you deleted them by mistake (closes <a href="https://github.com/revilheart/ESGST/issues/206">#206</a>).
-* Fixed a style issue in Giveaway Groups Loader that was not repositioning popups (closes <a href="https://github.com/revilheart/ESGST/issues/232">#232</a>).
-* Fixed a style issue in Giveaway Groups Loader that was adding double underlines to groups (closes <a href="https://github.com/revilheart/ESGST/issues/247">#247</a>).
-* Removed the user icon from Giveaway Groups Loader, since the feature shows avatars again.
-    
-**6.Beta.30.1 (August 19, 2017):**
-
-* Fixed a bug that was not enabling Giveaway Recreator in profile pages other than page 1.
-    
-**6.Beta.30.0 (August 19, 2017):**
-
-* Fixed a bug that was preventing the script from running in the entered/won pages.
-* Giveaways visited or hidden no longer count for the option in Header Refresher to indicate if there are unentered wishlist giveaways open.
-* Fixed a bug in Endless Scrolling that was not reversing the pages correctly.
-
-Added the following features:
-
-* 2.18 Giveaway Recreator
-    
-**6.Beta.29.0 (August 19, 2017):**
-
-* Added an option to sync your giveaways from the settings menu, without the need to use User Giveaways Data.
-* Fixed a bug that was not showing the button to manage hidden discussions in the settings menu.
-* If you have Level Progress Visualizer, Created/Entered/Won Giveaway Details, Real CV Calculator or the "Giveaway Info" category in Game Categories enabled, when you create a giveaway you will now get a popup asking you to wait a few seconds until the giveaway is saved in the storage for those features.
-* Level Progress Visualizer now projects what your level will be after your active giveaways end and get marked as received (only works for giveaways created after v6.Beta.29.0) (closes <a href="https://github.com/revilheart/ESGST/issues/181">#181</a>).
-* Real CV Calculator and the "Giveaway Info" category in Game Categories now both take into account active giveaways for calculation (closes <a href="https://github.com/revilheart/ESGST/issues/297">#297</a>).
-* Fixed a bug in Giveaway Filters that was not filtering some filters (closes <a href="https://github.com/revilheart/ESGST/issues/359">#359</a>).
-* Changed how User Giveaways Data is stored.
-* Fixed a bug in Game Categories that was showing the wrong icon/label for the "Multiplayer" category.
-
-Added the following features:
-
-* 2.25 Giveaways Manager (closes <a href="https://github.com/revilheart/ESGST/issues/197">#197</a>)
 
 ---
 
