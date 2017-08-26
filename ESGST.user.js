@@ -3,7 +3,7 @@
 // @namespace ESGST
 // @description Enhances SteamGifts and SteamTrades by adding some cool features to them.
 // @icon https://dl.dropboxusercontent.com/s/lr3t3bxrxfxylqe/esgstIcon.ico?raw=1
-// @version 6.Beta.32.0
+// @version 6.Beta.33.0
 // @author revilheart
 // @downloadURL https://github.com/revilheart/ESGST/raw/master/ESGST.user.js
 // @updateURL https://github.com/revilheart/ESGST/raw/master/ESGST.meta.js
@@ -856,7 +856,7 @@
                                 <ul>
                                     <li>Opens the attached images in a carousel.</li>
                                 </ul>
-                                <img src="http://imgur.com/iJjAs3W"/>
+                                <img src="http://imgur.com/iJjAs3W.png"/>
                             `,
                             id: `aic`,
                             name: `[NEW] Attached Images Carousel`,
@@ -1631,6 +1631,18 @@
                             ],
                             id: `er`,
                             name: `Entries Remover`,
+                            sg: true,
+                            type: `giveaways`
+                        },
+                        {
+                            description: `
+                                <ul>
+                                    <li>Allows you to remove owned games from the <a href="https://www.steamgifts.com/account/settings/giveaways/filters">hidden list</a>.</li>
+                                </ul>
+                                <img src="http://i.imgur.com/a653YCb.png"/>
+                            `,
+                            id: `hgr`,
+                            name: `[NEW] Hidden Games Remover`,
                             sg: true,
                             type: `giveaways`
                         },
@@ -2469,6 +2481,18 @@
                         {
                             id: `wbs`,
                             name: `Whitelist/Blacklist Sorter`,
+                            sg: true,
+                            type: `users`
+                        },
+                        {
+                            descruption: `
+                                <ul>
+                                    <li>Adds users status to the whitelist/blacklist pages, such as last online, gifts sent, gifts won, ratio and contributor value.</li>
+                                </ul>
+                                <img src="http://i.imgur.com/SnWasiw.png"/>                            
+                            `,
+                            id: `us`,
+                            name: `[NEW] Users Stats`,
                             sg: true,
                             type: `users`
                         },
@@ -3660,6 +3684,21 @@
                     editMgcDiscussion();
                 }
             }
+            if (location.pathname.match(/^\/account\/settings\/giveaways\/filters/)) {
+                if (esgst.hgr) {
+                    button = document.createElement(`div`);
+                    button.className = `esgst-heading-button`;
+                    button.title = `Remove owned games from the list`;
+                    button.innerHTML = `
+                        <i class="fa fa-eye-slash"></i>
+                        <i class="fa fa-times-circle"></i>
+                    `;
+                    mainPageHeadingBefore.appendChild(button);
+                    button.addEventListener(`click`, openHgrPopup.bind(null, {
+                        button: button
+                    }));
+                }
+            }
             if (esgst.commentsPath) {
                 if (esgst.giveawayCommentsPath) {
                     if (!document.getElementsByClassName(`table--summary`)[0]) {
@@ -3863,6 +3902,10 @@
                     loadAs(button);
                 }
             } else if (esgst.whitelistPath) {
+                if (esgst.us) {
+                    esgst.endlessFeatures.push(getUsUsers);
+                    getUsUsers(document);
+                }
                 if (esgst.wbs) {
                     button1 = document.createElement(`div`);
                     button1.className = `esgst-heading-button`;
@@ -3881,6 +3924,10 @@
                     addWbsButton(`whitelistedDate`, `whitelist`, `whitelisted`, button1, button2);
                 }
             } else if (esgst.blacklistPath) {
+                if (esgst.us) {
+                    esgst.endlessFeatures.push(getUsUsers);
+                    getUsUsers(document);
+                }
                 if (esgst.wbs) {
                     button1 = document.createElement(`div`);
                     button1.className = `esgst-heading-button`;
@@ -13211,7 +13258,6 @@ ${avatar.outerHTML}
         }
     }
 
-
     function checkNextErPage(context, currentPage, er, nextPage, url, callback) {
         var pagination;
         pagination = context.getElementsByClassName(`pagination__navigation`)[0];
@@ -13239,6 +13285,103 @@ ${avatar.outerHTML}
         er.canceled = true;
         er.button.classList.remove(`esgst-busy`);
         er.progress.innerHTML = ``;
+    }
+
+    /* [HGR] Hidden Games Remover */
+
+    function openHgrPopup(hgr) {
+        if (!hgr.popup) {
+            hgr.popup = createPopup(`fa-times`, `Remove owned games:`);
+            hgr.set = createButtonSet(`green`, `grey`, `fa-arrow-circle-right`, `fa-times`, `Remove`, `Cancel`, startHgrRemover.bind(null, hgr), stopHgrRemover.bind(null, hgr));
+            hgr.popup.description.appendChild(hgr.set.set);
+            hgr.progress = insertHtml(hgr.popup.description, `beforeEnd`, `<div></div>`);
+            hgr.removed = insertHtml(hgr.popup.scrollable, `beforeEnd`, `<div class="markdown"></div>`);
+        }
+        hgr.popup.open();
+    }
+
+    function startHgrRemover(hgr, callback) {
+        hgr.canceled = false;
+        hgr.button.classList.add(`esgst-busy`);
+        hgr.progress.innerHTML = `
+            <i class="fa fa-circle-o-notch fa-spin"></i>
+            <span>Removing games...</span>
+        `;
+        hgr.removed.innerHTML = `<span class="esgst-bold">Removed Games:</span>`;
+        removeHgrGames(null, esgst.currentPage, hgr, 1, `/account/settings/giveaways/filters/search?page=`, completeHgrProcess.bind(null, hgr, callback));
+    }
+
+    function removeHgrGames(context, currentPage, hgr, nextPage, url, callback) {
+        var button, element, elements, game, heading, i, info, n, pagination;
+        if (!hgr.canceled) {
+            if (currentPage === nextPage) {
+                context = document;
+                ++nextPage;
+            }
+            while (document.getElementById(`esgst-es-page-${nextPage}`)) {
+                ++nextPage;
+            }
+            if (context) {
+                if (nextPage === 1) {
+                    hgr.lastPage = getLastPage(context);
+                    hgr.lastPage = hgr.lastPage === 999999999 ? `` : ` of ${hgr.lastPage}`;
+                } else if (!hgr.lastPage) {
+                    hgr.lastPage = ``;
+                }
+                hgr.progress.innerHTML = `
+                    <i class="fa fa-circle-o-notch fa-spin"></i>
+                    <span>Removing games (page ${nextPage - 1}${hgr.lastPage})...</span>
+                `;
+                elements = context.getElementsByClassName(`table__row-outer-wrap`)
+                for (i = 0, n = elements.length; i < n; ++i) {
+                    element = elements[i];
+                    info = getGameInfo(element);
+                    if (info) {
+                        game = esgst.games[info.type][info.id];
+                        if (game && game.owned) {
+                            button = element.getElementsByClassName(`table__remove-default`)[0];
+                            if (context === document) {
+                                button.click();
+                            } else {
+                                request(`xsrf_token=${esgst.xsrfToken}&do=remove_filter&game_id=${button.parentElement.querySelector(`[name="game_id"]`).value}`, false, `/ajax.php`);
+                            }
+                            heading = element.getElementsByClassName(`table__column__heading`)[0];
+                            hgr.removed.insertAdjacentHTML(`beforeEnd`, `
+                                <a href="http://store.steampowered.com/${info.type.slice(0, -1)}/${info.id}">${heading.textContent}</a>
+                            `);
+                            hgr.popup.reposition();
+                        }
+                    }
+                }
+                pagination = context.getElementsByClassName(`pagination__navigation`)[0];
+                if (pagination && !pagination.lastElementChild.classList.contains(`is-selected`)) {
+                    setTimeout(removeHgrGames, 0, null, currentPage, hgr, nextPage, url, callback);
+                } else {
+                    callback();
+                }
+            } else if (!hgr.canceled) {
+                request(null, false, `${url}${nextPage}`, getNextHgrPage.bind(null, currentPage, hgr, nextPage, url, callback));
+            }
+        }
+    }
+
+    function getNextHgrPage(currentPage, hgr, nextPage, url, callback, response) {
+        setTimeout(removeHgrGames, 0, DOM.parse(response.responseText), currentPage, hgr, ++nextPage, url, callback);
+    }
+
+    function completeHgrProcess(hgr, callback) {
+        hgr.button.classList.remove(`esgst-busy`);
+        hgr.progress.innerHTML = ``;
+        if (hgr.removed.children.length === 1) {
+            hgr.removed.innerHTML = `<span class="esgst-bold">0 games removed.</span>`;
+        }
+        callback();
+    }
+
+    function stopHgrRemover(hgr) {
+        hgr.canceled = true;
+        hgr.button.classList.remove(`esgst-busy`);
+        hgr.progress.innerHTML = ``;
     }
 
     /* [SAL] Steam Activation Links */
@@ -22768,7 +22911,7 @@ ${avatar.outerHTML}
 
     function getCerbReplies(context, collapse, expand, permalink) {
         var elements, i, n, reply, replies;
-        elements = context.querySelectorAll(`.comments > .comment, .comments > .comment_outer`);
+        elements = context.querySelectorAll(`:not(.esgst-popup) .comments > .comment, :not(.esgst-popup) .comments > .comment_outer`);
         for (i = 0, n = elements.length; i < n; ++i) {
             reply = elements[i];
             replies = reply.querySelector(`.comment__children, .comment_children`);
@@ -26506,6 +26649,94 @@ ${avatar.outerHTML}
                 });
             });
         });
+    }
+
+    /* [US] Users Stats */
+
+    function getUsUsers(context) {
+        var element, elements, i, n, username, users;
+        if (context === document) {
+            document.getElementsByClassName(`table__heading`)[0].firstElementChild.insertAdjacentHTML(`afterEnd`, `
+                <div class="table__column--width-small text-center">Last Online</div>
+                <div class="table__column--width-small text-center">Gifts Won</div>
+                <div class="table__column--width-small text-center">Gifts Sent</div>
+                <div class="table__column--width-small text-center">Ratio</div>
+                <div class="table__column--width-small text-center">Contributor Level</div>
+            `);
+        }
+        users = {};
+        elements = context.getElementsByClassName(`table__row-inner-wrap`);
+        for (i = 0, n = elements.length; i < n; ++i) {
+            element = elements[i];
+            users[element.getElementsByClassName(`table__column__heading`)[0].textContent] = element.firstElementChild.nextElementSibling;
+        }
+        for (username in users) {
+            request(null, false, `/user/${username}`, loadUsStats.bind(null, users[username], username));
+        }
+    }
+
+    function loadUsStats(context, username, response) {
+        var element, elements, html, i, n, profile;
+        html = [];
+        profile = {};
+        elements = DOM.parse(response.responseText).getElementsByClassName(`featured__table__row__left`);
+        for (i = 0, n = elements.length; i < n; ++i) {
+            element = elements[i];
+            switch (element.textContent) {
+                case `Last Online`:
+                    html.push(`
+                        <div class="table__column--width-small text-center">${element.nextElementSibling.innerHTML}</div>
+                    `);
+                    break;
+                case `Gifts Won`:
+                    profile.wonRow = element.parentElement;
+                    profile.wonRowLeft = element;
+                    profile.wonRowRight = element.nextElementSibling;
+                    rows = JSON.parse(profile.wonRowRight.firstElementChild.firstElementChild.getAttribute(`data-ui-tooltip`)).rows;
+                    profile.wonCount = parseInt(rows[0].columns[1].name.replace(/,/g, ``));
+                    profile.wonFull = parseInt(rows[1].columns[1].name.replace(/,/g, ``));
+                    profile.wonReduced = parseInt(rows[2].columns[1].name.replace(/,/g, ``));
+                    profile.wonZero = parseInt(rows[3].columns[1].name.replace(/,/g, ``));
+                    cvrow = profile.wonRowRight.firstElementChild.lastElementChild;
+                    rows = JSON.parse(cvrow.getAttribute(`data-ui-tooltip`)).rows;
+                    profile.wonCV = parseFloat(cvrow.textContent.replace(/\$|,/g, ``));
+                    profile.realWonCV = parseFloat(rows[0].columns[1].name.replace(/\$|,/g, ``));
+                    element.nextElementSibling.firstElementChild.firstElementChild.firstElementChild.removeAttribute(`style`);
+                    html.push(`
+                        <div class="table__column--width-small text-center">${element.nextElementSibling.innerHTML}</div>
+                    `);
+                    break;
+                case `Gifts Sent`:
+                    profile.sentRow = element.parentElement;
+                    profile.sentRowLeft = element;
+                    profile.sentRowRight = element.nextElementSibling;
+                    rows = JSON.parse(profile.sentRowRight.firstElementChild.firstElementChild.getAttribute(`data-ui-tooltip`)).rows;
+                    profile.sentCount = parseInt(rows[0].columns[1].name.replace(/,/g, ``));
+                    profile.sentFull = parseInt(rows[1].columns[1].name.replace(/,/g, ``));
+                    profile.sentReduced = parseInt(rows[2].columns[1].name.replace(/,/g, ``));
+                    profile.sentZero = parseInt(rows[3].columns[1].name.replace(/,/g, ``));
+                    profile.notSent = parseInt(rows[5].columns[1].name.replace(/,/g, ``));
+                    cvrow = profile.sentRowRight.firstElementChild.lastElementChild;
+                    rows = JSON.parse(cvrow.getAttribute(`data-ui-tooltip`)).rows;
+                    profile.sentCV = parseFloat(cvrow.textContent.replace(/\$|,/g, ``));
+                    profile.realSentCV = parseFloat(rows[0].columns[1].name.replace(/\$|,/g, ``));
+                    element.nextElementSibling.firstElementChild.firstElementChild.firstElementChild.removeAttribute(`style`);
+                    html.push(`
+                        <div class="table__column--width-small text-center">${element.nextElementSibling.innerHTML}</div>
+                    `);
+                    break;
+                case `Contributor Level`:
+                    addSwrRatio(profile);
+                    html.push(`
+                        <div class="table__column--width-small text-center">${profile.sentRow.nextElementSibling.lastElementChild.innerHTML}</div>
+                    `);
+                    html.push(`
+                        <div class="table__column--width-small text-center">${parseFloat(JSON.parse(element.nextElementSibling.firstElementChild.getAttribute(`data-ui-tooltip`)).rows[0].columns[1].name)}</div>
+                    `);
+                    break;
+            }
+        }
+        context.insertAdjacentHTML(`afterEnd`, html.join(``));
     }
 
     /* [IBH] Inbox Winners Highlighter */
@@ -33488,18 +33719,32 @@ ${avatar.outerHTML}
         changelog = [
             {
                 date: `August 26, 2017`,
+                version: `6.Beta.33.0`,
+                changelog: `
+                    <ul>
+                        <li>Fixed a bug that was enabling Collapse/Expand Replies Button for popups.</li>
+                    </ul>
+                    <p>Added the following features:</p>
+                    <ul>
+                        <li>2.29 Hidden Games Remover (closes <a href="https://github.com/revilheart/ESGST/issues/299">#299</a>)</li>
+                        <li>5.15 (SG)/6.16 (ST) Users Stats (closes <a href="https://github.com/revilheart/ESGST/issues/307">#307</a>)</li>
+                    </ul>
+                `
+            },
+            {
+                date: `August 26, 2017`,
                 version: `6.Beta.32.0`,
                 changelog: `
                     <ul>
-                        <li>Fixed a bug in Shortcut Keys that was firing keys when focused on an input or text area (<a href="https://github.com/revilheart/ESGST/issues/377">#377</a>).</li>
+                        <li>Fixed a bug in Shortcut Keys that was firing keys when focused on an input or text area (closes <a href="https://github.com/revilheart/ESGST/issues/377">#377</a>).</li>
                         <li>Fixed a bug that was not showing Giveaway Winning Chance/Ratio for active invite only giveaways in popups.</li>
-                        <li>When trying to create a train in Multiple Giveaways Creator with no previous/next/bump links format in the description, an alert will now be shown (<a href="https://github.com/revilheart/ESGST/issues/376">#376</a>).</li>
+                        <li>When trying to create a train in Multiple Giveaways Creator with no previous/next/bump links format in the description, an alert will now be shown (closes <a href="https://github.com/revilheart/ESGST/issues/376">#376</a>).</li>
                         <li>You can now use only one type of link in Multiple Giveaways Creator. Before the description had to contain both previous and next links, otherwise it wouldn't work. Now you can have only next links in your train, for example.</li>
                         <li>Fixed a bug in Game Categories that was still not showing rating for non-English users.</li>
                     </ul>
                     <p>Added the following features:</p>
                     <ul>
-                        <li>1.12 Attached Images Carousel (<a href="https://github.com/revilheart/ESGST/issues/364">#364</a>)</li>
+                        <li>1.12 Attached Images Carousel (closes <a href="https://github.com/revilheart/ESGST/issues/364">#364</a>)</li>
                     </ul>
                 `
             },

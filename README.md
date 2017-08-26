@@ -844,7 +844,16 @@ The video above does not get embedded.
 
 ## Changelog
 
-**6.Beta.32.0 (August 26, 2017):**`
+**6.Beta.33.0 (August 26, 2017):**
+
+* Fixed a bug that was enabling Collapse/Expand Replies Button for popups.
+
+Added the following features:
+
+* 2.29 Hidden Games Remover (closes #299)
+* 5.15 (SG)/6.16 (ST) Users Stats (closes #307)
+
+**6.Beta.32.0 (August 26, 2017):**
 
 * Fixed a bug in Shortcut Keys that was firing keys when focused on an input or text area (closes #377).
 * Fixed a bug that was not showing Giveaway Winning Chance/Ratio for active invite only giveaways in popups.
