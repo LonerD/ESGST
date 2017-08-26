@@ -3,7 +3,7 @@
 // @namespace ESGST
 // @description Enhances SteamGifts and SteamTrades by adding some cool features to them.
 // @icon https://dl.dropboxusercontent.com/s/lr3t3bxrxfxylqe/esgstIcon.ico?raw=1
-// @version 6.Beta.33.0
+// @version 6.Beta.33.1
 // @author revilheart
 // @downloadURL https://github.com/revilheart/ESGST/raw/master/ESGST.user.js
 // @updateURL https://github.com/revilheart/ESGST/raw/master/ESGST.meta.js
@@ -1426,6 +1426,11 @@
                             `,
                             features: [
                                 {
+                                    description: `
+                                        <ul>
+                                            <li>Only shows the enter button in popups (Giveaway Encrypter/Decrypter, Train Giveaways Extractor, etc...), basically any giveaway that is loaded dynamically by the script.</li>
+                                        </ul>                                    
+                                    `,
                                     id: `elgb_p`,
                                     name: `Only enable for popups.`,
                                     sg: true
@@ -7790,7 +7795,7 @@
         icons = insertHtml(giveaway.innerWrap, `afterBegin`, `
             <div class="esgst-gv-icons giveaway__columns">
                 <div class="esgst-gv-time">
-                    <span title="Ends ${giveaway.endTimeColumn.lastElementChild.textContent}">${getRemainingTime(giveaway.endTime)}</span>
+                     <span title="${giveaway.started ? `Ends` : `Starts`} ${giveaway.endTimeColumn.lastElementChild.textContent}">${getRemainingTime(giveaway.endTime)}</span>
                     <i class="fa fa-clock-o"></i>
                     <span title="Created ${giveaway.startTimeColumn.lastElementChild.previousElementSibling.textContent}">${getRemainingTime(giveaway.startTime)}</span>
                 </div>
@@ -9417,7 +9422,7 @@ ${avatar.outerHTML}
                     request(null, false, `/giveaway/${giveaway.code}/`, function (response) {
                         responseHtml = DOM.parse(response.responseText);
                         builtGiveaway = buildGiveaway(responseHtml, response.finalUrl);
-                        if (builtGiveaway && builtGiveaway.started) {
+                        if (builtGiveaway) {
                             results.insertAdjacentHTML(`beforeEnd`, builtGiveaway.html);
                             var giveawayy = getGiveawayInfo(results.lastElementChild.lastElementChild, document, esgst.games, null, null, null, false, null, true);
                             setHideButton(giveawayy.giveaway);
@@ -9449,7 +9454,18 @@ ${avatar.outerHTML}
                                 window.setTimeout(getGedGiveaways, 0, currentGiveaways, giveaways, ++i, keys, n, callback);
                             }
                         } else {
-                            window.setTimeout(getGedGiveaways, 0, currentGiveaways, giveaways, ++i, keys, n, callback);
+                            createLock(`gedLock`, 300, function (deleteLock) {
+                                savedGiveaways = GM_getValue(`decryptedGiveaways`, GM_getValue(`exclusiveGiveaways`, {}));
+                                if (typeof savedGiveaways === `string`) {
+                                    savedGiveaways = JSON.parse(savedGiveaways);
+                                }
+                                savedGiveaways[giveaway.code] = {
+                                    timestamp: 0
+                                };
+                                GM_setValue(`decryptedGiveaways`, JSON.stringify(savedGiveaways));
+                                deleteLock();
+                                window.setTimeout(getGedGiveaways, 0, currentGiveaways, giveaways, ++i, keys, n, callback);
+                            });
                         }
                     });
                 } else {
@@ -33717,6 +33733,16 @@ ${avatar.outerHTML}
     function loadChangelog(version) {
         var changelog, current, html, i, index, n, popup;
         changelog = [
+            {
+                date: `August 26, 2017`,
+                version: `6.Beta.33.1`,
+                changelog: `
+                    <ul>
+                        <li>Fixed a bug in Giveaway Encrypter/Decrypter where the icon in the header was always green if the encrypted giveaway was a giveaway that the user cannot access.</li>
+                        <li>Giveaways that have not started yet now appear normally in Giveaway Encrypter/Decrypter (closes <a href="https://github.com/revilheart/ESGST/issues/375">#375</a>).</li>
+                    </ul>
+                `
+            },
             {
                 date: `August 26, 2017`,
                 version: `6.Beta.33.0`,

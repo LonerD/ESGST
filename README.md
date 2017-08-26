@@ -844,6 +844,11 @@ The video above does not get embedded.
 
 ## Changelog
 
+**6.Beta.33.1 (August 26, 2017):**
+
+* Fixed a bug in Giveaway Encrypter/Decrypter where the icon in the header was always green if the encrypted giveaway was a giveaway that the user cannot access.
+* Giveaways that have not started yet now appear normally in Giveaway Encrypter/Decrypter (closes #375).
+
 **6.Beta.33.0 (August 26, 2017):**
 
 * Fixed a bug that was enabling Collapse/Expand Replies Button for popups.
