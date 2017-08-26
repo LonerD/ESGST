@@ -3,7 +3,7 @@
 // @namespace ESGST
 // @description Enhances SteamGifts and SteamTrades by adding some cool features to them.
 // @icon https://dl.dropboxusercontent.com/s/lr3t3bxrxfxylqe/esgstIcon.ico?raw=1
-// @version 6.Beta.33.1
+// @version 6.Beta.33.2
 // @author revilheart
 // @downloadURL https://github.com/revilheart/ESGST/raw/master/ESGST.user.js
 // @updateURL https://github.com/revilheart/ESGST/raw/master/ESGST.meta.js
@@ -312,6 +312,7 @@
                         gas_optionGroups: `name_asc`,
                         ds_auto: false,
                         ds_option: `title_asc`,
+                        gc_o_altAccounts: [],
                         gc_g_colors: [],
                         gwc_colors: [],
                         gwr_colors: [],
@@ -2608,6 +2609,11 @@
                                             id: `gc_gi_t`,
                                             name: `Only show in discussion tables.`,
                                             sg: true
+                                        },
+                                        {
+                                            id: `gc_gi_cew`,
+                                            name: `[NEW] Only show in the created/entered/won pages.`,
+                                            sg: true
                                         }
                                     ],
                                     id: `gc_gi`,
@@ -2785,6 +2791,11 @@
                                             ],
                                             id: `gc_o_s`,
                                             name: `Enable the simplified version.`,
+                                            sg: true
+                                        },
+                                        {
+                                            id: `gc_o_t`,
+                                            name: `[NEW] Only show if games are owned by alt accounts in discussion tables.`,
                                             sg: true
                                         }
                                     ],
@@ -3909,7 +3920,7 @@
             } else if (esgst.whitelistPath) {
                 if (esgst.us) {
                     esgst.endlessFeatures.push(getUsUsers);
-                    getUsUsers(document);
+                    getUsUsers(document, true);
                 }
                 if (esgst.wbs) {
                     button1 = document.createElement(`div`);
@@ -3931,7 +3942,7 @@
             } else if (esgst.blacklistPath) {
                 if (esgst.us) {
                     esgst.endlessFeatures.push(getUsUsers);
-                    getUsUsers(document);
+                    getUsUsers(document, true);
                 }
                 if (esgst.wbs) {
                     button1 = document.createElement(`div`);
@@ -4314,8 +4325,12 @@
         if (user.steamId) {
             savedUser = savedUsers.users[user.steamId];
             if (savedUser) {
-                user.id = savedUser.id;
-                user.username = savedUser.username;
+                if (!user.id) {
+                    user.id = savedUser.id;
+                }
+                if (!user.username) {
+                    user.username = savedUser.username;
+                }
                 return savedUser;
             } else {
                 return null;
@@ -5035,7 +5050,7 @@
     function continueSyncStep4(syncer, callback) {
         if (esgst.settings.syncGames) {
             syncer.progress.lastElementChild.textContent = `Syncing your wishlisted/owned/ignored games...`;
-            syncGames(syncer, continueSyncStep5.bind(null, syncer, callback));
+            syncGames(syncer, syncAltAccounts.bind(null, 0, esgst.gc_o_altAccounts.length, syncer, continueSyncStep5.bind(null, syncer, callback)));
         } else {
             continueSyncStep5(syncer, callback);
         }
@@ -5049,18 +5064,33 @@
         }
     }
 
+    function syncAltAccounts(i, n, syncer, callback, games, html) {
+        var altAccount;
+        if (i < n) {
+            altAccount = esgst.gc_o_altAccounts[i];
+            request(null, false, `http://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/?key=${esgst.steamApiKey}&steamid=${altAccount.steamId}&format=json`, continueGameSync.bind(null, altAccount, html, syncer, setTimeout.bind(null, syncAltAccounts, 0, ++i, n, syncer, callback)));
+        } else {
+            setValue(`gc_o_altAccounts`, esgst.gc_o_altAccounts);
+            callback(null, html);
+        }
+    }
+
     function getApiResponseAndContinueSync(syncer, callback, response) {
         request(null, false, `http://store.steampowered.com/dynamicstore/userdata`, getStoreResponseAndContinueSync.bind(null, syncer, callback, response));
     }
 
     function getStoreResponseAndContinueSync(syncer, callback, response1, response2) {
-        createLock(`gameLock`, 300, continueGameSync.bind(null, syncer, callback, response1, response2));
+        createLock(`gameLock`, 300, continueGameSync.bind(null, null, null, syncer, callback, response1, response2));
     }
 
-    function continueGameSync(syncer, callback, response1, response2, deleteLock) {
+    function continueGameSync(altAccount, html, syncer, callback, response1, response2, deleteLock) {
         var currentOwned, newOwned, i, id, j, key, mainKey, n, numOwned, numValues, oldValue, owned, ownedGames, responseJson, responseText, result, savedGames, type, types, values;
         owned = 0;
-        savedGames = JSON.parse(GM_getValue(`games`));
+        if (altAccount) {
+            savedGames = altAccount.games;
+        } else {
+            savedGames = JSON.parse(GM_getValue(`games`));
+        }
         currentOwned = {
             apps: [],
             subs: []
@@ -5159,18 +5189,20 @@
                 }
             }
         }
-        if (response1 || response2) {
-            if (owned !== GM_getValue(`ownedGames`, 0)) {
-                GM_setValue(`ownedGames`, owned);
-                result = 1;
+        if (!altAccount) {
+            if (response1 || response2) {
+                if (owned !== GM_getValue(`ownedGames`, 0)) {
+                    GM_setValue(`ownedGames`, owned);
+                    result = 1;
+                } else {
+                    result = 2;
+                }
             } else {
-                result = 2;
+                result = 3;
             }
-        } else {
-            result = 3;
+            GM_setValue(`games`, JSON.stringify(savedGames));
+            deleteLock();
         }
-        GM_setValue(`games`, JSON.stringify(savedGames));
-        deleteLock();
         var missing = {
             apps: [],
             subs: []
@@ -5203,7 +5235,14 @@
                 neww.subs.push(`<a href="http://store.steampowered.com/sub/${id}">${id}</a>`);
             }
         }
-        var html = ``;
+        if (!html) {
+            html = ``;
+        }
+        if (altAccount) {
+            html += `
+                <div>Alt Account - ${altAccount.name}</div>
+            `;
+        }
         if (missing.apps.length) {
             html += `
                 <div>
@@ -26669,10 +26708,10 @@ ${avatar.outerHTML}
 
     /* [US] Users Stats */
 
-    function getUsUsers(context) {
+    function getUsUsers(context, main) {
         var element, elements, i, n, username, users;
-        if (context === document) {
-            document.getElementsByClassName(`table__heading`)[0].firstElementChild.insertAdjacentHTML(`afterEnd`, `
+        if (context === document || !main) {
+            context.getElementsByClassName(`table__heading`)[0].firstElementChild.insertAdjacentHTML(`afterEnd`, `
                 <div class="table__column--width-small text-center">Last Online</div>
                 <div class="table__column--width-small text-center">Gifts Won</div>
                 <div class="table__column--width-small text-center">Gifts Sent</div>
@@ -26684,7 +26723,7 @@ ${avatar.outerHTML}
         elements = context.getElementsByClassName(`table__row-inner-wrap`);
         for (i = 0, n = elements.length; i < n; ++i) {
             element = elements[i];
-            users[element.getElementsByClassName(`table__column__heading`)[0].textContent] = element.firstElementChild.nextElementSibling;
+            users[element.getElementsByClassName(`table__column__heading`)[0].textContent] = (main && element.firstElementChild.nextElementSibling) || element.firstElementChild;
         }
         for (username in users) {
             request(null, false, `/user/${username}`, loadUsStats.bind(null, users[username], username));
@@ -27315,7 +27354,7 @@ ${avatar.outerHTML}
             var currentTime = Date.now();
             for (id in gc.cache.apps) {
                 if (gc.cache.apps[id].lastCheck) {
-                    if (currentTime - gc.cache.apps[id].lastCheck > 604800000) {
+                    if (currentTime - gc.cache.apps[id].lastCheck > 604800000 || gc.cache.apps[id].price === -1 || (!gc.cache.apps[id].tags && !gc.cache.apps[id].rating)) {
                         delete gc.cache.apps[id];
                     }
                 } else {
@@ -27324,7 +27363,7 @@ ${avatar.outerHTML}
             }
             for (id in gc.cache.subs) {
                 if (gc.cache.subs[id].lastCheck) {
-                    if (currentTime - gc.cache.subs[id].lastCheck > 604800000) {
+                    if (currentTime - gc.cache.subs[id].lastCheck > 604800000 || gc.cache.subs[id].price === -1) {
                         delete gc.cache.subs[id];
                     }
                 } else {
@@ -27609,6 +27648,16 @@ ${avatar.outerHTML}
                                 <a class="esgst-gc esgst-gc-owned" href="https://www.steamgifts.com/account/steam/games/search?q=${encodedName}" title="Owned">${esgst.gc_o_s ? (esgst.gc_o_s_i ? `<i class="fa fa-${esgst.gc_oIcon}"></i>` : `O`) : esgst.gc_oLabel}</a>
                             `);
                         }
+                        if (!esgst.gc_o_t || games[0].table) {
+                            esgst.gc_o_altAccounts.forEach(account => {
+                                var game = account.games[type][id];
+                                if (game && game.owned) {
+                                    elements.push(`
+                                        <a class="esgst-gc esgst-gc-owned" href="http://steamcommunity.com/profiles/${account.steamId}/games" style="background-color: ${account.bgColor} !important; color: ${account.color} !important;" title="Owned by ${account.name}">${esgst.gc_o_s ? (esgst.gc_o_s_i ? `<i class="fa fa-${account.icon}"></i>` : `O`) : account.label}</a>
+                                    `);
+                                }
+                            });
+                        }
                         break;
                     case `gc_w`:
                         if (savedGame && savedGame.wishlisted) {
@@ -27618,7 +27667,7 @@ ${avatar.outerHTML}
                         }
                         break;
                     case `gc_gi`:
-                        if (((esgst.gc_gi_t && games[0].table) || (!esgst.gc_gi_t)) && cache && cache.price) {
+                        if (((esgst.gc_gi_t && games[0].table) || !esgst.gc_gi_t) && (esgst.gc_gi_cew && (esgst.createdPath || esgst.enteredPath || esgst.wonPath) || !esgst.gc_gi_cew) && cache && cache.price) {
                             user = esgst.users.users[esgst.steamId];
                             if (user) {
                                 giveaways = user.giveaways;
@@ -28345,6 +28394,11 @@ ${avatar.outerHTML}
                         elements.push(`
                             <div class="esgst-clickable esgst-gc esgst-gc-owned ${esgst.gc_o ? `` : `esgst-hidden`}" draggable="true" id="gc_o" title="Owned">${esgst.gc_o_s ? (esgst.gc_o_s_i ? `<i class="fa fa-${esgst.gc_oIcon}"></i>` : `O`) : esgst.gc_oLabel}</div>
                         `);
+                        esgst.gc_o_altAccounts.forEach(account => {
+                            elements.push(`
+                                <div class="esgst-clickable esgst-gc esgst-gc-owned ${esgst.gc_o ? `` : `esgst-hidden`}" draggable="true" id="gc_o" style="background-color: ${account.bgColor} !important; color: ${account.color} !important;" title="Owned by ${account.name}">${esgst.gc_o_s ? (esgst.gc_o_s_i ? `<i class="fa fa-${account.icon}"></i>` : `O`) : account.label}</div>
+                            `);
+                        });
                         break;
                     case `gc_w`:
                         elements.push(`
@@ -28458,6 +28512,8 @@ ${avatar.outerHTML}
             });
             if (Feature.id === `gc_g`) {
                 addGcMenuPanel(SMFeatures);
+            } else if (Feature.id === `gc_o`) {
+                addGcAltMenuPanel(SMFeatures);
             }
             if (Feature.input) {
                 input = insertHtml(SMFeatures, `beforeEnd`, `
@@ -28802,6 +28858,88 @@ ${avatar.outerHTML}
                 if (i < n) {
                     esgst.gc_g_colors.splice(i, 1);
                     setValue(`gc_g_colors`, esgst.gc_g_colors);
+                    setting.remove();
+                }
+            }
+        });
+    }
+
+    function addGcAltMenuPanel(context) {
+        var altSetting, button, i, n, panel;
+        panel = insertHtml(context, `beforeEnd`, `            
+            <div class="esgst-sm-colors">
+                <div class="form__saving-button esgst-sm-colors-default">
+                    <span>Add Alt Account</span>
+                </div>
+                <i class="fa fa-question-circle" title="You must sync your owned games normally for the script to pick up the games owned by your alt accounts. Syncing with alt accounts only works with a Steam API Key though, so make sure one is set."></i>
+            </div>
+        `);
+        button = panel.firstElementChild;
+        for (i = 0, n = esgst.gc_o_altAccounts.length; i < n; ++i) {
+            addGcAltSetting(esgst.gc_o_altAccounts[i], panel);
+        }
+        button.addEventListener(`click`, function () {
+            altSetting = {
+                bgColor: `#000000`,
+                color: `#ffffff`,
+                games: {
+                    apps: {},
+                    subs: {}
+                },
+                icon: ``,
+                label: ``,
+                name: ``,
+                steamId: ``
+            };
+            esgst.gc_o_altAccounts.push(altSetting);
+            addGcAltSetting(altSetting, panel);
+        });
+    }
+
+    function addGcAltSetting(altSetting, panel) {
+        var color, bgColor, i, icon, label, n, name, remove, setting, steamId;
+        setting = insertHtml(panel, `beforeEnd`, `
+            <div>
+                For account with Steam ID <input placeholder="0000000000000000" type="text" value="${altSetting.steamId}"/>, using the nickname <input placeholder="alt1" type="text" value="${altSetting.name}"/>, color it as <input type="color" value="${altSetting.color}"/> with background <input type="color" value="${altSetting.bgColor}"/>, icon <input placeholder="folder" type="text" value="${altSetting.icon}"/> and label <input placeholder="Owned by alt1" type="text" value="${altSetting.label}"/>. <i class="esgst-clickable fa fa-times" title="Delete this setting."></i>
+            </div>
+        `);
+        steamId = setting.firstElementChild;
+        name = steamId.nextElementSibling;
+        color = name.nextElementSibling;
+        bgColor = color.nextElementSibling;
+        icon = bgColor.nextElementSibling;
+        label = icon.nextElementSibling;
+        remove = label.nextElementSibling;
+        steamId.addEventListener(`change`, function () {
+            altSetting.steamId = steamId.value;
+            setValue(`gc_o_altAccounts`, esgst.gc_o_altAccounts);
+        });
+        name.addEventListener(`change`, function () {
+            altSetting.name = name.value;
+            setValue(`gc_o_altAccounts`, esgst.gc_o_altAccounts);
+        });
+        color.addEventListener(`change`, function () {
+            altSetting.color = color.value;
+            setValue(`gc_o_altAccounts`, esgst.gc_o_altAccounts);
+        });
+        bgColor.addEventListener(`change`, function () {
+            altSetting.bgColor = bgColor.value;
+            setValue(`gc_o_altAccounts`, esgst.gc_o_altAccounts);
+        });
+        icon.addEventListener(`change`, function () {
+            altSetting.icon = icon.value;
+            setValue(`gc_o_altAccounts`, esgst.gc_o_altAccounts);
+        });
+        label.addEventListener(`change`, function () {
+            altSetting.label = label.value;
+            setValue(`gc_o_altAccounts`, esgst.gc_o_altAccounts);
+        });
+        remove.addEventListener(`click`, function () {
+            if (confirm(`Are you sure you want to delete this setting?`)) {
+                for (i = 0, n = esgst.gc_o_altAccounts.length; i < n && esgst.gc_o_altAccounts[i] !== altSetting; ++i);
+                if (i < n) {
+                    esgst.gc_o_altAccounts.splice(i, 1);
+                    setValue(`gc_o_altAccounts`, esgst.gc_o_altAccounts);
                     setting.remove();
                 }
             }
@@ -29774,7 +29912,7 @@ ${avatar.outerHTML}
             } else {
                 profile.id = ``;
             }
-            profile.username = profile.heading.textContent;
+            profile.username = profile.heading.textContent.replace(/\s[\s\S]*/, ``);
             profile.steamButtonContainer = context.getElementsByClassName(`sidebar__shortcut-outer-wrap`)[0];
             profile.steamButton = profile.steamButtonContainer.querySelector(`[href*="/profiles/"]`);
             profile.steamId = profile.steamButton.getAttribute(`href`).match(/\d+/)[0];
@@ -33733,6 +33871,18 @@ ${avatar.outerHTML}
     function loadChangelog(version) {
         var changelog, current, html, i, index, n, popup;
         changelog = [
+            {
+                date: `August 26, 2017`,
+                version: `6.Beta.33.2`,
+                changelog: `
+                    <ul>
+                        <li>Added an option (7.4.3.2 - SG/8.4.3.2 - ST) to enable "Giveaway Info" category in Game Categories only in the created/entered/won pages.</li>
+                        <li>Game Categories now tries to retrieve price and rating information for games that have failed immediately when accessing the page again, instead of waiting 1 week.</li>
+                        <li>Added support for alt accounts in the "Owned" category in Game Categories (closes <a href="https://github.com/revilheart/ESGST/issues/280">#280</a>).</li>
+                        <li>Fixed Users Stats for the Whitelist/Blacklist Sorter popup (closes <a href="https://github.com/revilheart/ESGST/issues/378">#378</a>).</li>
+                    </ul>
+                `
+            },
             {
                 date: `August 26, 2017`,
                 version: `6.Beta.33.1`,

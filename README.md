@@ -844,6 +844,13 @@ The video above does not get embedded.
 
 ## Changelog
 
+**6.Beta.33.2 (August 26, 2017):**
+
+* Added an option (7.4.3.2 - SG/8.4.3.2 - ST) to enable "Giveaway Info" category in Game Categories only in the created/entered/won pages.
+* Game Categories now tries to retrieve price and rating information for games that have failed immediately when accessing the page again, instead of waiting 1 week.</li>
+* Added support for alt accounts in the "Owned" category in Game Categories (closes #280).</li>
+* Fixed Users Stats for the Whitelist/Blacklist Sorter popup (closes #378).</li>
+
 **6.Beta.33.1 (August 26, 2017):**
 
 * Fixed a bug in Giveaway Encrypter/Decrypter where the icon in the header was always green if the encrypted giveaway was a giveaway that the user cannot access.
