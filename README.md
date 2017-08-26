@@ -844,6 +844,14 @@ The video above does not get embedded.
 
 ## Changelog
 
+**6.Beta.33.4 (August 26, 2017):**
+
+<ul>
+    <li>Implemented a possible solution for <a href="https://github.com/revilheart/ESGST/issues/353">#353</a>. It would be useful if someone could test it if they know they're going to win a giveaway (100% chance) by not opening another tab when the giveaway ends and performing an action in the current tab that makes a request to SG (for example, refreshing a page through Endless Scrolling) to see if the popup appears.</li>
+    <li>Added a more detailed tooltip to the "Add Alt Account" button in the settings menu, with instructions on how to add the alt account.</li>
+    <li>You can now edit individual giveaways in Multiple Giveaways Creator. Instructions on how to do so are below the trash icon (closes <a href="https://github.com/revilheart/ESGST/issues/381">#381</a>).</li>
+</ul>
+
 **6.Beta.33.3 (August 26, 2017):**
 
 <ul>

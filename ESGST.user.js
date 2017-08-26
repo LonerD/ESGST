@@ -3,7 +3,7 @@
 // @namespace ESGST
 // @description Enhances SteamGifts and SteamTrades by adding some cool features to them.
 // @icon https://dl.dropboxusercontent.com/s/lr3t3bxrxfxylqe/esgstIcon.ico?raw=1
-// @version 6.Beta.33.3
+// @version 6.Beta.33.4
 // @author revilheart
 // @downloadURL https://github.com/revilheart/ESGST/raw/master/ESGST.user.js
 // @updateURL https://github.com/revilheart/ESGST/raw/master/ESGST.meta.js
@@ -5553,8 +5553,26 @@
                 if (callback) {
                     callback(response);
                 }
+                if (response.finalUrl.match(/www.steamgifts.com/)) {                    
+                    lookForPopups(response);
+                }
             }
         });
+    }
+
+    function lookForPopups(response) {
+        var popup, responseHtml;
+        responseHtml = DOM.parse(response.responseText);
+        popup = responseHtml.querySelector(`.popup--gift-received`);
+        if (popup) {
+            $(popup).bPopup({
+                opacity: .85,
+                fadeSpeed: 200,
+                followSpeed: 500,
+                modalColor: "#3c424d",
+                amsl: [0]
+            });
+        }
     }
 
     /* Popup */
@@ -11001,6 +11019,7 @@ ${avatar.outerHTML}
                 level: document.querySelector(`[name="contributor_level"]`),
                 description: document.querySelector(`[name="description"]`),
                 datas: [],
+                values: [],
                 created: []
             };
             mgc.gameName = mgc.gameId.nextElementSibling;
@@ -11065,7 +11084,9 @@ ${avatar.outerHTML}
                 </div>
             `);
             createToggleSwitch(createTrainDescription.firstElementChild, `mgc_removeLinks`, false, `Remove previous/next links from the first/last wagons.`, false, false, `Disabling this keeps the links as plain text.`, esgst.mgc_removeLinks);
-            addButton = createButtonSet(`green`, `grey`, `fa-plus-circle`, `fa-circle-o-notch fa-spin`, `Add`, `Adding...`, getMgcValues.bind(null, mgc));
+            mgc.editButton = createButtonSet(`green`, `grey`, `fa-edit`, `fa-circle-o-notch fa-spin`, `Edit`, `Editing...`, getMgcValues.bind(null, true, mgc));
+            mgc.editButton.set.classList.add(`esgst-hidden`);
+            addButton = createButtonSet(`green`, `grey`, `fa-plus-circle`, `fa-circle-o-notch fa-spin`, `Add`, `Adding...`, getMgcValues.bind(null, false, mgc));
             importButton = createButtonSet(`green`, `grey`, `fa-arrow-circle-up`, `fa-circle-o-notch fa-spin`, `Import`, `Importing...`, importMgcGiveaways.bind(null, mgc));
             exportButton = createButtonSet(`green`, `grey`, `fa-arrow-circle-down`, `fa-circle-o-notch fa-spin`, `Export`, `Exporting...`, exportMgcGiveaways.bind(null, mgc));
             emptyButton = createButtonSet(`green`, `grey`, `fa-trash`, `fa-circle-o-notch fa-spin`, `Empty`, `Emptying...`, emptyMgcGiveaways.bind(null, mgc));
@@ -11077,6 +11098,7 @@ ${avatar.outerHTML}
             viewButton = createButtonSet(`green`, `grey`, `fa-eye`, `fa-circle-o-notch fa-spin`, `View Results`, `Opening...`, viewMgcResults.bind(null, mgc));
             createButton = createButtonSet(`green`, `grey`, `fa-arrow-circle-right`, `fa-circle-o-notch fa-spin`, `Create`, `Creating...`, createMgcGiveaways.bind(null, mgc, viewButton));
             viewButton.set.classList.add(`esgst-hidden`);
+            section.appendChild(mgc.editButton.set);
             section.appendChild(addButton.set);
             section.appendChild(importButton.set);
             section.appendChild(exportButton.set);
@@ -11097,21 +11119,20 @@ ${avatar.outerHTML}
                 <div class="pinned-giveaways__outer-wrap">
                     <div class="pinned-giveaways__inner-wrap"></div>
                     <i class="fa fa-trash" title="Drag a giveaway here to remove it."></i>
-                    <div class="esgst-description">
-                        Giveaways successfully created will turn green, giveaways successfully connected will be strikethrough (for train creations) and giveaways that were not successfully created will turn red.
-                    </div>
+                    <div class="esgst-description">To edit a giveaway, click on it and a "Edit" button will appear. Then make your alterations and click "Edit".</div>
+                    <div class="esgst-description">Giveaways successfully created will turn green, giveaways successfully connected will be strikethrough (for train creations) and giveaways that were not successfully created will turn red.</div>
                 </div>
             `).firstElementChild;
             removeIcon = mgc.giveaways.nextElementSibling;
             removeIcon.addEventListener(`dragenter`, removeMgcGiveaway.bind(null, mgc));
             var cache = JSON.parse(localStorage.esgst_mgcCache || `[]`);
             cache.forEach(values => {
-                addMgcGiveaway(mgc, values);
+                addMgcGiveaway(false, mgc, values);
             });
         }
     }
 
-    function getMgcValues(mgc, callback) {
+    function getMgcValues(edit, mgc, callback) {
         var cache, values;
         values = {
             gameId: mgc.gameId.value,
@@ -11132,9 +11153,13 @@ ${avatar.outerHTML}
             values.description = mgc.description.value;
             if ((esgst.mgc_createTrain && mgc.description.value.match(/\[ESGST-P\]|\[ESGST-N\]/)) || !esgst.mgc_createTrain) {
                 if ((mgc.discussion && mgc.description.value.match(/\[ESGST-B\]/)) || !mgc.discussion) {
-                    addMgcGiveaway(mgc, values);
+                    addMgcGiveaway(edit, mgc, values);
                     cache = JSON.parse(localStorage.esgst_mgcCache || `[]`);
-                    cache.push(values);
+                    if (edit) {
+                        cache[mgc.editPos] = values;
+                    } else {
+                        cache.push(values);
+                    }
                     localStorage.esgst_mgcCache = JSON.stringify(cache);
                     mgc.copies.value = `1`;
                     mgc.keys.value = ``;
@@ -11150,7 +11175,7 @@ ${avatar.outerHTML}
         callback();
     }
 
-    function addMgcGiveaway(mgc, values) {
+    function addMgcGiveaway(edit, mgc, values) {
         var data, details;
         details = `${values.gameName}\n`;
         if (values.gameType === `gift`) {
@@ -11175,15 +11200,47 @@ ${avatar.outerHTML}
             }
         }
         details += `Level ${values.level}+\n\n${values.description}`;
-            mgc.datas.push(`xsrf_token=${esgst.xsrfToken}&next_step=3&game_id=${values.gameId}&type=${values.gameType}&copies=${values.copies}&key_string=${values.keys}&start_time=${values.startTime}&end_time=${values.endTime}&region=${values.region}&who_can_enter=${values.type}&whitelist=${values.whitelist}&group_string=${values.groups}&contributor_level=${values.level}&description=${encodeURIComponent(values.description)}`);
-        setMgcGiveaway(insertHtml(mgc.giveaways, `beforeEnd`, `
-            <div class="esgst-gm-giveaway" draggable="true" title="${details}">${mgc.datas.length}</div>
-        `), mgc);
+        data = `xsrf_token=${esgst.xsrfToken}&next_step=3&game_id=${values.gameId}&type=${values.gameType}&copies=${values.copies}&key_string=${values.keys}&start_time=${values.startTime}&end_time=${values.endTime}&region=${values.region}&who_can_enter=${values.type}&whitelist=${values.whitelist}&group_string=${values.groups}&contributor_level=${values.level}&description=${encodeURIComponent(values.description)}`;
+        if (edit) {
+            mgc.datas[mgc.editPos] = data;
+            mgc.values[mgc.editPos] = values;
+            mgc.giveaways.children[mgc.editPos].title = details;
+            mgc.editButton.set.classList.add(`esgst-hidden`);
+        } else {
+            mgc.datas.push(data);
+            mgc.values.push(values);
+            setMgcGiveaway(insertHtml(mgc.giveaways, `beforeEnd`, `
+                <div class="esgst-gm-giveaway" draggable="true" title="${details}">${mgc.datas.length}</div>
+            `), mgc);
+        }
     }
 
     function setMgcGiveaway(giveaway, mgc) {
+        giveaway.addEventListener(`click`, setMgcValues.bind(null, giveaway, mgc))
         giveaway.addEventListener(`dragstart`, setMgcSource.bind(null, giveaway, mgc));
         giveaway.addEventListener(`dragenter`, getMgcSource.bind(null, giveaway, mgc));
+    }
+
+    function setMgcValues(giveaway, mgc) {
+        var pos, values;
+        pos = parseInt(giveaway.textContent) - 1;
+        values = mgc.values[pos];
+        mgc.gameId.value = values.gameId;
+        mgc.gameType.value = values.gameType;
+        mgc.copies.value = values.copies;
+        mgc.keys.value = values.keys;
+        mgc.gameName.value = values.gameName;
+        mgc.startTime.value = values.startTime;
+        mgc.endTime.value = values.endTime;
+        mgc.region.value = values.region;
+        mgc.type.value = values.type;
+        mgc.whitelist.value = values.whitelist;
+        mgc.groups.value = values.groups;
+        mgc.level.value = values.level;
+        mgc.description.value = values.description;
+        applyGtsTemplate(values);
+        mgc.editPos = pos;
+        mgc.editButton.set.classList.remove(`esgst-hidden`);
     }
 
     function setMgcSource(giveaway, mgc) {
@@ -11407,7 +11464,7 @@ ${avatar.outerHTML}
         for (k = 0, numElements = elements.length; k < numElements && elements[k].getAttribute(`data-autocomplete-name`) !== name; ++k);
         if (k < numElements) {
             values.gameId = elements[k].getAttribute(`data-autocomplete-id`);
-            addMgcGiveaway(mgc, values);
+            addMgcGiveaway(false, mgc, values);
             cache = JSON.parse(localStorage.esgst_mgcCache || `[]`);
             cache.push(values);
             localStorage.esgst_mgcCache = JSON.stringify(cache);
@@ -11474,6 +11531,7 @@ ${avatar.outerHTML}
             localStorage.removeItem(`esgst_mgcCache`);
             esgst.busy = false;
             mgc.datas = [];
+            mgc.values = [];
             mgc.created = [];
             mgc.giveaways.innerHTML = ``;
             mgc.copies.value = `1`;
@@ -28922,10 +28980,16 @@ ${avatar.outerHTML}
                 <div class="form__saving-button esgst-sm-colors-default">
                     <span>Add Alt Account</span>
                 </div>
-                <i class="fa fa-question-circle" title="You must sync your owned games normally for the script to pick up the games owned by your alt accounts. Syncing with alt accounts only works with a Steam API Key though, so make sure one is set."></i>
             </div>
         `);
         button = panel.firstElementChild;
+        createTooltip(insertHtml(panel, `beforeEnd`, `<i class="fa fa-question-circle"></i>`), `
+            <div>You must sync your owned games normally for the script to pick up the games owned by your alt accounts. Syncing with alt accounts only works with a Steam API Key though, so make sure one is set at the last section of this menu.</div>
+            <br/>
+            <div>Steam ID is the number that comes after "steamcommunity.com/profiles/" in your alt account's URL. If your alt account has a URL in the format "steamcommunity.com/id/" though, you can get your Steam ID <a href="https://steamid.io/">here</a> by entering your URL in the input (you want the steamID64 one).</div>
+            <br/>
+            <div>You must fill the fields relative to your settings. For example, if you have simplified version enabled with icons, you must fill the "icon" field. If you don't have simplified version enabled, you must fill the "label" field. The current text in the fields are simply placeholders.</div>
+        `);
         for (i = 0, n = esgst.gc_o_altAccounts.length; i < n; ++i) {
             addGcAltSetting(esgst.gc_o_altAccounts[i], panel);
         }
@@ -33917,6 +33981,17 @@ ${avatar.outerHTML}
     function loadChangelog(version) {
         var changelog, current, html, i, index, n, popup;
         changelog = [
+            {
+                date: `August 26, 2017`,
+                version: `6.Beta.33.4`,
+                changelog: `
+                    <ul>
+                        <li>Implemented a possible solution for <a href="https://github.com/revilheart/ESGST/issues/353">#353</a>. It would be useful if someone could test it if they know they're going to win a giveaway (100% chance) by not opening another tab when the giveaway ends and performing an action in the current tab that makes a request to SG (for example, refreshing a page through Endless Scrolling) to see if the popup appears.</li>
+                        <li>Added a more detailed tooltip to the "Add Alt Account" button in the settings menu, with instructions on how to add the alt account.</li>
+                        <li>You can now edit individual giveaways in Multiple Giveaways Creator. Instructions on how to do so are below the trash icon (closes <a href="https://github.com/revilheart/ESGST/issues/381">#381</a>).</li>
+                    </ul>
+                `
+            },
             {
                 date: `August 26, 2017`,
                 version: `6.Beta.33.3`,
