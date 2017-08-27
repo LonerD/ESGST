@@ -844,6 +844,12 @@ The video above does not get embedded.
 
 ## Changelog
 
+**6.Beta.33.5 (August 26, 2017):**
+
+<ul>
+    <li>Extended Giveaway Filters to the created/entered/won pages with 4 new filters specific to the created page: "Received", "Not Received", "Awaiting Feedback" and "Deleted" (closes <a href="https://github.com/revilheart/ESGST/issues/223">#223</a>).</li>
+</ul>
+
 **6.Beta.33.4 (August 26, 2017):**
 
 <ul>
